@@ -302,7 +302,7 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 - **Issues**: [GitHub Issues](https://github.com/somuyakhandelwal/EWTCS/issues)
 - **Discussions**: [GitHub Discussions](https://github.com/somuyakhandelwal/EWTCS/discussions)
-- **Email**: [somuyakhandelwal@example.com](mailto:somuyakhandelwal@example.com)
+- **Email**: [somuyakhandelwal@gmail.com](mailto:somuyakhandelwal@gmail.com)
 
 ---
 
