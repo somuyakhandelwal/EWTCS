@@ -222,13 +222,8 @@ Full environment variable reference: See [CONFIGURATION.md](CONFIGURATION.md)
 
 - **[CONFIGURATION.md](CONFIGURATION.md)** - Detailed environment setup, migrations, and deployment
 - **[PRD.md](PRD.md)** - Complete Product Requirements Document
-<<<<<<< Updated upstream
-- **[CONTRIBUTING.md](CONTRIBUTING.md)** - Contribution guidelines
-- **[CODE_OF_CONDUCT.md](CODE_OF_CONDUCT.md)** - Community standards
-=======
 - **[CONTRIBUTING.md](CONTRIBUTING.md)** - How to contribute and coding standards
 - **[CODE_OF_CONDUCT.md](CODE_OF_CONDUCT.md)** - Community guidelines
->>>>>>> Stashed changes
 
 ---
 
