@@ -10,13 +10,14 @@ const encodedKey = new TextEncoder().encode(secretKey)
 
 type SessionPayload = {
     userId: string
+    username: string
     role: string
-    expiresAt: Date // Stored as string in JWT, but Date in runtime object if parsed? JWT claims are usually timestamps (numbers)
+    expiresAt: Date
 }
 
-export async function createSession(userId: string, role: string) {
+export async function createSession(userId: string, username: string, role: string) {
     const expiresAt = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000) // 7 days
-    const session = await new SignJWT({ userId, role })
+    const session = await new SignJWT({ userId, username, role })
         .setProtectedHeader({ alg: 'HS256' })
         .setIssuedAt()
         .setExpirationTime('7d')
@@ -44,7 +45,7 @@ export async function verifySession() {
         const { payload } = await jwtVerify(session, encodedKey, {
             algorithms: ['HS256'],
         })
-        return payload
+        return payload as unknown as SessionPayload
     } catch (err) {
         console.warn('Failed to verify session', err)
         return null

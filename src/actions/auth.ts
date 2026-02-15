@@ -68,12 +68,22 @@ export async function login(prevState: any, formData: FormData) {
             [user.id]
         )
 
-        await createSession(user.id, user.role)
+        await createSession(user.id, user.username, user.role)
 
+        // Redirect based on role
+        if (user.role === 'admin') {
+            redirect('/admin')
+        } else if (user.role === 'supervisor') {
+            redirect('/supervisor')
+        } else {
+            redirect('/dashboard')
+        }
     } catch (error) {
+        // If it's a redirect error, re-throw it so Next.js handles it
+        if ((error as any).digest?.startsWith('NEXT_REDIRECT')) {
+            throw error
+        }
         console.error('Login error:', error)
         return { message: 'Internal server error' }
     }
-
-    redirect('/dashboard')
 }
