@@ -11,7 +11,15 @@ const loginSchema = z.object({
     password: z.string().min(1, 'Password is required'),
 })
 
-export async function login(prevState: any, formData: FormData) {
+type LoginState = {
+    errors?: {
+        username?: string[];
+        password?: string[];
+    };
+    message?: string;
+} | undefined;
+
+export async function login(prevState: LoginState, formData: FormData) {
     // Validate form fields
     const result = loginSchema.safeParse(Object.fromEntries(formData))
 
@@ -34,7 +42,10 @@ export async function login(prevState: any, formData: FormData) {
             return { message: 'Invalid credentials' }
         }
 
-
+        // US-5.3: Check if user account is deactivated
+        if (user.is_active === false) {
+            return { message: 'Account has been deactivated. Contact administrator.' }
+        }
 
         // Check for lockout
         if (user.lockout_until && new Date(user.lockout_until) > new Date()) {
@@ -80,7 +91,9 @@ export async function login(prevState: any, formData: FormData) {
         }
     } catch (error) {
         // If it's a redirect error, re-throw it so Next.js handles it
-        if ((error as any).digest?.startsWith('NEXT_REDIRECT')) {
+        if (error && typeof error === 'object' && 'digest' in error && 
+            typeof (error as { digest?: string }).digest === 'string' && 
+            (error as { digest: string }).digest.startsWith('NEXT_REDIRECT')) {
             throw error
         }
         console.error('Login error:', error)

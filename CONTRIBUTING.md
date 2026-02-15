@@ -86,10 +86,11 @@ Once approved, a maintainer will merge your PR. Congratulations! 🎉
 
 ## 📏 Coding Standards
 
-### File Size Limit
+### File Size Guideline
 
-- **Maximum 200 lines per file**
-- If a file grows beyond 200 lines, split it into smaller modules
+- **Aim for around 200 lines per file** (guideline, not a strict limit)
+- If a file grows significantly larger, consider splitting it into better components or modules
+- Focus on maintainability and logical separation of concerns
 - Use clear file names that indicate purpose
 
 ### Naming Conventions
@@ -210,7 +211,7 @@ If you discover a security vulnerability:
 
 1. **Functionality**: Does it work as intended?
 2. **Code quality**: Follows coding standards?
-3. **File size**: No file exceeds 200 lines?
+3. **File size**: Files are reasonably sized(Around 200 lines) and modular?
 4. **Tests**: Are there tests (if applicable)?
 5. **Documentation**: Is it documented?
 6. **No breaking changes**: Doesn't break existing features?
@@ -275,14 +276,14 @@ Understanding labels helps you find the right issues:
 - ❌ Don't work on unassigned issues
 - ❌ Don't submit PRs without linked issues
 - ❌ Don't ignore review feedback
-- ❌ Don't submit files over 200 lines
+- ❌ Don't submit overly large files without proper modularization
 - ❌ Don't include unrelated changes in your PR
 - ❌ Don't copy code without attribution
 
 ## ✅ Checklist Before Submitting PR
 
 - [ ] Code follows style guidelines
-- [ ] No file exceeds 200 lines
+- [ ] Files are reasonably sized and well-modularized
 - [ ] Self-reviewed my code
 - [ ] Commented complex logic
 - [ ] Updated documentation
