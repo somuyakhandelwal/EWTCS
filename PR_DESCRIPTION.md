@@ -1,8 +1,8 @@
-# 🏗️ Feature-First Architecture + User Management (US-5.3)
+# 🏗️ Feature-First Architecture + User Management (US-5.7)
 
 ## Overview
 
-This PR implements a **feature-first hybrid architecture** AND includes the **complete User Management system (US-5.3)**, combining architectural improvements with immediate business value. This eliminates the need for PR #40 and provides a clean foundation for all future EPICs.
+This PR implements a **feature-first hybrid architecture** AND includes the **complete User Management system (US-5.7)**, combining architectural improvements with immediate business value. This eliminates the need for PR #40 and provides a clean foundation for all future EPICs.
 
 🔗 **Branch:** `feat/architecture-and-user-management`  
 📋 **Supersedes:** PR #40 (User Management feature now included here with better architecture)  
@@ -45,7 +45,7 @@ src/
 │   │   ├── hooks/         # React hooks
 │   │   └── types/         # TypeScript types
 │   │
-│   └── user-management/   # ✅ COMPLETE - User Management (US-5.3)
+   └── user-management/   # ✅ COMPLETE - User Management (US-5.7)
 │       ├── actions/       # CRUD operations for users
 │       ├── components/    # UserManagementTable, CreateUserDialog, EditUserDialog
 │       ├── lib/           # mutations, queries, audit, auth
@@ -146,7 +146,7 @@ Enhanced `tsconfig.json` with new path aliases:
 - Self-contained business domains
 - Can import from `@/shared/*` but not from other features
 - Each feature has standardized structure (actions, components, lib, etc.)
-- Maps to EPICs (auth = EPIC 5, user-management = EPIC 5.3, etc.)
+- Maps to EPICs (auth = EPIC 5, user-management = EPIC 5.7, etc.)
 
 ### Shared Layer
 - Code used by 2+ features
@@ -183,7 +183,7 @@ Enhanced `tsconfig.json` with new path aliases:
 **None** - This is a structural refactor with no functional changes.
 
 ### New Features Included
-**User Management System (US-5.3)** - Migrated from PR #40 into new architecture:
+**User Management System (US-5.7)** - Migrated from PR #40 into new architecture:
 - ✅ Admin can create new users with username, password, and role
 - ✅ Admin can update user details (username, password, role)
 - ✅ Admin can activate/deactivate user accounts
@@ -214,7 +214,7 @@ src/features/bed-management/
 ## 📋 Merge Strategy
 
 ### ✅ Recommended Approach: Combined Architecture + Feature
-This PR now includes **both** the architecture refactor **and** the complete user management feature (US-5.3 from PR #40), eliminating the need for complex rebase operations.
+This PR now includes **both** the architecture refactor **and** the complete user management feature (US-5.7 from PR #40), eliminating the need for complex rebase operations.
 
 **What's included:**
 1. ✅ Feature-first hybrid architecture foundation
@@ -277,7 +277,7 @@ Feel free to comment on this PR or reach out in discussions. This is a significa
 
 ---
 
-**PR Type:** 🏗️ Architecture / Refactoring + ✨ Feature (User Management US-5.3)  
+**PR Type:** 🏗️ Architecture / Refactoring + ✨ Feature (User Management US-5.7)  
 **Supersedes:** PR #40  
 **Priority:** High  
 **Estimated Review Time:** 45-60 minutes
