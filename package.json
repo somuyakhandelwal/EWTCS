@@ -11,6 +11,7 @@
     "db:rollback": "node scripts/run-migrations.js down 1",
     "db:status": "node scripts/run-migrations.js status",
     "db:create": "node scripts/run-migrations.js create",
+    "init": "node scripts/init-system.js",
     "db:seed": "node scripts/seed-db.js",
     "db:reset": "node scripts/reset-db.js"
   },
