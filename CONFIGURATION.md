@@ -100,7 +100,7 @@ Schema changes must follow these patterns for safe rolling deployments:
 
 ### Startup Validation
 Configuration is validated on startup:
-- Environment variable presence & format
+- Environment variable absence/format
 - Encrypted secret requirements
 - Database connectivity
 
