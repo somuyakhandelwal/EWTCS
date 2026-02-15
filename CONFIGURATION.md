@@ -135,7 +135,7 @@ Use health endpoint for deployment readiness checks and monitoring.
 - Use encrypted secrets in production (AWS Secrets Manager, Vault, K8s)
 - Rotate credentials every 90 days
 - Enable SSL/TLS for production database connections
-- Mask sensitive values in logs (automatic in logger)
+- Mask sensitive values in logs (manually avoid logging secrets like API keys, tokens, passwords, or full connection strings)
 
 ## Troubleshooting
 
