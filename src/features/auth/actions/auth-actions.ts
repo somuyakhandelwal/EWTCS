@@ -1,8 +1,8 @@
 'use server'
 
 import { z } from 'zod'
-import { createSession } from '@/lib/session'
-import pool from '@/db'
+import { createSession } from '@/features/auth/lib/session'
+import pool from '@/shared/lib/db'
 import bcrypt from 'bcrypt'
 import { redirect } from 'next/navigation'
 
@@ -11,7 +11,7 @@ const loginSchema = z.object({
     password: z.string().min(1, 'Password is required'),
 })
 
-export async function login(prevState: any, formData: FormData) {
+export async function login(prevState: unknown, formData: FormData) {
     // Validate form fields
     const result = loginSchema.safeParse(Object.fromEntries(formData))
 
@@ -80,7 +80,7 @@ export async function login(prevState: any, formData: FormData) {
         }
     } catch (error) {
         // If it's a redirect error, re-throw it so Next.js handles it
-        if ((error as any).digest?.startsWith('NEXT_REDIRECT')) {
+        if (error && typeof error === 'object' && 'digest' in error && typeof error.digest === 'string' && error.digest.startsWith('NEXT_REDIRECT')) {
             throw error
         }
         console.error('Login error:', error)

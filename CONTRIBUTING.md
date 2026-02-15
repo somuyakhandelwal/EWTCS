@@ -86,6 +86,44 @@ Once approved, a maintainer will merge your PR. Congratulations! 🎉
 
 ## 📏 Coding Standards
 
+### Project Architecture
+
+This project follows a **Feature-First Hybrid Architecture** for scalability and maintainability:
+
+```
+src/
+├── app/              # Next.js App Router (routes only)
+├── features/         # Feature modules (business logic)
+│   ├── auth/
+│   ├── user-management/
+│   └── ...
+└── shared/           # Shared code (used by 2+ features)
+    ├── components/
+    ├── lib/
+    ├── config/
+    └── types/
+```
+
+**When to use each directory:**
+
+- **`app/`**: Next.js routes and layouts only (minimal logic)
+- **`features/`**: Feature-specific code (components, actions, hooks, types)
+  - Each feature has: `components/`, `actions/`, `lib/`, `schemas/`, `hooks/`, `types/`
+  - Features should be self-contained and independent
+- **`shared/`**: Code reused by 2+ features (UI primitives, utilities, config)
+  - Shared code should have no feature dependencies
+
+**Import Guidelines:**
+- Use TypeScript path aliases: `@/features/*`, `@/shared/*`, `@/app/*`
+- Features can import from `@/shared/*` but not from other features
+- Shared code should never import from features
+- App routes import from both features and shared
+
+For detailed architecture information, see:
+- [src/features/README.md](src/features/README.md) - Feature structure guide
+- [src/shared/README.md](src/shared/README.md) - Shared code guidelines
+- [reports/FEATURE-FIRST-ARCHITECTURE-PLAN.md](reports/FEATURE-FIRST-ARCHITECTURE-PLAN.md) - Complete architecture documentation
+
 ### File Size Limit
 
 - **Maximum 200 lines per file**

@@ -2,11 +2,11 @@
 
 import { useActionState } from 'react'
 import { useFormStatus } from 'react-dom'
-import { login } from '@/actions/auth'
-import { Button } from '@/components/ui/button'
-import { Input } from '@/components/ui/input'
-import { Label } from '@/components/ui/label'
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card'
+import { login } from '@/features/auth/actions/auth-actions'
+import { Button } from '@/shared/components/ui/button'
+import { Input } from '@/shared/components/ui/input'
+import { Label } from '@/shared/components/ui/label'
+import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/shared/components/ui/card'
 
 function SubmitButton() {
     const { pending } = useFormStatus()

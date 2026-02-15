@@ -1,7 +1,7 @@
 import { z } from 'zod';
 import { logger } from './logger';
 import { decryptSecret, maskSensitive, validatePostgresUrl } from './secrets';
-import type { AppConfig } from '@/types/config';
+import type { AppConfig } from '@/shared/types/config.types';
 
 /**
  * Validates environment variables to ensure the system foundation is solid.

@@ -1,7 +1,7 @@
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { Card, CardContent, CardHeader, CardTitle } from "@/shared/components/ui/card"
 import { Shield, Users, Settings } from "lucide-react"
 
-import { verifySession } from "@/lib/session"
+import { verifySession } from "@/features/auth/lib/session"
 
 export default async function AdminDashboard() {
     const session = await verifySession()

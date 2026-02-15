@@ -7,7 +7,7 @@
 import { testConnection } from '@/lib/db/client';
 import { logger } from './logger';
 import { config, logConfigurationStatus } from './env';
-import type { HealthCheckResult } from '@/types/config';
+import type { HealthCheckResult } from '@/shared/types/config.types';
 
 let initializePromise: Promise<void> | null = null;
 
