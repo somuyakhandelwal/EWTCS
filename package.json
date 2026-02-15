@@ -5,11 +5,19 @@
   "scripts": {
     "dev": "next dev",
     "build": "next build",
-    "start": "next start",
-    "lint": "next lint"
+    "start": "node scripts/run-migrations.js up && next start",
+    "lint": "next lint",
+    "db:migrate": "node scripts/run-migrations.js up",
+    "db:rollback": "node scripts/run-migrations.js down 1",
+    "db:status": "node scripts/run-migrations.js status",
+    "db:create": "node scripts/run-migrations.js create",
+    "db:seed": "node scripts/seed-db.js",
+    "db:reset": "node scripts/reset-db.js"
   },
   "dependencies": {
+    "dotenv": "^16.4.7",
     "next": "^15.1.6",
+    "node-pg-migrate": "^7.9.0",
     "pg": "^8.11.3",
     "react": "^19.0.0",
     "react-dom": "^19.0.0"
