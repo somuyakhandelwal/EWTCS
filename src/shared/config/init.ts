@@ -4,7 +4,7 @@
  * Implements EPIC 0: System Foundation & Setup requirements
  */
 
-import { testConnection } from '@/lib/db/client';
+import { testConnection } from '@/shared/lib/db';
 import { logger } from './logger';
 import { config, logConfigurationStatus } from './env';
 import type { HealthCheckResult } from '@/shared/types/config.types';
