@@ -116,17 +116,31 @@ A simple, intuitive dashboard that provides:
 
 ## 📁 Project Structure
 
+We use a **feature-first hybrid architecture** for scalability and maintainability:
+
 ```
 EWTCS/
 ├── src/
-│   ├── app/              # Next.js App Router pages
-│   ├── components/       # React components
-│   ├── lib/              # Utility functions & config
-│   └── types/            # TypeScript type definitions
+│   ├── app/              # Next.js App Router (routes only)
+│   ├── features/         # Feature modules (business logic)
+│   │   ├── auth/         # Authentication & authorization
+│   │   └── user-management/  # User management (US-5.7)
+│   └── shared/           # Shared code (reusable across features)
+│       ├── components/ui/    # shadcn/ui components
+│       ├── lib/             # Utilities (db, utils)
+│       ├── config/          # App configuration
+│       └── types/           # Shared TypeScript types
 ├── migrations/           # Database migrations (version-controlled)
 ├── scripts/              # Utility scripts (migrations, seeding, reset)
 └── public/               # Static assets
 ```
+
+**Architecture Guidelines:**
+- **Features** - Self-contained business domains (auth, user-management, etc.)
+- **Shared** - Code reused by 2+ features (UI components, utilities, config)
+- **App** - Thin routing layer, minimal logic
+
+See [Architecture Plan](reports/FEATURE-FIRST-ARCHITECTURE-PLAN.md) for details.
 
 ---
 
@@ -192,15 +206,21 @@ Full environment variable reference: See [CONFIGURATION.md](CONFIGURATION.md)
 - **[CONFIGURATION.md](CONFIGURATION.md)** - Detailed environment setup, migrations, and deployment
 - **[CONTRIBUTING.md](CONTRIBUTING.md)** - Contribution guidelines and coding standards
 - **[CODE_OF_CONDUCT.md](CODE_OF_CONDUCT.md)** - Community guidelines
+- **[Architecture Plan](reports/FEATURE-FIRST-ARCHITECTURE-PLAN.md)** - Feature-first hybrid architecture design
+- **[Features Guide](src/features/README.md)** - How to structure new features
+- **[Shared Code Guide](src/shared/README.md)** - Guidelines for shared code
 
 ---
 
 ## 🗺️ Roadmap
 
-### Phase 1: MVP (Current)
-- [ ] Database schema design ✅
-- [ ] Automated migrations ✅
-- [ ] Authentication system
+### Phase 1: Foundation & Core Features
+- [x] Database schema design
+- [x] Automated migrations
+- [x] Feature-first hybrid architecture
+- [x] Authentication & authorization system (EPIC 5)
+- [x] Role-based access control (Admin, Supervisor, Nurse)
+- [x] User management system (US-5.7)
 - [ ] Bed status grid component
 - [ ] One-click stage updates
 - [ ] Color-coded visual indicators
@@ -219,22 +239,33 @@ Full environment variable reference: See [CONFIGURATION.md](CONFIGURATION.md)
 - [ ] Multi-department support
 
 ---
+Phase 1 Complete**
 
-## 🚦 Project Status
+**✅ Completed (Phase 1):**
+- Repository & Next.js 15.5 setup
+- PostgreSQL database schema & automated migrations
+- Feature-first hybrid architecture implementation
+- Environment configuration & validation with encryption support
+- Health check endpoint
+- **Authentication & Session Management (EPIC 5)**
+  - Secure login/logout with bcrypt password hashing
+  - Role-based access control (Admin, Supervisor, Nurse)
+  - Session management with encrypted cookies
+- **User Management System (US-5.7)**
+  - Create, update, activate/deactivate users
+  - Admin dashboard with user table
+  - Audit logging for all user actions
+  - Complete CRUD operations with input validation
 
-🟢 **Active Development - MVP Phase**
+**🔄 In Progress (Phase 2):**
+- Bed status grid UI component
+- One-click stage updates
+- Automatic time tracking per patient
 
-**Completed:**
-- ✅ Repository & Next.js setup
-- ✅ Database schema & migrations
-- ✅ Environment configuration & validation
-- ✅ Health check endpoint
-
-**In Progress:**
-- 🔄 Authentication & role-based access
-- 🔄 Bed grid UI & status updates
-- 🔄 Time tracking & logging
-
+**⏳ Pending (Phase 3+):**
+- Daily reports & AI summaries
+- Performance analytics dashboard
+- Lab/Radiology integration
 **Pending:**
 - ⏳ Daily reports & AI summaries
 - ⏳ Management dashboards
@@ -259,8 +290,11 @@ We welcome contributions! This is a healthcare project that can make a real diff
 
 ### Quick Start for Contributors
 
-1. **Fork** this repository
-2. **Create a branch**: `git checkout -b feature/issue-<id>-description`
+1. **Feature-first structure for new features (see [src/features/README.md](src/features/README.md))
+- ✅ Maximum 200 lines per file (enforced by CI)
+- ✅ Functional components with hooks
+- ✅ Tailwind CSS via shadcn/ui (in `shared/components/ui/`)
+- ✅ Path aliases: Use `@/features/*`, `@/shared/*`, `@/app/*`heckout -b feature/issue-<id>-description`
 3. **Make your changes** following our coding standards
 4. **Test locally**: `npm run dev`
 5. **Commit**: `git commit -m "feat: add feature description"`
@@ -330,25 +364,21 @@ Found a bug or have an idea?
 
 - **JMCH Medical College & Hospital** - For the opportunity to improve emergency ward efficiency
 - **Contributors** - Thank you to everyone who contributes
-- **Open Source Community** - For amazing tools and libraries
+**Star ⭐ this repository if you find it useful!**
 
 ---
 
-## 📄 License
+## 🏗️ Architecture Highlights
 
-This project is licensed under the MIT License. See [LICENSE](LICENSE) for details.
+This project uses a **feature-first hybrid architecture** designed for:
+- **Scalability** - Easy to add new features without conflicts
+- **Maintainability** - Clear separation of concerns
+- **Team Collaboration** - Multiple developers can work on different features
+- **Code Reusability** - Shared components and utilities
 
----
+Each feature is self-contained with its own actions, components, and business logic, while shared code provides common UI components and utilities used across features.
 
-**Made with ❤️ for better healthcare**
-
----
-
-## 🚦 Project Status
-
-🟢 **Active Development** - We're currently building the MVP
-
-- ✅ Repository setup complete
+Learn more: [Architecture Documentation](reports/FEATURE-FIRST-ARCHITECTURE-PLAN.md)
 - ✅ Next.js project initialized
 - ✅ Database client configured
 - 🔄 Database schema in progress
