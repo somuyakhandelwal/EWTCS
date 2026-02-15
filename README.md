@@ -188,8 +188,8 @@ Full environment variable reference: See [CONFIGURATION.md](CONFIGURATION.md)
 
 ## 📚 Documentation
 
-- **[CONFIGURATION.md](CONFIGURATION.md)** - Detailed environment setup, migrations, and deployment
 - **[PRD.md](PRD.md)** - Complete Product Requirements Document
+- **[CONFIGURATION.md](CONFIGURATION.md)** - Detailed environment setup, migrations, and deployment
 - **[CONTRIBUTING.md](CONTRIBUTING.md)** - Contribution guidelines and coding standards
 - **[CODE_OF_CONDUCT.md](CODE_OF_CONDUCT.md)** - Community guidelines
 
