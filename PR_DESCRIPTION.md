@@ -41,8 +41,11 @@ src/
 │   │   ├── hooks/         # React hooks
 │   │   └── types/         # TypeScript types
 │   │
-│   └── user-management/   # (Coming from PR #40)
-│       └── ...
+│   └── user-management/   # ✅ COMPLETE - User Management (US-5.3)
+│       ├── actions/       # CRUD operations for users
+│       ├── components/    # UserManagementTable, CreateUserDialog, EditUserDialog
+│       ├── lib/           # mutations, queries, audit, auth
+│       └── schemas/       # User validation schemas
 │
 └── shared/                 # Shared code (reusable across features)
     ├── components/ui/     # shadcn/ui components
@@ -63,6 +66,16 @@ src/
 - ✅ `src/actions/auth.ts` → `src/features/auth/actions/auth-actions.ts`
 - ✅ `src/lib/session.ts` → `src/features/auth/lib/session.ts`
 
+#### User Management Feature (`features/user-management/`) - **NEW**
+- ✅ `src/actions/user-management.ts` → `src/features/user-management/actions/user-management-actions.ts`
+- ✅ `src/lib/user-management/*` → `src/features/user-management/lib/*`
+  - mutations.ts, queries.ts, audit.ts, auth.ts
+- ✅ `src/lib/user-management/schemas.ts` → `src/features/user-management/schemas/user-schemas.ts`
+- ✅ `src/components/admin/*` → `src/features/user-management/components/*`
+  - UserManagementTable.tsx, CreateUserDialog.tsx, EditUserDialog.tsx
+- ✅ Added `migrations/003_add_user_management.sql`
+- ✅ Added `scripts/create-test-users.mjs`
+
 #### Shared Code (`shared/`)
 - ✅ UI Components: `src/components/ui/*` → `src/shared/components/ui/*`
   - button.tsx, card.tsx, input.tsx, label.tsx
@@ -72,11 +85,11 @@ src/
 - ✅ Database: `src/lib/db/client.ts` → `src/shared/lib/db.ts` (consolidated)
 - ✅ Types: `src/types/config.ts` → `src/shared/types/config.types.ts`
 
-### Updated Imports (15+ files)
+### Updated Imports (20+ files)
 
 All imports updated to use new TypeScript path aliases:
-- ❌ Old: `@/actions/auth`, `@/lib/session`, `@/components/ui/button`
-- ✅ New: `@/features/auth/*`, `@/shared/components/ui/*`
+- ❌ Old: `@/actions/auth`, `@/actions/user-management`, `@/lib/session`, `@/components/ui/button`
+- ✅ New: `@/features/auth/*`, `@/features/user-management/*`, `@/shared/components/ui/*`
 
 **Files updated:**
 - All app routes: `app/login/page.tsx`, `app/admin/page.tsx`, `app/dashboard/page.tsx`, `app/supervisor/page.tsx`
@@ -84,6 +97,8 @@ All imports updated to use new TypeScript path aliases:
 - App layout: `app/layout.tsx`
 - API routes: `app/api/health/route.ts`
 - All UI components: Updated internal imports
+- User management components: All 3 components updated
+- User management modules: All lib files updated (auth, audit, queries, mutations)
 
 ### Cleanup
 
@@ -163,6 +178,19 @@ Enhanced `tsconfig.json` with new path aliases:
 ### Breaking Changes
 **None** - This is a structural refactor with no functional changes.
 
+### New Features Included
+**User Management System (US-5.3)** - Migrated from PR #40 into new architecture:
+- ✅ Admin can create new users with username, password, and role
+- ✅ Admin can update user details (username, password, role)
+- ✅ Admin can activate/deactivate user accounts
+- ✅ Deactivated users cannot log in
+- ✅ All user management actions are logged for audit trail
+- ✅ Responsive admin dashboard with user table
+- ✅ Real-time status updates and activity feed
+- ✅ Role-based access control (admin-only)
+- ✅ Input validation with Zod schemas
+- ✅ Database migration included
+
 ### Future Development
 New features should follow the structure outlined in [src/features/README.md](../blob/refactor/feature-first-architecture/src/features/README.md):
 
@@ -181,23 +209,22 @@ src/features/bed-management/
 
 ## 📋 Merge Strategy
 
-### Option 1: Merge Architecture First (Recommended)
-1. ✅ Merge this PR to establish architectural foundation
-2. 🔄 Rebase PR #40 (User Management) onto new structure
-3. ✅ Future features follow established patterns
+### ✅ Recommended Approach: Combined Architecture + Feature
+This PR now includes **both** the architecture refactor **and** the complete user management feature (US-5.3 from PR #40), eliminating the need for complex rebase operations.
 
-**Pros:** Clean foundation for all future work  
-**Cons:** Requires rebasing PR #40
+**What's included:**
+1. ✅ Feature-first hybrid architecture foundation
+2. ✅ Complete user management implementation (migrated from PR #40)
+3. ✅ All imports updated to new structure
+4. ✅ Build passing successfully
 
-### Option 2: Merge User Management First
-1. ✅ Merge PR #40 (User Management)
-2. 🔄 Rebase this architecture PR
-3. 🔄 Migrate user management feature into new structure
+**Merge benefits:**
+- **One clean merge** - No need to coordinate multiple PRs
+- **Immediate value** - Architecture + working feature together
+- **Team reference** - Shows how to structure future features
+- **Reduced risk** - No rebase conflicts to resolve
 
-**Pros:** Gets features merged quickly  
-**Cons:** More complex migration of existing merged code
-
-**Recommendation:** Option 1 - Establish foundation first
+**Note:** This supersedes PR #40. After merging this PR, close #40 as the feature is now included here with the improved architecture.
 
 ---
 
@@ -221,8 +248,11 @@ For team members new to this architecture:
 - [x] Legacy directories cleaned up
 - [x] Comprehensive documentation created
 - [x] CONTRIBUTING.md updated with architecture guidelines
+- [x] User management feature migrated and integrated
+- [x] Admin dashboard fully functional
+- [x] All user management components working
 - [ ] Team review and approval
-- [ ] Decision on merge strategy with PR #40
+- [ ] PR #40 can be closed after merge (feature included here)
 
 ---
 
@@ -231,8 +261,9 @@ For team members new to this architecture:
 Please pay special attention to:
 1. **Import paths** - Verify all imports are correct and follow new patterns
 2. **Documentation** - Is the architecture clearly explained?
-3. **Merge strategy** - Which option makes more sense for the team?
+3. **User management feature** - Test all CRUD operations work correctly
 4. **Feature structure** - Does the proposed structure work for upcoming EPICs?
+5. **Merge impact** - Comfortable with closing PR #40 as feature is now here?
 
 ---
 
