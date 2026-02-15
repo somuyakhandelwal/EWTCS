@@ -1,13 +1,13 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/shared/components/ui/card"
 import { Shield, Users, Settings, Activity } from "lucide-react"
 
-import { verifySession } from "@/features/auth/lib/session"
+import { verifyActiveSession } from "@/features/auth/lib/active-session"
 import { getAllUsers, getUserLogs } from "@/features/user-management/actions/user-management-actions"
 import UserManagementTable from "@/features/user-management/components/UserManagementTable"
 import CreateUserDialog from "@/features/user-management/components/CreateUserDialog"
 
 export default async function AdminDashboard() {
-    const session = await verifySession()
+    const session = await verifyActiveSession()
     const usersResult = await getAllUsers()
     const logsResult = await getUserLogs()
 

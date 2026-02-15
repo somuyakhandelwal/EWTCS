@@ -1,7 +1,6 @@
 import 'server-only'
 import { SignJWT, jwtVerify } from 'jose'
 import { cookies } from 'next/headers'
-import pool from '@/shared/lib/db'
 
 const secretKey = process.env.SESSION_SECRET
 if (!secretKey) {
@@ -34,6 +33,10 @@ export async function createSession(userId: string, username: string, role: stri
     })
 }
 
+/**
+ * Verify JWT session from cookie (Edge-compatible, no DB calls).
+ * Used by middleware for route protection.
+ */
 export async function verifySession() {
     const cookieStore = await cookies()
     const session = cookieStore.get('session')?.value
@@ -46,21 +49,6 @@ export async function verifySession() {
         const { payload } = await jwtVerify(session, encodedKey, {
             algorithms: ['HS256'],
         })
-        
-        // CRITICAL: Verify user is still active in database
-        // US-5.7 Acceptance Criteria: "Deactivated users cannot log in"
-        // This prevents deactivated users from using existing sessions
-        const { rows } = await pool.query(
-            'SELECT is_active FROM users WHERE id = $1',
-            [payload.userId as string]
-        )
-        
-        if (rows.length === 0 || !rows[0].is_active) {
-            // User doesn't exist or is deactivated - invalidate session
-            await deleteSession()
-            return null
-        }
-        
         return payload as unknown as SessionPayload
     } catch (err) {
         console.warn('Failed to verify session', err)

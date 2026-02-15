@@ -1,4 +1,4 @@
-import { verifySession } from '@/features/auth/lib/session'
+import { verifyActiveSession } from '@/features/auth/lib/active-session'
 
 /**
  * Verify admin permission for user management actions
@@ -6,7 +6,7 @@ import { verifySession } from '@/features/auth/lib/session'
  * Ensures only admins can perform user management operations
  */
 export async function requireAdmin() {
-    const session = await verifySession()
+    const session = await verifyActiveSession()
     if (!session || session.role !== 'admin') {
         throw new Error('Unauthorized: Admin access required')
     }
