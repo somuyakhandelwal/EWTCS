@@ -1,0 +1,55 @@
+{
+  "hospital": {
+    "name": "JMCH Medical College & Hospital",
+    "code": "JMCH"
+  },
+  "beds": {
+    "prefix": "ER",
+    "start": 1,
+    "end": 50
+  },
+  "stages": [
+    {
+      "id": 1,
+      "name": "Patient Admitted",
+      "description": "Patient has arrived at emergency ward",
+      "color": "#FBBF24",
+      "sequence": 1
+    },
+    {
+      "id": 2,
+      "name": "Under Assessment",
+      "description": "Initial examination and triage in progress",
+      "color": "#F97316",
+      "sequence": 2
+    },
+    {
+      "id": 3,
+      "name": "Tests Ordered",
+      "description": "Diagnostic tests have been requested",
+      "color": "#3B82F6",
+      "sequence": 3
+    },
+    {
+      "id": 4,
+      "name": "Awaiting Results",
+      "description": "Waiting for test results to come back",
+      "color": "#8B5CF6",
+      "sequence": 4
+    },
+    {
+      "id": 5,
+      "name": "Decision Made",
+      "description": "Treatment plan decided, awaiting disposition",
+      "color": "#10B981",
+      "sequence": 5
+    },
+    {
+      "id": 6,
+      "name": "Discharged/Transferred",
+      "description": "Patient has left the emergency ward",
+      "color": "#9CA3AF",
+      "sequence": 6
+    }
+  ]
+}
