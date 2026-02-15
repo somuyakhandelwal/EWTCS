@@ -1,14 +1,20 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Activity, Users, Clock, AlertTriangle } from "lucide-react"
 
-export default function DashboardPage() {
+import { verifySession } from "@/lib/session"
+
+export default async function DashboardPage() {
+    const session = await verifySession()
+
     return (
         <div className="min-h-screen bg-black text-foreground p-8">
             <div className="max-w-7xl mx-auto space-y-8">
                 {/* Header */}
                 <div className="flex items-center justify-between">
                     <div>
-                        <h1 className="text-3xl font-bold tracking-tight text-white">Nurse Dashboard</h1>
+                        <h1 className="text-3xl font-bold tracking-tight text-white">
+                            Hello, {session?.username ? session.username : 'Nurse'}
+                        </h1>
                         <p className="text-zinc-400">Real-time bed status and ward overview</p>
                     </div>
                     <div className="flex items-center gap-2">
