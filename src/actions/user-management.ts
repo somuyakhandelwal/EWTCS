@@ -1,15 +1,10 @@
 'use server'
 
-import bcrypt from 'bcrypt'
-import pool from '@/db'
 import { logger } from '@/lib/config/logger'
 import { 
     createUserSchema, 
     updateUserSchema, 
-    deactivateUserSchema,
-    type CreateUserInput,
-    type UpdateUserInput,
-    type DeactivateUserInput
+    deactivateUserSchema
 } from '@/lib/user-management/schemas'
 import { requireAdmin } from '@/lib/user-management/auth'
 import { logUserAction } from '@/lib/user-management/audit'
@@ -17,6 +12,12 @@ import {
     getAllUsers as getAllUsersQuery, 
     getUserLogs as getUserLogsQuery 
 } from '@/lib/user-management/queries'
+import {
+    createUserInDB,
+    updateUserInDB,
+    deactivateUserInDB,
+    activateUserInDB
+} from '@/lib/user-management/mutations'
 
 /**
  * Create a new user
@@ -42,31 +43,8 @@ export async function createUser(prevState: unknown, formData: FormData) {
 
         const { username, password, role } = result.data
 
-        // Check if username already exists
-        const existing = await pool.query(
-            'SELECT id FROM users WHERE username = $1',
-            [username]
-        )
-
-        if (existing.rows.length > 0) {
-            return {
-                success: false,
-                message: 'Username already exists',
-            }
-        }
-
-        // Hash password
-        const passwordHash = await bcrypt.hash(password, 10)
-
-        // Insert user
-        const insertResult = await pool.query(
-            `INSERT INTO users (username, password_hash, role, is_active) 
-            VALUES ($1, $2, $3, TRUE) 
-            RETURNING id, username, role`,
-            [username, passwordHash, role]
-        )
-
-        const newUser = insertResult.rows[0]
+        // Create user in database
+        const newUser = await createUserInDB(username, password, role, session)
 
         // Log action
         await logUserAction('CREATE', newUser.id, session.userId, {
@@ -82,10 +60,11 @@ export async function createUser(prevState: unknown, formData: FormData) {
             user: newUser,
         }
     } catch (error) {
+        const errorMessage = error instanceof Error ? error.message : 'Failed to create user'
         logger.error('Failed to create user', error as Error)
         return {
             success: false,
-            message: 'Failed to create user',
+            message: errorMessage,
         }
     }
 }
@@ -114,45 +93,9 @@ export async function updateUser(prevState: unknown, formData: FormData) {
         }
 
         const { userId, username, password, role } = result.data
-        const changes: Record<string, unknown> = {}
-        const updates: string[] = []
-        const values: unknown[] = []
-        let paramIndex = 1
 
-        // Build dynamic update query
-        if (username) {
-            updates.push(`username = $${paramIndex++}`)
-            values.push(username)
-            changes.username = username
-        }
-
-        if (password) {
-            const passwordHash = await bcrypt.hash(password, 10)
-            updates.push(`password_hash = $${paramIndex++}`)
-            values.push(passwordHash)
-            changes.password = 'changed'
-        }
-
-        if (role) {
-            updates.push(`role = $${paramIndex++}`)
-            values.push(role)
-            changes.role = role
-        }
-
-        if (updates.length === 0) {
-            return {
-                success: false,
-                message: 'No fields to update',
-            }
-        }
-
-        updates.push(`updated_at = NOW()`)
-        values.push(userId)
-
-        await pool.query(
-            `UPDATE users SET ${updates.join(', ')} WHERE id = $${paramIndex}`,
-            values
-        )
+        // Update user in database
+        const changes = await updateUserInDB(userId, username, password, role)
 
         // Log action
         await logUserAction('UPDATE', userId, session.userId, changes)
@@ -164,10 +107,11 @@ export async function updateUser(prevState: unknown, formData: FormData) {
             message: 'User updated successfully',
         }
     } catch (error) {
+        const errorMessage = error instanceof Error ? error.message : 'Failed to update user'
         logger.error('Failed to update user', error as Error)
         return {
             success: false,
-            message: 'Failed to update user',
+            message: errorMessage,
         }
     }
 }
@@ -189,11 +133,7 @@ export async function deactivateUser(userId: string, reason?: string) {
             }
         }
 
-        await pool.query(
-            'UPDATE users SET is_active = FALSE, updated_at = NOW() WHERE id = $1',
-            [userId]
-        )
-
+        await deactivateUserInDB(userId)
         await logUserAction('DEACTIVATE', userId, session.userId, {}, reason)
 
         logger.info('User deactivated', { userId, reason })
@@ -218,11 +158,7 @@ export async function activateUser(userId: string) {
     try {
         const session = await requireAdmin()
 
-        await pool.query(
-            'UPDATE users SET is_active = TRUE, updated_at = NOW() WHERE id = $1',
-            [userId]
-        )
-
+        await activateUserInDB(userId)
         await logUserAction('ACTIVATE', userId, session.userId)
 
         logger.info('User activated', { userId })
