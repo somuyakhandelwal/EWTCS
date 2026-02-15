@@ -137,6 +137,73 @@ function updateBedStatus(bed: Bed, newStatus: BedStatus): Bed {
 }
 ```
 
+## � Security Guidelines
+
+### Sensitive Data Protection
+
+⚠️ **CRITICAL**: Never commit sensitive information
+
+**❌ DON'T** commit:
+- Passwords or API keys
+- Database credentials
+- SSH keys or tokens
+- Customer data or patient information
+- Secrets of any kind
+
+**✅ DO** instead:
+- Use environment variables for secrets
+- Use `.env.local` (which is in `.gitignore`)
+- Reference `.env.example` with placeholder values
+- Use secret management tools in production
+- Document expected environment variables
+
+### Example: Handling Secrets
+
+❌ **Bad:**
+```typescript
+const DB_PASSWORD = "Kapil@$9215";  // NEVER hardcode!
+const API_KEY = "sk-123456789";     // NEVER commit!
+```
+
+✅ **Good:**
+```typescript
+// .env.example
+DATABASE_URL=postgresql://user:password@host/db
+OPENAI_API_KEY=your_api_key_here
+
+// code
+import { env } from '@/lib/config/env';
+const dbUrl = env.DATABASE_URL;  // Loaded from .env.local
+```
+
+### Database Security
+
+- Never query with string concatenation (SQL injection risk)
+- Always use parameterized queries with Zod validation
+- Implement proper authentication/authorization middleware
+- Log dangerous operations (logins, deletions)
+- Use SSL/TLS for database connections in production
+
+### Code Review Security Checks
+
+When reviewing PRs, reviewers will check:
+
+1. **No secrets exposed**: No hardcoded passwords/API keys
+2. **Input validation**: All user inputs validated with Zod
+3. **SQL injection prevention**: Parameterized queries only
+4. **XSS prevention**: Proper escaping of user content
+5. **Authentication**: Proper auth middleware in place
+6. **Logging**: No sensitive data logged without masking
+
+### Reporting Security Issues
+
+If you discover a security vulnerability:
+
+1. **DO NOT** open a public GitHub issue
+2. **DO** email security concerns to maintainers privately
+3. Allow reasonable time for a fix before disclosure
+4. Provide detailed reproduction steps
+
 ## 🔍 Pull Request Review Process
 
 ### What Reviewers Check
@@ -147,6 +214,7 @@ function updateBedStatus(bed: Bed, newStatus: BedStatus): Bed {
 4. **Tests**: Are there tests (if applicable)?
 5. **Documentation**: Is it documented?
 6. **No breaking changes**: Doesn't break existing features?
+7. **Security**: No sensitive data exposed? Proper input validation?
 
 ### Review Timeline
 

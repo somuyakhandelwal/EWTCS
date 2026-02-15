@@ -19,49 +19,24 @@ EWTCS is a hospital management system designed for JMCH Medical College & Hospit
 - ❌ Lack of operational intelligence
 - ❌ No automated reporting
 
-### Solution
-- ✅ Real-time bed status dashboard
-- ✅ One-click stage updates
-- ✅ Automatic time tracking
 - ✅ Color-coded visual alerts
 - ✅ AI-generated daily summaries
-
----
-
-## ✨ Features
-
 ### For Nurses
-- **One-Click Updates**: Update bed status with a single click
 - **Visual Dashboard**: Color-coded grid showing all emergency beds
 - **No Typing Required**: Simple, intuitive interface
 
 ### For Supervisors
-- **Real-Time Monitoring**: See delayed beds instantly
-- **Color Alerts**: Red highlighting for beds exceeding 3-hour limit
-- **Stage Tracking**: Monitor patient progress through each stage
-
 ### For Management
 - **Daily AI Reports**: Automated performance summaries
-- **Analytics Dashboard**: Patient flow, bottlenecks, and trends
-- **Exportable Reports**: PDF/CSV downloads for documentation
-
 ---
 
-## 🛠️ Tech Stack
-
-### Frontend
 - **[Next.js 15.5](https://nextjs.org/)** - React framework with App Router
-- **[TypeScript](https://www.typescriptlang.org/)** - Type-safe development
 - **[shadcn/ui](https://ui.shadcn.com/)** - Beautiful, accessible components
 - **[Tailwind CSS](https://tailwindcss.com/)** - Utility-first styling
 
 ### Backend
 - **Next.js API Routes** - RESTful API endpoints
 - **Server Actions** - Server-side mutations
-- **[PostgreSQL](https://www.postgresql.org/)** - Relational database
-
-### Tools & Libraries
-- **[pg](https://node-postgres.com/)** - PostgreSQL client for Node.js
 - **ESLint** - Code linting
 - **TypeScript** - Static type checking
 
@@ -108,7 +83,6 @@ Before you begin, ensure you have the following installed:
    
    # Run migrations (coming soon)
    npm run db:migrate
-   
    # Seed initial data (coming soon)
    npm run db:seed
    ```
@@ -208,6 +182,7 @@ For detailed guidelines, see [CONTRIBUTING.md](CONTRIBUTING.md).
 ## 📚 Documentation
 
 - **[PRD.md](PRD.md)** - Complete Product Requirements Document
+- **[CONFIGURATION.md](CONFIGURATION.md)** - Environment configuration and security guide
 - **[CONTRIBUTING.md](CONTRIBUTING.md)** - Contribution guidelines
 - **[CODE_OF_CONDUCT.md](CODE_OF_CONDUCT.md)** - Community standards
 
@@ -258,18 +233,37 @@ npm run db:reset     # Reset database
 
 ## 🌐 Environment Variables
 
+Use the provided templates for each environment:
+
+- .env.example (general template)
+- .env.development
+- .env.staging
+- .env.production
+
 Create a `.env.local` file in the root directory:
 
 ```env
-# Database
+# Database (plaintext allowed in dev/staging)
 DATABASE_URL=postgresql://username:password@localhost:5432/ewtcs
 
 # Application
 NEXT_PUBLIC_APP_URL=http://localhost:3000
 
+# Environment
+NODE_ENV=development
+
 # AI/Analytics (Optional - for future use)
 # OPENAI_API_KEY=your_api_key_here
 ```
+
+For production, use encrypted secrets instead of plaintext values:
+
+```env
+DATABASE_URL_ENCRYPTED=ivhex:encryptedhex
+ENCRYPTION_KEY=your-32-byte-master-key
+```
+
+See CONFIGURATION.md for full details.
 
 ---
 
