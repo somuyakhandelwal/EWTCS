@@ -16,7 +16,8 @@ const loadEnvFiles = () => {
 	baseFiles.forEach((file) => {
 		const fullPath = path.resolve(process.cwd(), file);
 		if (fs.existsSync(fullPath)) {
-			dotenv.config({ path: fullPath, override: false });
+			const override = file !== '.env';
+			dotenv.config({ path: fullPath, override });
 		}
 	});
 
