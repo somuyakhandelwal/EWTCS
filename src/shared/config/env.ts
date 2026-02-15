@@ -45,11 +45,15 @@ const envSchema = z.object({
   }
 
   if (value.NODE_ENV === 'production' && !value.DATABASE_URL_ENCRYPTED) {
-    ctx.addIssue({
-      code: z.ZodIssueCode.custom,
-      message: 'DATABASE_URL_ENCRYPTED is required in production for security',
-      path: ['DATABASE_URL_ENCRYPTED'],
-    });
+    // Skip this check during build time - encrypted DB URL only required at runtime
+    const isBuildTime = process.env.NEXT_PHASE === 'phase-production-build';
+    if (!isBuildTime) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: 'DATABASE_URL_ENCRYPTED is required in production for security',
+        path: ['DATABASE_URL_ENCRYPTED'],
+      });
+    }
   }
 });
 
@@ -80,7 +84,9 @@ const resolveSecret = (
     return { value: decryptSecret(encrypted, encryptionKey), encrypted: true };
   }
 
-  if (requireEncrypted) {
+  // During build time, allow plaintext even in production
+  const isBuildTime = process.env.NEXT_PHASE === 'phase-production-build';
+  if (requireEncrypted && !isBuildTime) {
     throw new Error(`${label} must be encrypted in production`);
   }
 

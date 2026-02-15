@@ -1,6 +1,7 @@
 ﻿'use client'
 
 import { useState } from 'react'
+import { useRouter } from 'next/navigation'
 import { Button } from '@/shared/components/ui/button'
 import { Pencil, Ban, CheckCircle } from 'lucide-react'
 import { deactivateUser, activateUser } from '@/features/user-management/actions/user-management-actions'
@@ -19,22 +20,32 @@ interface UserManagementTableProps {
 }
 
 export default function UserManagementTable({ users }: UserManagementTableProps) {
+    const router = useRouter()
     const [selectedUser, setSelectedUser] = useState<User | null>(null)
     const [isEditing, setIsEditing] = useState(false)
     const [actionLoading, setActionLoading] = useState<string | null>(null)
+    const [error, setError] = useState<string | null>(null)
 
     const handleToggleActive = async (userId: string, currentStatus: boolean) => {
         setActionLoading(userId)
+        setError(null)
         try {
+            let result
             if (currentStatus) {
-                await deactivateUser(userId, 'Deactivated by admin')
+                result = await deactivateUser(userId, 'Deactivated by admin')
             } else {
-                await activateUser(userId)
+                result = await activateUser(userId)
             }
-            // Refresh the page to show updated data
-            window.location.reload()
+            
+            if (result.success) {
+                // Use Next.js router refresh to update UI
+                router.refresh()
+            } else {
+                setError(result.message || 'Failed to update user status')
+            }
         } catch (error) {
             console.error('Failed to toggle user status', error)
+            setError('An unexpected error occurred')
         } finally {
             setActionLoading(null)
         }
@@ -48,6 +59,7 @@ export default function UserManagementTable({ users }: UserManagementTableProps)
     const handleCloseEdit = () => {
         setIsEditing(false)
         setSelectedUser(null)
+        router.refresh()
     }
 
     const getRoleBadgeColor = (role: string) => {
@@ -65,6 +77,11 @@ export default function UserManagementTable({ users }: UserManagementTableProps)
 
     return (
         <>
+            {error && (
+                <div className="mb-4 p-4 bg-red-900/20 border border-red-900/50 rounded-lg text-red-400 text-sm">
+                    {error}
+                </div>
+            )}
             <div className="rounded-lg border border-zinc-800 overflow-hidden">
                 <table className="w-full">
                     <thead className="bg-black/50">
