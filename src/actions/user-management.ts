@@ -124,30 +124,19 @@ export async function updateUser(prevState: unknown, formData: FormData) {
 export async function deactivateUser(userId: string, reason?: string) {
     try {
         const session = await requireAdmin()
-
         const result = deactivateUserSchema.safeParse({ userId, reason })
         if (!result.success) {
-            return {
-                success: false,
-                message: 'Invalid user ID',
-            }
+            return { success: false, message: 'Invalid user ID' }
         }
 
         await deactivateUserInDB(userId)
         await logUserAction('DEACTIVATE', userId, session.userId, {}, reason)
-
         logger.info('User deactivated', { userId, reason })
 
-        return {
-            success: true,
-            message: 'User deactivated successfully',
-        }
+        return { success: true, message: 'User deactivated successfully' }
     } catch (error) {
         logger.error('Failed to deactivate user', error as Error)
-        return {
-            success: false,
-            message: 'Failed to deactivate user',
-        }
+        return { success: false, message: 'Failed to deactivate user' }
     }
 }
 
@@ -157,22 +146,14 @@ export async function deactivateUser(userId: string, reason?: string) {
 export async function activateUser(userId: string) {
     try {
         const session = await requireAdmin()
-
         await activateUserInDB(userId)
         await logUserAction('ACTIVATE', userId, session.userId)
-
         logger.info('User activated', { userId })
 
-        return {
-            success: true,
-            message: 'User activated successfully',
-        }
+        return { success: true, message: 'User activated successfully' }
     } catch (error) {
         logger.error('Failed to activate user', error as Error)
-        return {
-            success: false,
-            message: 'Failed to activate user',
-        }
+        return { success: false, message: 'Failed to activate user' }
     }
 }
 
@@ -183,17 +164,10 @@ export async function activateUser(userId: string) {
 export async function getAllUsers() {
     try {
         const users = await getAllUsersQuery()
-        return {
-            success: true,
-            users,
-        }
+        return { success: true, users }
     } catch (error) {
         logger.error('Failed to fetch users', error as Error)
-        return {
-            success: false,
-            message: 'Failed to fetch users',
-            users: [],
-        }
+        return { success: false, message: 'Failed to fetch users', users: [] }
     }
 }
 
@@ -205,16 +179,9 @@ export async function getAllUsers() {
 export async function getUserLogs(userId?: string) {
     try {
         const logs = await getUserLogsQuery(userId)
-        return {
-            success: true,
-            logs,
-        }
+        return { success: true, logs }
     } catch (error) {
         logger.error('Failed to fetch user logs', error as Error)
-        return {
-            success: false,
-            message: 'Failed to fetch logs',
-            logs: [],
-        }
+        return { success: false, message: 'Failed to fetch logs', logs: [] }
     }
 }
