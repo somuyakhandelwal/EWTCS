@@ -35,7 +35,7 @@ function SubmitButton() {
 }
 
 export default function EditUserDialog({ user, isOpen, onClose }: EditUserDialogProps) {
-    const [state, action, isPending] = useActionState(updateUser, undefined)
+    const [state, action] = useActionState(updateUser, undefined)
     const formRef = useRef<HTMLFormElement>(null)
 
     // Reset form when dialog opens/closes or user changes

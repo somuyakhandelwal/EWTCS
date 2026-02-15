@@ -44,7 +44,7 @@ export async function createUser(prevState: unknown, formData: FormData) {
         const { username, password, role } = result.data
 
         // Create user in database
-        const newUser = await createUserInDB(username, password, role, session)
+        const newUser = await createUserInDB(username, password, role)
 
         // Log action
         await logUserAction('CREATE', newUser.id, session.userId, {

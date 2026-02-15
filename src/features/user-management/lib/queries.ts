@@ -1,5 +1,4 @@
 import pool from '@/shared/lib/db'
-import { logger } from '@/shared/config/logger'
 import { requireAdmin } from './auth'
 
 /**

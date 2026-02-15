@@ -1,6 +1,5 @@
 import bcrypt from 'bcrypt'
 import pool from '@/shared/lib/db'
-import { logger } from '@/shared/config/logger'
 
 /**
  * Create user in database
@@ -9,8 +8,7 @@ import { logger } from '@/shared/config/logger'
 export async function createUserInDB(
     username: string,
     password: string,
-    role: string,
-    session: { userId: string; username: string; role: string }
+    role: string
 ) {
     // Check if username already exists
     const existing = await pool.query(
