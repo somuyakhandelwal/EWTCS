@@ -11,15 +11,18 @@ const DEFAULT_ENV = 'development';
 
 const loadEnvFiles = () => {
   const nodeEnv = process.env.NODE_ENV || DEFAULT_ENV;
-  const baseFiles = ['.env', `.env.${nodeEnv}`];
 
-  baseFiles.forEach((file) => {
-    const fullPath = path.resolve(process.cwd(), file);
-    if (fs.existsSync(fullPath)) {
-      dotenv.config({ path: fullPath, override: false });
-    }
-  });
+  // Load base .env first (defaults only, do not override existing values)
+  const basePath = path.resolve(process.cwd(), '.env');
+  if (fs.existsSync(basePath)) {
+    dotenv.config({ path: basePath, override: false });
+  }
 
+  // Then load environment-specific .env.<NODE_ENV>, allowing it to override base values
+  const envSpecificPath = path.resolve(process.cwd(), `.env.${nodeEnv}`);
+  if (fs.existsSync(envSpecificPath)) {
+    dotenv.config({ path: envSpecificPath, override: true });
+  }
   const localPath = path.resolve(process.cwd(), '.env.local');
   if (fs.existsSync(localPath)) {
     dotenv.config({ path: localPath, override: true });
