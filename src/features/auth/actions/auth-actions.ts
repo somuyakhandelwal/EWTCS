@@ -34,7 +34,11 @@ export async function login(prevState: unknown, formData: FormData) {
             return { message: 'Invalid credentials' }
         }
 
-
+        // CRITICAL: Check if user account is active
+        // US-5.7 Acceptance Criteria: "Deactivated users cannot log in"
+        if (!user.is_active) {
+            return { message: 'Account is deactivated. Contact administrator.' }
+        }
 
         // Check for lockout
         if (user.lockout_until && new Date(user.lockout_until) > new Date()) {
