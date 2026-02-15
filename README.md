@@ -14,7 +14,6 @@
 **The Problem:**
 Emergency wards lack real-time visibility into patient progress. Manual tracking, no operational intelligence, and no automated reporting lead to delays and poor accountability.
 
-<<<<<<< Updated upstream
 ### Solution
 - ✅ Real-time bed status dashboard
 - ✅ One-click stage updates
@@ -50,7 +49,6 @@ Emergency wards lack real-time visibility into patient progress. Manual tracking
 - **[TypeScript](https://www.typescriptlang.org/)** - Type-safe development
 - **[shadcn/ui](https://ui.shadcn.com/)** - Beautiful, accessible components
 - **[Tailwind CSS](https://tailwindcss.com/)** - Utility-first styling
-=======
 **Our Solution:**
 A simple, intuitive dashboard that provides:
 - ✅ Real-time bed status visibility
@@ -81,7 +79,6 @@ A simple, intuitive dashboard that provides:
 - **shadcn/ui** - Beautiful, accessible components
 - **Tailwind CSS** - Utility-first styling
 - **TypeScript** - Static type checking
->>>>>>> Stashed changes
 
 ### Backend
 - **Next.js API Routes** - RESTful endpoints
@@ -122,7 +119,6 @@ A simple, intuitive dashboard that provides:
 
 3. **Run database setup**
    ```bash
-<<<<<<< Updated upstream
    # Create database
    createdb ewtcs
    
@@ -131,10 +127,8 @@ A simple, intuitive dashboard that provides:
    
    # Seed initial data (coming soon)
    npm run db:seed
-=======
    npm run db:migrate  # Apply schema migrations
    npm run db:seed     # Seed initial data
->>>>>>> Stashed changes
    ```
 
 4. **Start development server**
@@ -275,13 +269,11 @@ Full environment variable reference: See [CONFIGURATION.md](CONFIGURATION.md)
 
 ## 🤝 Contributing
 
-<<<<<<< Updated upstream
 Create a `.env.local` file in the root directory:
 
 ```env
 # Database
 DATABASE_URL=postgresql://username:password@localhost:5432/ewtcs
-=======
 We welcome contributions! This is a healthcare project that can make a real difference.
 
 ### Quick Start for Contributors
@@ -295,7 +287,6 @@ We welcome contributions! This is a healthcare project that can make a real diff
 7. **Submit a Pull Request**
 
 ### Coding Standards
->>>>>>> Stashed changes
 
 - ✅ TypeScript required for all new code
 - ✅ Functional components with hooks
@@ -304,12 +295,14 @@ We welcome contributions! This is a healthcare project that can make a real diff
 - ✅ Documentation for complex logic
 - ✅ Tests for new features (when test suite is available)
 
-<<<<<<< Updated upstream
+# Security (Required)
+SESSION_SECRET=your_super_secret_key_at_least_32_chars_long
+
 # AI/Analytics (Optional - for future use)
 # OPENAI_API_KEY=your_api_key_here
 ```
 
-=======
+
 ### Branch Naming Convention
 
 ```
@@ -320,7 +313,7 @@ docs/issue-<id>-short-description
 
 For complete guidelines: See [CONTRIBUTING.md](CONTRIBUTING.md)
 
->>>>>>> Stashed changes
+
 ---
 
 ## 🐛 Bug Reports & Feature Requests
@@ -357,3 +350,25 @@ This project is licensed under the MIT License. See [LICENSE](LICENSE) for detai
 ---
 
 **Made with ❤️ for better healthcare**
+
+---
+
+## 🚦 Project Status
+
+🟢 **Active Development** - We're currently building the MVP
+
+- ✅ Repository setup complete
+- ✅ Next.js project initialized
+- ✅ Database client configured
+- 🔄 Database schema in progress
+- 🔄 UI components in progress
+- ✅ Authentication system
+- ✅ Dashboard (Nurse View)
+- [ ] Bed status grid component
+- [ ] One-click stage updates
+- [ ] Color-coded visual indicators
+- [ ] Automatic time tracking
+
+---
+
+**Star ⭐ this repository if you find it useful!**
