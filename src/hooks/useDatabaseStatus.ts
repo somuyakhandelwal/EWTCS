@@ -26,7 +26,7 @@ export function useDatabaseStatus() {
                         isOnline: false,
                     }));
                 }
-            } catch (error) {
+            } catch {
                 setStatus((prev) => ({
                     ...prev,
                     isOnline: false,

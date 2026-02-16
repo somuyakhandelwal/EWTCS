@@ -80,37 +80,102 @@ A simple, intuitive dashboard that provides:
 
 ### Installation
 
-1. **Clone & install**
+#### Quick Start (Recommended for New Developers)
+
+Run our automated setup script:
+
+```bash
+git clone https://github.com/somuyakhandelwal/EWTCS.git
+cd EWTCS
+npm install
+npm run setup
+```
+
+The setup script will:
+✅ Check prerequisites (Node.js, PostgreSQL)
+✅ Create database
+✅ Configure environment variables (.env.local)
+✅ Run migrations
+✅ Seed initial data
+✅ Provide next steps
+
+**Default Credentials After Setup:**
+- Username: `admin`
+- Password: `Admin@123`
+
+---
+
+#### Manual Setup (For Experienced Developers)
+
+1. **Clone & install dependencies**
    ```bash
    git clone https://github.com/somuyakhandelwal/EWTCS.git
-   cd EWTCS && npm install
+   cd EWTCS
+   npm install
    ```
 
-2. **Configure environment**
-   ```bash
-   cp .env.example .env.local
-   # Edit DATABASE_URL and NEXT_PUBLIC_APP_URL in .env.local
-   ```
+2. **Install & start PostgreSQL**
+   - Windows: [Download PostgreSQL](https://www.postgresql.org/download/windows/)
+   - macOS: `brew install postgresql@14 && brew services start postgresql@14`
+   - Linux: `sudo apt install postgresql-14 && sudo systemctl start postgresql`
 
-3. **Run database setup**
+3. **Create database**
    ```bash
-   # Create database
+   # Using createdb command (recommended)
    createdb ewtcs
    
-   # Run migrations (coming soon)
-   npm run db:migrate
-   # Seed initial data (coming soon)
-   npm run db:seed
-   npm run db:migrate  # Apply schema migrations
-   npm run db:seed     # Seed initial data
+   # OR using psql
+   psql -U postgres -c "CREATE DATABASE ewtcs;"
    ```
 
-4. **Start development server**
+4. **Configure environment**
+   ```bash
+   cp .env.example .env.local
+   # Edit .env.local with your database credentials
+   ```
+
+   **Required variables in `.env.local`:**
+   ```env
+   DATABASE_URL=postgresql://postgres:YOUR_PASSWORD@localhost:5432/ewtcs
+   NEXT_PUBLIC_APP_URL=http://localhost:3000
+   NODE_ENV=development
+   RED_ALERT_THRESHOLD_MS=10800000
+   ```
+
+5. **Run database migrations**
+   ```bash
+   npm run db:migrate
+   ```
+
+6. **Seed initial data**
+   ```bash
+   npm run db:seed
+   ```
+
+7. **Start development server**
    ```bash
    npm run dev
    ```
 
-   Open [http://localhost:3000](http://localhost:3000) in your browser.
+   Open [http://localhost:3000](http://localhost:3000) and login with `admin`/`Admin@123`
+
+---
+
+#### Troubleshooting Setup
+
+**Problem: "createdb: error: connection refused"**
+- PostgreSQL is not running
+- Solution: Start PostgreSQL (see step 2 above)
+
+**Problem: "password authentication failed"**
+- Wrong credentials in DATABASE_URL
+- Solution: Check your PostgreSQL password and update .env.local
+
+**Problem: "relation 'users' does not exist"**
+- Migrations not run
+- Solution: `npm run db:migrate`
+
+**For complete troubleshooting guide:** See [DATABASE_SETUP.md](DATABASE_SETUP.md)
 
 ---
 
@@ -162,8 +227,9 @@ The system tracks patients through 6 stages with color-coded indicators:
 
 ## 🔧 Available Commands
 
-### Development
+### Setup & Development
 ```bash
+npm run setup        # 🚀 Automated setup wizard (recommended for new developers)
 npm run dev          # Start development server
 npm run build        # Build for production
 npm run start        # Start production server (runs migrations automatically)
@@ -179,6 +245,8 @@ npm run db:create    # Create a new timestamped migration file
 npm run db:seed      # Seed initial test data
 npm run db:reset     # Drop and recreate schema (development only)
 ```
+
+**New to the project?** Run `npm run setup` for automated database setup!
 
 Migration details and best practices: See [CONFIGURATION.md#migrations](CONFIGURATION.md#migrations)
 
@@ -202,12 +270,35 @@ Full environment variable reference: See [CONFIGURATION.md](CONFIGURATION.md)
 
 ## 📚 Documentation
 
+### For New Developers - Start Here! 🚀
+
+- **[DATABASE_SETUP.md](DATABASE_SETUP.md)** - 📗 **Complete database setup guide** (ESSENTIAL FOR NEW TEAM MEMBERS)
+  - PostgreSQL installation & configuration
+  - Step-by-step database creation
+  - Migration & seeding instructions
+  - Troubleshooting common issues
+  - Quick reference commands
+
+### Core Documentation
+
+- **[DOCUMENTATION.md](DOCUMENTATION.md)** - 📘 Documentation structure & guidelines
 - **[PRD.md](PRD.md)** - Complete Product Requirements Document
-- **[CONFIGURATION.md](CONFIGURATION.md)** - Detailed environment setup, migrations, and deployment
+- **[EPICS.md](EPICS.md)** - All project EPICs and user stories
+- **[USER_STORIES.md](USER_STORIES.md)** - Detailed user stories with acceptance criteria
+- **[CONFIGURATION.md](CONFIGURATION.md)** - Environment setup, migrations, and deployment
 - **[CONTRIBUTING.md](CONTRIBUTING.md)** - Contribution guidelines and coding standards
 - **[CODE_OF_CONDUCT.md](CODE_OF_CONDUCT.md)** - Community guidelines
+
+### Architecture & Design
+
 - **[Architecture Plan](reports/FEATURE-FIRST-ARCHITECTURE-PLAN.md)** - Feature-first hybrid architecture design
 - **[Features Guide](src/features/README.md)** - How to structure new features
+- **[Shared Code Guide](src/shared/README.md)** - Guidelines for shared utilities and components
+
+### Implementation Reports
+- **[US-1.1 Report](reports/US-1.1-IMPLEMENTATION-REPORT.md)** - Bed Status Dashboard (Grid Layout)
+- **[US-5.3 Report](reports/US-5.3-IMPLEMENTATION-REPORT.md)** - User Management System
+- **[Reports Index](reports/README.md)** - All implementation reports
 - **[Shared Code Guide](src/shared/README.md)** - Guidelines for shared code
 
 ---
@@ -217,33 +308,40 @@ Full environment variable reference: See [CONFIGURATION.md](CONFIGURATION.md)
 ### Phase 1: Foundation & Core Features
 - [x] Database schema design
 - [x] Automated migrations
+### Phase 1: Foundation & Core Features
+- [x] Database schema design
+- [x] Automated migrations
 - [x] Feature-first hybrid architecture
 - [x] Authentication & authorization system (EPIC 5)
 - [x] Role-based access control (Admin, Supervisor, Nurse)
-- [x] User management system (US-5.7)
-- [ ] Bed status grid component
-- [ ] One-click stage updates
-- [ ] Color-coded visual indicators
-- [ ] Automatic time tracking
+- [x] User management system (US-5.3)
+- [x] **Bed status grid component (US-1.1)** ✨ NEW
+- [x] **Color-coded visual indicators (US-1.1)** ✨ NEW
+- [x] **Automatic time tracking (US-1.1)** ✨ NEW
+- [x] **Delay detection & alerts (US-1.1)** ✨ NEW
+- [ ] One-click stage updates (US-2.1)
+- [ ] Real-time updates with WebSocket/polling (US-1.2)
 
-### Phase 2: Analytics
+### Phase 2: Analytics & Reporting
 - [ ] Daily AI summary generator
-- [ ] Management dashboard
-- [ ] Performance metrics
+- [ ] Management dashboard with analytics
+- [ ] Performance metrics & KPIs
 - [ ] Exportable reports (PDF/CSV)
+- [ ] Historical trend analysis
 
 ### Phase 3: Advanced Features
 - [ ] Lab/Radiology integration
 - [ ] Mobile app for doctors
-- [ ] Predictive analytics
+- [ ] Predictive analytics for bed allocation
 - [ ] Multi-department support
+- [ ] Patient transfer workflows
 
 ---
 Phase 1 Complete**
 
 **✅ Completed (Phase 1):**
 - Repository & Next.js 15.5 setup
-- PostgreSQL database schema & automated migrations
+- PostgreSQL database schema & automated migrations  
 - Feature-first hybrid architecture implementation
 - Environment configuration & validation with encryption support
 - Health check endpoint
@@ -251,26 +349,33 @@ Phase 1 Complete**
   - Secure login/logout with bcrypt password hashing
   - Role-based access control (Admin, Supervisor, Nurse)
   - Session management with encrypted cookies
-- **User Management System (US-5.7)**
+- **User Management System (US-5.3)**
   - Create, update, activate/deactivate users
   - Admin dashboard with user table
   - Audit logging for all user actions
   - Complete CRUD operations with input validation
+- **Bed Status Dashboard (US-1.1)** ✨ NEW
+  - Responsive grid layout showing all 20 emergency beds
+  - Color-coded bed cards for 8 workflow stages
+  - Real-time elapsed time tracking per patient
+  - Automatic delay detection (>3 hours) with visual alerts
+  - Filter functionality (Show Delayed Only)
+  - Statistics dashboard (Total, Occupied, Available, Delayed)
+  - Stage color legend with descriptions
 
-**🔄 In Progress (Phase 2):**
-- Bed status grid UI component
-- One-click stage updates
-- Automatic time tracking per patient
+**🔄 In Progress (Phase 1 - Remaining):**
+- One-click stage updates (US-2.1)
+- Real-time updates with WebSocket/polling (US-1.2)
 
-**⏳ Pending (Phase 3+):**
-- Daily reports & AI summaries
+**⏳ Pending (Phase 2+):**
+- Daily AI reports & summaries
 - Performance analytics dashboard
 - Lab/Radiology integration
-**Pending:**
-- ⏳ Daily reports & AI summaries
-- ⏳ Management dashboards
+- Advanced reporting & exports
 
 ---
+
+## 🤝 Contributing
 
 ## 🤝 Contributing
 
@@ -363,8 +468,8 @@ Found a bug or have an idea?
 ## 🙏 Acknowledgments
 
 - **JMCH Medical College & Hospital** - For the opportunity to improve emergency ward efficiency
-- **Contributors** - Thank you to everyone who contributes
-**Star ⭐ this repository if you find it useful!**
+- **Contributors** - Thank you to everyone who contributes code, documentation, and feedback
+- **Open Source Community** - For the amazing tools and libraries that power this project
 
 ---
 
@@ -373,23 +478,13 @@ Found a bug or have an idea?
 This project uses a **feature-first hybrid architecture** designed for:
 - **Scalability** - Easy to add new features without conflicts
 - **Maintainability** - Clear separation of concerns
-- **Team Collaboration** - Multiple developers can work on different features
-- **Code Reusability** - Shared components and utilities
+- **Team Collaboration** - Multiple developers can work on different features simultaneously
+- **Code Reusability** - Shared components and utilities across features
 
 Each feature is self-contained with its own actions, components, and business logic, while shared code provides common UI components and utilities used across features.
 
-Learn more: [Architecture Documentation](reports/FEATURE-FIRST-ARCHITECTURE-PLAN.md)
-- ✅ Next.js project initialized
-- ✅ Database client configured
-- 🔄 Database schema in progress
-- 🔄 UI components in progress
-- ✅ Authentication system
-- ✅ Dashboard (Nurse View)
-- [ ] Bed status grid component
-- [ ] One-click stage updates
-- [ ] Color-coded visual indicators
-- [ ] Automatic time tracking
+**Learn more:** [Architecture Documentation](reports/FEATURE-FIRST-ARCHITECTURE-PLAN.md)
 
 ---
 
-**Star ⭐ this repository if you find it useful!**
+**⭐ Star this repository if you find it useful!**

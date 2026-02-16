@@ -37,7 +37,7 @@ export interface AuditLogRecord {
     metadata: Record<string, unknown>
     created_at: string
     performed_by_username?: string | null
-    performed_by_full_name?: string | null
+    performed_by_role?: string | null
     // Legacy field for backward compatibility with old user_management_logs
     target_user_id?: string | null
     target_username?: string | null
@@ -111,7 +111,7 @@ export async function getAuditLogs(
             SELECT 
                 al.*,
                 u.username as performed_by_username,
-                u.full_name as performed_by_full_name
+                u.role as performed_by_role
             FROM audit_logs al
             LEFT JOIN users u ON al.performed_by_user_id = u.id
             WHERE al.entity_type = $1
@@ -146,7 +146,7 @@ export async function getRecentAuditLogs(limit = 50): Promise<AuditLogRecord[]> 
             `SELECT 
                 al.*,
                 u.username as performed_by_username,
-                u.full_name as performed_by_full_name
+                u.role as performed_by_role
             FROM audit_logs al
             LEFT JOIN users u ON al.performed_by_user_id = u.id
             ORDER BY al.created_at DESC
