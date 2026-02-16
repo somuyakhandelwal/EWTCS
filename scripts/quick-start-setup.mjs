@@ -18,88 +18,16 @@
  */
 
 import { execSync } from 'child_process';
-import { existsSync, copyFileSync, readFileSync } from 'fs';
-import { createInterface } from 'readline';
+import { existsSync } from 'fs';
 import { fileURLToPath } from 'url';
 import { dirname, join } from 'path';
+import { log, colors, askQuestion } from './setup-utils.mjs';
+import { checkNodeVersion, checkPostgreSQL } from './setup-checks.mjs';
+import { setupDatabase, createEnvFile } from './setup-database.mjs';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 const ROOT_DIR = join(__dirname, '..');
-
-// ANSI colors for terminal output
-const colors = {
-  reset: '\x1b[0m',
-  bright: '\x1b[1m',
-  red: '\x1b[31m',
-  green: '\x1b[32m',
-  yellow: '\x1b[33m',
-  blue: '\x1b[34m',
-  cyan: '\x1b[36m',
-};
-
-// Helper functions
-const log = {
-  info: (msg) => console.log(`${colors.blue}ℹ${colors.reset} ${msg}`),
-  success: (msg) => console.log(`${colors.green}✓${colors.reset} ${msg}`),
-  error: (msg) => console.log(`${colors.red}✗${colors.reset} ${msg}`),
-  warning: (msg) => console.log(`${colors.yellow}⚠${colors.reset} ${msg}`),
-  title: (msg) => console.log(`\n${colors.bright}${colors.cyan}${msg}${colors.reset}\n`),
-  step: (step, total, msg) => console.log(`${colors.bright}[${step}/${total}]${colors.reset} ${msg}`),
-};
-
-// Execute command silently and return success/failure
-function execSilent(command) {
-  try {
-    execSync(command, { stdio: 'ignore' });
-    return true;
-  } catch {
-    return false;
-  }
-}
-
-// Execute command and return output
-function execOutput(command) {
-  try {
-    return execSync(command, { encoding: 'utf-8' }).trim();
-  } catch (error) {
-    return null;
-  }
-}
-
-// Ask user a yes/no question
-function askQuestion(question) {
-  return new Promise((resolve) => {
-    const rl = createInterface({
-      input: process.stdin,
-      output: process.stdout,
-    });
-
-    rl.question(`${colors.cyan}?${colors.reset} ${question} (y/n): `, (answer) => {
-      rl.close();
-      resolve(answer.toLowerCase() === 'y' || answer.toLowerCase() === 'yes');
-    });
-  });
-}
-
-// Ask user for input
-function askInput(question, defaultValue = '') {
-  return new Promise((resolve) => {
-    const rl = createInterface({
-      input: process.stdin,
-      output: process.stdout,
-    });
-
-    const prompt = defaultValue 
-      ? `${colors.cyan}?${colors.reset} ${question} (default: ${defaultValue}): `
-      : `${colors.cyan}?${colors.reset} ${question}: `;
-
-    rl.question(prompt, (answer) => {
-      rl.close();
-      resolve(answer.trim() || defaultValue);
-    });
-  });
-}
 
 // Main setup function
 async function setup() {
@@ -110,90 +38,35 @@ async function setup() {
   const TOTAL_STEPS = 7;
 
   // Step 1: Check Node.js version
-  log.step(1, TOTAL_STEPS, 'Checking Node.js version...');
-  const nodeVersion = execOutput('node --version');
-  if (!nodeVersion) {
-    log.error('Node.js is not installed. Please install Node.js 18 or higher.');
-    process.exit(1);
-  }
-  const majorVersion = parseInt(nodeVersion.replace('v', '').split('.')[0]);
-  if (majorVersion < 18) {
-    log.error(`Node.js ${nodeVersion} is too old. Please upgrade to Node.js 18 or higher.`);
-    process.exit(1);
-  }
-  log.success(`Node.js ${nodeVersion} detected`);
+  const nodeVersion = await checkNodeVersion(1, TOTAL_STEPS);
 
   // Step 2: Check PostgreSQL
-  log.step(2, TOTAL_STEPS, 'Checking PostgreSQL...');
-  const pgVersion = execOutput('psql --version') || execOutput('postgres --version');
-  if (!pgVersion) {
-    log.error('PostgreSQL is not installed or not in PATH.');
-    console.log('\nPlease install PostgreSQL 14 or higher:');
-    console.log('  Windows: https://www.postgresql.org/download/windows/');
-    console.log('  macOS: brew install postgresql@14');
-    console.log('  Linux: sudo apt install postgresql-14\n');
-    process.exit(1);
-  }
-  log.success(`PostgreSQL detected: ${pgVersion}`);
-
-  // Check if PostgreSQL is running
-  const pgRunning = execSilent('pg_isready') || execSilent('psql -U postgres -c "SELECT 1" 2>nul');
-  if (!pgRunning) {
-    log.warning('PostgreSQL may not be running.');
-    const shouldContinue = await askQuestion('Do you want to continue anyway?');
-    if (!shouldContinue) {
-      console.log('\nTo start PostgreSQL:');
-      console.log('  Windows: net start postgresql-x64-14');
-      console.log('  macOS: brew services start postgresql@14');
-      console.log('  Linux: sudo systemctl start postgresql\n');
-      process.exit(1);
-    }
-  } else {
-    log.success('PostgreSQL is running');
-  }
+  await checkPostgreSQL(2, TOTAL_STEPS);
 
   // Step 3: Create database
-  log.step(3, TOTAL_STEPS, 'Setting up database...');
-  const dbName = await askInput('Enter database name', 'ewtcs');
-  const dbUser = await askInput('Enter PostgreSQL username', 'postgres');
-  const dbPassword = await askInput('Enter PostgreSQL password');
-  const dbHost = await askInput('Enter database host', 'localhost');
-  const dbPort = await askInput('Enter database port', '5432');
-
-  // Try to create database
-  const createDbCommand = process.platform === 'win32'
-    ? `createdb -U ${dbUser} ${dbName}`
-    : `createdb -U ${dbUser} ${dbName}`;
-
-  if (execSilent(createDbCommand)) {
-    log.success(`Database '${dbName}' created successfully`);
-  } else {
-    log.warning(`Database '${dbName}' may already exist or creation failed`);
-    const shouldContinue = await askQuestion('Continue anyway?');
-    if (!shouldContinue) {
-      process.exit(1);
-    }
-  }
+  const dbConfig = await setupDatabase(3, TOTAL_STEPS);
 
   // Step 4: Create .env.local
-  log.step(4, TOTAL_STEPS, 'Creating environment configuration...');
-  const envLocalPath = join(ROOT_DIR, '.env.local');
-  const envExamplePath = join(ROOT_DIR, '.env.example');
-
-  if (existsSync(envLocalPath)) {
-    log.warning('.env.local already exists');
-    const shouldOverwrite = await askQuestion('Do you want to overwrite it?');
-    if (!shouldOverwrite) {
-      log.info('Skipping .env.local creation');
-    } else {
-      await createEnvLocal(envExamplePath, envLocalPath, dbUser, dbPassword, dbHost, dbPort, dbName);
-    }
-  } else {
-    await createEnvLocal(envExamplePath, envLocalPath, dbUser, dbPassword, dbHost, dbPort, dbName);
-  }
+  await createEnvFile(4, TOTAL_STEPS, ROOT_DIR, dbConfig);
 
   // Step 5: Install dependencies
-  log.step(5, TOTAL_STEPS, 'Installing dependencies...');
+  await installDependencies(5, TOTAL_STEPS);
+
+  // Step 6: Run migrations
+  await runMigrations(6, TOTAL_STEPS);
+
+  // Step 7: Seed database
+  const shouldSeed = await seedDatabase(7, TOTAL_STEPS);
+
+  // Success!
+  displaySuccessMessage(nodeVersion, dbConfig.dbName, shouldSeed);
+}
+
+/**
+ * Install npm dependencies
+ */
+async function installDependencies(step, totalSteps) {
+  log.step(step, totalSteps, 'Installing dependencies...');
   if (!existsSync(join(ROOT_DIR, 'node_modules'))) {
     log.info('Running npm install...');
     try {
@@ -206,9 +79,13 @@ async function setup() {
   } else {
     log.success('Dependencies already installed');
   }
+}
 
-  // Step 6: Run migrations
-  log.step(6, TOTAL_STEPS, 'Running database migrations...');
+/**
+ * Run database migrations
+ */
+async function runMigrations(step, totalSteps) {
+  log.step(step, totalSteps, 'Running database migrations...');
   try {
     execSync('npm run db:migrate', { cwd: ROOT_DIR, stdio: 'inherit' });
     log.success('Migrations completed');
@@ -219,23 +96,35 @@ async function setup() {
     console.log('  2. Run: npm run db:migrate\n');
     process.exit(1);
   }
+}
 
-  // Step 7: Seed database
-  log.step(7, TOTAL_STEPS, 'Seeding initial data...');
+/**
+ * Seed database with sample data
+ * @returns {Promise<boolean>} True if seeded, false if skipped
+ */
+async function seedDatabase(step, totalSteps) {
+  log.step(step, totalSteps, 'Seeding initial data...');
   const shouldSeed = await askQuestion('Do you want to seed the database with sample data?');
   if (shouldSeed) {
     try {
       execSync('npm run db:seed', { cwd: ROOT_DIR, stdio: 'inherit' });
       log.success('Database seeded successfully');
+      return true;
     } catch (error) {
       log.error('Seeding failed');
       console.log('\nYou can seed manually later with: npm run db:seed\n');
+      return false;
     }
   } else {
     log.info('Skipping database seeding');
+    return false;
   }
+}
 
-  // Success!
+/**
+ * Display success message with next steps
+ */
+function displaySuccessMessage(nodeVersion, dbName, shouldSeed) {
   log.title('✅ Setup Complete!');
 
   console.log('Your development environment is ready. Here\'s what was set up:\n');
@@ -264,33 +153,6 @@ async function setup() {
   console.log(`  • Configuration: ${colors.cyan}CONFIGURATION.md${colors.reset}`);
   console.log(`  • Contributing: ${colors.cyan}CONTRIBUTING.md${colors.reset}\n`);
   console.log(`${colors.green}Happy coding! 🚀${colors.reset}\n`);
-}
-
-// Create .env.local file with user's database credentials
-async function createEnvLocal(examplePath, localPath, user, password, host, port, dbName) {
-  try {
-    // Read template
-    let envContent = readFileSync(examplePath, 'utf-8');
-
-    // Replace DATABASE_URL
-    const databaseUrl = `postgresql://${user}:${password}@${host}:${port}/${dbName}`;
-    envContent = envContent.replace(
-      /DATABASE_URL=postgresql:\/\/postgres:password@localhost:5432\/ewtcs/,
-      `DATABASE_URL=${databaseUrl}`
-    );
-
-    // Write to .env.local
-    const fs = await import('fs/promises');
-    await fs.writeFile(localPath, envContent);
-
-    log.success('.env.local created successfully');
-    log.info(`Database URL: postgresql://${user}:***@${host}:${port}/${dbName}`);
-  } catch (error) {
-    log.error('Failed to create .env.local');
-    console.log('\nPlease create it manually:');
-    console.log(`  cp .env.example .env.local`);
-    console.log(`  # Then edit DATABASE_URL in .env.local\n`);
-  }
 }
 
 // Error handling
