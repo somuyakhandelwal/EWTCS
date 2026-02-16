@@ -5,14 +5,15 @@ EWTCS uses environment variables for multi-environment configuration with suppor
 ## Quick Start
 
 1. Copy `.env.example` to `.env.local`
-2. Set `DATABASE_URL` and `NEXT_PUBLIC_APP_URL`
-3. Run `npm run dev` (development) or validate with `/api/health` (production)
+2. Set `DATABASE_URL`, `SESSION_SECRET`, and `NEXT_PUBLIC_APP_URL`
+3. Run `npm run dev` (development)
 
 ## Environment Variables
 
 ### Required
 - `DATABASE_URL` - PostgreSQL connection string (dev/staging) OR
 - `DATABASE_URL_ENCRYPTED` - Encrypted connection string (production)
+- `SESSION_SECRET` - JWT secret (minimum 32 characters)
 - `NEXT_PUBLIC_APP_URL` - Application URL
 
 ### Optional
@@ -25,6 +26,7 @@ EWTCS uses environment variables for multi-environment configuration with suppor
 Example `.env.local`:
 ```env
 DATABASE_URL=postgresql://user:password@localhost:5432/ewtcs
+SESSION_SECRET=your-secret-key-min-32-chars-change-in-prod
 NEXT_PUBLIC_APP_URL=http://localhost:3000
 NODE_ENV=development
 ```
@@ -49,21 +51,21 @@ ENCRYPTION_KEY=master-key
 ### Development
 ```bash
 cp .env.example .env.local
-# Set DATABASE_URL and NEXT_PUBLIC_APP_URL
+# Set DATABASE_URL, SESSION_SECRET, NEXT_PUBLIC_APP_URL
 npm run dev
 ```
 
 ### Staging
 ```bash
 # Use .env.staging as template
-# Prefer encrypted secrets via DATABASE_URL_ENCRYPTED
+# Set encrypted secrets via DATABASE_URL_ENCRYPTED if desired
 npm run build && npm run start
 ```
 
 ### Production
 ```bash
 # Use AWS Secrets Manager, Vault, or Kubernetes Secrets
-# Set: DATABASE_URL_ENCRYPTED, ENCRYPTION_KEY, NODE_ENV=production
+# Set: DATABASE_URL_ENCRYPTED, SESSION_SECRET, ENCRYPTION_KEY, NODE_ENV=production
 npm run start
 ```
 
@@ -77,7 +79,8 @@ npm run db:migrate   # Apply pending migrations (uses single transaction)
 npm run db:rollback  # Revert last migration
 npm run db:status    # Show applied and pending migrations
 npm run db:create    # Create new migration file (timestamped)
-npm run db:seed      # Seed initial data
+npm run db:seed      # Seed user accounts (admin1, nurse, nurse1, supervisor1)
+npm run seed:config  # Seed beds (ER-01 to ER-50) and patient workflow stages
 npm run db:reset     # Drop and recreate public schema (dev only)
 ```
 

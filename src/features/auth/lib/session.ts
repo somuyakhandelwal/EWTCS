@@ -51,7 +51,12 @@ export async function verifySession() {
         })
         return payload as unknown as SessionPayload
     } catch (err) {
-        console.warn('Failed to verify session', err)
+        // Signature verification failures are expected when SESSION_SECRET changes
+        // Don't log them as they're normal, just return null (no session)
+        const errorCode = (err as Record<string, unknown>)?.code
+        if (errorCode !== 'ERR_JWS_SIGNATURE_VERIFICATION_FAILED') {
+            console.warn('Unexpected session verification error:', err instanceof Error ? err.message : String(err))
+        }
         return null
     }
 }

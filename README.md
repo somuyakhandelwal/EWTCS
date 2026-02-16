@@ -100,8 +100,10 @@ The setup script will:
 ✅ Provide next steps
 
 **Default Credentials After Setup:**
-- Username: `admin`
-- Password: `Admin@123`
+- Username: `admin1`
+- Password: `Nurse@123`
+- Other users: `nurse`, `nurse1`, `supervisor1` (same password)
+- **Note:** These are created by `npm run db:seed` which runs `scripts/seed-db.js`
 
 ---
 
@@ -137,6 +139,7 @@ The setup script will:
    **Required variables in `.env.local`:**
    ```env
    DATABASE_URL=postgresql://postgres:YOUR_PASSWORD@localhost:5432/ewtcs
+   SESSION_SECRET=your-random-secret-min-32-characters-long
    NEXT_PUBLIC_APP_URL=http://localhost:3000
    NODE_ENV=development
    RED_ALERT_THRESHOLD_MS=10800000
@@ -149,15 +152,24 @@ The setup script will:
 
 6. **Seed initial data**
    ```bash
-   npm run db:seed
+   npm run db:seed        # Creates user accounts (admin1, nurse, nurse1, supervisor1)
+   npm run seed:config    # Creates emergency ward beds (ER-01 to ER-50) and patient workflow stages
    ```
+   
+   **User accounts created by `npm run db:seed`:**
+   - `admin1` - Administrator account
+   - `nurse` - Nurse account
+   - `nurse1` - Nurse account
+   - `supervisor1` - Supervisor account
+   
+   All users have password: `Nurse@123`
 
 7. **Start development server**
    ```bash
    npm run dev
    ```
 
-   Open [http://localhost:3000](http://localhost:3000) and login with `admin`/`Admin@123`
+   Open [http://localhost:3000](http://localhost:3000) and login with `admin1`/`Nurse@123`
 
 ---
 

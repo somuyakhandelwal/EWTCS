@@ -1,25 +1,18 @@
 /**
- * Secrets management module for EWTCS
- * Handles encryption of sensitive data like database credentials
- * For production, consider using AWS Secrets Manager, HashiCorp Vault, or similar
+ * Secrets management for encryption/decryption
+ * For production, use AWS Secrets Manager, HashiCorp Vault, or similar
  */
 
 import { createCipheriv, createDecipheriv, randomBytes, scryptSync } from 'crypto';
 import { logger } from './logger';
 
-/**
- * Encryption key generation from a master secret (in production, use proper secret management)
- * For MVP: key is derived from DATABASE_URL itself to avoid hardcoding
- */
 const deriveEncryptionKey = (seed: string): Buffer => {
   const key = scryptSync(seed, 'EWTCS_SALT_2026', 32);
   return key;
 };
 
 /**
- * Encrypt sensitive string (for future use)
- * Currently disabled for MVP to avoid complexity
- * Enable when integrating with proper secret management
+ * Encrypt sensitive string
  */
 export const encryptSecret = (
   plaintext: string,
@@ -33,7 +26,6 @@ export const encryptSecret = (
     let encrypted = cipher.update(plaintext, 'utf8', 'hex');
     encrypted += cipher.final('hex');
 
-    // Return IV + encrypted as single string
     return `${iv.toString('hex')}:${encrypted}`;
   } catch (error) {
     logger.error('Failed to encrypt secret', error as Error);
@@ -42,7 +34,7 @@ export const encryptSecret = (
 };
 
 /**
- * Decrypt sensitive string (for future use)
+ * Decrypt sensitive string
  */
 export const decryptSecret = (
   encrypted: string,
@@ -66,7 +58,6 @@ export const decryptSecret = (
 
 /**
  * Mask sensitive values for logging
- * Replace password/key portions with asterisks
  */
 export const maskSensitive = (value: string): string => {
   if (value.length <= 8) {
@@ -76,8 +67,7 @@ export const maskSensitive = (value: string): string => {
 };
 
 /**
- * Validate DATABASE_URL format (PostgreSQL)
- * Checks for postgresql:// protocol and basic structure
+ * Validate PostgreSQL URL format
  */
 export const validatePostgresUrl = (url: string): boolean => {
   try {

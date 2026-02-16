@@ -4,13 +4,13 @@ import { decryptSecret, maskSensitive, validatePostgresUrl } from './secrets';
 import type { AppConfig } from '@/shared/types/config.types';
 
 /**
- * Validates environment variables to ensure the system foundation is solid.
- * Supports development, staging, and production environments.
- * Implements EPIC 0 Acceptance Criteria with comprehensive validation.
+ * Validates environment variables on startup
+ * Supports development, staging, and production environments
  */
 const envSchema = z.object({
   DATABASE_URL: z.string().optional(),
   DATABASE_URL_ENCRYPTED: z.string().optional(),
+  SESSION_SECRET: z.string().min(32, 'SESSION_SECRET must be at least 32 characters'),
   ENCRYPTION_KEY: z.string().optional(),
   NEXT_PUBLIC_APP_URL: z.string()
     .url('NEXT_PUBLIC_APP_URL must be a valid URL')
@@ -45,7 +45,6 @@ const envSchema = z.object({
   }
 
   if (value.NODE_ENV === 'production' && !value.DATABASE_URL_ENCRYPTED) {
-    // Skip this check during build time - encrypted DB URL only required at runtime
     const isBuildTime = process.env.NEXT_PHASE === 'phase-production-build';
     if (!isBuildTime) {
       ctx.addIssue({
@@ -122,9 +121,6 @@ const aiSecret = envVars.OPENAI_API_KEY_ENCRYPTED || envVars.OPENAI_API_KEY
     )
   : null;
 
-/**
- * Transforms validated environment variables into application configuration
- */
 const createAppConfig = (env: z.infer<typeof envSchema>): AppConfig => {
   const isDevelopment = env.NODE_ENV === 'development';
   const isStaging = env.NODE_ENV === 'staging';
@@ -155,16 +151,9 @@ const createAppConfig = (env: z.infer<typeof envSchema>): AppConfig => {
   };
 };
 
-// Export raw env variables for backward compatibility (if needed)
 export const env = envVars;
-
-// Export typed configuration object (immutable to prevent runtime mutation)
 export const config = Object.freeze(createAppConfig(envVars));
 
-/**
- * Logs successful environment configuration on startup
- * Masks sensitive data in logs
- */
 export const logConfigurationStatus = (): void => {
   logger.info('Environment configuration loaded successfully', {
     environment: env.NODE_ENV,
