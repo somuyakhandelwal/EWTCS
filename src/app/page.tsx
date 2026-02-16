@@ -1,7 +1,6 @@
 import Link from "next/link"
-import { Button } from "@/components/ui/button"
-import { Card, CardContent } from "@/components/ui/card"
-import { Activity, Zap, FileText, Github, ChevronRight } from "lucide-react"
+import { Button } from "@/shared/components/ui/button"
+import { Activity, Zap, FileText } from "lucide-react"
 
 export default function Home() {
   return (

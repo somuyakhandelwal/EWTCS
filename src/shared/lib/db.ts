@@ -1,6 +1,6 @@
 import { Pool, QueryResult, QueryResultRow } from 'pg';
-import { config } from '@/lib/config/env';
-import { logger } from '@/lib/config/logger';
+import { config } from '@/shared/config/env';
+import { logger } from '@/shared/config/logger';
 
 /**
  * Initializes the PostgreSQL connection pool.

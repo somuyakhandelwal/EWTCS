@@ -33,6 +33,10 @@ export async function createSession(userId: string, username: string, role: stri
     })
 }
 
+/**
+ * Verify JWT session from cookie (Edge-compatible, no DB calls).
+ * Used by middleware for route protection.
+ */
 export async function verifySession() {
     const cookieStore = await cookies()
     const session = cookieStore.get('session')?.value

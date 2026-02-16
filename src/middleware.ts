@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server'
 import type { NextRequest } from 'next/server'
-import { verifySession } from '@/lib/session'
+import { verifySession } from '@/features/auth/lib/session'
 
 export async function middleware(request: NextRequest) {
     const session = await verifySession()

@@ -1,10 +1,10 @@
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { Card, CardContent, CardHeader, CardTitle } from "@/shared/components/ui/card"
 import { ClipboardList, AlertTriangle, Clock } from "lucide-react"
 
-import { verifySession } from "@/lib/session"
+import { verifyActiveSession } from "@/features/auth/lib/active-session"
 
 export default async function SupervisorDashboard() {
-    const session = await verifySession()
+    const session = await verifyActiveSession()
 
     return (
         <div className="min-h-screen bg-black text-foreground p-8">
