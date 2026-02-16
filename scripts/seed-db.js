@@ -5,6 +5,7 @@ const path = require('path');
 const { createDecipheriv, scryptSync } = require('crypto');
 const dotenv = require('dotenv');
 const { Pool } = require('pg');
+const bcrypt = require('bcrypt');
 
 const SALT = 'EWTCS_SALT_2026';
 const DEFAULT_ENV = 'development';
@@ -81,38 +82,60 @@ const seed = async () => {
   try {
     await client.query('BEGIN');
 
+    const sharedPassword = 'Nurse@123';
     const users = [
       {
-        email: 'nurse1@ewtcs.local',
-        password_hash: 'dev-only',
-        display_name: 'Nurse One',
+        username: 'nurse',
+        password: sharedPassword,
         role: 'nurse',
       },
       {
-        email: 'supervisor1@ewtcs.local',
-        password_hash: 'dev-only',
-        display_name: 'Supervisor One',
+        username: 'nurse1',
+        password: sharedPassword,
+        role: 'nurse',
+      },
+      {
+        username: 'supervisor1',
+        password: sharedPassword,
         role: 'supervisor',
       },
       {
-        email: 'admin1@ewtcs.local',
-        password_hash: 'dev-only',
-        display_name: 'Admin One',
+        username: 'admin1',
+        password: sharedPassword,
         role: 'admin',
       },
     ];
 
     for (const user of users) {
+      const passwordHash = await bcrypt.hash(user.password, 10);
       await client.query(
         `
-        INSERT INTO users (email, password_hash, display_name, role)
-        VALUES ($1, $2, $3, $4)
-        ON CONFLICT (email) DO UPDATE
-        SET display_name = EXCLUDED.display_name,
+        INSERT INTO users (username, password_hash, role)
+        VALUES ($1, $2, $3)
+        ON CONFLICT (username) DO UPDATE
+        SET password_hash = EXCLUDED.password_hash,
             role = EXCLUDED.role
         `,
-        [user.email, user.password_hash, user.display_name, user.role]
+        [user.username, passwordHash, user.role]
       );
+    }
+
+    const stageResult = await client.query(
+      `SELECT id FROM stages WHERE name = $1 LIMIT 1`,
+      ['Empty']
+    );
+    const emptyStageId = stageResult.rows[0]?.id;
+    if (!emptyStageId) {
+      throw new Error('Missing stage "Empty". Run migrations before seeding.');
+    }
+
+    const adminResult = await client.query(
+      `SELECT id FROM users WHERE username = $1 LIMIT 1`,
+      ['admin1']
+    );
+    const adminUserId = adminResult.rows[0]?.id;
+    if (!adminUserId) {
+      throw new Error('Admin user not found after seeding.');
     }
 
     const beds = Array.from({ length: 12 }, (_, index) => `EW-${String(index + 1).padStart(2, '0')}`);
@@ -120,23 +143,25 @@ const seed = async () => {
     for (const bedCode of beds) {
       await client.query(
         `
-        INSERT INTO beds (bed_code, current_stage, status_color, active, admitted_at, last_stage_at)
-        VALUES ($1, $2, $3, $4, NOW(), NOW())
-        ON CONFLICT (bed_code) DO NOTHING
+        INSERT INTO beds (bed_number, current_stage_id, is_occupied, is_active, patient_start_time, last_stage_change)
+        VALUES ($1, $2, $3, $4, NULL, NOW())
+        ON CONFLICT (bed_number) DO NOTHING
         `,
-        [bedCode, 'patient_admitted', 'yellow', true]
+        [bedCode, emptyStageId, false, true]
       );
     }
 
     await client.query(
       `
-      INSERT INTO stage_logs (bed_id, stage, changed_at)
-      SELECT b.id, b.current_stage, NOW()
+      INSERT INTO bed_stage_logs (bed_id, from_stage_id, to_stage_id, changed_by_user_id, transition_time)
+      SELECT b.id, NULL, b.current_stage_id, $1, NOW()
       FROM beds b
-      WHERE NOT EXISTS (
-        SELECT 1 FROM stage_logs s WHERE s.bed_id = b.id
-      )
-      `
+      WHERE b.current_stage_id IS NOT NULL
+        AND NOT EXISTS (
+          SELECT 1 FROM bed_stage_logs s WHERE s.bed_id = b.id
+        )
+      `,
+      [adminUserId]
     );
 
     await client.query('COMMIT');
