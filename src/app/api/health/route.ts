@@ -1,8 +1,5 @@
 import { NextResponse } from 'next/server';
-import pool from '@/db';
-import { config } from '@/shared/config/env';
-import { performHealthCheck } from '@/shared/config/init';
-import { logger } from '@/shared/config/logger';
+import pool from '@/shared/lib/db';
 
 // Force dynamic rendering - don't pre-render during build
 // This prevents build-time errors when encrypted env vars aren't available
@@ -17,9 +14,7 @@ export async function GET() {
       { status: 'healthy', timestamp: new Date().toISOString() },
       { status: 200 }
     );
-  } catch (error) {
-    console.error('Database connection check failed:', error);
-    
+  } catch {
     return NextResponse.json(
       { status: 'unhealthy', error: 'Database connection failed' },
       { status: 503 }

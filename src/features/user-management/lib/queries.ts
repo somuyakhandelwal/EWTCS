@@ -1,20 +1,19 @@
-import pool from '@/shared/lib/db'
+import { getAll } from '@/shared/lib/db-helpers'
+import { getAuditLogs } from '@/shared/lib/audit'
 import { requireAdmin } from './auth'
+import type { UserSummary } from '../types/user'
 
 /**
  * Get all users with their details
  * Epic 5: US-5.3 - User Management
+ * 
+ * Now uses shared getAll helper for consistency
  */
 export async function getAllUsers() {
     await requireAdmin()
 
-    const result = await pool.query(
-        `SELECT id, username, role, is_active, created_at, updated_at 
-        FROM users 
-        ORDER BY created_at DESC`
-    )
-
-    return result.rows
+    // Using shared db helper for consistency with proper typing
+    return getAll<UserSummary>('users', undefined, [], 'created_at DESC')
 }
 
 /**
@@ -24,30 +23,12 @@ export async function getAllUsers() {
  * 
  * @param userId - Optional user ID to filter logs
  * @returns Array of log entries with user details
+ * 
+ * Now uses shared audit system which tracks all entities
  */
 export async function getUserLogs(userId?: string) {
     await requireAdmin()
 
-    const query = userId
-        ? `SELECT l.*, 
-            u1.username as target_username, 
-            u2.username as performed_by_username
-          FROM user_management_logs l
-          JOIN users u1 ON l.target_user_id = u1.id
-          JOIN users u2 ON l.performed_by_user_id = u2.id
-          WHERE l.target_user_id = $1
-          ORDER BY l.created_at DESC
-          LIMIT 100`
-        : `SELECT l.*, 
-            u1.username as target_username, 
-            u2.username as performed_by_username
-          FROM user_management_logs l
-          JOIN users u1 ON l.target_user_id = u1.id
-          JOIN users u2 ON l.performed_by_user_id = u2.id
-          ORDER BY l.created_at DESC
-          LIMIT 100`
-
-    const result = await pool.query(query, userId ? [userId] : [])
-
-    return result.rows
+    // Using shared audit system - entity_type = 'user'
+    return getAuditLogs('user', userId, 100)
 }

@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
-import { initializeSystem } from "@/lib/config/init";
+import { initializeSystem } from "@/shared/config/init";
 import { DatabaseStatusBanner } from "@/components/ui/DatabaseStatusBanner";
 
 const geistSans = Geist({

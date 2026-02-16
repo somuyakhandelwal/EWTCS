@@ -1,5 +1,6 @@
 import bcrypt from 'bcrypt'
 import pool from '@/shared/lib/db'
+import { exists, softDelete, reactivate } from '@/shared/lib/db-helpers'
 
 /**
  * Create user in database
@@ -10,13 +11,10 @@ export async function createUserInDB(
     password: string,
     role: string
 ) {
-    // Check if username already exists
-    const existing = await pool.query(
-        'SELECT id FROM users WHERE username = $1',
-        [username]
-    )
+    // Check if username already exists using shared helper
+    const userExists = await exists('users', 'username = $1', [username])
 
-    if (existing.rows.length > 0) {
+    if (userExists) {
         throw new Error('Username already exists')
     }
 
@@ -87,21 +85,20 @@ export async function updateUserInDB(
 /**
  * Deactivate user in database
  * Epic 5: US-5.3 - User Management
+ * 
+ * Now uses shared softDelete helper for consistency across all entities
  */
 export async function deactivateUserInDB(userId: string) {
-    await pool.query(
-        'UPDATE users SET is_active = FALSE, updated_at = NOW() WHERE id = $1',
-        [userId]
-    )
+    await softDelete('users', userId)
 }
 
 /**
  * Activate user in database
  * Epic 5: US-5.3 - User Management
+ * 
+ * Now uses shared reactivate helper for consistency across all entities
  */
 export async function activateUserInDB(userId: string) {
-    await pool.query(
-        'UPDATE users SET is_active = TRUE, updated_at = NOW() WHERE id = $1',
-        [userId]
-    )
+    await reactivate('users', userId)
 }
+

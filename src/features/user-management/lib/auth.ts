@@ -1,14 +1,8 @@
-import { verifyActiveSession } from '@/features/auth/lib/active-session'
-
 /**
- * Verify admin permission for user management actions
+ * Re-export shared auth utilities for user management
  * Epic 5: US-5.3 - User Management
- * Ensures only admins can perform user management operations
+ * 
+ * This file now delegates to shared utilities in @/shared/lib/auth
+ * for consistency across all features.
  */
-export async function requireAdmin() {
-    const session = await verifyActiveSession()
-    if (!session || session.role !== 'admin') {
-        throw new Error('Unauthorized: Admin access required')
-    }
-    return session
-}
+export { requireAdmin, requireRole, requireSupervisorOrAdmin, getCurrentSession } from '@/shared/lib/auth'

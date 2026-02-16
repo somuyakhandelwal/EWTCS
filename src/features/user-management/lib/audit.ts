@@ -1,10 +1,17 @@
-import pool from '@/shared/lib/db'
-import { logger } from '@/shared/config/logger'
+/**
+ * Re-export shared audit utilities for user management
+ * Epic 5: US-5.3 - User Management
+ * 
+ * This file now delegates to shared utilities in @/shared/lib/audit
+ * for consistency across all features.
+ * 
+ * The generic audit system can track any entity (users, beds, patients, etc.)
+ */
+import { logAudit } from '@/shared/lib/audit'
 
 /**
  * Log user management action to audit trail
- * Epic 5: US-5.3 - User Management
- * US-5.3 Acceptance Criteria: "User management actions are logged"
+ * Wrapper around generic logAudit for backward compatibility
  * 
  * @param actionType - Type of action (CREATE, UPDATE, DEACTIVATE, ACTIVATE)
  * @param targetUserId - ID of the user being acted upon
@@ -19,21 +26,12 @@ export async function logUserAction(
     changes?: Record<string, unknown>,
     reason?: string
 ) {
-    try {
-        await pool.query(
-            `INSERT INTO user_management_logs 
-            (action_type, target_user_id, performed_by_user_id, changes, reason) 
-            VALUES ($1, $2, $3, $4, $5)`,
-            [actionType, targetUserId, performedById, JSON.stringify(changes || {}), reason]
-        )
-        
-        logger.info(`User management action logged: ${actionType}`, {
-            actionType,
-            targetUserId,
-            performedById,
-        })
-    } catch (error) {
-        logger.error('Failed to log user management action', error as Error)
-        throw error
-    }
+    return logAudit({
+        actionType,
+        entityType: 'user',
+        entityId: targetUserId,
+        performedBy: performedById,
+        changes,
+        reason
+    })
 }

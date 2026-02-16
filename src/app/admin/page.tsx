@@ -103,13 +103,7 @@ export default async function AdminDashboard() {
                     <CardContent>
                         {recentLogs.length > 0 ? (
                             <div className="space-y-2">
-                                {recentLogs.map((log: {
-                                    id: string;
-                                    action_type: string;
-                                    target_username: string;
-                                    performed_by_username: string;
-                                    created_at: string;
-                                }) => (
+                                {recentLogs.map((log) => (
                                     <div
                                         key={log.id}
                                         className="flex items-center justify-between p-3 rounded-lg bg-black/30 border border-zinc-800"
@@ -123,9 +117,9 @@ export default async function AdminDashboard() {
                                             }`} />
                                             <div>
                                                 <p className="text-sm text-white">
-                                                    <span className="font-medium">{log.performed_by_username}</span>
+                                                    <span className="font-medium">{log.performed_by_username || 'System'}</span>
                                                     {' '}{log.action_type.toLowerCase()}d{' '}
-                                                    <span className="font-medium">{log.target_username}</span>
+                                                    <span className="font-medium">{log.target_username || 'entity'}</span>
                                                 </p>
                                                 <p className="text-xs text-zinc-500">
                                                     {new Date(log.created_at).toLocaleString('en-US', { year: 'numeric', month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })}
