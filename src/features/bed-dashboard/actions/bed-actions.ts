@@ -7,6 +7,11 @@ import { getAllStages, getBedsWithElapsedTime } from '../lib/queries'
 import { config } from '@/shared/config/env'
 import { logger } from '@/shared/config/logger'
 import type { BedGridData } from '../types/bed'
+import { requireRole } from '@/shared/lib/auth'
+import { logAudit } from '@/shared/lib/audit'
+import { UpdateBedStageSchema } from '../schemas/bed-schemas'
+import { updateBedStageInDB } from '../lib/bed-mutations'
+import type { UpdateBedStageInput } from '../schemas/bed-schemas'
 
 /**
  * Get all beds with current status and elapsed time
@@ -49,6 +54,63 @@ export async function getBedGridData(): Promise<{
     return {
       success: false,
       error: error instanceof Error ? error.message : 'Failed to fetch bed grid data',
+    }
+  }
+}
+
+/**
+ * Update a bed stage with a single action
+ * Epic 2: One-Click Stage Update System
+ */
+export async function updateBedStage(input: UpdateBedStageInput) {
+  try {
+    const session = await requireRole(['nurse', 'supervisor', 'admin'])
+
+    const result = UpdateBedStageSchema.safeParse(input)
+    if (!result.success) {
+      return {
+        success: false,
+        errors: result.error.flatten().fieldErrors,
+      }
+    }
+
+    const { bedId, toStageId, notes } = result.data
+
+    const updateResult = await updateBedStageInDB({
+      bedId,
+      toStageId,
+      changedByUserId: session.userId,
+      notes,
+    })
+
+    await logAudit({
+      actionType: 'UPDATE',
+      entityType: 'bed',
+      entityId: bedId,
+      performedBy: session.userId,
+      changes: {
+        fromStageId: updateResult.fromStageId,
+        toStageId: updateResult.toStageId,
+        isOccupied: updateResult.isOccupied,
+      },
+      reason: notes,
+    })
+
+    logger.info('Bed stage updated', {
+      bedId,
+      toStageId,
+      changedBy: session.userId,
+    })
+
+    return {
+      success: true,
+      data: updateResult,
+    }
+  } catch (error) {
+    logger.error('Failed to update bed stage', error as Error)
+    return {
+      success: false,
+      message: error instanceof Error ? error.message : 'Failed to update bed stage',
     }
   }
 }

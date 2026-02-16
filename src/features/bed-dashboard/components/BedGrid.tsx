@@ -15,9 +15,25 @@ interface BedGridProps {
   data: BedGridData
   onRefresh?: () => void
   onBedClick?: (bed: BedWithElapsedTime) => void
+  onStageSelect: (bedId: string, stageId: string) => void
+  updatingBedId: string | null
+  updatingStageId: string | null
+  lastUpdatedBedId: string | null
+  lastUpdatedStageId: string | null
+  errorByBedId: Record<string, string | null>
 }
 
-export function BedGrid({ data, onRefresh, onBedClick }: BedGridProps) {
+export function BedGrid({
+  data,
+  onRefresh,
+  onBedClick,
+  onStageSelect,
+  updatingBedId,
+  updatingStageId,
+  lastUpdatedBedId,
+  lastUpdatedStageId,
+  errorByBedId,
+}: BedGridProps) {
   const [showDelayedOnly, setShowDelayedOnly] = useState(false)
   const [isRefreshing, setIsRefreshing] = useState(false)
 
@@ -111,7 +127,13 @@ export function BedGrid({ data, onRefresh, onBedClick }: BedGridProps) {
             <BedCard
               key={bed.id}
               bed={bed}
+              stages={data.stages}
               onClick={onBedClick}
+              onStageSelect={onStageSelect}
+              isUpdating={updatingBedId === bed.id}
+              updatingStageId={updatingBedId === bed.id ? updatingStageId : null}
+              lastUpdatedStageId={lastUpdatedBedId === bed.id ? lastUpdatedStageId : null}
+              errorMessage={errorByBedId[bed.id]}
             />
           ))}
         </div>

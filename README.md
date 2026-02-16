@@ -331,7 +331,7 @@ Full environment variable reference: See [CONFIGURATION.md](CONFIGURATION.md)
 - [x] **Color-coded visual indicators (US-1.1)** ✨ NEW
 - [x] **Automatic time tracking (US-1.1)** ✨ NEW
 - [x] **Delay detection & alerts (US-1.1)** ✨ NEW
-- [ ] One-click stage updates (US-2.1)
+- [x] One-click stage updates (US-2.1)
 - [ ] Real-time updates with WebSocket/polling (US-1.2)
 
 ### Phase 2: Analytics & Reporting
@@ -376,7 +376,7 @@ Phase 1 Complete**
   - Stage color legend with descriptions
 
 **🔄 In Progress (Phase 1 - Remaining):**
-- One-click stage updates (US-2.1)
+- Performance verification for one-click stage updates (US-2.1)
 - Real-time updates with WebSocket/polling (US-1.2)
 
 **⏳ Pending (Phase 2+):**

@@ -3,17 +3,34 @@
 
 import { memo } from 'react'
 import { Card, CardContent } from '@/shared/components/ui/card'
-import { Clock, AlertTriangle } from 'lucide-react'
+import { Clock, AlertTriangle, CheckCircle } from 'lucide-react'
 import type { BedWithElapsedTime } from '../types/bed'
 import { formatElapsedTime, getStageColorClasses } from '../lib/utils'
 import { cn } from '@/shared/lib/utils'
+import { BedStageButtons } from './BedStageButtons'
+import type { Stage } from '../types/bed'
 
 interface BedCardProps {
   bed: BedWithElapsedTime
+  stages: Stage[]
   onClick?: (bed: BedWithElapsedTime) => void
+  onStageSelect: (bedId: string, stageId: string) => void
+  isUpdating: boolean
+  updatingStageId: string | null
+  lastUpdatedStageId: string | null
+  errorMessage?: string | null
 }
 
-export const BedCard = memo(function BedCard({ bed, onClick }: BedCardProps) {
+export const BedCard = memo(function BedCard({
+  bed,
+  stages,
+  onClick,
+  onStageSelect,
+  isUpdating,
+  updatingStageId,
+  lastUpdatedStageId,
+  errorMessage,
+}: BedCardProps) {
   const stageName = bed.currentStage?.name || 'Empty'
   const stageColor = bed.currentStage?.colorCode || 'gray'
   const colorClasses = getStageColorClasses(stageColor)
@@ -59,6 +76,12 @@ export const BedCard = memo(function BedCard({ bed, onClick }: BedCardProps) {
           <p className={cn('text-sm font-semibold', colorClasses.text)}>
             {stageName}
           </p>
+          {lastUpdatedStageId && (
+            <div className="flex items-center gap-2 text-xs text-emerald-400">
+              <CheckCircle className="h-3.5 w-3.5" />
+              Updated
+            </div>
+          )}
         </div>
 
         {/* Elapsed Time */}
@@ -83,6 +106,18 @@ export const BedCard = memo(function BedCard({ bed, onClick }: BedCardProps) {
             <p className="text-xs text-zinc-500">Status</p>
             <p className="text-sm font-medium text-zinc-400">Available</p>
           </div>
+        )}
+
+        <BedStageButtons
+          bed={bed}
+          stages={stages}
+          onStageSelect={onStageSelect}
+          isUpdating={isUpdating}
+          updatingStageId={updatingStageId}
+        />
+
+        {errorMessage && (
+          <p className="text-xs text-red-400">{errorMessage}</p>
         )}
       </CardContent>
     </Card>
