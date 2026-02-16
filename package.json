@@ -7,13 +7,16 @@
     "build": "next build",
     "start": "node scripts/run-migrations.js up && next start",
     "lint": "next lint",
+    "setup": "node scripts/quick-start-setup.mjs",
     "db:migrate": "node scripts/run-migrations.js up",
     "db:rollback": "node scripts/run-migrations.js down 1",
     "db:status": "node scripts/run-migrations.js status",
     "db:create": "node scripts/run-migrations.js create",
     "init": "node scripts/init-system.js",
     "db:seed": "node scripts/seed-db.js",
-    "db:reset": "node scripts/reset-db.js"
+    "db:reset": "node scripts/reset-db.js",
+    "seed:beds": "node scripts/seed-beds.mjs",
+    "seed:simulate": "node scripts/simulate-occupied-beds.mjs"
   },
   "dependencies": {
     "@radix-ui/react-label": "^2.1.8",
