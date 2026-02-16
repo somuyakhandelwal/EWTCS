@@ -34,6 +34,12 @@ Reports should follow the format: `US-X.Y-IMPLEMENTATION-REPORT.md` or `ISSUE-XX
   - Elapsed time tracking and delay detection
   - Filter functionality and statistics dashboard
 
+### EPIC 3: Time Tracking & Stage Logging
+- **[US-3.1-IMPLEMENTATION-REPORT.md](US-3.1-IMPLEMENTATION-REPORT.md)** - Capture Patient Entry Time
+  - Status: ✅ Complete (Feb 17, 2026)
+  - Server-side admission time capture
+  - Immutable entry timestamps using database time
+
 ### EPIC 5: Authentication & Role-Based Access
 - **[US-5.3-IMPLEMENTATION-REPORT.md](US-5.3-IMPLEMENTATION-REPORT.md)** - User Management (Admin)
   - Status: ✅ Complete (Feb 15, 2026)

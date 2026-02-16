@@ -102,12 +102,15 @@ export function BedDashboardClient({ initialData }: BedDashboardClientProps) {
         const patientStartTime = result.data?.patientStartTime
           ? new Date(result.data.patientStartTime)
           : null
+        const lastStageChange = result.data?.lastStageChange
+          ? new Date(result.data.lastStageChange)
+          : new Date()
 
         return {
           ...bed,
           currentStageId: stageId,
           currentStage: stage,
-          lastStageChange: new Date(),
+          lastStageChange,
           isOccupied: result.data.isOccupied,
           patientStartTime,
           elapsedTimeMs: result.data.isOccupied ? 0 : null,

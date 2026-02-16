@@ -309,6 +309,7 @@ Full environment variable reference: See [CONFIGURATION.md](CONFIGURATION.md)
 
 ### Implementation Reports
 - **[US-1.1 Report](reports/US-1.1-IMPLEMENTATION-REPORT.md)** - Bed Status Dashboard (Grid Layout)
+- **[US-3.1 Report](reports/US-3.1-IMPLEMENTATION-REPORT.md)** - Capture Patient Entry Time
 - **[US-5.3 Report](reports/US-5.3-IMPLEMENTATION-REPORT.md)** - User Management System
 - **[Reports Index](reports/README.md)** - All implementation reports
 - **[Shared Code Guide](src/shared/README.md)** - Guidelines for shared code
@@ -330,6 +331,7 @@ Full environment variable reference: See [CONFIGURATION.md](CONFIGURATION.md)
 - [x] **Bed status grid component (US-1.1)** ✨ NEW
 - [x] **Color-coded visual indicators (US-1.1)** ✨ NEW
 - [x] **Automatic time tracking (US-1.1)** ✨ NEW
+- [x] **Capture patient entry time (US-3.1)** ✨ NEW
 - [x] **Delay detection & alerts (US-1.1)** ✨ NEW
 - [x] One-click stage updates (US-2.1)
 - [ ] Real-time updates with WebSocket/polling (US-1.2)
@@ -374,6 +376,9 @@ Phase 1 Complete**
   - Filter functionality (Show Delayed Only)
   - Statistics dashboard (Total, Occupied, Available, Delayed)
   - Stage color legend with descriptions
+- **Time Tracking Foundation (US-3.1)** ✨ NEW
+   - Server-side patient entry time capture
+   - Immutable admission timestamps for accurate duration calculations
 
 **🔄 In Progress (Phase 1 - Remaining):**
 - Performance verification for one-click stage updates (US-2.1)
