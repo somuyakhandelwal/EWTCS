@@ -9,118 +9,108 @@
 
 ---
 
-## 📋 Overview
+## 📋 Problem & Solution
 
-EWTCS is a hospital management system designed for JMCH Medical College & Hospital to improve emergency ward efficiency through real-time visibility, accountability, and automated reporting. The system focuses on **visibility, discipline, and reporting** — not replacing existing hospital systems.
+**The Problem:**
+Emergency wards lack real-time visibility into patient progress. Manual tracking, no operational intelligence, and no automated reporting lead to delays and poor accountability.
 
-### Key Problems Solved
-- ❌ No real-time visibility of patient progress
-- ❌ Manual tracking of bed usage
-- ❌ Lack of operational intelligence
-- ❌ No automated reporting
-
-### Solution
-- ✅ Real-time bed status dashboard
-- ✅ One-click stage updates
-- ✅ Automatic time tracking
 - ✅ Color-coded visual alerts
 - ✅ AI-generated daily summaries
-
----
-
-## ✨ Features
-
 ### For Nurses
-- **One-Click Updates**: Update bed status with a single click
 - **Visual Dashboard**: Color-coded grid showing all emergency beds
 - **No Typing Required**: Simple, intuitive interface
 
 ### For Supervisors
-- **Real-Time Monitoring**: See delayed beds instantly
-- **Color Alerts**: Red highlighting for beds exceeding 3-hour limit
-- **Stage Tracking**: Monitor patient progress through each stage
-
 ### For Management
 - **Daily AI Reports**: Automated performance summaries
-- **Analytics Dashboard**: Patient flow, bottlenecks, and trends
-- **Exportable Reports**: PDF/CSV downloads for documentation
+---
+
+- **[Next.js 15.5](https://nextjs.org/)** - React framework with App Router
+- **[shadcn/ui](https://ui.shadcn.com/)** - Beautiful, accessible components
+- **[Tailwind CSS](https://tailwindcss.com/)** - Utility-first styling
+**Our Solution:**
+A simple, intuitive dashboard that provides:
+- ✅ Real-time bed status visibility
+- ✅ One-click status updates (no typing)
+- ✅ Automatic time tracking per patient
+- ✅ Color-coded visual alerts
+- ✅ Automated daily performance reports
+
+**For Nurses:** Visual dashboard with color-coded beds and simple buttons  
+**For Supervisors:** Monitor delayed beds and enforce compliance  
+**For Management:** Daily AI-powered summaries and performance metrics  
 
 ---
 
-## 🛠️ Tech Stack
+## 🎯 Project Goals
+
+1. **Reduce patient wait times** by improving visibility
+2. **Increase accountability** through automatic tracking
+3. **Enable data-driven decisions** with AI-powered insights
+4. **Improve emergency ward efficiency** without disrupting existing workflows
+
+---
+
+## 🔧 Technology Stack
 
 ### Frontend
-- **[Next.js 15.5](https://nextjs.org/)** - React framework with App Router
-- **[TypeScript](https://www.typescriptlang.org/)** - Type-safe development
-- **[shadcn/ui](https://ui.shadcn.com/)** - Beautiful, accessible components
-- **[Tailwind CSS](https://tailwindcss.com/)** - Utility-first styling
+- **Next.js 15.5** - React framework with App Router
+- **shadcn/ui** - Beautiful, accessible components
+- **Tailwind CSS** - Utility-first styling
+- **TypeScript** - Static type checking
 
 ### Backend
-- **Next.js API Routes** - RESTful API endpoints
+- **Next.js API Routes** - RESTful endpoints
 - **Server Actions** - Server-side mutations
-- **[PostgreSQL](https://www.postgresql.org/)** - Relational database
-
-### Tools & Libraries
-- **[pg](https://node-postgres.com/)** - PostgreSQL client for Node.js
 - **ESLint** - Code linting
-- **TypeScript** - Static type checking
+
+### Database & Infrastructure
+- **PostgreSQL 14+** - Relational database
+- **node-pg-migrate** - Version-controlled schema migrations
+- **Automated migrations** - Deploy-time schema updates
 
 ---
 
 ## 🚀 Getting Started
 
 ### Prerequisites
-
-Before you begin, ensure you have the following installed:
-- **Node.js** 18.x or higher
-- **npm** or **yarn** or **pnpm**
-- **PostgreSQL** 14.x or higher
-- **Git**
+- Node.js 18.x or higher
+- PostgreSQL 14.x or higher
+- npm/yarn/pnpm
 
 ### Installation
 
-1. **Clone the repository**
+1. **Clone & install**
    ```bash
    git clone https://github.com/somuyakhandelwal/EWTCS.git
-   cd EWTCS
+   cd EWTCS && npm install
    ```
 
-2. **Install dependencies**
-   ```bash
-   npm install
-   ```
-
-3. **Set up environment variables**
+2. **Configure environment**
    ```bash
    cp .env.example .env.local
-   ```
-   
-   Edit `.env.local` and configure:
-   ```env
-   DATABASE_URL=postgresql://username:password@localhost:5432/ewtcs
-   NEXT_PUBLIC_APP_URL=http://localhost:3000
+   # Edit DATABASE_URL and NEXT_PUBLIC_APP_URL in .env.local
    ```
 
-4. **Set up the database**
+3. **Run database setup**
    ```bash
    # Create database
    createdb ewtcs
    
    # Run migrations (coming soon)
    npm run db:migrate
-   
    # Seed initial data (coming soon)
    npm run db:seed
+   npm run db:migrate  # Apply schema migrations
+   npm run db:seed     # Seed initial data
    ```
 
-5. **Run the development server**
+4. **Start development server**
    ```bash
    npm run dev
    ```
 
-6. **Open your browser**
-   
-   Navigate to [http://localhost:3000](http://localhost:3000)
+   Open [http://localhost:3000](http://localhost:3000) in your browser.
 
 ---
 
@@ -129,22 +119,13 @@ Before you begin, ensure you have the following installed:
 ```
 EWTCS/
 ├── src/
-│   ├── app/                    # Next.js App Router pages
-│   │   ├── layout.tsx          # Root layout
-│   │   ├── page.tsx            # Home page
-│   │   └── globals.css         # Global styles
-│   ├── components/             # React components (to be created)
-│   ├── lib/                    # Utility functions (to be created)
-│   └── types/                  # TypeScript types (to be created)
-├── public/                     # Static assets
-├── .github/                    # GitHub templates
-│   ├── ISSUE_TEMPLATE.md
-│   └── PULL_REQUEST_TEMPLATE.md
-├── .env.example                # Environment variables template
-├── CODE_OF_CONDUCT.md          # Community guidelines
-├── CONTRIBUTING.md             # Contribution guide
-├── PRD.md                      # Product Requirements Document
-└── README.md                   # This file
+│   ├── app/              # Next.js App Router pages
+│   ├── components/       # React components
+│   ├── lib/              # Utility functions & config
+│   └── types/            # TypeScript type definitions
+├── migrations/           # Database migrations (version-controlled)
+├── scripts/              # Utility scripts (migrations, seeding, reset)
+└── public/               # Static assets
 ```
 
 ---
@@ -165,58 +146,60 @@ The system tracks patients through 6 stages with color-coded indicators:
 
 ---
 
-## 🤝 Contributing
+## 🔧 Available Commands
 
-We welcome contributions from developers of all skill levels! This is a healthcare project that can make a real difference.
-
-### Quick Start for Contributors
-
-1. **Fork** this repository
-2. **Create a branch**: `git checkout -b feature/issue-<id>-description`
-3. **Make your changes** following our coding standards
-4. **Test locally**: `npm run dev`
-5. **Commit**: `git commit -m "feat: add feature description"`
-6. **Push**: `git push origin feature/issue-<id>-description`
-7. **Submit a Pull Request**
-
-### Coding Standards
-
-- ✅ **TypeScript**: All new code must be TypeScript
-- ✅ **Components**: Use functional components with hooks
-- ✅ **Styling**: Use Tailwind CSS classes via shadcn/ui
-- ✅ **Naming**: Use descriptive, meaningful names
-- ✅ **Comments**: Document complex logic
-- ✅ **Testing**: Write tests for new features (when test suite is set up)
-
-### Branch Naming Convention
-
-```
-feature/issue-<id>-short-description
-bugfix/issue-<id>-short-description
-docs/issue-<id>-short-description
+### Development
+```bash
+npm run dev          # Start development server
+npm run build        # Build for production
+npm run start        # Start production server (runs migrations automatically)
+npm run lint         # Run ESLint
 ```
 
-**Examples:**
-- `feature/issue-1-bed-status-grid`
-- `bugfix/issue-12-timer-reset`
-- `docs/issue-5-api-documentation`
+### Database Management
+```bash
+npm run db:migrate   # Apply pending migrations with single transaction
+npm run db:rollback  # Revert the last migration
+npm run db:status    # Show applied and pending migrations
+npm run db:create    # Create a new timestamped migration file
+npm run db:seed      # Seed initial test data
+npm run db:reset     # Drop and recreate schema (development only)
+```
 
-For detailed guidelines, see [CONTRIBUTING.md](CONTRIBUTING.md).
+Migration details and best practices: See [CONFIGURATION.md#migrations](CONFIGURATION.md#migrations)
+
+---
+
+## 🌐 Configuration
+
+### Environment Variables (Quick Setup)
+```env
+DATABASE_URL=postgresql://user:password@localhost:5432/ewtcs
+NEXT_PUBLIC_APP_URL=http://localhost:3000
+NODE_ENV=development
+```
+
+### For Production
+Use encrypted secrets via `DATABASE_URL_ENCRYPTED` and `ENCRYPTION_KEY`.
+
+Full environment variable reference: See [CONFIGURATION.md](CONFIGURATION.md)
 
 ---
 
 ## 📚 Documentation
 
 - **[PRD.md](PRD.md)** - Complete Product Requirements Document
-- **[CONTRIBUTING.md](CONTRIBUTING.md)** - Contribution guidelines
-- **[CODE_OF_CONDUCT.md](CODE_OF_CONDUCT.md)** - Community standards
+- **[CONFIGURATION.md](CONFIGURATION.md)** - Detailed environment setup, migrations, and deployment
+- **[CONTRIBUTING.md](CONTRIBUTING.md)** - Contribution guidelines and coding standards
+- **[CODE_OF_CONDUCT.md](CODE_OF_CONDUCT.md)** - Community guidelines
 
 ---
 
 ## 🗺️ Roadmap
 
 ### Phase 1: MVP (Current)
-- [ ] Database schema design
+- [ ] Database schema design ✅
+- [ ] Automated migrations ✅
 - [ ] Authentication system
 - [ ] Bed status grid component
 - [ ] One-click stage updates
@@ -237,81 +220,123 @@ For detailed guidelines, see [CONTRIBUTING.md](CONTRIBUTING.md).
 
 ---
 
-## 🔧 Available Scripts
+## 🚦 Project Status
 
-### Development
-```bash
-npm run dev          # Start development server
-npm run build        # Build for production
-npm run start        # Start production server
-npm run lint         # Run ESLint
-```
+🟢 **Active Development - MVP Phase**
 
-### Database (Coming Soon)
-```bash
-npm run db:migrate   # Run database migrations
-npm run db:seed      # Seed initial data
-npm run db:reset     # Reset database
-```
+**Completed:**
+- ✅ Repository & Next.js setup
+- ✅ Database schema & migrations
+- ✅ Environment configuration & validation
+- ✅ Health check endpoint
+
+**In Progress:**
+- 🔄 Authentication & role-based access
+- 🔄 Bed grid UI & status updates
+- 🔄 Time tracking & logging
+
+**Pending:**
+- ⏳ Daily reports & AI summaries
+- ⏳ Management dashboards
 
 ---
 
-## 🌐 Environment Variables
+## 🤝 Contributing
+
+Use the provided templates for each environment:
+
+- .env.example (general template)
+- .env.development
+- .env.staging
+- .env.production
 
 Create a `.env.local` file in the root directory:
 
 ```env
-# Database
+# Database (plaintext allowed in dev/staging)
 DATABASE_URL=postgresql://username:password@localhost:5432/ewtcs
+We welcome contributions! This is a healthcare project that can make a real difference.
 
-# Application
-NEXT_PUBLIC_APP_URL=http://localhost:3000
+### Quick Start for Contributors
+
+1. **Fork** this repository
+2. **Create a branch**: `git checkout -b feature/issue-<id>-description`
+3. **Make your changes** following our coding standards
+4. **Test locally**: `npm run dev`
+5. **Commit**: `git commit -m "feat: add feature description"`
+6. **Push**: `git push origin feature/issue-<id>-description`
+7. **Submit a Pull Request**
+
+### Coding Standards
+
+- ✅ TypeScript required for all new code
+- ✅ Functional components with hooks
+- ✅ Tailwind CSS via shadcn/ui
+- ✅ Descriptive, meaningful names
+- ✅ Documentation for complex logic
+- ✅ Tests for new features (when test suite is available)
+
+# Environment
+NODE_ENV=development
+# Security (Required)
+SESSION_SECRET=your_super_secret_key_at_least_32_chars_long
 
 # AI/Analytics (Optional - for future use)
 # OPENAI_API_KEY=your_api_key_here
 ```
 
+
+### Branch Naming Convention
+
+```
+feature/issue-<id>-short-description
+bugfix/issue-<id>-short-description
+docs/issue-<id>-short-description
+```
+
+For complete guidelines: See [CONTRIBUTING.md](CONTRIBUTING.md)
+
+For production, use encrypted secrets instead of plaintext values:
+
+```env
+DATABASE_URL_ENCRYPTED=ivhex:encryptedhex
+ENCRYPTION_KEY=your-32-byte-master-key
+```
+
+See CONFIGURATION.md for full details.
+
 ---
 
 ## 🐛 Bug Reports & Feature Requests
 
-Found a bug or have a feature idea? Please create an issue:
+Found a bug or have an idea?
 
-1. Go to [Issues](https://github.com/somuyakhandelwal/EWTCS/issues)
-2. Click "New Issue"
+1. Check [existing issues](https://github.com/somuyakhandelwal/EWTCS/issues)
+2. Create a [new issue](https://github.com/somuyakhandelwal/EWTCS/issues/new)
 3. Use the issue template
-4. Provide detailed information
+4. Provide clear steps to reproduce or detailed context
 
 ---
 
-## 📄 License
+## 📞 Support & Discussion
 
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+- **Issues**: [GitHub Issues](https://github.com/somuyakhandelwal/EWTCS/issues) - Bug reports and feature requests
+- **Discussions**: [GitHub Discussions](https://github.com/somuyakhandelwal/EWTCS/discussions) - Questions and ideas
+- **Email**: [somuyakhandelwal@gmail.com](mailto:somuyakhandelwal@gmail.com)
 
 ---
 
 ## 🙏 Acknowledgments
 
 - **JMCH Medical College & Hospital** - For the opportunity to improve emergency ward efficiency
-- **Contributors** - Thank you to everyone who contributes to this project
-- **Open Source Community** - For the amazing tools and libraries
+- **Contributors** - Thank you to everyone who contributes
+- **Open Source Community** - For amazing tools and libraries
 
 ---
 
-## 📞 Support
+## 📄 License
 
-- **Issues**: [GitHub Issues](https://github.com/somuyakhandelwal/EWTCS/issues)
-- **Discussions**: [GitHub Discussions](https://github.com/somuyakhandelwal/EWTCS/discussions)
-- **Email**: [somuyakhandelwal@gmail.com](mailto:somuyakhandelwal@gmail.com)
-
----
-
-## 🎯 Project Goals
-
-1. **Reduce patient wait times** by improving visibility
-2. **Increase accountability** through automatic tracking
-3. **Enable data-driven decisions** with AI-powered insights
-4. **Improve emergency ward efficiency** without disrupting existing workflows
+This project is licensed under the MIT License. See [LICENSE](LICENSE) for details.
 
 ---
 
@@ -328,8 +353,12 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 - ✅ Database client configured
 - 🔄 Database schema in progress
 - 🔄 UI components in progress
-- ⏳ Authentication pending
-- ⏳ Dashboard pending
+- ✅ Authentication system
+- ✅ Dashboard (Nurse View)
+- [ ] Bed status grid component
+- [ ] One-click stage updates
+- [ ] Color-coded visual indicators
+- [ ] Automatic time tracking
 
 ---
 
