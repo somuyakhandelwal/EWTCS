@@ -102,6 +102,8 @@ npm run dev         # Start server
 
 ---
 
+**Closes #6**
+
 **Related:** EPIC 1 - Nurse Desk Bed Dashboard  
 **Story Points:** 5 | **Priority:** P0 (Critical)
 
