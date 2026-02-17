@@ -96,6 +96,8 @@ export async function updateBedStageInDB(
     const shouldBeUnoccupied = isNonPatientStage(stage.name)
     const nextIsOccupied = !shouldBeUnoccupied
 
+    // US-3.1: Use CASE to preserve patient_start_time permanently (never cleared)
+    // Only set when NULL and bed becomes occupied (non-empty/non-cleaning stage)
     const updateResult = await client.query<{
       patientStartTime: Date | null
       isOccupied: boolean

@@ -2,6 +2,7 @@ import 'server-only'
 import { SignJWT, jwtVerify } from 'jose'
 import { cookies } from 'next/headers'
 
+
 const secretKey = process.env.SESSION_SECRET
 if (!secretKey) {
     throw new Error('SESSION_SECRET is not defined in environment variables.')
@@ -63,5 +64,15 @@ export async function verifySession() {
 
 export async function deleteSession() {
     const cookieStore = await cookies()
-    cookieStore.delete('session')
+    // Explicitly overwrite the cookie to ensure it is cleared
+    cookieStore.set('session', '', {
+        httpOnly: true,
+        secure: process.env.NODE_ENV === 'production',
+        expires: new Date(0),
+        sameSite: 'lax', // Must match the original setting
+        path: '/',       // Must match the original setting
+        maxAge: 0
+    })
 }
+
+

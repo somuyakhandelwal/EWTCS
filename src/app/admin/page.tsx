@@ -1,5 +1,7 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/shared/components/ui/card"
 import { Shield, Users, Settings, Activity } from "lucide-react"
+import { LogoutButton } from "@/features/auth/components/LogoutButton"
+import { redirect } from "next/navigation"
 
 import { verifyActiveSession } from "@/features/auth/lib/active-session"
 import { getAllUsers, getUserLogs } from "@/features/user-management/actions/user-management-actions"
@@ -8,6 +10,10 @@ import CreateUserDialog from "@/features/user-management/components/CreateUserDi
 
 export default async function AdminDashboard() {
     const session = await verifyActiveSession()
+
+    if (!session) {
+        redirect('/login')
+    }
     const usersResult = await getAllUsers()
     const logsResult = await getUserLogs()
 
@@ -24,8 +30,11 @@ export default async function AdminDashboard() {
                         </h1>
                         <p className="text-zinc-400">System configuration and user management</p>
                     </div>
-                    <div className="p-2 bg-red-900/20 border border-red-900/50 rounded-full">
-                        <Shield className="h-6 w-6 text-red-500" />
+                    <div className="flex items-center gap-6">
+                        <div className="p-2 bg-red-900/20 border border-red-900/50 rounded-full">
+                            <Shield className="h-6 w-6 text-red-500" />
+                        </div>
+                        <LogoutButton />
                     </div>
                 </div>
 
@@ -109,12 +118,11 @@ export default async function AdminDashboard() {
                                         className="flex items-center justify-between p-3 rounded-lg bg-black/30 border border-zinc-800"
                                     >
                                         <div className="flex items-center gap-3">
-                                            <div className={`h-2 w-2 rounded-full ${
-                                                log.action_type === 'CREATE' ? 'bg-green-500' :
+                                            <div className={`h-2 w-2 rounded-full ${log.action_type === 'CREATE' ? 'bg-green-500' :
                                                 log.action_type === 'UPDATE' ? 'bg-blue-500' :
-                                                log.action_type === 'DEACTIVATE' ? 'bg-red-500' :
-                                                'bg-yellow-500'
-                                            }`} />
+                                                    log.action_type === 'DEACTIVATE' ? 'bg-red-500' :
+                                                        'bg-yellow-500'
+                                                }`} />
                                             <div>
                                                 <p className="text-sm text-white">
                                                     <span className="font-medium">{log.performed_by_username || 'System'}</span>

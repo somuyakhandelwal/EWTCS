@@ -164,7 +164,17 @@ The setup script will:
    
    All users have password: `Nurse@123`
 
-7. **Start development server**
+7. **Configure ward assignments** (Required for bed updates)
+   ```bash
+   # Quick setup: Assign all users and beds to Emergency Ward A
+   psql -U postgres -d ewtcs -f scripts/setup-ward-assignments.sql
+   ```
+   
+   **Why this is needed:** Migration 006 adds ward-level access control for security. Nurses can only update beds in their assigned ward. Without this setup, you'll see "permission denied" errors when trying to update beds.
+   
+   See [DATABASE_SETUP.md - Ward Access Control](DATABASE_SETUP.md#ward-access-control-setup) for advanced configuration.
+
+8. **Start development server**
    ```bash
    npm run dev
    ```
@@ -186,6 +196,11 @@ The setup script will:
 **Problem: "relation 'users' does not exist"**
 - Migrations not run
 - Solution: `npm run db:migrate`
+
+**Problem: "You do not have permission to update this bed"**
+- Ward assignments not configured (Migration 006 security feature)
+- Solution: Run `psql -U postgres -d ewtcs -f scripts/setup-ward-assignments.sql`
+- This is expected behavior until wards are assigned (prevents unauthorized access)
 
 **For complete troubleshooting guide:** See [DATABASE_SETUP.md](DATABASE_SETUP.md)
 
@@ -311,6 +326,7 @@ Full environment variable reference: See [CONFIGURATION.md](CONFIGURATION.md)
 - **[US-1.1 Report](reports/US-1.1-IMPLEMENTATION-REPORT.md)** - Bed Status Dashboard (Grid Layout)
 - **[US-3.1 Report](reports/US-3.1-IMPLEMENTATION-REPORT.md)** - Capture Patient Entry Time
 - **[US-5.3 Report](reports/US-5.3-IMPLEMENTATION-REPORT.md)** - User Management System
+- **[US-5.6 Report](reports/US-5.6-IMPLEMENTATION-REPORT.md)** - Secure Logout
 - **[Reports Index](reports/README.md)** - All implementation reports
 - **[Shared Code Guide](src/shared/README.md)** - Guidelines for shared code
 
@@ -363,11 +379,16 @@ Phase 1 Complete**
   - Secure login/logout with bcrypt password hashing
   - Role-based access control (Admin, Supervisor, Nurse)
   - Session management with encrypted cookies
+  - **Ward-level access control (Migration 006)** - IDOR protection
 - **User Management System (US-5.3)**
   - Create, update, activate/deactivate users
   - Admin dashboard with user table
   - Audit logging for all user actions
   - Complete CRUD operations with input validation
+- **Secure Logout (US-5.6)** ✨ NEW
+  - Token blacklisting for immediate session termination
+  - Audit logging and rigorous client-side cleanup
+  - Ward assignment for multi-zone security
 - **Bed Status Dashboard (US-1.1)** ✨ NEW
   - Responsive grid layout showing all 20 emergency beds
   - Color-coded bed cards for 8 workflow stages
@@ -376,9 +397,10 @@ Phase 1 Complete**
   - Filter functionality (Show Delayed Only)
   - Statistics dashboard (Total, Occupied, Available, Delayed)
   - Stage color legend with descriptions
+  - Ward-based bed access control for nurses
 - **Time Tracking Foundation (US-3.1)** ✨ NEW
-   - Server-side patient entry time capture
-   - Immutable admission timestamps for accurate duration calculations
+  - Server-side patient entry time capture
+  - Immutable admission timestamps for accurate duration calculations
 
 **🔄 In Progress (Phase 1 - Remaining):**
 - Performance verification for one-click stage updates (US-2.1)
