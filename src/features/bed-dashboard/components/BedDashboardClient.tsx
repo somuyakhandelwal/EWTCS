@@ -4,11 +4,12 @@
 
 'use client'
 
-import { useCallback, useMemo, useState, useRef, useEffect } from 'react'
+import { useCallback, useMemo, useState, useRef } from 'react'
 import { useRouter } from 'next/navigation'
 import { BedGrid } from './BedGrid'
 import type { BedGridData, BedWithElapsedTime, Stage } from '../types/bed'
 import { updateBedStage } from '../actions/bed-actions'
+import { useErrorTimers, useSuccessFeedback } from '../hooks/useBedUpdateState'
 
 interface BedDashboardClientProps {
   initialData: BedGridData
@@ -16,7 +17,6 @@ interface BedDashboardClientProps {
 
 const UPDATE_TIMEOUT_MS = 2000
 const SUCCESS_FEEDBACK_MS = 3000
-const ERROR_CLEAR_MS = 5000
 
 function isNonPatientStage(stageName: string): boolean {
   const normalized = stageName.trim().toLowerCase()
@@ -28,40 +28,13 @@ export function BedDashboardClient({ initialData }: BedDashboardClientProps) {
   const [data, setData] = useState<BedGridData>(initialData)
   const [updatingBedId, setUpdatingBedId] = useState<string | null>(null)
   const [updatingStageId, setUpdatingStageId] = useState<string | null>(null)
-  const [lastUpdatedBedId, setLastUpdatedBedId] = useState<string | null>(null)
-  const [lastUpdatedStageId, setLastUpdatedStageId] = useState<string | null>(null)
-  const [errorByBedId, setErrorByBedId] = useState<Record<string, string>>({})
-
-  // FIX for Issue #1 (Memory Leak): Track all timers for cleanup
-  const timeoutRefs = useRef<{
-    errorClearTimers: Map<string, NodeJS.Timeout>
-    successTimer: NodeJS.Timeout | null
-    updateTimeoutTimer: NodeJS.Timeout | null
-  }>({
-    errorClearTimers: new Map(),
-    successTimer: null,
-    updateTimeoutTimer: null,
-  })
-
-  // Cleanup: clear all timers on unmount
-  useEffect(() => {
-    const refs = timeoutRefs.current
-    return () => {
-      // Clear all error timers
-      refs.errorClearTimers.forEach((timer) => clearTimeout(timer))
-      refs.errorClearTimers.clear()
-
-      // Clear success timer
-      if (refs.successTimer) {
-        clearTimeout(refs.successTimer)
-      }
-
-      // Clear update timeout timer
-      if (refs.updateTimeoutTimer) {
-        clearTimeout(refs.updateTimeoutTimer)
-      }
-    }
-  }, [])
+  
+  // Use custom hooks for timer management (prevents memory leaks)
+  const { errorByBedId, setTemporaryError, clearError } = useErrorTimers()
+  const { lastUpdatedBedId, lastUpdatedStageId, showSuccessFeedback } = 
+    useSuccessFeedback(SUCCESS_FEEDBACK_MS)
+  
+  const updateTimeoutTimer = useRef<NodeJS.Timeout | null>(null)
 
   const stageById = useMemo(() => {
     const map = new Map<string, Stage>()
@@ -76,30 +49,6 @@ export function BedDashboardClient({ initialData }: BedDashboardClientProps) {
   const handleBedClick = useCallback((bed: BedWithElapsedTime) => {
     // TODO US-1.2: Open bed details modal or navigate to bed page
     void bed
-  }, [])
-
-  const setTemporaryError = useCallback((bedId: string, message: string) => {
-    setErrorByBedId((prev) => ({ ...prev, [bedId]: message }))
-
-    // FIX for Issue #1 (Memory Leak): Clear previous timer for this bed before setting new one
-    const previousTimer = timeoutRefs.current.errorClearTimers.get(bedId)
-    if (previousTimer) {
-      clearTimeout(previousTimer)
-    }
-
-    const timer = setTimeout(() => {
-      setErrorByBedId((prev) => {
-        if (!prev[bedId]) {
-          return prev
-        }
-        const next = { ...prev }
-        delete next[bedId]
-        return next
-      })
-      timeoutRefs.current.errorClearTimers.delete(bedId)
-    }, ERROR_CLEAR_MS)
-
-    timeoutRefs.current.errorClearTimers.set(bedId, timer)
   }, [])
 
   const handleStageSelect = useCallback(
@@ -119,14 +68,7 @@ export function BedDashboardClient({ initialData }: BedDashboardClientProps) {
 
       setUpdatingBedId(bedId)
       setUpdatingStageId(stageId)
-      setErrorByBedId((prev) => {
-        if (!prev[bedId]) {
-          return prev
-        }
-        const next = { ...prev }
-        delete next[bedId]
-        return next
-      })
+      clearError(bedId)
 
       const now = new Date()
       const shouldBeUnoccupied = isNonPatientStage(stage.name)
@@ -135,6 +77,7 @@ export function BedDashboardClient({ initialData }: BedDashboardClientProps) {
         ? null
         : previousBed.patientStartTime ?? now
 
+      // Optimistic update
       setData((prev) => ({
         ...prev,
         beds: prev.beds.map((bed) =>
@@ -156,13 +99,12 @@ export function BedDashboardClient({ initialData }: BedDashboardClientProps) {
       try {
         const updatePromise = updateBedStage({ bedId, toStageId: stageId })
 
-        // FIX for Issue #1 (Memory Leak): Track update timeout for cleanup
+        // Track update timeout for cleanup
         const timeoutPromise = new Promise<never>((_, reject) => {
-          const timer = setTimeout(
+          updateTimeoutTimer.current = setTimeout(
             () => reject(new Error('Update took too long (>2 seconds)')),
             UPDATE_TIMEOUT_MS
           )
-          timeoutRefs.current.updateTimeoutTimer = timer
         })
 
         const result = await Promise.race([updatePromise, timeoutPromise])
@@ -198,21 +140,13 @@ export function BedDashboardClient({ initialData }: BedDashboardClientProps) {
           ),
         }))
 
-        setLastUpdatedBedId(bedId)
-        setLastUpdatedStageId(stageId)
-
-        // FIX for Issue #1 (Memory Leak): Track success feedback timer for cleanup
-        const successTimer = setTimeout(() => {
-          setLastUpdatedBedId(null)
-          setLastUpdatedStageId(null)
-          timeoutRefs.current.successTimer = null
-        }, SUCCESS_FEEDBACK_MS)
-        timeoutRefs.current.successTimer = successTimer
-
+        showSuccessFeedback(bedId, stageId)
         router.refresh()
       } catch (error) {
         const message = error instanceof Error ? error.message : 'Failed to update stage'
         setTemporaryError(bedId, message)
+        
+        // Rollback optimistic update
         setData((prev) => ({
           ...prev,
           beds: prev.beds.map((bed) => (bed.id === bedId ? previousBed : bed)),
@@ -221,10 +155,10 @@ export function BedDashboardClient({ initialData }: BedDashboardClientProps) {
       } finally {
         setUpdatingBedId(null)
         setUpdatingStageId(null)
-        timeoutRefs.current.updateTimeoutTimer = null
+        updateTimeoutTimer.current = null
       }
     },
-    [data.beds, stageById, updatingBedId, router, setTemporaryError]
+    [data.beds, stageById, updatingBedId, router, setTemporaryError, clearError, showSuccessFeedback]
   )
 
   return (
