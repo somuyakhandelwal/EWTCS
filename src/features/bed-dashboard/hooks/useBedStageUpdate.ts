@@ -5,20 +5,15 @@
 
 import { useCallback, useMemo, useState } from 'react'
 import { useRouter } from 'next/navigation'
-import type { BedGridData, BedWithElapsedTime, Stage } from '../types/bed'
+import type { BedGridData, BedWithElapsedTime, Stage, OverrideState, ConfirmationState } from '../types/bed'
 import { useErrorTimers, useSuccessFeedback } from './useBedUpdateState'
 import { useStageUpdateActions } from './useStageUpdateActions'
 
+import { useDashboardSettings } from './useDashboardSettings'
+
 const SUCCESS_FEEDBACK_MS = 3000
 
-export interface OverrideState {
-  bedId: string
-  stageId: string
-  bedNumber: string
-  fromStageName: string | null
-  toStage: Stage
-  reason: string | null
-}
+
 
 interface UseBedStageUpdateReturn {
   data: BedGridData
@@ -33,6 +28,11 @@ interface UseBedStageUpdateReturn {
   handleStageSelect: (bedId: string, stageId: string) => Promise<void>
   handleOverrideApprove: (reason: string) => Promise<void>
   closeOverrideModal: () => void
+  confirmationState: ConfirmationState | null
+  handleConfirmationConfirm: () => Promise<void>
+  closeConfirmationModal: () => void
+  settings: { confirmCriticalStages: boolean }
+  toggleConfirmation: () => void
 }
 
 export function useBedStageUpdate(initialData: BedGridData): UseBedStageUpdateReturn {
@@ -41,10 +41,12 @@ export function useBedStageUpdate(initialData: BedGridData): UseBedStageUpdateRe
   const [updatingBedId, setUpdatingBedId] = useState<string | null>(null)
   const [updatingStageId, setUpdatingStageId] = useState<string | null>(null)
   const [overrideState, setOverrideState] = useState<OverrideState | null>(null)
+  const [confirmationState, setConfirmationState] = useState<ConfirmationState | null>(null)
 
   const { errorByBedId, setTemporaryError, clearError } = useErrorTimers()
   const { lastUpdatedBedId, lastUpdatedStageId, showSuccessFeedback } =
     useSuccessFeedback(SUCCESS_FEEDBACK_MS)
+  const { settings, toggleConfirmation } = useDashboardSettings()
 
   const stageById = useMemo(() => {
     const map = new Map<string, Stage>()
@@ -72,7 +74,24 @@ export function useBedStageUpdate(initialData: BedGridData): UseBedStageUpdateRe
     setOverrideState(null)
   }, [])
 
-  const { isOverrideSubmitting, handleStageSelect, handleOverrideApprove } = useStageUpdateActions({
+  const openConfirmationModal = useCallback(
+    (bed: BedWithElapsedTime, stage: Stage) => {
+      setConfirmationState({
+        bedId: bed.id,
+        stageId: stage.id,
+        bedNumber: bed.bedNumber,
+        fromStageName: bed.currentStage?.name ?? 'Empty',
+        toStage: stage,
+      })
+    },
+    []
+  )
+
+  const closeConfirmationModal = useCallback(() => {
+    setConfirmationState(null)
+  }, [])
+
+  const { isOverrideSubmitting, handleStageSelect, handleOverrideApprove, handleConfirmationConfirm } = useStageUpdateActions({
     data,
     stageById,
     updatingBedId,
@@ -85,6 +104,10 @@ export function useBedStageUpdate(initialData: BedGridData): UseBedStageUpdateRe
     openOverrideModal,
     overrideState,
     closeOverrideModal,
+    openConfirmationModal,
+    confirmationState,
+    closeConfirmationModal,
+    confirmCriticalStages: settings.confirmCriticalStages,
   })
 
   return {
@@ -100,5 +123,10 @@ export function useBedStageUpdate(initialData: BedGridData): UseBedStageUpdateRe
     handleStageSelect,
     handleOverrideApprove,
     closeOverrideModal,
+    confirmationState,
+    handleConfirmationConfirm,
+    closeConfirmationModal,
+    settings,
+    toggleConfirmation,
   }
 }

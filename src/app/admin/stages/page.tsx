@@ -1,6 +1,8 @@
 import { getStages } from '@/features/stage-management/actions/stage-actions';
 import { StageList } from '@/features/stage-management/components/StageList';
 
+export const dynamic = 'force-dynamic';
+
 export default async function StagesPage() {
   const stages = await getStages();
   return (

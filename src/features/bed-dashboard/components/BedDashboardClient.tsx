@@ -8,6 +8,8 @@ import { useCallback } from 'react'
 import { BedGrid } from './BedGrid'
 import type { BedGridData, BedWithElapsedTime } from '../types/bed'
 import { SupervisorOverrideModal } from './SupervisorOverrideModal'
+import { ConfirmationModal } from './ConfirmationModal'
+import { DashboardSettings } from './DashboardSettings'
 import { useBedStageUpdate } from '../hooks/useBedStageUpdate'
 
 interface BedDashboardClientProps {
@@ -27,11 +29,17 @@ export function BedDashboardClient({ initialData }: BedDashboardClientProps) {
     handleRefresh,
     handleStageSelect,
     handleOverrideApprove,
+
     closeOverrideModal,
+    confirmationState,
+    handleConfirmationConfirm,
+    closeConfirmationModal,
+    settings,
+    toggleConfirmation,
   } = useBedStageUpdate(initialData)
 
   // TODO: Implement real-time updates (US-1.2)
-  const isLoading = false, connectionStatus = 'connected', reconnect = () => {}
+  const isLoading = false, connectionStatus = 'connected', reconnect = () => { }
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const ConnectionStatus = (_props: { status: string; onReconnect: () => void }) => null
 
@@ -43,7 +51,11 @@ export function BedDashboardClient({ initialData }: BedDashboardClientProps) {
   return (
     <div className="space-y-4">
       {/* Connection Status Indicator */}
-      <div className="flex justify-end">
+      <div className="flex justify-end items-center gap-2">
+        <DashboardSettings
+          enabled={settings.confirmCriticalStages}
+          onToggle={toggleConfirmation}
+        />
         <ConnectionStatus status={connectionStatus} onReconnect={reconnect} />
       </div>
 
@@ -70,6 +82,16 @@ export function BedDashboardClient({ initialData }: BedDashboardClientProps) {
         onApprove={handleOverrideApprove}
         onCancel={closeOverrideModal}
         isLoading={isOverrideSubmitting}
+      />
+
+      <ConfirmationModal
+        isOpen={Boolean(confirmationState)}
+        bedNumber={confirmationState?.bedNumber ?? null}
+        fromStageName={confirmationState?.fromStageName ?? null}
+        toStage={confirmationState?.toStage ?? null}
+        onConfirm={handleConfirmationConfirm}
+        onCancel={closeConfirmationModal}
+        isUpdating={confirmationState ? updatingBedId === confirmationState.bedId : false}
       />
     </div>
   )

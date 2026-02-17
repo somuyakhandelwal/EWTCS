@@ -50,3 +50,20 @@ export interface BedGridData {
   stages: Stage[]
   delayThresholdMs: number
 }
+
+export interface OverrideState {
+  bedId: string
+  stageId: string
+  bedNumber: string
+  fromStageName: string | null
+  toStage: Stage
+  reason: string | null
+}
+
+export interface ConfirmationState {
+  bedId: string
+  stageId: string
+  bedNumber: string
+  fromStageName: string | null
+  toStage: Stage
+}
