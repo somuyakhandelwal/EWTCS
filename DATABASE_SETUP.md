@@ -473,6 +473,25 @@ npm run db:seed
 
 ---
 
+### Problem: "Not run migration XXX is preceding already run migration YYY"
+
+**Cause:** Migration numbering mismatch between database and filesystem (occurs after PR merges with conflicting migration numbers)
+
+**Solution:** Run the migration reordering script:
+```bash
+psql -U postgres -d ewtcs -f scripts/fix-migration-order.sql
+```
+
+Then verify:
+```bash
+npm run db:status
+npm run validate:migrations
+```
+
+**Background:** When team members create migrations with the same numbers in different branches, merging can cause the database to have migrations recorded under different names than the filesystem expects. The `fix-migration-order.sql` script synchronizes the pgmigrations table with the current filesystem state.
+
+---
+
 ### Problem: "You do not have permission to update this bed" (Ward Access Control)
 
 **Cause:** Ward assignments not configured (Migration 006 security feature)
