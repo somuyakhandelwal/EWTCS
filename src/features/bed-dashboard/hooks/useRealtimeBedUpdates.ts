@@ -40,6 +40,7 @@ export function useRealtimeBedUpdates(
   const retryTimeoutRef = useRef<NodeJS.Timeout | null>(null)
   const abortControllerRef = useRef<AbortController | null>(null)
   const isVisibleRef = useRef(true)
+  const errorCountRef = useRef(0)
 
   /**
    * Fetch latest bed data from server
@@ -65,6 +66,7 @@ export function useRealtimeBedUpdates(
           beds: getStableBeds(prevData.beds, result.data!.beds),
         }))
 
+        errorCountRef.current = 0
         setConnectionStatus(resetConnectionStatus())
       } else {
         throw new Error(result.error || 'Failed to fetch bed data')
@@ -77,17 +79,18 @@ export function useRealtimeBedUpdates(
 
       const errorMessage = error instanceof Error ? error.message : 'Unknown error'
       
+      errorCountRef.current += 1
       setConnectionStatus((prev) => handleConnectionError(prev, errorMessage))
 
       // Schedule retry with exponential backoff
-      const retryInterval = getRetryInterval(connectionStatus.errorCount + 1)
+      const retryInterval = getRetryInterval(errorCountRef.current)
       retryTimeoutRef.current = setTimeout(() => {
         fetchData()
       }, retryInterval)
     } finally {
       setIsLoading(false)
     }
-  }, [connectionStatus.errorCount])
+  }, [])
 
   /**
    * Start polling
@@ -132,6 +135,7 @@ export function useRealtimeBedUpdates(
    * Manual reconnect
    */
   const reconnect = useCallback(() => {
+    errorCountRef.current = 0
     setConnectionStatus({
       status: 'reconnecting',
       lastUpdate: connectionStatus.lastUpdate,
