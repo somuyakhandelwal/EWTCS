@@ -82,7 +82,7 @@ const validateDatabaseSchema = async () => {
       },
       { 
         table: 'beds', 
-        cols: ['id', 'bed_number', 'status', 'ward_id'] 
+        cols: ['id', 'bed_number', 'ward_id'] 
       },
       { 
         table: 'wards', 

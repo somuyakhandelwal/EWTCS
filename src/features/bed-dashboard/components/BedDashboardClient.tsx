@@ -37,32 +37,17 @@ export function BedDashboardClient({ initialData }: BedDashboardClientProps) {
   const updateTimeoutTimer = useRef<NodeJS.Timeout | null>(null)
 
   // TODO: Implement real-time updates (US-1.2)
-  // These are placeholders to fix build errors
-  const isLoading = false
-  const connectionStatus = 'connected'
-  const reconnect = () => { }
+  const isLoading = false, connectionStatus = 'connected', reconnect = () => { }
+  const ConnectionStatus = (_: { status: string, onReconnect: () => void }) => null;
 
-  // Mock ConnectionStatus component for build
-  const ConnectionStatus = ({ status, onReconnect }: { status: string, onReconnect: () => void }) => {
-    void status
-    void onReconnect
-    return null
-  };
-
-  // Create map for easy stage lookup
   const stageById = useMemo(() => {
     const map = new Map<string, Stage>()
     initialData.stages.forEach(stage => map.set(stage.id, stage))
     return map
   }, [initialData.stages])
 
-  const refresh = useCallback(async () => {
-    router.refresh()
-  }, [router])
-
-  const handleRefresh = useCallback(async () => {
-    await refresh()
-  }, [refresh])
+  const refresh = useCallback(async () => router.refresh(), [router])
+  const handleRefresh = useCallback(async () => await refresh(), [refresh])
 
   const handleBedClick = useCallback((bed: BedWithElapsedTime) => {
     // TODO US-1.2: Open bed details modal or navigate to bed page
