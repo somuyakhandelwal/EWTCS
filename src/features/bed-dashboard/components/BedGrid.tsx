@@ -52,7 +52,7 @@ export function BedGrid({
     onRefresh?.()
     setTimeout(() => setIsRefreshing(false), 500)
   }, [onRefresh])
-  
+
   const toggleFilter = useCallback(() => {
     setShowDelayedOnly(prev => !prev)
   }, [])

@@ -80,7 +80,22 @@ const resolveSecret = (
     if (!encryptionKey) {
       throw new Error(`ENCRYPTION_KEY is required to decrypt ${label}`);
     }
-    return { value: decryptSecret(encrypted, encryptionKey), encrypted: true };
+    try {
+      return { value: decryptSecret(encrypted, encryptionKey), encrypted: true };
+    } catch (error) {
+      // During build time, return plaintext or provide a fallback
+      const isBuildTime = process.env.NEXT_PHASE === 'phase-production-build';
+      if (isBuildTime && plaintext) {
+        logger.warn(`Decryption failed for ${label} during build, using plaintext fallback`);
+        return { value: plaintext, encrypted: false };
+      }
+      // For DATABASE_URL during build, use a dummy PostgreSQL URL
+      if (isBuildTime && label === 'DATABASE_URL') {
+        logger.warn('Using dummy database URL during build');
+        return { value: 'postgresql://dummy:dummy@localhost/dummy', encrypted: false };
+      }
+      throw error;
+    }
   }
 
   // During build time, allow plaintext even in production

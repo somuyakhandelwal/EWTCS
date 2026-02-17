@@ -1,7 +1,10 @@
 import { verifyActiveSession } from "@/features/auth/lib/active-session"
 import { getBedGridData } from "@/features/bed-dashboard/actions/bed-actions"
 import { BedDashboardClient } from "@/features/bed-dashboard/components/BedDashboardClient"
-import { AlertTriangle } from "lucide-react"
+import LogoutButton from "@/features/auth/components/LogoutButton"
+import { Button } from "@/shared/components/ui/button"
+import { AlertTriangle, BarChart3 } from "lucide-react"
+import Link from "next/link"
 
 export default async function DashboardPage() {
     const session = await verifyActiveSession()
@@ -48,6 +51,15 @@ export default async function DashboardPage() {
                             <span className="relative inline-flex rounded-full h-3 w-3 bg-emerald-500"></span>
                         </span>
                         <span className="text-sm font-medium text-emerald-500">System Live</span>
+                        {(session?.role === 'supervisor' || session?.role === 'admin') && (
+                            <Link href="/analytics">
+                                <Button variant="outline" size="sm" className="gap-2">
+                                    <BarChart3 className="h-4 w-4" />
+                                    Analytics
+                                </Button>
+                            </Link>
+                        )}
+                        <LogoutButton />
                     </div>
                 </div>
 

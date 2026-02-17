@@ -1,5 +1,8 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/shared/components/ui/card"
-import { ClipboardList, AlertTriangle, Clock } from "lucide-react"
+import { Button } from "@/shared/components/ui/button"
+import { ClipboardList, AlertTriangle, Clock, BarChart3 } from "lucide-react"
+import LogoutButton from "@/features/auth/components/LogoutButton"
+import Link from "next/link"
 
 import { verifyActiveSession } from "@/features/auth/lib/active-session"
 
@@ -16,8 +19,17 @@ export default async function SupervisorDashboard() {
                         </h1>
                         <p className="text-zinc-400">Ward performance and incident reporting</p>
                     </div>
-                    <div className="p-2 bg-amber-900/20 border border-amber-900/50 rounded-full">
-                        <ClipboardList className="h-6 w-6 text-amber-500" />
+                    <div className="flex items-center gap-2">
+                        <Link href="/analytics">
+                            <Button variant="outline" size="sm" className="gap-2">
+                                <BarChart3 className="h-4 w-4" />
+                                Analytics
+                            </Button>
+                        </Link>
+                        <div className="p-2 bg-amber-900/20 border border-amber-900/50 rounded-full">
+                            <ClipboardList className="h-5 w-5 text-amber-500" />
+                        </div>
+                        <LogoutButton />
                     </div>
                 </div>
 
