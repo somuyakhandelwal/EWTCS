@@ -96,14 +96,17 @@ export async function updateBedStageInDB(
     const shouldBeUnoccupied = isNonPatientStage(stage.name)
     const nextIsOccupied = !shouldBeUnoccupied
 
-    const updateResult = await client.query<{ patientStartTime: Date | null; isOccupied: boolean; lastStageChange: Date | null }>(
+    const updateResult = await client.query<{
+      patientStartTime: Date | null
+      isOccupied: boolean
+      lastStageChange: Date | null
+    }>(
       `
       UPDATE beds
       SET current_stage_id = $1,
           last_stage_change = NOW(),
           patient_start_time = CASE
-            WHEN $2 THEN NULL
-            WHEN patient_start_time IS NULL THEN NOW()
+            WHEN patient_start_time IS NULL AND NOT $2 THEN NOW()
             ELSE patient_start_time
           END,
           is_occupied = $3,
