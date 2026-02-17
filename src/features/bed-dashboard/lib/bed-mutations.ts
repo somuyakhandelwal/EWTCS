@@ -31,6 +31,7 @@ export interface UpdateBedStageResult {
   durationInPreviousStageMs: number | null
   isOccupied: boolean
   patientStartTime: Date | null
+  lastStageChange: Date | null
 }
 
 function isNonPatientStage(stageName: string): boolean {
@@ -94,21 +95,28 @@ export async function updateBedStageInDB(
 
     const shouldBeUnoccupied = isNonPatientStage(stage.name)
     const nextIsOccupied = !shouldBeUnoccupied
-    const nextPatientStartTime = shouldBeUnoccupied
-      ? null
-      : bed.patientStartTime || new Date(now)
 
-    await client.query(
+    // US-3.1: Use CASE to preserve patient_start_time permanently (never cleared)
+    // Only set when NULL and bed becomes occupied (non-empty/non-cleaning stage)
+    const updateResult = await client.query<{
+      patientStartTime: Date | null
+      isOccupied: boolean
+      lastStageChange: Date | null
+    }>(
       `
       UPDATE beds
       SET current_stage_id = $1,
           last_stage_change = NOW(),
-          patient_start_time = $2,
+          patient_start_time = CASE
+            WHEN patient_start_time IS NULL AND NOT $2 THEN NOW()
+            ELSE patient_start_time
+          END,
           is_occupied = $3,
           updated_at = NOW()
       WHERE id = $4
+      RETURNING patient_start_time as "patientStartTime", is_occupied as "isOccupied", last_stage_change as "lastStageChange"
       `,
-      [toStageId, nextPatientStartTime, nextIsOccupied, bedId]
+      [toStageId, shouldBeUnoccupied, nextIsOccupied, bedId]
     )
 
     await client.query(
@@ -134,13 +142,16 @@ export async function updateBedStageInDB(
 
     await client.query('COMMIT')
 
+    const updated = updateResult.rows[0]
+
     return {
       bedId,
       fromStageId: bed.currentStageId,
       toStageId,
       durationInPreviousStageMs,
-      isOccupied: nextIsOccupied,
-      patientStartTime: nextPatientStartTime,
+      isOccupied: updated?.isOccupied ?? nextIsOccupied,
+      patientStartTime: updated?.patientStartTime ?? bed.patientStartTime,
+      lastStageChange: updated?.lastStageChange ?? bed.lastStageChange,
     }
   } catch (error) {
     await client.query('ROLLBACK')
