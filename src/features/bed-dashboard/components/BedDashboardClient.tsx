@@ -28,13 +28,37 @@ export function BedDashboardClient({ initialData }: BedDashboardClientProps) {
   const [data, setData] = useState<BedGridData>(initialData)
   const [updatingBedId, setUpdatingBedId] = useState<string | null>(null)
   const [updatingStageId, setUpdatingStageId] = useState<string | null>(null)
-  
+
   // Use custom hooks for timer management (prevents memory leaks)
   const { errorByBedId, setTemporaryError, clearError } = useErrorTimers()
-  const { lastUpdatedBedId, lastUpdatedStageId, showSuccessFeedback } = 
+  const { lastUpdatedBedId, lastUpdatedStageId, showSuccessFeedback } =
     useSuccessFeedback(SUCCESS_FEEDBACK_MS)
-  
+
   const updateTimeoutTimer = useRef<NodeJS.Timeout | null>(null)
+
+  // TODO: Implement real-time updates (US-1.2)
+  // These are placeholders to fix build errors
+  const isLoading = false
+  const connectionStatus = 'connected'
+  const reconnect = () => { }
+
+  // Mock ConnectionStatus component for build
+  const ConnectionStatus = ({ status, onReconnect }: { status: string, onReconnect: () => void }) => {
+    void status
+    void onReconnect
+    return null
+  };
+
+  // Create map for easy stage lookup
+  const stageById = useMemo(() => {
+    const map = new Map<string, Stage>()
+    initialData.stages.forEach(stage => map.set(stage.id, stage))
+    return map
+  }, [initialData.stages])
+
+  const refresh = useCallback(async () => {
+    router.refresh()
+  }, [router])
 
   const handleRefresh = useCallback(async () => {
     await refresh()
@@ -77,15 +101,15 @@ export function BedDashboardClient({ initialData }: BedDashboardClientProps) {
         beds: prev.beds.map((bed) =>
           bed.id === bedId
             ? {
-                ...bed,
-                currentStageId: stageId,
-                currentStage: stage,
-                lastStageChange: now,
-                elapsedTimeMs: 0,
-                isDelayed: false,
-                isOccupied: nextIsOccupied,
-                patientStartTime: nextPatientStartTime,
-              }
+              ...bed,
+              currentStageId: stageId,
+              currentStage: stage,
+              lastStageChange: now,
+              elapsedTimeMs: 0,
+              isDelayed: false,
+              isOccupied: nextIsOccupied,
+              patientStartTime: nextPatientStartTime,
+            }
             : bed
         ),
       }))
@@ -107,12 +131,14 @@ export function BedDashboardClient({ initialData }: BedDashboardClientProps) {
           throw new Error(result.error || 'Failed to update stage')
         }
 
+        const responseData = result.data
+
         // US-3.1: Use server-provided timestamps for accuracy
-        const serverPatientStartTime = result.data.patientStartTime
-          ? new Date(result.data.patientStartTime)
+        const serverPatientStartTime = responseData.patientStartTime
+          ? new Date(responseData.patientStartTime)
           : null
-        const serverLastStageChange = result.data.lastStageChange
-          ? new Date(result.data.lastStageChange)
+        const serverLastStageChange = responseData.lastStageChange
+          ? new Date(responseData.lastStageChange)
           : now
 
         // Update with server data
@@ -121,15 +147,15 @@ export function BedDashboardClient({ initialData }: BedDashboardClientProps) {
           beds: prev.beds.map((bed) =>
             bed.id === bedId
               ? {
-                  ...bed,
-                  currentStageId: stageId,
-                  currentStage: stage,
-                  lastStageChange: serverLastStageChange,
-                  isOccupied: result.data.isOccupied,
-                  patientStartTime: serverPatientStartTime,
-                  elapsedTimeMs: result.data.isOccupied ? 0 : null,
-                  isDelayed: false,
-                }
+                ...bed,
+                currentStageId: stageId,
+                currentStage: stage,
+                lastStageChange: serverLastStageChange,
+                isOccupied: responseData.isOccupied,
+                patientStartTime: serverPatientStartTime,
+                elapsedTimeMs: responseData.isOccupied ? 0 : null,
+                isDelayed: false,
+              }
               : bed
           ),
         }))
@@ -139,7 +165,7 @@ export function BedDashboardClient({ initialData }: BedDashboardClientProps) {
       } catch (error) {
         const message = error instanceof Error ? error.message : 'Failed to update stage'
         setTemporaryError(bedId, message)
-        
+
         // Rollback optimistic update
         setData((prev) => ({
           ...prev,

@@ -159,7 +159,9 @@ jobs:
         run: |
           echo "🔍 Validating migration file naming conventions..."
           
-          for file in migrations/*.sql migrations/*.js migrations/*.ts 2>/dev/null; do
+          # Enable nullglob so patterns with no matches disappear
+          shopt -s nullglob
+          for file in migrations/*.sql migrations/*.js migrations/*.ts; do
             if [ -f "$file" ]; then
               filename=$(basename "$file")
               
