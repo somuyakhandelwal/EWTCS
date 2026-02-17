@@ -164,7 +164,17 @@ The setup script will:
    
    All users have password: `Nurse@123`
 
-7. **Start development server**
+7. **Configure ward assignments** (Required for bed updates)
+   ```bash
+   # Quick setup: Assign all users and beds to Emergency Ward A
+   psql -U postgres -d ewtcs -f scripts/setup-ward-assignments.sql
+   ```
+   
+   **Why this is needed:** Migration 006 adds ward-level access control for security. Nurses can only update beds in their assigned ward. Without this setup, you'll see "permission denied" errors when trying to update beds.
+   
+   See [DATABASE_SETUP.md - Ward Access Control](DATABASE_SETUP.md#ward-access-control-setup) for advanced configuration.
+
+8. **Start development server**
    ```bash
    npm run dev
    ```
@@ -186,6 +196,11 @@ The setup script will:
 **Problem: "relation 'users' does not exist"**
 - Migrations not run
 - Solution: `npm run db:migrate`
+
+**Problem: "You do not have permission to update this bed"**
+- Ward assignments not configured (Migration 006 security feature)
+- Solution: Run `psql -U postgres -d ewtcs -f scripts/setup-ward-assignments.sql`
+- This is expected behavior until wards are assigned (prevents unauthorized access)
 
 **For complete troubleshooting guide:** See [DATABASE_SETUP.md](DATABASE_SETUP.md)
 
@@ -361,11 +376,13 @@ Phase 1 Complete**
   - Secure login/logout with bcrypt password hashing
   - Role-based access control (Admin, Supervisor, Nurse)
   - Session management with encrypted cookies
+  - **Ward-level access control (Migration 006)** - IDOR protection
 - **User Management System (US-5.3)**
   - Create, update, activate/deactivate users
   - Admin dashboard with user table
   - Audit logging for all user actions
   - Complete CRUD operations with input validation
+  - Ward assignment for multi-zone security
 - **Bed Status Dashboard (US-1.1)** ✨ NEW
   - Responsive grid layout showing all 20 emergency beds
   - Color-coded bed cards for 8 workflow stages
@@ -374,6 +391,7 @@ Phase 1 Complete**
   - Filter functionality (Show Delayed Only)
   - Statistics dashboard (Total, Occupied, Available, Delayed)
   - Stage color legend with descriptions
+  - Ward-based bed access control for nurses
 
 **🔄 In Progress (Phase 1 - Remaining):**
 - Performance verification for one-click stage updates (US-2.1)

@@ -1,0 +1,134 @@
+"use client"
+
+import { useEffect, useMemo } from "react"
+import { cn } from "@/shared/lib/utils"
+
+export interface ContextMenuItem {
+  id: string
+  label: string
+  disabled?: boolean
+  onSelect: () => void
+  className?: string
+}
+
+export interface ContextMenuProps {
+  isOpen: boolean
+  position: { x: number; y: number } | null
+  items: ContextMenuItem[]
+  onClose: () => void
+  header?: string
+}
+
+// FIX for Issue #2 (Off-Screen Menu): Calculate clamped position within viewport
+function getClampedPosition(
+  x: number,
+  y: number,
+  menuWidth: number,
+  menuHeight: number
+): { x: number; y: number } {
+  const padding = 8 // Small buffer from edges
+  const viewportWidth = typeof window !== 'undefined' ? window.innerWidth : 0
+  const viewportHeight = typeof window !== 'undefined' ? window.innerHeight : 0
+
+  // Clamp X position (prevent horizontal overflow)
+  let clampedX = x
+  if (x + menuWidth > viewportWidth - padding) {
+    clampedX = Math.max(padding, viewportWidth - menuWidth - padding)
+  }
+
+  // Clamp Y position (prevent vertical overflow)
+  let clampedY = y
+  if (y + menuHeight > viewportHeight - padding) {
+    clampedY = Math.max(padding, viewportHeight - menuHeight - padding)
+  }
+
+  return { x: clampedX, y: clampedY }
+}
+
+export function ContextMenu({
+  isOpen,
+  position,
+  items,
+  onClose,
+  header,
+}: ContextMenuProps) {
+  // FIX for Issue #2 (Off-Screen Menu): Estimate menu height and apply clamping
+  const clampedPosition = useMemo(() => {
+    if (!position) return null
+    // Estimate: header (if present) + items with padding
+    const headerHeight = header ? 24 : 0
+    const itemHeight = items.length * 36 + 16 // approximate height per item + padding
+    const estimatedMenuHeight = headerHeight + itemHeight
+    const estimatedMenuWidth = 192 // min-w-48 = 12rem = 192px
+
+    return getClampedPosition(
+      position.x,
+      position.y,
+      estimatedMenuWidth,
+      estimatedMenuHeight
+    )
+  }, [position, header, items.length])
+
+  useEffect(() => {
+    if (!isOpen) {
+      return
+    }
+
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === "Escape") {
+        onClose()
+      }
+    }
+
+    document.addEventListener("keydown", handleKeyDown)
+    return () => document.removeEventListener("keydown", handleKeyDown)
+  }, [isOpen, onClose])
+
+  if (!isOpen || !clampedPosition) {
+    return null
+  }
+
+  return (
+    <div className="fixed inset-0 z-50" onMouseDown={onClose}>
+      <div
+        className="absolute min-w-48 rounded-md border border-zinc-800 bg-zinc-950/95 p-2 shadow-lg backdrop-blur"
+        style={{ top: clampedPosition.y, left: clampedPosition.x }}
+        onMouseDown={(event) => event.stopPropagation()}
+        role="menu"
+      >
+        {header && (
+          <div className="px-2 py-1 text-xs text-zinc-500">{header}</div>
+        )}
+        <div className="space-y-1">
+          {items.map((item) => (
+            <button
+              key={item.id}
+              type="button"
+              className={cn(
+                "flex w-full items-center gap-2 rounded px-2 py-1.5 text-left text-sm text-zinc-200 hover:bg-zinc-800/70 disabled:cursor-not-allowed disabled:opacity-50",
+                item.className
+              )}
+              disabled={item.disabled}
+              onClick={(e) => {
+                // FIX for Issue #4 (Double-Click): Check e.detail to allow only single clicks
+                // e.detail > 1 indicates a double-click or higher
+                if (e.detail > 1) {
+                  return
+                }
+
+                if (item.disabled) {
+                  return
+                }
+                item.onSelect()
+                onClose()
+              }}
+              role="menuitem"
+            >
+              {item.label}
+            </button>
+          ))}
+        </div>
+      </div>
+    </div>
+  )
+}

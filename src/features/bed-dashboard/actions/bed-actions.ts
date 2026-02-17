@@ -1,18 +1,90 @@
-// Bed Dashboard Server Actions
-// Epic 1: Nurse Desk Bed Dashboard
-
 'use server'
 
 import { getAllStages, getBedsWithElapsedTime } from '../lib/queries'
 import { config } from '@/shared/config/env'
 import { logger } from '@/shared/config/logger'
 import type { BedGridData } from '../types/bed'
+import { UpdateBedStageSchema, type UpdateBedStageInput } from '../schemas/bed-schemas'
+import { updateBedStageInDB } from '../lib/bed-mutations'
+import { getUserWard, getBedWard } from '../lib/bed-queries'
 import { requireRole } from '@/shared/lib/auth'
 import { logAudit } from '@/shared/lib/audit'
-import { UpdateBedStageSchema } from '../schemas/bed-schemas'
-import { updateBedStageInDB } from '../lib/bed-mutations'
-import type { UpdateBedStageInput } from '../schemas/bed-schemas'
 
+/**
+ * Update bed stage (US-2.1)
+ */
+export async function updateBedStage(input: UpdateBedStageInput): Promise<{
+  success: boolean
+  data?: Awaited<ReturnType<typeof updateBedStageInDB>>
+  error?: string
+  errors?: Record<string, string[]>
+}> {
+  try {
+    const session = await requireRole(['nurse', 'supervisor', 'admin'])
+
+    const result = UpdateBedStageSchema.safeParse(input)
+    if (!result.success) {
+      return {
+        success: false,
+        errors: result.error.flatten().fieldErrors,
+      }
+    }
+
+    // IDOR FIX: Verify user has access to this specific bed (ward-level access control)
+    const userWard = await getUserWard(session.userId)
+    const bedWard = await getBedWard(result.data.bedId)
+
+    // Allow access if:
+    // 1. Both user and bed have ward assignments and they match, OR
+    // 2. User is an admin (admins can access all beds)
+    const hasWardAccess =
+      (userWard && bedWard && userWard === bedWard) ||
+      session.role === 'admin'
+
+    if (!hasWardAccess) {
+      logger.warn('Unauthorized bed access attempt', {
+        userId: session.userId,
+        bedId: result.data.bedId,
+        userWard,
+        bedWard,
+        userRole: session.role,
+      })
+      return {
+        success: false,
+        error: 'You do not have permission to update this bed. Access is restricted to your assigned ward.',
+      }
+    }
+
+    const updateResult = await updateBedStageInDB({
+      ...result.data,
+      changedByUserId: session.userId,
+    })
+
+    await logAudit({
+      actionType: 'UPDATE',
+      entityType: 'bed',
+      entityId: updateResult.bedId,
+      performedBy: session.userId,
+      changes: {
+        fromStageId: updateResult.fromStageId,
+        toStageId: updateResult.toStageId,
+        isOccupied: updateResult.isOccupied,
+      },
+    })
+
+    return {
+      success: true,
+      data: updateResult,
+    }
+  } catch (error) {
+    const message = error instanceof Error ? error.message : 'Failed to update bed stage'
+    logger.error('Failed to update bed stage', error as Error)
+    return {
+      success: false,
+      error: message,
+    }
+  }
+}
 /**
  * Get all beds with current status and elapsed time
  * Used by the nurse dashboard to display the bed grid
@@ -59,63 +131,6 @@ export async function getBedGridData(): Promise<{
 }
 
 /**
- * Update a bed stage with a single action
- * Epic 2: One-Click Stage Update System
- */
-export async function updateBedStage(input: UpdateBedStageInput) {
-  try {
-    const session = await requireRole(['nurse', 'supervisor', 'admin'])
-
-    const result = UpdateBedStageSchema.safeParse(input)
-    if (!result.success) {
-      return {
-        success: false,
-        errors: result.error.flatten().fieldErrors,
-      }
-    }
-
-    const { bedId, toStageId, notes } = result.data
-
-    const updateResult = await updateBedStageInDB({
-      bedId,
-      toStageId,
-      changedByUserId: session.userId,
-      notes,
-    })
-
-    await logAudit({
-      actionType: 'UPDATE',
-      entityType: 'bed',
-      entityId: bedId,
-      performedBy: session.userId,
-      changes: {
-        fromStageId: updateResult.fromStageId,
-        toStageId: updateResult.toStageId,
-        isOccupied: updateResult.isOccupied,
-      },
-      reason: notes,
-    })
-
-    logger.info('Bed stage updated', {
-      bedId,
-      toStageId,
-      changedBy: session.userId,
-    })
-
-    return {
-      success: true,
-      data: updateResult,
-    }
-  } catch (error) {
-    logger.error('Failed to update bed stage', error as Error)
-    return {
-      success: false,
-      message: error instanceof Error ? error.message : 'Failed to update bed stage',
-    }
-  }
-}
-
-/**
  * Get only delayed beds (for filtering)
  */
 export async function getDelayedBeds(): Promise<{
@@ -142,3 +157,4 @@ export async function getDelayedBeds(): Promise<{
     }
   }
 }
+

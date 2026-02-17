@@ -1,35 +1,27 @@
 // Bed Card Component
 // Epic 1: Nurse Desk Bed Dashboard
 
-import { memo } from 'react'
+import { memo, type MouseEvent } from 'react'
 import { Card, CardContent } from '@/shared/components/ui/card'
-import { Clock, AlertTriangle, CheckCircle } from 'lucide-react'
+import { Clock, AlertTriangle } from 'lucide-react'
 import type { BedWithElapsedTime } from '../types/bed'
 import { formatElapsedTime, getStageColorClasses } from '../lib/utils'
 import { cn } from '@/shared/lib/utils'
-import { BedStageButtons } from './BedStageButtons'
-import type { Stage } from '../types/bed'
 
 interface BedCardProps {
   bed: BedWithElapsedTime
-  stages: Stage[]
   onClick?: (bed: BedWithElapsedTime) => void
-  onStageSelect: (bedId: string, stageId: string) => void
-  isUpdating: boolean
-  updatingStageId: string | null
-  lastUpdatedStageId: string | null
+  onContextMenu?: (event: MouseEvent<HTMLDivElement>, bed: BedWithElapsedTime) => void
+  showUpdated?: boolean
   errorMessage?: string | null
 }
 
 export const BedCard = memo(function BedCard({
   bed,
-  stages,
   onClick,
-  onStageSelect,
-  isUpdating,
-  updatingStageId,
-  lastUpdatedStageId,
-  errorMessage,
+  onContextMenu,
+  showUpdated = false,
+  errorMessage = null,
 }: BedCardProps) {
   const stageName = bed.currentStage?.name || 'Empty'
   const stageColor = bed.currentStage?.colorCode || 'gray'
@@ -48,6 +40,7 @@ export const BedCard = memo(function BedCard({
         isDelayed && 'ring-2 ring-red-500 animate-pulse'
       )}
       onClick={() => onClick?.(bed)}
+      onContextMenu={(event) => onContextMenu?.(event, bed)}
     >
       {/* Delay indicator */}
       {isDelayed && (
@@ -76,11 +69,16 @@ export const BedCard = memo(function BedCard({
           <p className={cn('text-sm font-semibold', colorClasses.text)}>
             {stageName}
           </p>
-          {lastUpdatedStageId && (
-            <div className="flex items-center gap-2 text-xs text-emerald-400">
-              <CheckCircle className="h-3.5 w-3.5" />
-              Updated
-            </div>
+          {onContextMenu && (
+            <p className="text-[10px] text-zinc-500">
+              Right-click to update stage
+            </p>
+          )}
+          {showUpdated && (
+            <p className="text-[10px] text-emerald-400">Updated</p>
+          )}
+          {errorMessage && (
+            <p className="text-[10px] text-red-400">{errorMessage}</p>
           )}
         </div>
 
@@ -106,18 +104,6 @@ export const BedCard = memo(function BedCard({
             <p className="text-xs text-zinc-500">Status</p>
             <p className="text-sm font-medium text-zinc-400">Available</p>
           </div>
-        )}
-
-        <BedStageButtons
-          bed={bed}
-          stages={stages}
-          onStageSelect={onStageSelect}
-          isUpdating={isUpdating}
-          updatingStageId={updatingStageId}
-        />
-
-        {errorMessage && (
-          <p className="text-xs text-red-400">{errorMessage}</p>
         )}
       </CardContent>
     </Card>

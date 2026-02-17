@@ -165,6 +165,7 @@ Running migrations...
 ✓ 003_add_user_management.sql
 ✓ 004_generic_audit_logs.sql
 ✓ 005_create_beds_and_stages.sql
+✓ 006_add_ward_access_control.sql
 All migrations completed successfully
 ```
 
@@ -218,11 +219,12 @@ Visit [http://localhost:3000/login](http://localhost:3000/login) and log in:
 
 | Table | Purpose | Key Columns |
 |-------|---------|-------------|
-| `users` | Authentication & user management | id, username, role, password_hash |
+| `users` | Authentication & user management | id, username, role, password_hash, ward_id |
 | `audit_logs` | Security & compliance logging | id, action_type, performed_by, timestamp |
 | `stages` | Patient workflow stages | id, name, display_order, color_code |
-| `beds` | Emergency ward beds | id, bed_number, current_stage_id, is_occupied |
+| `beds` | Emergency ward beds | id, bed_number, current_stage_id, is_occupied, ward_id |
 | `bed_stage_logs` | Bed transition history | id, bed_id, from_stage_id, to_stage_id |
+| `wards` | Hospital ward definitions | id, name, code, description, is_active |
 
 ### Default Stages
 
@@ -245,6 +247,117 @@ users (1) ──< (many) bed_stage_logs
 stages (1) ──< (many) beds
 stages (1) ──< (many) bed_stage_logs
 beds (1) ──< (many) bed_stage_logs
+wards (1) ──< (many) users
+wards (1) ──< (many) beds
+```
+
+---
+
+## Ward Access Control Setup
+
+**Migration 006** adds ward-level access control to prevent IDOR (Insecure Direct Object Reference) attacks. Nurses can only update beds in their assigned ward.
+
+### Default Wards
+
+Three wards are created automatically:
+- **Emergency Ward A** (Code: `EWA`)
+- **Emergency Ward B** (Code: `EWB`)
+- **Emergency Ward C** (Code: `EWC`)
+
+### Assign Users to Wards
+
+After seeding users, assign them to wards:
+
+```sql
+-- Connect to database
+psql -U postgres -d ewtcs
+
+-- View available wards
+SELECT id, name, code FROM wards;
+
+-- Assign nurse1 to Emergency Ward A
+UPDATE users 
+SET ward_id = (SELECT id FROM wards WHERE code = 'EWA') 
+WHERE username = 'nurse1';
+
+-- Assign nurse to Emergency Ward B
+UPDATE users 
+SET ward_id = (SELECT id FROM wards WHERE code = 'EWB') 
+WHERE username = 'nurse';
+
+-- Verify assignments
+SELECT username, role, w.name as ward_name, w.code as ward_code
+FROM users u
+LEFT JOIN wards w ON u.ward_id = w.id
+WHERE role IN ('nurse', 'supervisor');
+```
+
+### Assign Beds to Wards
+
+Distribute beds across wards:
+
+```sql
+-- Assign ER-01 to ER-17 to Emergency Ward A
+UPDATE beds 
+SET ward_id = (SELECT id FROM wards WHERE code = 'EWA'),
+    ward_name = 'Emergency Ward A'
+WHERE bed_number BETWEEN 'ER-01' AND 'ER-17';
+
+-- Assign ER-18 to ER-34 to Emergency Ward B
+UPDATE beds 
+SET ward_id = (SELECT id FROM wards WHERE code = 'EWB'),
+    ward_name = 'Emergency Ward B'
+WHERE bed_number BETWEEN 'ER-18' AND 'ER-34';
+
+-- Assign ER-35 to ER-50 to Emergency Ward C
+UPDATE beds 
+SET ward_id = (SELECT id FROM wards WHERE code = 'EWC'),
+    ward_name = 'Emergency Ward C'
+WHERE bed_number BETWEEN 'ER-35' AND 'ER-50';
+
+-- Verify assignments
+SELECT ward_name, COUNT(*) as bed_count 
+FROM beds 
+GROUP BY ward_name 
+ORDER BY ward_name;
+```
+
+### Quick Setup Script
+
+For convenience, use the provided setup script to assign all users and beds to Emergency Ward A:
+
+```bash
+# Option 1: Run the SQL script
+psql -U postgres -d ewtcs -f scripts/setup-ward-assignments.sql
+
+# Option 2: Quick one-liner (assigns everything to Ward A)
+psql -U postgres -d ewtcs -c "UPDATE users SET ward_id = (SELECT id FROM wards WHERE code = 'EWA') WHERE role = 'nurse'; UPDATE beds SET ward_id = (SELECT id FROM wards WHERE code = 'EWA'), ward_name = 'Emergency Ward A' WHERE bed_number LIKE 'ER-%';"
+```
+
+**After running the setup:**
+1. Refresh your browser
+2. Right-click any bed to update its stage
+3. Updates should work without permission errors
+
+### Access Control Behavior
+
+- **Nurses**: Can only view and update beds in their assigned ward
+- **Supervisors**: Can access all wards
+- **Admins**: Can access all wards
+- **Audit Logging**: Unauthorized access attempts are logged in `audit_logs` table
+
+### Creating Additional Wards
+
+```sql
+-- Add a new ward
+INSERT INTO wards (name, code, description) 
+VALUES ('Emergency Ward D', 'EWD', 'Emergency Ward Zone D');
+
+-- Assign beds to new ward
+UPDATE beds 
+SET ward_id = (SELECT id FROM wards WHERE code = 'EWD'),
+    ward_name = 'Emergency Ward D'
+WHERE bed_number IN ('ER-51', 'ER-52', 'ER-53');
 ```
 
 ---
@@ -346,6 +459,34 @@ npm run db:seed
 
 ---
 
+### Problem: "You do not have permission to update this bed" (Ward Access Control)
+
+**Cause:** Ward assignments not configured (Migration 006 security feature)
+
+**Explanation:** This is **expected behavior**, not a bug. Migration 006 added ward-level access control to prevent IDOR attacks. Nurses can only update beds in their assigned ward.
+
+**Solution:** Assign wards to users and beds:
+```bash
+# Quick setup (assigns everything to Emergency Ward A)
+psql -U postgres -d ewtcs -f scripts/setup-ward-assignments.sql
+
+# Or manual assignment
+psql -U postgres -d ewtcs
+```
+
+Then run:
+```sql
+-- Assign nurses to ward
+UPDATE users SET ward_id = (SELECT id FROM wards WHERE code = 'EWA') WHERE role = 'nurse';
+
+-- Assign beds to ward
+UPDATE beds SET ward_id = (SELECT id FROM wards WHERE code = 'EWA'), ward_name = 'Emergency Ward A' WHERE bed_number LIKE 'ER-%';
+```
+
+**Security Note:** This error prevents unauthorized bed access. See [Ward Access Control Setup](#ward-access-control-setup) for details.
+
+---
+
 ## Migration Commands
 
 ### Available Commands
@@ -432,12 +573,13 @@ SELECT bed_number, is_occupied FROM beds ORDER BY bed_number;
 
 ### Expected Table Count
 
-Run `\dt` in psql - you should see **5 tables**:
+Run `\dt` in psql - you should see **6 tables**:
 - audit_logs
 - bed_stage_logs
 - beds
 - stages
 - users
+- wards
 
 ---
 
