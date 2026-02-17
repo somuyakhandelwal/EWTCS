@@ -1,7 +1,7 @@
 // Bed Card Component
 // Epic 1: Nurse Desk Bed Dashboard
 
-import { memo } from 'react'
+import { memo, type MouseEvent } from 'react'
 import { Card, CardContent } from '@/shared/components/ui/card'
 import { Clock, AlertTriangle } from 'lucide-react'
 import type { BedWithElapsedTime } from '../types/bed'
@@ -11,9 +11,18 @@ import { cn } from '@/shared/lib/utils'
 interface BedCardProps {
   bed: BedWithElapsedTime
   onClick?: (bed: BedWithElapsedTime) => void
+  onContextMenu?: (event: MouseEvent<HTMLDivElement>, bed: BedWithElapsedTime) => void
+  showUpdated?: boolean
+  errorMessage?: string | null
 }
 
-export const BedCard = memo(function BedCard({ bed, onClick }: BedCardProps) {
+export const BedCard = memo(function BedCard({
+  bed,
+  onClick,
+  onContextMenu,
+  showUpdated = false,
+  errorMessage = null,
+}: BedCardProps) {
   const stageName = bed.currentStage?.name || 'Empty'
   const stageColor = bed.currentStage?.colorCode || 'gray'
   const colorClasses = getStageColorClasses(stageColor)
@@ -31,6 +40,7 @@ export const BedCard = memo(function BedCard({ bed, onClick }: BedCardProps) {
         isDelayed && 'ring-2 ring-red-500 animate-pulse'
       )}
       onClick={() => onClick?.(bed)}
+      onContextMenu={(event) => onContextMenu?.(event, bed)}
     >
       {/* Delay indicator */}
       {isDelayed && (
@@ -59,6 +69,17 @@ export const BedCard = memo(function BedCard({ bed, onClick }: BedCardProps) {
           <p className={cn('text-sm font-semibold', colorClasses.text)}>
             {stageName}
           </p>
+          {onContextMenu && (
+            <p className="text-[10px] text-zinc-500">
+              Right-click to update stage
+            </p>
+          )}
+          {showUpdated && (
+            <p className="text-[10px] text-emerald-400">Updated</p>
+          )}
+          {errorMessage && (
+            <p className="text-[10px] text-red-400">{errorMessage}</p>
+          )}
         </div>
 
         {/* Elapsed Time */}

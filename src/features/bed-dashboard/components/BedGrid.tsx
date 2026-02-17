@@ -3,9 +3,10 @@
 
 'use client'
 
-import { useState, useMemo, useCallback } from 'react'
+import { useState, useMemo, useCallback, type MouseEvent } from 'react'
 import { BedCard } from './BedCard'
 import { BedStatusLegend } from './BedStatusLegend'
+import { BedStageContextMenu } from './BedStageContextMenu'
 import { Button } from '@/shared/components/ui/button'
 import { Filter, RefreshCw } from 'lucide-react'
 import type { BedGridData, BedWithElapsedTime } from '../types/bed'
@@ -15,11 +16,32 @@ interface BedGridProps {
   data: BedGridData
   onRefresh?: () => void
   onBedClick?: (bed: BedWithElapsedTime) => void
+  onStageSelect?: (bedId: string, stageId: string) => void
+  updatingBedId?: string | null
+  updatingStageId?: string | null
+  lastUpdatedBedId?: string | null
+  lastUpdatedStageId?: string | null
+  errorByBedId?: Record<string, string>
   isRefreshing?: boolean
 }
 
-export function BedGrid({ data, onRefresh, onBedClick, isRefreshing = false }: BedGridProps) {
+export function BedGrid({
+  data,
+  onRefresh,
+  onBedClick,
+  onStageSelect,
+  updatingBedId = null,
+  updatingStageId = null,
+  lastUpdatedBedId = null,
+  lastUpdatedStageId = null,
+  errorByBedId = {},
+  isRefreshing = false,
+}: BedGridProps) {
   const [showDelayedOnly, setShowDelayedOnly] = useState(false)
+  const [menuState, setMenuState] = useState<{
+    bedId: string
+    position: { x: number; y: number }
+  } | null>(null)
 
   // Memoize filtered beds to prevent unnecessary recalculation
   const displayedBeds = useMemo(() => {
@@ -38,6 +60,31 @@ export function BedGrid({ data, onRefresh, onBedClick, isRefreshing = false }: B
   const toggleFilter = useCallback(() => {
     setShowDelayedOnly(prev => !prev)
   }, [])
+
+  const handleOpenMenu = useCallback(
+    (event: MouseEvent<HTMLDivElement>, bed: BedWithElapsedTime) => {
+      if (!onStageSelect) {
+        return
+      }
+      event.preventDefault()
+      setMenuState({
+        bedId: bed.id,
+        position: { x: event.clientX, y: event.clientY },
+      })
+    },
+    [onStageSelect]
+  )
+
+  const handleCloseMenu = useCallback(() => {
+    setMenuState(null)
+  }, [])
+
+  const activeBed = useMemo(() => {
+    if (!menuState) {
+      return null
+    }
+    return data.beds.find((bed) => bed.id === menuState.bedId) ?? null
+  }, [data.beds, menuState])
 
   return (
     <div className="space-y-6">
@@ -110,9 +157,25 @@ export function BedGrid({ data, onRefresh, onBedClick, isRefreshing = false }: B
               key={bed.id}
               bed={bed}
               onClick={onBedClick}
+              onContextMenu={handleOpenMenu}
+              showUpdated={lastUpdatedBedId === bed.id && lastUpdatedStageId !== null}
+              errorMessage={errorByBedId[bed.id] || null}
             />
           ))}
         </div>
+      )}
+
+      {onStageSelect && (
+        <BedStageContextMenu
+          bed={activeBed}
+          stages={data.stages}
+          isOpen={Boolean(menuState)}
+          position={menuState?.position ?? null}
+          isUpdating={Boolean(updatingBedId)}
+          updatingStageId={updatingStageId}
+          onStageSelect={onStageSelect}
+          onClose={handleCloseMenu}
+        />
       )}
 
       {/* Footer info */}

@@ -1,10 +1,16 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/shared/components/ui/card"
 import { ClipboardList, AlertTriangle, Clock } from "lucide-react"
+import { LogoutButton } from "@/features/auth/components/LogoutButton"
+import { redirect } from "next/navigation"
 
 import { verifyActiveSession } from "@/features/auth/lib/active-session"
 
 export default async function SupervisorDashboard() {
     const session = await verifyActiveSession()
+
+    if (!session) {
+        redirect('/login')
+    }
 
     return (
         <div className="min-h-screen bg-black text-foreground p-8">
@@ -16,8 +22,11 @@ export default async function SupervisorDashboard() {
                         </h1>
                         <p className="text-zinc-400">Ward performance and incident reporting</p>
                     </div>
-                    <div className="p-2 bg-amber-900/20 border border-amber-900/50 rounded-full">
-                        <ClipboardList className="h-6 w-6 text-amber-500" />
+                    <div className="flex items-center gap-6">
+                        <div className="p-2 bg-amber-900/20 border border-amber-900/50 rounded-full">
+                            <ClipboardList className="h-6 w-6 text-amber-500" />
+                        </div>
+                        <LogoutButton />
                     </div>
                 </div>
 

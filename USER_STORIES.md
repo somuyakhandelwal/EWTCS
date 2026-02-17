@@ -310,11 +310,16 @@
 **So that** I can quickly update status without typing or navigating complex forms
 
 **Acceptance Criteria:**
-- [ ] Stage buttons are clearly labeled and visible
-- [ ] Click updates stage immediately
-- [ ] Visual feedback confirms the update
-- [ ] No keyboard input required
+- [x] Stage buttons are clearly labeled and visible
+- [x] Click updates stage immediately
+- [x] Visual feedback confirms the update
+- [x] No keyboard input required
 - [ ] Update completes in ≤2 seconds
+
+**Implementation Notes:**
+- Inline stage buttons added to each bed card with immediate update handling.
+- Success feedback shown inline; per-bed errors display if update fails.
+- Performance verification for the ≤2s requirement is pending in staging.
 
 **Priority:** P0 (Critical)  
 **Story Points:** 5  

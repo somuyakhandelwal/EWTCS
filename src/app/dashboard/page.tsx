@@ -2,9 +2,15 @@ import { verifyActiveSession } from "@/features/auth/lib/active-session"
 import { getBedGridData } from "@/features/bed-dashboard/actions/bed-actions"
 import { BedDashboardClient } from "@/features/bed-dashboard/components/BedDashboardClient"
 import { AlertTriangle } from "lucide-react"
+import { LogoutButton } from "@/features/auth/components/LogoutButton"
+import { redirect } from "next/navigation"
 
 export default async function DashboardPage() {
     const session = await verifyActiveSession()
+
+    if (!session) {
+        redirect('/login')
+    }
     const bedGridResult = await getBedGridData()
 
     // Handle error state
@@ -42,6 +48,7 @@ export default async function DashboardPage() {
                         </h1>
                         <p className="text-zinc-400">Real-time bed status and ward overview</p>
                     </div>
+                    <LogoutButton />
                 </div>
 
                 {/* Bed Grid */}
