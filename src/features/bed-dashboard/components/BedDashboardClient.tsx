@@ -1,12 +1,13 @@
 // Bed Dashboard Client Wrapper
 // Epic 1: Nurse Desk Bed Dashboard
-// This component wraps the BedGrid to handle client-side interactions
+// US-1.2: Real-time updates with intelligent polling
 
 'use client'
 
 import { useCallback } from 'react'
-import { useRouter } from 'next/navigation'
 import { BedGrid } from './BedGrid'
+import { ConnectionStatus } from './ConnectionStatus'
+import { useRealtimeBedUpdates } from '../hooks/useRealtimeBedUpdates'
 import type { BedGridData, BedWithElapsedTime } from '../types/bed'
 
 interface BedDashboardClientProps {
@@ -14,24 +15,36 @@ interface BedDashboardClientProps {
 }
 
 export function BedDashboardClient({ initialData }: BedDashboardClientProps) {
-  const router = useRouter()
+  // Real-time updates hook with intelligent polling
+  const { data, connectionStatus, isLoading, refresh, reconnect } = useRealtimeBedUpdates(initialData)
 
-  const handleRefresh = useCallback(() => {
-    // Use Next.js router to refresh server components
-    router.refresh()
-  }, [router])
+  const handleRefresh = useCallback(async () => {
+    await refresh()
+  }, [refresh])
 
   const handleBedClick = useCallback((bed: BedWithElapsedTime) => {
-    // TODO US-1.2: Open bed details modal or navigate to bed page
+    // TODO: Open bed details modal or navigate to bed page
     // Future: router.push(`/dashboard/beds/${bed.id}`)
-    void bed
+    console.log('Bed clicked:', bed.bedNumber)
   }, [])
 
   return (
-    <BedGrid
-      data={initialData}
-      onRefresh={handleRefresh}
-      onBedClick={handleBedClick}
-    />
+    <div className="space-y-4">
+      {/* Connection Status Indicator */}
+      <div className="flex justify-end">
+        <ConnectionStatus 
+          status={connectionStatus} 
+          onReconnect={reconnect}
+        />
+      </div>
+
+      {/* Bed Grid with real-time data */}
+      <BedGrid
+        data={data}
+        onRefresh={handleRefresh}
+        onBedClick={handleBedClick}
+        isRefreshing={isLoading}
+      />
+    </div>
   )
 }

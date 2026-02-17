@@ -15,11 +15,11 @@ interface BedGridProps {
   data: BedGridData
   onRefresh?: () => void
   onBedClick?: (bed: BedWithElapsedTime) => void
+  isRefreshing?: boolean
 }
 
-export function BedGrid({ data, onRefresh, onBedClick }: BedGridProps) {
+export function BedGrid({ data, onRefresh, onBedClick, isRefreshing = false }: BedGridProps) {
   const [showDelayedOnly, setShowDelayedOnly] = useState(false)
-  const [isRefreshing, setIsRefreshing] = useState(false)
 
   // Memoize filtered beds to prevent unnecessary recalculation
   const displayedBeds = useMemo(() => {
@@ -31,10 +31,8 @@ export function BedGrid({ data, onRefresh, onBedClick }: BedGridProps) {
   // Memoize statistics calculation
   const stats = useMemo(() => getBedStatistics(data.beds), [data.beds])
 
-  const handleRefresh = useCallback(async () => {
-    setIsRefreshing(true)
+  const handleRefresh = useCallback(() => {
     onRefresh?.()
-    setTimeout(() => setIsRefreshing(false), 500)
   }, [onRefresh])
   
   const toggleFilter = useCallback(() => {
