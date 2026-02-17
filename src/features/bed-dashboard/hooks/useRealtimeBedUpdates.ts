@@ -8,10 +8,16 @@ import { useState, useEffect, useRef, useCallback } from 'react'
 import { getBedGridData } from '../actions/bed-actions'
 import { getStableBeds } from '../lib/bed-diff'
 import { realtimeConfig } from '@/shared/config/realtime'
+import {
+  getRetryInterval,
+  handleConnectionError,
+  resetConnectionStatus,
+  pauseConnectionStatus,
+  resumeConnectionStatus,
+} from '../lib/connection-manager'
 import type { BedGridData } from '../types/bed'
 import type { 
   UseRealtimeBedUpdatesReturn, 
-  ConnectionStatus,
   ConnectionStatusDetails 
 } from '../types/realtime'
 
@@ -34,15 +40,6 @@ export function useRealtimeBedUpdates(
   const retryTimeoutRef = useRef<NodeJS.Timeout | null>(null)
   const abortControllerRef = useRef<AbortController | null>(null)
   const isVisibleRef = useRef(true)
-
-  /**
-   * Calculate next retry interval with exponential backoff
-   */
-  const getRetryInterval = useCallback((errorCount: number): number => {
-    const baseInterval = realtimeConfig.retryInterval
-    const exponentialInterval = baseInterval * Math.pow(2, Math.min(errorCount, 4))
-    return Math.min(exponentialInterval, realtimeConfig.maxRetryInterval)
-  }, [])
 
   /**
    * Fetch latest bed data from server
@@ -68,11 +65,7 @@ export function useRealtimeBedUpdates(
           beds: getStableBeds(prevData.beds, result.data!.beds),
         }))
 
-        setConnectionStatus({
-          status: 'connected',
-          lastUpdate: new Date(),
-          errorCount: 0,
-        })
+        setConnectionStatus(resetConnectionStatus())
       } else {
         throw new Error(result.error || 'Failed to fetch bed data')
       }
@@ -84,17 +77,7 @@ export function useRealtimeBedUpdates(
 
       const errorMessage = error instanceof Error ? error.message : 'Unknown error'
       
-      setConnectionStatus((prev) => {
-        const newErrorCount = prev.errorCount + 1
-        const status: ConnectionStatus = newErrorCount >= 3 ? 'disconnected' : 'reconnecting'
-        
-        return {
-          status,
-          lastUpdate: prev.lastUpdate,
-          errorCount: newErrorCount,
-          errorMessage,
-        }
-      })
+      setConnectionStatus((prev) => handleConnectionError(prev, errorMessage))
 
       // Schedule retry with exponential backoff
       const retryInterval = getRetryInterval(connectionStatus.errorCount + 1)
@@ -104,7 +87,7 @@ export function useRealtimeBedUpdates(
     } finally {
       setIsLoading(false)
     }
-  }, [connectionStatus.errorCount, getRetryInterval])
+  }, [connectionStatus.errorCount])
 
   /**
    * Start polling
@@ -167,16 +150,10 @@ export function useRealtimeBedUpdates(
       isVisibleRef.current = !document.hidden
 
       if (document.hidden) {
-        setConnectionStatus((prev) => ({
-          ...prev,
-          status: 'paused',
-        }))
+        setConnectionStatus(pauseConnectionStatus)
       } else {
         // Resume and fetch immediately
-        setConnectionStatus((prev) => ({
-          ...prev,
-          status: prev.errorCount > 0 ? 'reconnecting' : 'connected',
-        }))
+        setConnectionStatus(resumeConnectionStatus)
         fetchData()
       }
     }
