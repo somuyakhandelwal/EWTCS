@@ -64,6 +64,7 @@ export default function DemoLegendPage() {
             <li><code className="text-blue-400">role=&quot;list&quot;</code> and <code className="text-blue-400">role=&quot;listitem&quot;</code> - Semantic list structure</li>
             <li><code className="text-blue-400">aria-hidden=&quot;true&quot;</code> - Hides decorative elements from screen readers</li>
             <li><code className="text-blue-400">focus:ring-2</code> - Visible focus indicators for keyboard navigation</li>
+            <li><code className="text-blue-400">min-h-[44px] min-w-[44px]</code> - WCAG 2.1 compliant touch target size</li>
           </ul>
         </div>
 

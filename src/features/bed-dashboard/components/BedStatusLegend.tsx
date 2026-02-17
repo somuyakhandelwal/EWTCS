@@ -27,7 +27,16 @@ export const BedStatusLegend = memo(function BedStatusLegend({ stages }: BedStat
     try {
       const savedState = localStorage.getItem(LEGEND_STORAGE_KEY)
       if (savedState !== null) {
-        setIsCollapsed(savedState === 'true')
+        // Safely parse boolean value
+        try {
+          const isCollapsedValue = JSON.parse(savedState)
+          if (typeof isCollapsedValue === 'boolean') {
+            setIsCollapsed(isCollapsedValue)
+          }
+        } catch {
+          // If parsing fails, fall back to string comparison
+          setIsCollapsed(savedState === 'true')
+        }
       }
     } catch (error) {
       // Silently fail if localStorage is not available (e.g., private browsing mode)
@@ -71,7 +80,7 @@ export const BedStatusLegend = memo(function BedStatusLegend({ stages }: BedStat
           aria-expanded={!isCollapsed}
           aria-controls="legend-content"
           aria-label={isCollapsed ? 'Expand legend' : 'Collapse legend'}
-          className="flex items-center gap-1 text-xs text-zinc-400 hover:text-zinc-300 transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 focus:ring-offset-zinc-900 rounded px-2 py-1"
+          className="flex items-center gap-1 text-xs text-zinc-400 hover:text-zinc-300 transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 focus:ring-offset-zinc-900 rounded px-3 py-2 min-h-[44px] min-w-[44px]"
         >
           {isCollapsed ? (
             <>
