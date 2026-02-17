@@ -35,7 +35,7 @@ export function StageFormModal({ stage, onClose, onSaved }:
           description: desc, display_order: 99, is_default: false,
           is_active: true, created_at: '', updated_at: '' });
       }
-    } catch (e: any) { setError(e.message); }
+    } catch (e: unknown) { setError(e instanceof Error ? e.message : 'Something went wrong'); }
     finally { setLoading(false); }
   };
 

@@ -23,7 +23,7 @@ export function StageList({ initialStages }: { initialStages: Stage[] }) {
     try {
       await deleteStage(id);
       setStages(stages.filter(s => s.id !== id));
-    } catch (e: any) { alert(e.message); }
+    } catch (e: unknown) { alert(e instanceof Error ? e.message : 'Something went wrong'); }
   };
 
   const move = async (index: number, dir: 'up' | 'down') => {
