@@ -14,6 +14,9 @@ interface BedStageButtonsProps {
   onStageSelect: (bedId: string, stageId: string) => void
   isUpdating: boolean
   updatingStageId: string | null
+  validNextStages?: string[]
+  overrideRequiredStages?: string[]
+  hideInvalid?: boolean
 }
 
 export const BedStageButtons = memo(function BedStageButtons({
@@ -22,6 +25,9 @@ export const BedStageButtons = memo(function BedStageButtons({
   onStageSelect,
   isUpdating,
   updatingStageId,
+  validNextStages = [],
+  overrideRequiredStages = [],
+  hideInvalid = false,
 }: BedStageButtonsProps) {
   return (
     <div className="space-y-2">
@@ -31,6 +37,17 @@ export const BedStageButtons = memo(function BedStageButtons({
           const isCurrentStage = bed.currentStageId === stage.id
           const isStageUpdating = isUpdating && updatingStageId === stage.id
           const colorClasses = getStageColorClasses(stage.colorCode)
+          const isValid = validNextStages.includes(stage.id)
+          const requiresOverride = overrideRequiredStages.includes(stage.id)
+          const isInvalid = !isValid && !requiresOverride
+
+          if (hideInvalid && isInvalid) {
+            return null
+          }
+
+          const label = requiresOverride
+            ? `⚠️ ${stage.name}`
+            : stage.name
 
           return (
             <Button
@@ -38,19 +55,27 @@ export const BedStageButtons = memo(function BedStageButtons({
               type="button"
               variant="outline"
               size="sm"
-              disabled={isUpdating || isCurrentStage}
+              disabled={isUpdating || isCurrentStage || isInvalid}
               onClick={() => onStageSelect(bed.id, stage.id)}
               className={cn(
                 'justify-start text-xs h-9 px-2 border',
                 colorClasses.border,
                 colorClasses.text,
-                isCurrentStage && colorClasses.bg
+                isCurrentStage && colorClasses.bg,
+                isInvalid && 'opacity-50'
               )}
               aria-pressed={isCurrentStage}
               aria-label={`Update ${bed.bedNumber} to ${stage.name}`}
+              title={
+                isInvalid
+                  ? 'This transition is not allowed'
+                  : requiresOverride
+                    ? 'Requires supervisor approval'
+                    : undefined
+              }
             >
               {isStageUpdating && <Loader2 className="h-4 w-4 animate-spin" />}
-              <span className="truncate">{stage.name}</span>
+              <span className="truncate">{label}</span>
             </Button>
           )
         })}

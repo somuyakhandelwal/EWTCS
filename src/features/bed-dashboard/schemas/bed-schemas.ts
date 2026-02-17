@@ -38,6 +38,8 @@ export const CreateBedSchema = z.object({
 export const UpdateBedStageSchema = z.object({
   bedId: z.string().uuid('Invalid bed ID'),
   toStageId: z.string().uuid('Invalid stage ID'),
+  supervisorOverride: z.boolean().optional().default(false),
+  overrideReason: z.string().max(500).optional(),
   notes: z.string().max(500).optional(),
 })
 

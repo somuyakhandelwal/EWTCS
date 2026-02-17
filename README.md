@@ -250,6 +250,10 @@ The system tracks patients through 6 stages with color-coded indicators:
 | **6. Discharged/Transferred** | ⚪ Grey | Patient has left |
 | **⚠️ Time > 3 hours** | 🔴 Red | Automatic alert for delays |
 
+### Stage Transition Rules
+
+Stage updates are governed by configurable rules in the `stage_transitions` table. Invalid transitions are blocked, and specific edge-case transitions can require supervisor approval. See [DATABASE_SETUP.md](DATABASE_SETUP.md#stage-transition-rules) for details.
+
 ---
 
 ## 🔧 Available Commands
@@ -323,12 +327,11 @@ Full environment variable reference: See [CONFIGURATION.md](CONFIGURATION.md)
 
 ### Core Documentation
 
-- **[DOCUMENTATION.md](DOCUMENTATION.md)** - 📘 Documentation structure & guidelines
 - **[PRD.md](PRD.md)** - Complete Product Requirements Document
 - **[EPICS.md](EPICS.md)** - All project EPICs and user stories
 - **[USER_STORIES.md](USER_STORIES.md)** - Detailed user stories with acceptance criteria
 - **[CONFIGURATION.md](CONFIGURATION.md)** - Environment setup, migrations, and deployment
-- **[CONTRIBUTING.md](CONTRIBUTING.md)** - Contribution guidelines and coding standards
+- **[CONTRIBUTING.md](CONTRIBUTING.md)** - Contribution guidelines and coding standards (includes 200-line file limit rule)
 - **[CODE_OF_CONDUCT.md](CODE_OF_CONDUCT.md)** - Community guidelines
 
 ### Architecture & Design
@@ -336,14 +339,6 @@ Full environment variable reference: See [CONFIGURATION.md](CONFIGURATION.md)
 - **[Architecture Plan](reports/FEATURE-FIRST-ARCHITECTURE-PLAN.md)** - Feature-first hybrid architecture design
 - **[Features Guide](src/features/README.md)** - How to structure new features
 - **[Shared Code Guide](src/shared/README.md)** - Guidelines for shared utilities and components
-
-### Implementation Reports
-- **[US-1.1 Report](reports/US-1.1-IMPLEMENTATION-REPORT.md)** - Bed Status Dashboard (Grid Layout)
-- **[US-3.1 Report](reports/US-3.1-IMPLEMENTATION-REPORT.md)** - Capture Patient Entry Time
-- **[US-5.3 Report](reports/US-5.3-IMPLEMENTATION-REPORT.md)** - User Management System
-- **[US-5.6 Report](reports/US-5.6-IMPLEMENTATION-REPORT.md)** - Secure Logout
-- **[Reports Index](reports/README.md)** - All implementation reports
-- **[Shared Code Guide](src/shared/README.md)** - Guidelines for shared code
 
 ---
 

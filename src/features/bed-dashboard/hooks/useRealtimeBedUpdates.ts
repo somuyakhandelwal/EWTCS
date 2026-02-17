@@ -5,7 +5,7 @@
 'use client'
 
 import { useState, useEffect, useRef, useCallback } from 'react'
-import { getBedGridData } from '../actions/bed-actions'
+import { getBedGridData } from '../actions/bed-grid-actions'
 import { getStableBeds } from '../lib/bed-diff'
 import { realtimeConfig } from '@/shared/config/realtime'
 import {

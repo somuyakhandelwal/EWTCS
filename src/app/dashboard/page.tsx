@@ -1,5 +1,5 @@
 import { verifyActiveSession } from "@/features/auth/lib/active-session"
-import { getBedGridData } from "@/features/bed-dashboard/actions/bed-actions"
+import { getBedGridData } from "@/features/bed-dashboard/actions/bed-grid-actions"
 import { BedDashboardClient } from "@/features/bed-dashboard/components/BedDashboardClient"
 import { AlertTriangle } from "lucide-react"
 import { LogoutButton } from "@/features/auth/components/LogoutButton"
