@@ -4,6 +4,8 @@ import { verifySession } from '@/features/auth/lib/session'
 
 export async function middleware(request: NextRequest) {
     const session = await verifySession()
+    // Note: Token blacklist is checked in verifyActiveSession() within Server Components/Actions,
+    // as Middleware runs on Edge and cannot access the database directly for blacklist checks.
 
     // Protected routes
     if (request.nextUrl.pathname.startsWith('/admin')) {

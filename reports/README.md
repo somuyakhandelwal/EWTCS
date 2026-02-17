@@ -41,6 +41,12 @@ Reports should follow the format: `US-X.Y-IMPLEMENTATION-REPORT.md` or `ISSUE-XX
   - Admin dashboard with audit logging
   - Full CRUD operations with validation
 
+- **[US-5.6-IMPLEMENTATION-REPORT.md](US-5.6-IMPLEMENTATION-REPORT.md)** - Secure Logout
+  - Status: ✅ Complete (Feb 16, 2026)
+  - Token blacklist implementation and DB validation
+  - Frontend LogoutButton with offline cleanup
+  - Audit logging for all logout events
+
 ### Architecture & Planning
 - **[FEATURE-FIRST-ARCHITECTURE-PLAN.md](FEATURE-FIRST-ARCHITECTURE-PLAN.md)** - Feature-First Hybrid Architecture
   - Comprehensive architecture documentation

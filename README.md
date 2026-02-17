@@ -310,6 +310,7 @@ Full environment variable reference: See [CONFIGURATION.md](CONFIGURATION.md)
 ### Implementation Reports
 - **[US-1.1 Report](reports/US-1.1-IMPLEMENTATION-REPORT.md)** - Bed Status Dashboard (Grid Layout)
 - **[US-5.3 Report](reports/US-5.3-IMPLEMENTATION-REPORT.md)** - User Management System
+- **[US-5.6 Report](reports/US-5.6-IMPLEMENTATION-REPORT.md)** - Secure Logout
 - **[Reports Index](reports/README.md)** - All implementation reports
 - **[Shared Code Guide](src/shared/README.md)** - Guidelines for shared code
 
@@ -366,6 +367,9 @@ Phase 1 Complete**
   - Admin dashboard with user table
   - Audit logging for all user actions
   - Complete CRUD operations with input validation
+- **Secure Logout (US-5.6)** ✨ NEW
+  - Token blacklisting for immediate session termination
+  - Audit logging and rigorous client-side cleanup
 - **Bed Status Dashboard (US-1.1)** ✨ NEW
   - Responsive grid layout showing all 20 emergency beds
   - Color-coded bed cards for 8 workflow stages
