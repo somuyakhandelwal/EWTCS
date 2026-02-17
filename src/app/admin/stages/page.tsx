@@ -8,7 +8,7 @@ export default async function StagesPage() {
       <div className='mb-6'>
         <h1 className='text-2xl font-bold'>Workflow Stage Configuration</h1>
         <p className='text-gray-500 text-sm mt-1'>
-          Default stages delete nahi ho sakte. Custom stages add, edit, delete aur reorder kar sakte ho.
+          Default stages cannot be deleted. You can add, edit, delete and reorder custom stages.
         </p>
       </div>
       <StageList initialStages={stages} />
