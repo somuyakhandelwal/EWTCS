@@ -277,6 +277,21 @@ npm run db:reset     # Drop and recreate schema (development only)
 
 Migration details and best practices: See [CONFIGURATION.md#migrations](CONFIGURATION.md#migrations)
 
+### Pre-Merge Validation
+```bash
+npm run validate:env          # Validate .env.example completeness
+npm run validate:db           # Test database connection
+npm run validate:migrations   # Check all migrations are applied
+npm run validate:schema       # Verify database schema structure
+npm run validate:all          # Run all validation checks + build
+./scripts/test-fresh-setup.sh # Simulate complete fresh setup
+```
+
+**Before submitting a PR**, run `npm run validate:all` to ensure your changes won't break setup for other developers.
+
+Full validation guide: See [PRE_MERGE_VALIDATION.md](PRE_MERGE_VALIDATION.md)
+
+
 ---
 
 ## 🌐 Configuration
