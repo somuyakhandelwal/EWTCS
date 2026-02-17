@@ -7,15 +7,27 @@ import { BedStatusLegend } from '@/features/bed-dashboard/components/BedStatusLe
 import type { Stage } from '@/features/bed-dashboard/types/bed'
 
 // Mock stages data for demonstration
+const now = new Date()
+const createStage = (id: string, name: string, colorCode: string, displayOrder: number, description: string): Stage => ({
+  id,
+  name,
+  colorCode,
+  displayOrder,
+  description,
+  isActive: true,
+  createdAt: now,
+  updatedAt: now,
+})
+
 const mockStages: Stage[] = [
-  { id: '1', name: 'Empty', colorCode: 'gray', displayOrder: 0, description: 'Bed is available and ready for new patient', isActive: true, createdAt: new Date(), updatedAt: new Date() },
-  { id: '2', name: 'Registration', colorCode: 'blue', displayOrder: 1, description: 'Patient registration in progress', isActive: true, createdAt: new Date(), updatedAt: new Date() },
-  { id: '3', name: 'Triage', colorCode: 'cyan', displayOrder: 2, description: 'Initial assessment and prioritization', isActive: true, createdAt: new Date(), updatedAt: new Date() },
-  { id: '4', name: 'Examination', colorCode: 'yellow', displayOrder: 3, description: 'Doctor examination in progress', isActive: true, createdAt: new Date(), updatedAt: new Date() },
-  { id: '5', name: 'Lab Work', colorCode: 'orange', displayOrder: 4, description: 'Waiting for or conducting lab tests', isActive: true, createdAt: new Date(), updatedAt: new Date() },
-  { id: '6', name: 'Treatment', colorCode: 'green', displayOrder: 5, description: 'Active treatment being administered', isActive: true, createdAt: new Date(), updatedAt: new Date() },
-  { id: '7', name: 'Observation', colorCode: 'purple', displayOrder: 6, description: 'Patient under observation', isActive: true, createdAt: new Date(), updatedAt: new Date() },
-  { id: '8', name: 'Discharge', colorCode: 'pink', displayOrder: 7, description: 'Discharge process in progress', isActive: true, createdAt: new Date(), updatedAt: new Date() },
+  createStage('1', 'Empty', 'gray', 0, 'Bed is available and ready for new patient'),
+  createStage('2', 'Registration', 'blue', 1, 'Patient registration in progress'),
+  createStage('3', 'Triage', 'cyan', 2, 'Initial assessment and prioritization'),
+  createStage('4', 'Examination', 'yellow', 3, 'Doctor examination in progress'),
+  createStage('5', 'Lab Work', 'orange', 4, 'Waiting for or conducting lab tests'),
+  createStage('6', 'Treatment', 'green', 5, 'Active treatment being administered'),
+  createStage('7', 'Observation', 'purple', 6, 'Patient under observation'),
+  createStage('8', 'Discharge', 'pink', 7, 'Discharge process in progress'),
 ]
 
 export default function DemoLegendPage() {

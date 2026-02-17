@@ -21,9 +21,17 @@ export const BedStatusLegend = memo(function BedStatusLegend({ stages }: BedStat
 
   // Load collapsed state from localStorage on mount
   useEffect(() => {
-    const savedState = localStorage.getItem(LEGEND_STORAGE_KEY)
-    if (savedState !== null) {
-      setIsCollapsed(savedState === 'true')
+    // Check if we're in a browser environment
+    if (typeof window === 'undefined') return
+    
+    try {
+      const savedState = localStorage.getItem(LEGEND_STORAGE_KEY)
+      if (savedState !== null) {
+        setIsCollapsed(savedState === 'true')
+      }
+    } catch (error) {
+      // Silently fail if localStorage is not available (e.g., private browsing mode)
+      console.warn('Failed to load legend state from localStorage:', error)
     }
   }, [])
 
@@ -31,7 +39,15 @@ export const BedStatusLegend = memo(function BedStatusLegend({ stages }: BedStat
   const handleToggle = () => {
     setIsCollapsed((prev) => {
       const newState = !prev
-      localStorage.setItem(LEGEND_STORAGE_KEY, String(newState))
+      // Check if we're in a browser environment and localStorage is available
+      if (typeof window !== 'undefined') {
+        try {
+          localStorage.setItem(LEGEND_STORAGE_KEY, String(newState))
+        } catch (error) {
+          // Silently fail if localStorage is not available
+          console.warn('Failed to save legend state to localStorage:', error)
+        }
+      }
       return newState
     })
   }
