@@ -1,11 +1,16 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/shared/components/ui/card"
 import { ClipboardList, AlertTriangle, Clock } from "lucide-react"
 import { LogoutButton } from "@/features/auth/components/LogoutButton"
+import { redirect } from "next/navigation"
 
 import { verifyActiveSession } from "@/features/auth/lib/active-session"
 
 export default async function SupervisorDashboard() {
     const session = await verifyActiveSession()
+
+    if (!session) {
+        redirect('/login')
+    }
 
     return (
         <div className="min-h-screen bg-black text-foreground p-8">
