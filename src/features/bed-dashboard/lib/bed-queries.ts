@@ -164,3 +164,49 @@ export async function getBedByNumber(bedNumber: string): Promise<Bed | null> {
     throw new Error('Failed to fetch bed from database')
   }
 }
+
+/**
+ * Get the ward ID for a specific bed
+ * Used for access control in updateBedStage()
+ */
+export async function getBedWard(bedId: string): Promise<string | null> {
+  try {
+    const result = await query<{ ward_id: string | null }>(
+      `
+      SELECT b.ward_id
+      FROM beds b
+      WHERE b.id = $1
+      LIMIT 1
+      `,
+      [bedId]
+    )
+    
+    return result.rows[0]?.ward_id || null
+  } catch (error) {
+    logger.error('Failed to fetch bed ward', error as Error, { bedId })
+    throw new Error('Failed to verify bed access')
+  }
+}
+
+/**
+ * Get the ward ID for a specific user
+ * Used for access control in updateBedStage()
+ */
+export async function getUserWard(userId: string): Promise<string | null> {
+  try {
+    const result = await query<{ ward_id: string | null }>(
+      `
+      SELECT u.ward_id
+      FROM users u
+      WHERE u.id = $1
+      LIMIT 1
+      `,
+      [userId]
+    )
+    
+    return result.rows[0]?.ward_id || null
+  } catch (error) {
+    logger.error('Failed to fetch user ward', error as Error, { userId })
+    throw new Error('Failed to verify access permissions')
+  }
+}
