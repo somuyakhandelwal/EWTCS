@@ -14,12 +14,24 @@ function startTicker() {
   timerId = setTimeout(() => {
     // notify immediately at boundary
     const t0 = Date.now()
-    subscribers.forEach(fn => fn(t0))
+    subscribers.forEach((fn) => {
+      try {
+        fn(t0)
+      } catch {
+        // Ignore individual subscriber errors to prevent one bad subscriber from breaking others
+      }
+    })
 
     // subsequent regular ticks
     timerId = setInterval(() => {
       const t = Date.now()
-      subscribers.forEach(fn => fn(t))
+      subscribers.forEach((fn) => {
+        try {
+          fn(t)
+        } catch {
+          // Ignore individual subscriber errors to prevent one bad subscriber from breaking others
+        }
+      })
     }, 60_000)
   }, msToNextMinute) as unknown as ReturnType<typeof setInterval>
 }
