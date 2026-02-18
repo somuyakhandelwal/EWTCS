@@ -1,7 +1,7 @@
 'use server'
 
 import { z } from 'zod'
-import { createSession } from '@/features/auth/lib/session'
+import { createSession, deleteSession } from '@/features/auth/lib/session'
 import pool from '@/shared/lib/db'
 import bcrypt from 'bcrypt'
 import { redirect } from 'next/navigation'
@@ -90,4 +90,9 @@ export async function login(prevState: unknown, formData: FormData) {
         console.error('Login error:', error)
         return { message: 'Internal server error' }
     }
+}
+
+export async function logout() {
+    await deleteSession()
+    redirect('/login')
 }

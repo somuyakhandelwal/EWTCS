@@ -25,7 +25,9 @@ export async function recordDispositionDelayReason(input: {
     const userWard = await getUserWard(session.userId)
     const bedWard = await getBedWard(input.bedId)
     const hasWardAccess =
-      (userWard && bedWard && userWard === bedWard) || session.role === 'admin'
+      (!userWard && !bedWard) ||                      // wards not configured — open access
+      (userWard && bedWard && userWard === bedWard) || // same ward
+      session.role === 'admin'                         // admin bypasses ward check
 
     if (!hasWardAccess) {
       logger.warn('Unauthorized disposition reason record attempt', {

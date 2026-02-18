@@ -4,16 +4,17 @@
 
 'use client'
 
-import { useCallback, useState, useRef, useEffect } from 'react'
+import { useCallback, useState, useRef, useEffect, useTransition } from 'react'
 import { BedGrid } from './BedGrid'
 import { SearchInput } from './SearchInput'
 import { ConnectionStatus } from './ConnectionStatus'
 import { SupervisorOverrideModal } from './SupervisorOverrideModal'
 import { ConfirmationModal } from './ConfirmationModal'
 import { DashboardSettings } from './DashboardSettings'
-import type { BedGridData, BedWithElapsedTime } from '../types/bed'
+import type { BedGridData, BedWithElapsedTime, DispositionDelayReason } from '../types/bed'
 import { useRealtimeBedUpdates } from '../hooks/useRealtimeBedUpdates'
 import { useBedStageUpdate } from '../hooks/useBedStageUpdate'
+import { recordDispositionDelayReason } from '../actions/disposition-actions'
 
 interface BedDashboardClientProps {
   initialData: BedGridData
@@ -71,6 +72,16 @@ export function BedDashboardClient({ initialData }: BedDashboardClientProps) {
     void bed
   }, [])
 
+  const [, startTransition] = useTransition()
+
+  const handleReasonSelect = useCallback(
+    async (bedId: string, reason: DispositionDelayReason) => {
+      await recordDispositionDelayReason({ bedId, reason })
+      startTransition(() => { handleRefresh() })
+    },
+    [handleRefresh]
+  )
+
   return (
     <div className="space-y-4">
       {/* Search Input */}
@@ -93,6 +104,7 @@ export function BedDashboardClient({ initialData }: BedDashboardClientProps) {
         onRefresh={handleRefresh}
         onBedClick={handleBedClick}
         onStageSelect={handleStageSelect}
+        onReasonSelect={handleReasonSelect}
         updatingBedId={updatingBedId}
         updatingStageId={updatingStageId}
         lastUpdatedBedId={lastUpdatedBedId}

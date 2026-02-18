@@ -2,7 +2,7 @@
 
 import { useMemo } from "react"
 import type { BedWithElapsedTime, Stage } from "../types/bed"
-import { getStageColorClasses } from "../lib/utils"
+import { getStageColorClasses } from '@/shared/utils/stage-colors'
 import { ContextMenu, type ContextMenuItem } from "@/shared/components/ui/context-menu"
 
 interface BedStageContextMenuProps {
