@@ -1,15 +1,14 @@
-// Bed Grid Component
-// Epic 1: Nurse Desk Bed Dashboard
-
 'use client'
 
 import { useState, useMemo, useCallback, type MouseEvent } from 'react'
 import { BedCard } from './BedCard'
 import { BedStatusLegend } from './BedStatusLegend'
 import { BedStageContextMenu } from './BedStageContextMenu'
+import { BottleneckPanel } from './BottleneckPanel'
+import { BedGridStats } from './BedGridStats'
 import { Button } from '@/shared/components/ui/button'
 import { Filter, RefreshCw } from 'lucide-react'
-import type { BedGridData, BedWithElapsedTime } from '../types/bed'
+import type { BedGridData, BedWithElapsedTime, DispositionDelayReason } from '../types/bed'
 import { getBedStatistics } from '../lib/utils'
 import { getValidTransitionsForBed } from '../actions/bed-grid-actions'
 
@@ -18,6 +17,7 @@ interface BedGridProps {
   onRefresh?: () => void
   onBedClick?: (bed: BedWithElapsedTime) => void
   onStageSelect?: (bedId: string, stageId: string) => void
+  onReasonSelect?: (bedId: string, reason: DispositionDelayReason) => void
   updatingBedId?: string | null
   updatingStageId?: string | null
   lastUpdatedBedId?: string | null
@@ -31,6 +31,7 @@ export function BedGrid({
   onRefresh,
   onBedClick,
   onStageSelect,
+  onReasonSelect,
   updatingBedId = null,
   updatingStageId = null,
   lastUpdatedBedId = null,
@@ -57,10 +58,6 @@ export function BedGrid({
   // Memoize statistics calculation
   const stats = useMemo(() => getBedStatistics(data.beds), [data.beds])
 
-  const handleRefresh = useCallback(() => {
-    onRefresh?.()
-  }, [onRefresh])
-  
   const toggleFilter = useCallback(() => {
     setShowDelayedOnly(prev => !prev)
   }, [])
@@ -84,8 +81,8 @@ export function BedGrid({
           setValidNextStages(result.allowed || [])
           setOverrideRequiredStages(result.requiresOverride || [])
         }
-      } catch (error) {
-        console.error('Failed to fetch valid transitions:', error)
+      } catch {
+        // transition fetch failed — menu will show all stages as fallback
       } finally {
         setIsLoadingTransitions(false)
       }
@@ -130,7 +127,7 @@ export function BedGrid({
         <Button
           variant="ghost"
           size="sm"
-          onClick={handleRefresh}
+          onClick={onRefresh}
           disabled={isRefreshing}
         >
           <RefreshCw className={`h-4 w-4 mr-2 ${isRefreshing ? 'animate-spin' : ''}`} />
@@ -139,27 +136,19 @@ export function BedGrid({
       </div>
 
       {/* Statistics bar */}
-      <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 p-4 bg-zinc-900/50 rounded-lg border border-zinc-800">
-        <div>
-          <p className="text-xs text-zinc-500 uppercase">Total Beds</p>
-          <p className="text-2xl font-bold text-white">{stats.total}</p>
-        </div>
-        <div>
-          <p className="text-xs text-zinc-500 uppercase">Occupied</p>
-          <p className="text-2xl font-bold text-green-400">{stats.occupied}</p>
-        </div>
-        <div>
-          <p className="text-xs text-zinc-500 uppercase">Available</p>
-          <p className="text-2xl font-bold text-blue-400">{stats.available}</p>
-        </div>
-        <div>
-          <p className="text-xs text-zinc-500 uppercase">Delayed</p>
-          <p className="text-2xl font-bold text-red-400">{stats.delayed}</p>
-        </div>
-      </div>
+      <BedGridStats
+        total={stats.total}
+        occupied={stats.occupied}
+        available={stats.available}
+        delayed={stats.delayed}
+        bottleneckCount={data.bottleneckCount}
+      />
 
       {/* Legend */}
       <BedStatusLegend stages={data.stages} />
+
+      {/* US-1.6: Disposition bottleneck panel */}
+      <BottleneckPanel beds={data.beds} onReasonRecorded={onRefresh} />
 
       {/* Bed Grid */}
       {displayedBeds.length === 0 ? (
@@ -178,6 +167,7 @@ export function BedGrid({
               bed={bed}
               onClick={onBedClick}
               onContextMenu={handleOpenMenu}
+              onReasonSelect={onReasonSelect}
               showUpdated={lastUpdatedBedId === bed.id && lastUpdatedStageId !== null}
               errorMessage={errorByBedId[bed.id] || null}
             />
@@ -200,7 +190,6 @@ export function BedGrid({
         />
       )}
 
-      {/* Footer info */}
       <div className="text-center text-xs text-zinc-500">
         Showing {displayedBeds.length} of {data.beds.length} beds
         {showDelayedOnly && ' (delayed only)'}

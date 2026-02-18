@@ -39,11 +39,18 @@ export const BedStatusLegend = memo(function BedStatusLegend({ stages }: BedStat
       </div>
       
       {/* Delay indicator */}
-      <div className="mt-3 pt-3 border-t border-zinc-800">
+      <div className="mt-3 pt-3 border-t border-zinc-800 flex flex-wrap gap-4">
         <div className="flex items-center gap-2">
           <div className="w-4 h-4 rounded border-2 border-red-700 bg-red-900/50 animate-pulse" />
           <span className="text-xs text-zinc-400">
             Delayed (&gt;3 hours)
+          </span>
+        </div>
+        {/* US-1.6: Disposition bottleneck key */}
+        <div className="flex items-center gap-2">
+          <div className="w-4 h-4 rounded border-2 border-amber-700 bg-amber-900/40 animate-pulse" />
+          <span className="text-xs text-zinc-400">
+            Disposition Hold (&gt;30 min in Decision Made)
           </span>
         </div>
       </div>

@@ -12,7 +12,7 @@ export function formatElapsedTime(ms: number | null): string {
   }
 
   const totalMinutes = Math.floor(ms / 60000)
-  
+
   if (totalMinutes < 1) {
     return '< 1m'
   }
@@ -44,7 +44,7 @@ export function getDelayColorClasses(isDelayed: boolean): {
       border: 'border-red-700',
     }
   }
-  
+
   return {
     bg: 'bg-zinc-800',
     text: 'text-zinc-300',
@@ -61,7 +61,7 @@ export function calculateOccupancyPercentage(
   beds: Array<{ isOccupied: boolean }>
 ): number {
   if (beds.length === 0) return 0
-  
+
   const occupiedCount = beds.filter(b => b.isOccupied).length
   return Math.round((occupiedCount / beds.length) * 100)
 }
@@ -86,8 +86,7 @@ export function getBedStatistics(
   const available = total - occupied
   const delayed = beds.filter(b => b.isDelayed).length
   const occupancyPercentage = calculateOccupancyPercentage(beds)
-  
-  // Calculate average elapsed time for occupied beds
+
   const occupiedBeds = beds.filter(b => b.isOccupied && b.elapsedTimeMs !== null)
   const averageElapsedTimeMs = occupiedBeds.length > 0
     ? occupiedBeds.reduce((sum, bed) => sum + (bed.elapsedTimeMs || 0), 0) / occupiedBeds.length
@@ -102,3 +101,28 @@ export function getBedStatistics(
     averageElapsedTimeMs,
   }
 }
+
+const CRITICAL_STAGE_KEYWORDS = [
+  'discharge',
+  'code',
+  'critical',
+  'deceased',
+  'terminal',
+  'transfer'
+]
+
+/**
+ * Check if a stage is considered critical and requires confirmation
+ * @param stageName - Name of the stage
+ * @returns boolean
+ */
+export function isCriticalStage(stageName: string): boolean {
+  if (!stageName) return false
+  const normalizedStageName = stageName.toLowerCase()
+  return CRITICAL_STAGE_KEYWORDS.some(keyword =>
+    normalizedStageName.includes(keyword)
+  )
+}
+
+// Re-export from shared utility for backward compatibility
+export { getStageColorClasses } from '@/shared/utils/stage-colors'
