@@ -4,7 +4,8 @@ import { useCallback, useMemo, useState } from 'react'
 import { BedGrid } from './BedGrid'
 import { BedHistoryModal } from './BedHistoryModal'
 import type { BedGridData, BedWithElapsedTime, Stage } from '../types/bed'
-import { updateBedStage, getBedHistory } from '../actions/bed-actions'
+import { updateBedStage, getBedHistory, getBedGridData } from '../actions/bed-actions'
+import { useRouter } from 'next/navigation'
 
 interface BedDashboardClientProps {
   initialData: BedGridData
@@ -19,12 +20,14 @@ interface HistoryState {
 }
 
 export function BedDashboardClient({ initialData }: BedDashboardClientProps) {
-  const [data] = useState<BedGridData>(initialData)
+  const router = useRouter()
+  const [data, setData] = useState<BedGridData>(initialData)
   const [updatingBedId, setUpdatingBedId] = useState<string | null>(null)
   const [updatingStageId, setUpdatingStageId] = useState<string | null>(null)
   const [errorByBedId, setErrorByBedId] = useState<Record<string, string | null>>({})
   const [lastUpdatedBedId, setLastUpdatedBedId] = useState<string | null>(null)
   const [lastUpdatedStageId, setLastUpdatedStageId] = useState<string | null>(null)
+  const [isRefreshing, setIsRefreshing] = useState(false)
 
   const [historyState, setHistoryState] = useState<HistoryState>({
     isOpen: false,
@@ -40,9 +43,27 @@ export function BedDashboardClient({ initialData }: BedDashboardClientProps) {
     return map
   }, [data.stages])
 
+  const refreshData = useCallback(async () => {
+    if (isRefreshing) return
+    
+    setIsRefreshing(true)
+    try {
+      const result = await getBedGridData()
+      if (result.success && result.data) {
+        setData(result.data)
+        // Also trigger Next.js router refresh for server component data
+        router.refresh()
+      }
+    } catch (error) {
+      console.error('Failed to refresh data:', error)
+    } finally {
+      setIsRefreshing(false)
+    }
+  }, [isRefreshing, router])
+
   const handleRefresh = useCallback(() => {
-    // Refresh logic can be added later
-  }, [])
+    refreshData()
+  }, [refreshData])
 
   const handleBedClick = useCallback(async (bed: BedWithElapsedTime) => {
     if (!bed.isOccupied) return
@@ -108,11 +129,14 @@ export function BedDashboardClient({ initialData }: BedDashboardClientProps) {
         const result = await updateBedStage({ bedId, toStageId: stageId })
 
         if (!result.success) {
-          throw new Error('Failed to update stage')
+          throw new Error(result.message || 'Failed to update stage')
         }
 
         setLastUpdatedBedId(bedId)
         setLastUpdatedStageId(stageId)
+
+        // Refresh the data to show the updated stage and colors
+        await refreshData()
       } catch (error) {
         const message = error instanceof Error ? error.message : 'Failed to update stage'
         setErrorByBedId((prev) => ({
@@ -124,7 +148,7 @@ export function BedDashboardClient({ initialData }: BedDashboardClientProps) {
         setUpdatingStageId(null)
       }
     },
-    [updatingBedId, stageById]
+    [updatingBedId, stageById, refreshData]
   )
 
   return (
@@ -139,6 +163,7 @@ export function BedDashboardClient({ initialData }: BedDashboardClientProps) {
         lastUpdatedBedId={lastUpdatedBedId}
         lastUpdatedStageId={lastUpdatedStageId}
         errorByBedId={errorByBedId}
+        isRefreshing={isRefreshing}
       />
 
       <BedHistoryModal
@@ -151,5 +176,3 @@ export function BedDashboardClient({ initialData }: BedDashboardClientProps) {
     </>
   )
 }
-
-

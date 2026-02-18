@@ -3,6 +3,7 @@
 
 import { query } from '@/shared/lib/db'
 import { logger } from '@/shared/config/logger'
+import { BED_WITH_STAGE_SELECT } from './bed-query-helpers'
 import type { Bed, BedWithElapsedTime } from '../types/bed'
 
 /**
@@ -12,24 +13,7 @@ export async function getAllBeds(): Promise<Bed[]> {
   try {
     const result = await query<Bed>(`
       SELECT 
-        b.id,
-        b.bed_number as "bedNumber",
-        b.current_stage_id as "currentStageId",
-        b.patient_start_time as "patientStartTime",
-        b.last_stage_change as "lastStageChange",
-        b.is_occupied as "isOccupied",
-        b.is_active as "isActive",
-        b.metadata,
-        b.created_at as "createdAt",
-        b.updated_at as "updatedAt",
-        json_build_object(
-          'id', s.id,
-          'name', s.name,
-          'displayOrder', s.display_order,
-          'colorCode', s.color_code,
-          'description', s.description,
-          'isActive', s.is_active
-        ) as "currentStage"
+        ${BED_WITH_STAGE_SELECT}
       FROM beds b
       LEFT JOIN stages s ON b.current_stage_id = s.id
       WHERE b.is_active = true
@@ -50,24 +34,7 @@ export async function getBedsWithElapsedTime(delayThresholdMs: number): Promise<
   try {
     const result = await query<BedWithElapsedTime>(`
       SELECT 
-        b.id,
-        b.bed_number as "bedNumber",
-        b.current_stage_id as "currentStageId",
-        b.patient_start_time as "patientStartTime",
-        b.last_stage_change as "lastStageChange",
-        b.is_occupied as "isOccupied",
-        b.is_active as "isActive",
-        b.metadata,
-        b.created_at as "createdAt",
-        b.updated_at as "updatedAt",
-        json_build_object(
-          'id', s.id,
-          'name', s.name,
-          'displayOrder', s.display_order,
-          'colorCode', s.color_code,
-          'description', s.description,
-          'isActive', s.is_active
-        ) as "currentStage",
+        ${BED_WITH_STAGE_SELECT},
         CASE 
           WHEN b.is_occupied AND b.patient_start_time IS NOT NULL 
           THEN EXTRACT(EPOCH FROM (CURRENT_TIMESTAMP - b.patient_start_time)) * 1000
@@ -100,24 +67,7 @@ export async function getBedById(bedId: string): Promise<Bed | null> {
     const result = await query<Bed>(
       `
       SELECT 
-        b.id,
-        b.bed_number as "bedNumber",
-        b.current_stage_id as "currentStageId",
-        b.patient_start_time as "patientStartTime",
-        b.last_stage_change as "lastStageChange",
-        b.is_occupied as "isOccupied",
-        b.is_active as "isActive",
-        b.metadata,
-        b.created_at as "createdAt",
-        b.updated_at as "updatedAt",
-        json_build_object(
-          'id', s.id,
-          'name', s.name,
-          'displayOrder', s.display_order,
-          'colorCode', s.color_code,
-          'description', s.description,
-          'isActive', s.is_active
-        ) as "currentStage"
+        ${BED_WITH_STAGE_SELECT}
       FROM beds b
       LEFT JOIN stages s ON b.current_stage_id = s.id
       WHERE b.id = $1 AND b.is_active = true

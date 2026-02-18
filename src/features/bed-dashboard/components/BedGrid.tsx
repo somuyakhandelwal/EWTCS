@@ -21,6 +21,7 @@ interface BedGridProps {
   lastUpdatedBedId: string | null
   lastUpdatedStageId: string | null
   errorByBedId: Record<string, string | null>
+  isRefreshing?: boolean
 }
 
 export function BedGrid({
@@ -33,6 +34,7 @@ export function BedGrid({
   lastUpdatedBedId,
   lastUpdatedStageId,
   errorByBedId,
+  isRefreshing: externalRefreshing = false,
 }: BedGridProps) {
   const [showDelayedOnly, setShowDelayedOnly] = useState(false)
   const [isRefreshing, setIsRefreshing] = useState(false)
@@ -56,6 +58,8 @@ export function BedGrid({
   const toggleFilter = useCallback(() => {
     setShowDelayedOnly(prev => !prev)
   }, [])
+
+  const refreshing = isRefreshing || externalRefreshing
 
   return (
     <div className="space-y-6">
@@ -82,9 +86,9 @@ export function BedGrid({
           variant="ghost"
           size="sm"
           onClick={handleRefresh}
-          disabled={isRefreshing}
+          disabled={refreshing}
         >
-          <RefreshCw className={`h-4 w-4 mr-2 ${isRefreshing ? 'animate-spin' : ''}`} />
+          <RefreshCw className={`h-4 w-4 mr-2 ${refreshing ? 'animate-spin' : ''}`} />
           Refresh
         </Button>
       </div>
