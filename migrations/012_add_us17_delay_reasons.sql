@@ -9,6 +9,7 @@
 ALTER TYPE disposition_delay_reason_type ADD VALUE IF NOT EXISTS 'no_icu_bed';
 ALTER TYPE disposition_delay_reason_type ADD VALUE IF NOT EXISTS 'no_general_ward_bed';
 
--- Down Migration (cannot truly undo ALTER TYPE ADD VALUE in PostgreSQL;
--- a full type recreation would be needed, which is intentionally omitted here
--- as removing enum values is destructive and not required for a rollback).
+-- Down Migration
+-- NOTE: ALTER TYPE ADD VALUE cannot be reversed in PostgreSQL without full type
+-- recreation. The values are left in place as they are non-breaking additions.
+SELECT 1; -- no-op: enum value removal is intentionally unsupported
