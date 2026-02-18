@@ -5,8 +5,6 @@
 -- Since bed_stage_logs are immutable, corrections must be tracked separately
 -- This table maintains a full audit trail of any corrections made
 
--- Up Migration
-
 CREATE TABLE IF NOT EXISTS bed_stage_log_corrections (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
     bed_stage_log_id UUID NOT NULL,
