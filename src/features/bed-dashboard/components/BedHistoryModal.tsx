@@ -116,14 +116,14 @@ export function BedHistoryModal({
                                                 {log.durationMs !== null && (
                                                     <div className="flex items-center gap-2 text-zinc-400">
                                                         <Clock className="h-3.5 w-3.5 text-zinc-500" />
-                                                        <span>Time spent in <span className="text-zinc-300">"{log.fromStageName || 'Admission'}"</span>: <span className="text-white font-medium">{formatDuration(log.durationMs)}</span></span>
+                                                        <span>Time spent in <span className="text-zinc-300">&quot;{log.fromStageName || 'Admission'}&quot;</span>: <span className="text-white font-medium">{formatDuration(log.durationMs)}</span></span>
                                                     </div>
                                                 )}
                                             </div>
 
                                             {log.notes && (
                                                 <div className="mt-3 pt-3 border-t border-zinc-800/50">
-                                                    <p className="text-xs text-zinc-500 italic">"{log.notes}"</p>
+                                                    <p className="text-xs text-zinc-500 italic">&quot;{log.notes}&quot;</p>
                                                 </div>
                                             )}
                                         </div>
