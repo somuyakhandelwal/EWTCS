@@ -9,8 +9,9 @@ import { BedGridStats } from './BedGridStats'
 import { BedGridHeader } from './BedGridHeader'
 import { BedGridFooter } from './BedGridFooter'
 import { useBedFilter } from '../hooks/useBedFilter'
-import type { BedGridData, BedWithElapsedTime, DispositionDelayReason } from '../types/bed'
+import type { BedGridData, BedWithElapsedTime, DispositionDelayReason, TatSummary } from '../types/bed'
 import { getBedStatistics } from '../lib/utils'
+import { isCleaningStage } from './CleaningActions'
 import { getValidTransitionsForBed } from '../actions/bed-grid-actions'
 
 interface BedGridProps {
@@ -20,6 +21,9 @@ interface BedGridProps {
   onBedClick?: (bed: BedWithElapsedTime) => void
   onStageSelect?: (bedId: string, stageId: string) => void
   onReasonSelect?: (bedId: string, reason: DispositionDelayReason) => void
+  onMarkClean?: (bedId: string) => void
+  markCleanBedId?: string | null
+  tatSummary?: TatSummary | null
   updatingBedId?: string | null
   updatingStageId?: string | null
   lastUpdatedBedId?: string | null
@@ -37,6 +41,9 @@ export function BedGrid({
   onBedClick,
   onStageSelect,
   onReasonSelect,
+  onMarkClean,
+  markCleanBedId = null,
+  tatSummary = null,
   updatingBedId = null,
   updatingStageId = null,
   lastUpdatedBedId = null,
@@ -58,14 +65,25 @@ export function BedGrid({
   const {
     showDelayedOnly,
     sortOrder,
-    displayedBeds,
+    displayedBeds: filteredBeds,
     isFilterActive,
     toggleDelayedFilter,
     toggleSortOrder,
     clearFilter,
   } = useBedFilter(data.beds)
 
+  // Further filter by search query
+  const displayedBeds = useMemo(() => {
+    if (!searchQuery.trim()) return filteredBeds
+    const q = searchQuery.toLowerCase()
+    return filteredBeds.filter(bed =>
+      bed.bedNumber.toLowerCase().includes(q) ||
+      bed.currentStage?.name.toLowerCase().includes(q)
+    )
+  }, [filteredBeds, searchQuery])
+
   const stats = useMemo(() => getBedStatistics(data.beds), [data.beds])
+  const cleaningCount = useMemo(() => data.beds.filter(b => isCleaningStage(b.currentStage?.name)).length, [data.beds])
 
   const openMenuForBed = useCallback(
     async (bedId: string, position: { x: number; y: number }) => {
@@ -141,6 +159,8 @@ export function BedGrid({
         available={stats.available}
         delayed={stats.delayed}
         bottleneckCount={data.bottleneckCount}
+        cleaningCount={cleaningCount}
+        avgTatMs={tatSummary?.averageTatMs}
       />
 
       {/* Legend */}
@@ -167,6 +187,8 @@ export function BedGrid({
               onClick={onStageSelect ? handleBedTap : onBedClick}
               onContextMenu={handleOpenMenu}
               onReasonSelect={onReasonSelect}
+              onMarkClean={onMarkClean}
+              isMarkCleanUpdating={markCleanBedId === bed.id}
               showUpdated={lastUpdatedBedId === bed.id && lastUpdatedStageId !== null}
               errorMessage={errorByBedId[bed.id] || null}
               searchQuery={searchQuery}

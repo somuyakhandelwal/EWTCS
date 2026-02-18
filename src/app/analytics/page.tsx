@@ -1,4 +1,5 @@
 import { StageAnalyticsView } from '@/features/bed-dashboard/components/StageAnalyticsView'
+import { TatAnalyticsView } from '@/features/bed-dashboard/components/TatAnalyticsView'
 import { verifyActiveSession } from '@/shared/lib/active-session'
 import { redirect } from 'next/navigation'
 import { Button } from '@/shared/components/ui/button'
@@ -41,6 +42,9 @@ export default async function AnalyticsPage() {
 
         {/* Analytics View */}
         <StageAnalyticsView />
+
+        {/* Turnaround Time Analytics (US-2.4) */}
+        <TatAnalyticsView />
       </div>
     </div>
   )

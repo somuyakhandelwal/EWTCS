@@ -36,7 +36,8 @@ export interface UpdateBedStageResult {
 
 function isNonPatientStage(stageName: string): boolean {
   const normalized = stageName.trim().toLowerCase()
-  return normalized === 'empty' || normalized === 'cleaning'
+  // Cleaning retains patient context for TAT tracking (US-2.4)
+  return normalized === 'empty'
 }
 
 export async function updateBedStageInDB(

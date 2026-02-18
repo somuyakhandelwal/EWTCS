@@ -8,6 +8,7 @@ import type { BedWithElapsedTime, DispositionDelayReason } from '../types/bed'
 import { DISPOSITION_DELAY_REASON_LABELS } from '../types/bed'
 import { formatElapsedTime, getStageColorClasses, getDelayColorClasses } from '../lib/utils'
 import { useElapsedTime } from '../hooks/useElapsedTime'
+import { CleaningActions, isCleaningStage } from './CleaningActions'
 import { cn } from '@/shared/lib/utils'
 import { highlightMatch } from '../lib/highlight-match'
 
@@ -21,6 +22,8 @@ interface BedCardProps {
   onClick?: (bed: BedWithElapsedTime) => void
   onContextMenu?: (event: MouseEvent<HTMLDivElement>, bed: BedWithElapsedTime) => void
   onReasonSelect?: (bedId: string, reason: DispositionDelayReason) => void
+  onMarkClean?: (bedId: string) => void
+  isMarkCleanUpdating?: boolean
   showUpdated?: boolean
   errorMessage?: string | null
   searchQuery?: string
@@ -34,6 +37,8 @@ export const BedCard = memo(function BedCard({
   onClick,
   onContextMenu,
   onReasonSelect,
+  onMarkClean,
+  isMarkCleanUpdating = false,
   showUpdated = false,
   errorMessage = null,
   searchQuery = '',
@@ -48,6 +53,7 @@ export const BedCard = memo(function BedCard({
   const isOccupied = bed.isOccupied
   const isDelayed = bed.isDelayed
   const isBottleneck = bed.isDispositionBottleneck
+  const isCleaning = isCleaningStage(bed.currentStage?.name)
 
   return (
     <Card
@@ -175,8 +181,18 @@ export const BedCard = memo(function BedCard({
           </div>
         )}
 
+        {/* US-2.4: Cleaning actions */}
+        {isCleaning && onMarkClean && (
+          <CleaningActions
+            bedId={bed.id}
+            lastStageChange={bed.lastStageChange}
+            onMarkClean={onMarkClean}
+            isUpdating={isMarkCleanUpdating}
+          />
+        )}
+
         {/* Empty bed status */}
-        {!isOccupied && (
+        {!isOccupied && !isCleaning && (
           <div className="pt-2 border-t border-zinc-700/50">
             <p className="text-xs text-zinc-500">Status</p>
             <p className="text-sm font-medium text-zinc-400">Available</p>
