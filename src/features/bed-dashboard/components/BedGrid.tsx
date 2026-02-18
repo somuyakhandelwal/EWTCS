@@ -11,6 +11,7 @@ import { Button } from '@/shared/components/ui/button'
 import { Filter, RefreshCw } from 'lucide-react'
 import type { BedGridData, BedWithElapsedTime } from '../types/bed'
 import { getBedStatistics } from '../lib/utils'
+import { getValidTransitionsForBed } from '../actions/bed-grid-actions'
 
 interface BedGridProps {
   data: BedGridData
@@ -42,6 +43,9 @@ export function BedGrid({
     bedId: string
     position: { x: number; y: number }
   } | null>(null)
+  const [validNextStages, setValidNextStages] = useState<string[]>([])
+  const [overrideRequiredStages, setOverrideRequiredStages] = useState<string[]>([])
+  const [isLoadingTransitions, setIsLoadingTransitions] = useState(false)
 
   // Memoize filtered beds to prevent unnecessary recalculation
   const displayedBeds = useMemo(() => {
@@ -62,7 +66,7 @@ export function BedGrid({
   }, [])
 
   const handleOpenMenu = useCallback(
-    (event: MouseEvent<HTMLDivElement>, bed: BedWithElapsedTime) => {
+    async (event: MouseEvent<HTMLDivElement>, bed: BedWithElapsedTime) => {
       if (!onStageSelect) {
         return
       }
@@ -71,12 +75,28 @@ export function BedGrid({
         bedId: bed.id,
         position: { x: event.clientX, y: event.clientY },
       })
+
+      // Fetch valid transitions for this bed
+      setIsLoadingTransitions(true)
+      try {
+        const result = await getValidTransitionsForBed(bed.id)
+        if (result.success) {
+          setValidNextStages(result.allowed || [])
+          setOverrideRequiredStages(result.requiresOverride || [])
+        }
+      } catch (error) {
+        console.error('Failed to fetch valid transitions:', error)
+      } finally {
+        setIsLoadingTransitions(false)
+      }
     },
     [onStageSelect]
   )
 
   const handleCloseMenu = useCallback(() => {
     setMenuState(null)
+    setValidNextStages([])
+    setOverrideRequiredStages([])
   }, [])
 
   const activeBed = useMemo(() => {
@@ -171,8 +191,10 @@ export function BedGrid({
           stages={data.stages}
           isOpen={Boolean(menuState)}
           position={menuState?.position ?? null}
-          isUpdating={Boolean(updatingBedId)}
+          isUpdating={Boolean(updatingBedId) || isLoadingTransitions}
           updatingStageId={updatingStageId}
+          validNextStages={validNextStages}
+          overrideRequiredStages={overrideRequiredStages}
           onStageSelect={onStageSelect}
           onClose={handleCloseMenu}
         />

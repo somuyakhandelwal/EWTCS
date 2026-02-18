@@ -4,9 +4,12 @@
 
 'use client'
 
-import { useCallback, useEffect } from 'react'
+import { useCallback } from 'react'
 import { BedGrid } from './BedGrid'
 import { ConnectionStatus } from './ConnectionStatus'
+import { SupervisorOverrideModal } from './SupervisorOverrideModal'
+import { ConfirmationModal } from './ConfirmationModal'
+import { DashboardSettings } from './DashboardSettings'
 import type { BedGridData, BedWithElapsedTime } from '../types/bed'
 import { useRealtimeBedUpdates } from '../hooks/useRealtimeBedUpdates'
 import { useBedStageUpdate } from '../hooks/useBedStageUpdate'
@@ -16,16 +19,13 @@ interface BedDashboardClientProps {
 }
 
 export function BedDashboardClient({ initialData }: BedDashboardClientProps) {
-  // Hook for real-time polling and connection status
   const {
     data: realtimeData,
     connectionStatus,
     isLoading,
-    refresh,
     reconnect,
   } = useRealtimeBedUpdates(initialData)
 
-  // Hook for bed stage updates with optimistic updates and error handling
   const {
     data,
     updatingBedId,
@@ -33,32 +33,33 @@ export function BedDashboardClient({ initialData }: BedDashboardClientProps) {
     lastUpdatedBedId,
     lastUpdatedStageId,
     errorByBedId,
+    isOverrideSubmitting,
+    overrideState,
+    handleRefresh,
     handleStageSelect,
-    setData,
+    handleOverrideApprove,
+    closeOverrideModal,
+    confirmationState,
+    handleConfirmationConfirm,
+    closeConfirmationModal,
+    settings,
+    toggleConfirmation,
   } = useBedStageUpdate(realtimeData)
 
-  // Sync realtime data to bed stage update hook
-  useEffect(() => {
-    setData(realtimeData)
-  }, [realtimeData, setData])
-
-  const handleRefresh = useCallback(async () => {
-    await refresh()
-  }, [refresh])
-
   const handleBedClick = useCallback((bed: BedWithElapsedTime) => {
-    // TODO US-1.2: Open bed details modal or navigate to bed page
     void bed
   }, [])
 
   return (
     <div className="space-y-4">
-      {/* Connection Status Indicator */}
-      <div className="flex justify-end">
+      <div className="flex justify-end items-center gap-2">
+        <DashboardSettings
+          enabled={settings.confirmCriticalStages}
+          onToggle={toggleConfirmation}
+        />
         <ConnectionStatus status={connectionStatus} onReconnect={reconnect} />
       </div>
 
-      {/* Bed Grid with real-time data */}
       <BedGrid
         data={data}
         onRefresh={handleRefresh}
@@ -71,7 +72,27 @@ export function BedDashboardClient({ initialData }: BedDashboardClientProps) {
         errorByBedId={errorByBedId}
         isRefreshing={isLoading}
       />
+
+      <SupervisorOverrideModal
+        isOpen={Boolean(overrideState)}
+        bedNumber={overrideState?.bedNumber ?? null}
+        fromStageName={overrideState?.fromStageName ?? null}
+        toStage={overrideState?.toStage ?? null}
+        reason={overrideState?.reason ?? null}
+        onApprove={handleOverrideApprove}
+        onCancel={closeOverrideModal}
+        isLoading={isOverrideSubmitting}
+      />
+
+      <ConfirmationModal
+        isOpen={Boolean(confirmationState)}
+        bedNumber={confirmationState?.bedNumber ?? null}
+        fromStageName={confirmationState?.fromStageName ?? null}
+        toStage={confirmationState?.toStage ?? null}
+        onConfirm={handleConfirmationConfirm}
+        onCancel={closeConfirmationModal}
+        isUpdating={confirmationState ? updatingBedId === confirmationState.bedId : false}
+      />
     </div>
   )
 }
-

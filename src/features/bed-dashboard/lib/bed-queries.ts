@@ -1,13 +1,9 @@
-// Bed Database Queries
-// Epic 1: Nurse Desk Bed Dashboard
-
+// Bed Database Queries - Epic 1: Nurse Desk Bed Dashboard
 import { query } from '@/shared/lib/db'
 import { logger } from '@/shared/config/logger'
 import type { Bed, BedWithElapsedTime } from '../types/bed'
 
-/**
- * Get all active beds with current stage information
- */
+/** Get all active beds with current stage information */
 export async function getAllBeds(): Promise<Bed[]> {
   try {
     const result = await query<Bed>(`
@@ -43,9 +39,7 @@ export async function getAllBeds(): Promise<Bed[]> {
   }
 }
 
-/**
- * Get all beds with elapsed time calculation
- */
+/** Get all beds with elapsed time calculation */
 export async function getBedsWithElapsedTime(delayThresholdMs: number): Promise<BedWithElapsedTime[]> {
   try {
     const result = await query<BedWithElapsedTime>(`
@@ -92,9 +86,7 @@ export async function getBedsWithElapsedTime(delayThresholdMs: number): Promise<
   }
 }
 
-/**
- * Get bed by ID
- */
+/** Get bed by ID */
 export async function getBedById(bedId: string): Promise<Bed | null> {
   try {
     const result = await query<Bed>(
@@ -135,7 +127,7 @@ export async function getBedById(bedId: string): Promise<Bed | null> {
 
 /**
  * Get bed by bed number
- */
+/** Get bed by bed number */
 export async function getBedByNumber(bedNumber: string): Promise<Bed | null> {
   try {
     const result = await query<Bed>(
@@ -165,10 +157,7 @@ export async function getBedByNumber(bedNumber: string): Promise<Bed | null> {
   }
 }
 
-/**
- * Get the ward ID for a specific bed
- * Used for access control in updateBedStage()
- */
+/** Get the ward ID for a specific bed (for access control) */
 export async function getBedWard(bedId: string): Promise<string | null> {
   try {
     const result = await query<{ ward_id: string | null }>(
@@ -188,10 +177,7 @@ export async function getBedWard(bedId: string): Promise<string | null> {
   }
 }
 
-/**
- * Get the ward ID for a specific user
- * Used for access control in updateBedStage()
- */
+/** Get the ward ID for a specific user (for access control) */
 export async function getUserWard(userId: string): Promise<string | null> {
   try {
     const result = await query<{ ward_id: string | null }>(

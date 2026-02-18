@@ -224,6 +224,7 @@ Visit [http://localhost:3000/login](http://localhost:3000/login) and log in:
 | `stages` | Patient workflow stages | id, name, display_order, color_code |
 | `beds` | Emergency ward beds | id, bed_number, current_stage_id, is_occupied, ward_id |
 | `bed_stage_logs` | Bed transition history | id, bed_id, from_stage_id, to_stage_id |
+| `stage_transitions` | Workflow rules for stage updates | from_stage_id, to_stage_id, is_allowed, requires_supervisor_override |
 | `wards` | Hospital ward definitions | id, name, code, description, is_active |
 
 ### Default Stages
@@ -238,6 +239,19 @@ Visit [http://localhost:3000/login](http://localhost:3000/login) and log in:
 | Decision Made | 5 | Green | Discharge/admission decided |
 | Discharge Process | 6 | Purple | Being discharged |
 | Cleaning | 7 | Pink | Bed being cleaned |
+
+### Stage Transition Rules
+
+Stage transition rules are stored in the `stage_transitions` table (migration 010). These rules control which stage updates are allowed, which require supervisor approval, and which are blocked.
+
+Key fields:
+- `from_stage_id`: Source stage (NULL means any current stage)
+- `to_stage_id`: Destination stage
+- `is_allowed`: Whether the transition is allowed without override
+- `requires_supervisor_override`: If true, only supervisors/admins can approve
+- `priority`: Higher priority rules override lower ones
+
+Default rules are seeded by migration 010 and reflect the standard emergency workflow with safe override options for edge cases.
 
 ### Relationships
 

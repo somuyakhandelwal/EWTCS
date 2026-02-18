@@ -12,6 +12,8 @@ interface BedStageContextMenuProps {
   position: { x: number; y: number } | null
   isUpdating: boolean
   updatingStageId: string | null
+  validNextStages?: string[] // Stages without override requirement
+  overrideRequiredStages?: string[] // Stages requiring supervisor approval
   onStageSelect: (bedId: string, stageId: string) => void
   onClose: () => void
 }
@@ -23,6 +25,8 @@ export function BedStageContextMenu({
   position,
   isUpdating,
   updatingStageId,
+  validNextStages = [],
+  overrideRequiredStages = [],
   onStageSelect,
   onClose,
 }: BedStageContextMenuProps) {
@@ -34,16 +38,25 @@ export function BedStageContextMenu({
     return stages.map((stage) => {
       const isCurrentStage = bed.currentStageId === stage.id
       const colorClasses = getStageColorClasses(stage.colorCode)
+      const isValid = validNextStages.includes(stage.id)
+      const requiresOverride = overrideRequiredStages.includes(stage.id)
+      const isDisabled = !isValid && !requiresOverride
+
+      let label = stage.name
+      if (requiresOverride) {
+        label = `⚠️ ${stage.name} (needs approval)`
+      }
 
       return {
         id: stage.id,
-        label: stage.name,
-        disabled: isUpdating || isCurrentStage || updatingStageId === stage.id,
+        label,
+        disabled: isUpdating || isCurrentStage || updatingStageId === stage.id || isDisabled,
         onSelect: () => onStageSelect(bed.id, stage.id),
         className: colorClasses.text,
+        title: isDisabled ? 'This transition is not allowed' : requiresOverride ? 'Requires supervisor approval' : undefined,
       }
     })
-  }, [bed, stages, isUpdating, updatingStageId, onStageSelect])
+  }, [bed, stages, isUpdating, updatingStageId, validNextStages, overrideRequiredStages, onStageSelect])
 
   if (!bed) {
     return null
