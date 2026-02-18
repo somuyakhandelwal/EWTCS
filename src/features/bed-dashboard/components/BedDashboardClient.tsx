@@ -6,8 +6,12 @@
 
 import { useCallback } from 'react'
 import { BedGrid } from './BedGrid'
-import type { BedGridData, BedWithElapsedTime } from '../types/bed'
+import { ConnectionStatus } from './ConnectionStatus'
 import { SupervisorOverrideModal } from './SupervisorOverrideModal'
+import { ConfirmationModal } from './ConfirmationModal'
+import { DashboardSettings } from './DashboardSettings'
+import type { BedGridData, BedWithElapsedTime } from '../types/bed'
+import { useRealtimeBedUpdates } from '../hooks/useRealtimeBedUpdates'
 import { useBedStageUpdate } from '../hooks/useBedStageUpdate'
 
 interface BedDashboardClientProps {
@@ -16,38 +20,46 @@ interface BedDashboardClientProps {
 
 export function BedDashboardClient({ initialData }: BedDashboardClientProps) {
   const {
+    data: realtimeData,
+    connectionStatus,
+    isLoading,
+    reconnect,
+  } = useRealtimeBedUpdates(initialData)
+
+  const {
     data,
     updatingBedId,
     updatingStageId,
-    errorByBedId,
     lastUpdatedBedId,
     lastUpdatedStageId,
+    errorByBedId,
     isOverrideSubmitting,
     overrideState,
     handleRefresh,
     handleStageSelect,
     handleOverrideApprove,
     closeOverrideModal,
-  } = useBedStageUpdate(initialData)
-
-  // TODO: Implement real-time updates (US-1.2)
-  const isLoading = false, connectionStatus = 'connected', reconnect = () => {}
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  const ConnectionStatus = (_props: { status: string; onReconnect: () => void }) => null
+    confirmationState,
+    handleConfirmationConfirm,
+    closeConfirmationModal,
+    settings,
+    toggleConfirmation,
+  } = useBedStageUpdate(realtimeData)
 
   const handleBedClick = useCallback((bed: BedWithElapsedTime) => {
-    // TODO US-1.2: Open bed details modal or navigate to bed page
     void bed
   }, [])
 
   return (
     <div className="space-y-4">
-      {/* Connection Status Indicator */}
-      <div className="flex justify-end">
+      <div className="flex justify-end items-center gap-2">
+        <DashboardSettings
+          enabled={settings.confirmCriticalStages}
+          onToggle={toggleConfirmation}
+        />
         <ConnectionStatus status={connectionStatus} onReconnect={reconnect} />
       </div>
 
-      {/* Bed Grid with real-time data */}
       <BedGrid
         data={data}
         onRefresh={handleRefresh}
@@ -71,7 +83,16 @@ export function BedDashboardClient({ initialData }: BedDashboardClientProps) {
         onCancel={closeOverrideModal}
         isLoading={isOverrideSubmitting}
       />
+
+      <ConfirmationModal
+        isOpen={Boolean(confirmationState)}
+        bedNumber={confirmationState?.bedNumber ?? null}
+        fromStageName={confirmationState?.fromStageName ?? null}
+        toStage={confirmationState?.toStage ?? null}
+        onConfirm={handleConfirmationConfirm}
+        onCancel={closeConfirmationModal}
+        isUpdating={confirmationState ? updatingBedId === confirmationState.bedId : false}
+      />
     </div>
   )
 }
-

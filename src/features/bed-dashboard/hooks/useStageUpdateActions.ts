@@ -6,9 +6,10 @@
 import { useCallback, useRef, useState } from 'react'
 import type { Dispatch, SetStateAction } from 'react'
 import { useRouter } from 'next/navigation'
-import type { BedGridData, BedWithElapsedTime, Stage } from '../types/bed'
-import type { OverrideState } from './useBedStageUpdate'
+
+import type { BedGridData, BedWithElapsedTime, Stage, OverrideState, ConfirmationState } from '../types/bed'
 import { executeStageUpdate } from '../lib/execute-stage-update'
+import { isCriticalStage } from '../lib/utils'
 
 interface StageUpdateActionsDeps {
   data: BedGridData
@@ -23,12 +24,17 @@ interface StageUpdateActionsDeps {
   openOverrideModal: (bed: BedWithElapsedTime, stage: Stage, reason: string | null) => void
   overrideState: OverrideState | null
   closeOverrideModal: () => void
+  openConfirmationModal: (bed: BedWithElapsedTime, stage: Stage) => void
+  confirmationState: ConfirmationState | null
+  closeConfirmationModal: () => void
+  confirmCriticalStages: boolean
 }
 
 interface StageUpdateActionsResult {
   isOverrideSubmitting: boolean
   handleStageSelect: (bedId: string, stageId: string) => Promise<void>
   handleOverrideApprove: (reason: string) => Promise<void>
+  handleConfirmationConfirm: () => Promise<void>
 }
 
 export function useStageUpdateActions({
@@ -44,6 +50,10 @@ export function useStageUpdateActions({
   openOverrideModal,
   overrideState,
   closeOverrideModal,
+  openConfirmationModal,
+  confirmationState,
+  closeConfirmationModal,
+  confirmCriticalStages,
 }: StageUpdateActionsDeps): StageUpdateActionsResult {
   const router = useRouter()
   const [isOverrideSubmitting, setIsOverrideSubmitting] = useState(false)
@@ -92,10 +102,29 @@ export function useStageUpdateActions({
 
   const handleStageSelect = useCallback(
     async (bedId: string, stageId: string) => {
+      const stage = stageById.get(stageId)
+      const bed = data.beds.find(b => b.id === bedId)
+
+      // Only show confirmation if the setting is enabled AND it's a critical stage
+      if (stage && bed && isCriticalStage(stage.name) && confirmCriticalStages) {
+        openConfirmationModal(bed, stage)
+        return
+      }
+
       await performStageUpdate(bedId, stageId)
     },
-    [performStageUpdate]
+    [performStageUpdate, stageById, data.beds, openConfirmationModal, confirmCriticalStages]
   )
+
+  const handleConfirmationConfirm = useCallback(async () => {
+    if (!confirmationState) return
+
+    // Proceed with the update
+    // Note: performStageUpdate handles validation and override checks internally
+    await performStageUpdate(confirmationState.bedId, confirmationState.stageId)
+
+    closeConfirmationModal()
+  }, [confirmationState, performStageUpdate, closeConfirmationModal])
 
   const handleOverrideApprove = useCallback(
     async (reason: string) => {
@@ -116,5 +145,5 @@ export function useStageUpdateActions({
     [overrideState, performStageUpdate, closeOverrideModal]
   )
 
-  return { isOverrideSubmitting, handleStageSelect, handleOverrideApprove }
+  return { isOverrideSubmitting, handleStageSelect, handleOverrideApprove, handleConfirmationConfirm }
 }

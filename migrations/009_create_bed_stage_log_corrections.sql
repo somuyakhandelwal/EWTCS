@@ -28,7 +28,7 @@ CREATE TABLE IF NOT EXISTS bed_stage_log_corrections (
 CREATE INDEX IF NOT EXISTS idx_bed_stage_log_corrections_log_id 
     ON bed_stage_log_corrections(bed_stage_log_id);
 
-CREATE INDEX IF NOT EXISTS idx_bed_stage_log_corrections_user 
+CREATE INDEX IF NOT EXISTS idx_bed_stage_log_corrections_user
     ON bed_stage_log_corrections(corrected_by_user_id);
 
 CREATE INDEX IF NOT EXISTS idx_bed_stage_log_corrections_time 
@@ -43,3 +43,6 @@ COMMENT ON COLUMN bed_stage_log_corrections.corrected_fields IS
 
 COMMENT ON COLUMN bed_stage_log_corrections.correction_reason IS 
 'Human-readable explanation for why the correction was made';
+
+-- Down Migration
+DROP TABLE IF EXISTS bed_stage_log_corrections;
