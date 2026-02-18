@@ -28,6 +28,7 @@
     "test:coverage": "vitest run --coverage"
   },
   "dependencies": {
+    "@radix-ui/react-context-menu": "^2.2.16",
     "@radix-ui/react-label": "^2.1.8",
     "@radix-ui/react-slot": "^1.2.4",
     "@types/bcrypt": "^6.0.0",
@@ -57,10 +58,10 @@
     "@types/react-dom": "^19",
     "@vitejs/plugin-react": "^5.1.4",
     "@vitest/coverage-v8": "^4.0.18",
-    "ajv": "^8.12.0",
+    "ajv": "^8.18.0",
     "autoprefixer": "^10.4.24",
-    "eslint": "^9",
-    "eslint-config-next": "^15.1.6",
+    "eslint": "^9.20.0",
+    "eslint-config-next": "^15.1.7",
     "jsdom": "^28.1.0",
     "postcss": "^8.5.6",
     "tailwindcss": "^3.4.17",
@@ -68,5 +69,9 @@
     "tsx": "^4.7.0",
     "typescript": "^5",
     "vitest": "^4.0.18"
+  },
+  "overrides": {
+    "ajv": "^8.18.0",
+    "@eslint-community/eslint-utils": "^4.4.1"
   }
 }

@@ -27,68 +27,6 @@ export function formatElapsedTime(ms: number | null): string {
   return minutes === 0 ? `${hours}h` : `${hours}h ${minutes}m`
 }
 
-// Color map constant to avoid recreation on every call
-const STAGE_COLOR_MAP: Record<string, { bg: string; text: string; border: string }> = {
-  gray: {
-    bg: 'bg-zinc-800',
-    text: 'text-zinc-300',
-    border: 'border-zinc-700',
-  },
-  blue: {
-    bg: 'bg-blue-900/50',
-    text: 'text-blue-300',
-    border: 'border-blue-700',
-  },
-  cyan: {
-    bg: 'bg-cyan-900/50',
-    text: 'text-cyan-300',
-    border: 'border-cyan-700',
-  },
-  yellow: {
-    bg: 'bg-yellow-900/50',
-    text: 'text-yellow-300',
-    border: 'border-yellow-700',
-  },
-  orange: {
-    bg: 'bg-orange-900/50',
-    text: 'text-orange-300',
-    border: 'border-orange-700',
-  },
-  green: {
-    bg: 'bg-green-900/50',
-    text: 'text-green-300',
-    border: 'border-green-700',
-  },
-  purple: {
-    bg: 'bg-purple-900/50',
-    text: 'text-purple-300',
-    border: 'border-purple-700',
-  },
-  pink: {
-    bg: 'bg-pink-900/50',
-    text: 'text-pink-300',
-    border: 'border-pink-700',
-  },
-  red: {
-    bg: 'bg-red-900/50',
-    text: 'text-red-300',
-    border: 'border-red-700',
-  },
-} as const
-
-/**
- * Get Tailwind color classes for stage color codes
- * @param colorCode - Color code from database (e.g., 'blue', 'red')
- * @returns Tailwind CSS classes for background and text
- */
-export function getStageColorClasses(colorCode: string): {
-  bg: string
-  text: string
-  border: string
-} {
-  return STAGE_COLOR_MAP[colorCode.toLowerCase()] || STAGE_COLOR_MAP.gray
-}
-
 /**
  * Get delay indicator color classes
  * @param isDelayed - Whether the bed is delayed
@@ -149,7 +87,6 @@ export function getBedStatistics(
   const delayed = beds.filter(b => b.isDelayed).length
   const occupancyPercentage = calculateOccupancyPercentage(beds)
 
-  // Calculate average elapsed time for occupied beds
   const occupiedBeds = beds.filter(b => b.isOccupied && b.elapsedTimeMs !== null)
   const averageElapsedTimeMs = occupiedBeds.length > 0
     ? occupiedBeds.reduce((sum, bed) => sum + (bed.elapsedTimeMs || 0), 0) / occupiedBeds.length
@@ -186,3 +123,6 @@ export function isCriticalStage(stageName: string): boolean {
     normalizedStageName.includes(keyword)
   )
 }
+
+// Re-export from shared utility for backward compatibility
+export { getStageColorClasses } from '@/shared/utils/stage-colors'

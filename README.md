@@ -164,17 +164,7 @@ The setup script will:
    
    All users have password: `Nurse@123`
 
-7. **Configure ward assignments** (Required for bed updates)
-   ```bash
-   # Quick setup: Assign all users and beds to Emergency Ward A
-   psql -U postgres -d ewtcs -f scripts/setup-ward-assignments.sql
-   ```
-   
-   **Why this is needed:** Migration 006 adds ward-level access control for security. Nurses can only update beds in their assigned ward. Without this setup, you'll see "permission denied" errors when trying to update beds.
-   
-   See [DATABASE_SETUP.md - Ward Access Control](DATABASE_SETUP.md#ward-access-control-setup) for advanced configuration.
-
-8. **Start development server**
+7. **Start development server**
    ```bash
    npm run dev
    ```
@@ -197,62 +187,69 @@ The setup script will:
 - Migrations not run
 - Solution: `npm run db:migrate`
 
-**Problem: "You do not have permission to update this bed"**
-- Ward assignments not configured (Migration 006 security feature)
-- Solution: Run `psql -U postgres -d ewtcs -f scripts/setup-ward-assignments.sql`
-- This is expected behavior until wards are assigned (prevents unauthorized access)
-
 **For complete troubleshooting guide:** See [DATABASE_SETUP.md](DATABASE_SETUP.md)
 
 ---
 
 ## 📁 Project Structure
 
-We use a **feature-first hybrid architecture** for scalability and maintainability:
+We use a **feature-first architecture** for scalability and maintainability:
 
 ```
 EWTCS/
 ├── src/
-│   ├── app/              # Next.js App Router (routes only)
-│   ├── features/         # Feature modules (business logic)
-│   │   ├── auth/         # Authentication & authorization
-│   │   └── user-management/  # User management (US-5.7)
-│   └── shared/           # Shared code (reusable across features)
-│       ├── components/ui/    # shadcn/ui components
-│       ├── lib/             # Utilities (db, utils)
-│       ├── config/          # App configuration
-│       └── types/           # Shared TypeScript types
-├── migrations/           # Database migrations (version-controlled)
-├── scripts/              # Utility scripts (migrations, seeding, reset)
-└── public/               # Static assets
+│   ├── app/                     # Next.js App Router (routes & pages)
+│   │   ├── (auth)/             # Auth-protected routes
+│   │   ├── admin/              # Admin dashboard
+│   │   ├── analytics/          # Analytics pages
+│   │   ├── dashboard/          # Main dashboard
+│   │   ├── login/              # Login page
+│   │   └── supervisor/         # Supervisor pages
+│   ├── features/                # Feature modules (self-contained)
+│   │   ├── auth/               # Authentication & authorization
+│   │   ├── bed-dashboard/      # Bed management & analytics
+│   │   └── user-management/    # User CRUD operations
+│   └── shared/                  # Shared code (utilities, UI components)
+│       ├── components/ui/      # Reusable UI components (shadcn/ui)
+│       ├── lib/                # Utilities (database, auth, validation)
+│       ├── config/             # Configuration (logger, constants)
+│       └── types/              # Shared TypeScript types
+├── migrations/                  # Database migrations (versioned)
+├── scripts/                     # Utility scripts (setup, seed, migrate)
+├── docs/                        # Documentation and archives
+└── public/                      # Static assets
+
 ```
 
-**Architecture Guidelines:**
-- **Features** - Self-contained business domains (auth, user-management, etc.)
-- **Shared** - Code reused by 2+ features (UI components, utilities, config)
-- **App** - Thin routing layer, minimal logic
-
-See [Architecture Plan](reports/FEATURE-FIRST-ARCHITECTURE-PLAN.md) for details.
+**Architecture Principles:**
+- **Features** - Self-contained business logic (auth, bed-dashboard, etc.)
+- **Shared** - Reusable code (UI components, utilities, types)
+- **App** - Routing layer with minimal logic
+- **Max 200 lines per file** - Enforced for maintainability
 
 ---
 
 ## 🎨 Bed Status Stages
 
-The system tracks patients through 6 stages with color-coded indicators:
+The system tracks patients through 8 workflow stages with color-coded indicators:
 
 | Stage | Color | Description |
 |-------|-------|-------------|
-| **1. Patient Admitted** | 🟡 Yellow | Patient has arrived |
-| **2. Under Assessment** | 🟠 Orange | Initial examination in progress |
-| **3. Tests Ordered** | 🔵 Blue | Diagnostic tests requested |
-| **4. Awaiting Results** | 🟣 Purple | Waiting for test results |
-| **5. Decision Made** | 🟢 Green | Treatment plan decided |
-| **6. Discharged/Transferred** | ⚪ Grey | Patient has left |
-| **⚠️ Time > 3 hours** | 🔴 Red | Automatic alert for delays |
+| **Empty** | ⚪ Gray | Bed is available and ready for next patient |
+| **Triage** | 🔵 Blue | Patient initial assessment and prioritization |
+| **Registration** | 🟦 Cyan | Patient registration and documentation |
+| **Doctor Assessment** | 🟡 Yellow | Doctor examining patient and ordering tests |
+| **Treatment/Observation** | 🟠 Orange | Patient receiving treatment or under observation |
+| **Decision Made** | 🟢 Green | Discharge decision made or admission arranged |
+| **Discharge Process** | 🟣 Purple | Patient being discharged or transferred |
+| **Cleaning** | 🟤 Pink | Bed being cleaned and prepared for next patient |
+| **⚠️ DELAYED** | 🔴 Red | Any stage >3 hours triggers automatic alert |
 
-### Stage Transition Rules
-
-Stage updates are governed by configurable rules in the `stage_transitions` table. Invalid transitions are blocked, and specific edge-case transitions can require supervisor approval. See [DATABASE_SETUP.md](DATABASE_SETUP.md#stage-transition-rules) for details.
+**Stage Transitions:**
+- Forward progression through stages is allowed
+- Skip ahead allowed (e.g., Triage → Treatment)
+- Backward transitions require supervisor override
+- All transitions are logged with timestamps for analytics
 
 ---
 
@@ -281,21 +278,6 @@ npm run db:reset     # Drop and recreate schema (development only)
 
 Migration details and best practices: See [CONFIGURATION.md#migrations](CONFIGURATION.md#migrations)
 
-### Pre-Merge Validation
-```bash
-npm run validate:env          # Validate .env.example completeness
-npm run validate:db           # Test database connection
-npm run validate:migrations   # Check all migrations are applied
-npm run validate:schema       # Verify database schema structure
-npm run validate:all          # Run all validation checks + build
-./scripts/test-fresh-setup.sh # Simulate complete fresh setup
-```
-
-**Before submitting a PR**, run `npm run validate:all` to ensure your changes won't break setup for other developers.
-
-Full validation guide: See [PRE_MERGE_VALIDATION.md](PRE_MERGE_VALIDATION.md)
-
-
 ---
 
 ## 🌐 Configuration
@@ -316,182 +298,126 @@ Full environment variable reference: See [CONFIGURATION.md](CONFIGURATION.md)
 
 ## 📚 Documentation
 
-### For New Developers - Start Here! 🚀
+### Quick Links
 
-- **[DATABASE_SETUP.md](DATABASE_SETUP.md)** - 📗 **Complete database setup guide** (ESSENTIAL FOR NEW TEAM MEMBERS)
-  - PostgreSQL installation & configuration
-  - Step-by-step database creation
-  - Migration & seeding instructions
-  - Troubleshooting common issues
-  - Quick reference commands
+- **[QUICKSTART.md](QUICKSTART.md)** ⚡ - Get running in 5 minutes
+- **[PROJECT_STATUS.md](PROJECT_STATUS.md)** 📊 - Current status, features, and roadmap
+- **[docs/README.md](docs/README.md)** 📑 - Complete documentation index
 
-### Core Documentation
+### Start Here
 
-- **[PRD.md](PRD.md)** - Complete Product Requirements Document
-- **[EPICS.md](EPICS.md)** - All project EPICs and user stories
-- **[USER_STORIES.md](USER_STORIES.md)** - Detailed user stories with acceptance criteria
-- **[CONFIGURATION.md](CONFIGURATION.md)** - Environment setup, migrations, and deployment
-- **[CONTRIBUTING.md](CONTRIBUTING.md)** - Contribution guidelines and coding standards (includes 200-line file limit rule)
-- **[CODE_OF_CONDUCT.md](CODE_OF_CONDUCT.md)** - Community guidelines
+- **[DATABASE_SETUP.md](DATABASE_SETUP.md)** - Complete database setup guide (PostgreSQL, migrations, seeding)
+- **[CONFIGURATION.md](CONFIGURATION.md)** - Environment variables, deployment, and production setup
+- **[CONTRIBUTING.md](CONTRIBUTING.md)** - How to contribute (coding standards, branch naming, PR process)
+- **[CODE_OF_CONDUCT.md](CODE_OF_CONDUCT.md)** - Community guidelines and standards
 
-### Architecture & Design
+### Technical Documentation
 
-- **[Architecture Plan](reports/FEATURE-FIRST-ARCHITECTURE-PLAN.md)** - Feature-first hybrid architecture design
-- **[Features Guide](src/features/README.md)** - How to structure new features
+- **[Features Guide](src/features/README.md)** - How to structure and build new features
 - **[Shared Code Guide](src/shared/README.md)** - Guidelines for shared utilities and components
+- **[Analytics Documentation](src/features/bed-dashboard/ANALYTICS_README.md)** - Stage analytics and reporting system
+
+### Reference Documentation
+
+- **[PRD & User Stories](docs/archive/)** - Product requirements and detailed user stories (archived)
 
 ---
 
 ## 🗺️ Roadmap
 
-### Phase 1: Foundation & Core Features
-- [x] Database schema design
-- [x] Automated migrations
-### Phase 1: Foundation & Core Features
-- [x] Database schema design
-- [x] Automated migrations
-- [x] Feature-first hybrid architecture
-- [x] Authentication & authorization system (EPIC 5)
+### ✅ Phase 1: Foundation & Core Features (COMPLETED)
+
+**Authentication & User Management:**
+- [x] Database schema with automated migrations
+- [x] Feature-first architecture implementation
+- [x] Authentication system with bcrypt password hashing
 - [x] Role-based access control (Admin, Supervisor, Nurse)
-- [x] User management system (US-5.3)
-- [x] **Bed status grid component (US-1.1)** ✨ NEW
-- [x] **Color-coded visual indicators (US-1.1)** ✨ NEW
-- [x] **Automatic time tracking (US-1.1)** ✨ NEW
-- [x] **Capture patient entry time (US-3.1)** ✨ NEW
-- [x] **Delay detection & alerts (US-1.1)** ✨ NEW
-- [x] One-click stage updates (US-2.1)
+- [x] Complete user management system with CRUD operations
+- [x] Audit logging for all user actions
+
+**Bed Management & Tracking:**
+- [x] Bed status dashboard with grid layout (20 beds)
+- [x] 8-stage patient workflow (Empty → Triage → Registration → Doctor Assessment → Treatment → Decision → Discharge → Cleaning)
+- [x] Color-coded visual indicators for each stage
+- [x] Automatic patient entry time capture (server-side)
+- [x] Real-time elapsed time tracking
+- [x] Automatic delay detection (>3 hours) with visual alerts
+- [x] One-click stage updates with validation
+- [x] Filter functionality (Show Delayed Only)
+- [x] Stage transition validation and corrections system
+
+**Analytics & Reporting:**
+- [x] Comprehensive stage analytics system
+- [x] Time tracking for all stage transitions (US-3.2)
+- [x] Immutable audit logs with correction trail
+- [x] Statistical analysis (avg, median, percentiles)
+- [x] Bed timeline visualization
+- [x] CSV export functionality for analysts
+- [x] Performance-optimized queries with indexes
+
+### 🔄 Phase 2: Real-Time Updates & Advanced Features (IN PROGRESS)
+
 - [ ] Real-time updates with WebSocket/polling (US-1.2)
+- [ ] Push notifications for delayed beds
+- [ ] Enhanced mobile responsiveness
+- [ ] Advanced filtering and search capabilities
+- [ ] Batch operations for multiple beds
 
-### Phase 2: Analytics & Reporting
-- [ ] Daily AI summary generator
-- [ ] Management dashboard with analytics
-- [ ] Performance metrics & KPIs
-- [ ] Exportable reports (PDF/CSV)
-- [ ] Historical trend analysis
+### ⏳ Phase 3: AI & Reporting (PLANNED)
 
-### Phase 3: Advanced Features
-- [ ] Lab/Radiology integration
-- [ ] Mobile app for doctors
+- [ ] Daily AI summary reports generator
+- [ ] Management dashboard with KPIs
 - [ ] Predictive analytics for bed allocation
-- [ ] Multi-department support
+- [ ] Automated performance reports (PDF/CSV)
+- [ ] Historical trend analysis
+- [ ] Bottleneck identification algorithms
+
+### 🚀 Phase 4: Integration & Expansion (FUTURE)
+
+- [ ] Lab/Radiology system integration
+- [ ] Mobile app for doctors and nurses
+- [ ] Multi-ward/department support
 - [ ] Patient transfer workflows
-
----
-Phase 1 Complete**
-
-**✅ Completed (Phase 1):**
-- Repository & Next.js 15.5 setup
-- PostgreSQL database schema & automated migrations  
-- Feature-first hybrid architecture implementation
-- Environment configuration & validation with encryption support
-- Health check endpoint
-- **Authentication & Session Management (EPIC 5)**
-  - Secure login/logout with bcrypt password hashing
-  - Role-based access control (Admin, Supervisor, Nurse)
-  - Session management with encrypted cookies
-  - **Ward-level access control (Migration 006)** - IDOR protection
-- **User Management System (US-5.3)**
-  - Create, update, activate/deactivate users
-  - Admin dashboard with user table
-  - Audit logging for all user actions
-  - Complete CRUD operations with input validation
-- **Secure Logout (US-5.6)** ✨ NEW
-  - Token blacklisting for immediate session termination
-  - Audit logging and rigorous client-side cleanup
-  - Ward assignment for multi-zone security
-- **Bed Status Dashboard (US-1.1)** ✨ NEW
-  - Responsive grid layout showing all 20 emergency beds
-  - Color-coded bed cards for 8 workflow stages
-  - Real-time elapsed time tracking per patient
-  - Automatic delay detection (>3 hours) with visual alerts
-  - Filter functionality (Show Delayed Only)
-  - Statistics dashboard (Total, Occupied, Available, Delayed)
-  - Stage color legend with descriptions
-  - Ward-based bed access control for nurses
-- **Time Tracking Foundation (US-3.1)** ✨ NEW
-  - Server-side patient entry time capture
-  - Immutable admission timestamps for accurate duration calculations
-
-**🔄 In Progress (Phase 1 - Remaining):**
-- Performance verification for one-click stage updates (US-2.1)
-- Real-time updates with WebSocket/polling (US-1.2)
-
-**⏳ Pending (Phase 2+):**
-- Daily AI reports & summaries
-- Performance analytics dashboard
-- Lab/Radiology integration
-- Advanced reporting & exports
+- [ ] EMR/EHR integration capabilities
 
 ---
 
 ## 🤝 Contributing
 
-## 🤝 Contributing
-
-Use the provided templates for each environment:
-
-- .env.example (general template)
-- .env.development
-- .env.staging
-- .env.production
-
-Create a `.env.local` file in the root directory:
-
-```env
-# Database (plaintext allowed in dev/staging)
-DATABASE_URL=postgresql://username:password@localhost:5432/ewtcs
-We welcome contributions! This is a healthcare project that can make a real difference.
+We welcome contributions! This project can make a real difference in healthcare.
 
 ### Quick Start for Contributors
 
-1. **Feature-first structure for new features (see [src/features/README.md](src/features/README.md))
-- ✅ Maximum 200 lines per file (enforced by CI)
-- ✅ Functional components with hooks
-- ✅ Tailwind CSS via shadcn/ui (in `shared/components/ui/`)
-- ✅ Path aliases: Use `@/features/*`, `@/shared/*`, `@/app/*`heckout -b feature/issue-<id>-description`
-3. **Make your changes** following our coding standards
-4. **Test locally**: `npm run dev`
-5. **Commit**: `git commit -m "feat: add feature description"`
-6. **Push**: `git push origin feature/issue-<id>-description`
-7. **Submit a Pull Request**
+1. **Fork & clone**: `git clone https://github.com/YourUsername/EWTCS.git`
+2. **Install**: `npm install`
+3. **Setup database**: `npm run setup` (automated wizard)
+4. **Create branch**: `git checkout -b feature/issue-<id>-description`
+5. **Make changes** following our coding standards (see below)
+6. **Test locally**: `npm run dev` and verify changes
+7. **Commit**: `git commit -m "feat: add feature description"`
+8. **Push**: `git push origin feature/issue-<id>-description`
+9. **Submit Pull Request** with clear description
 
 ### Coding Standards
 
 - ✅ TypeScript required for all new code
+- ✅ Feature-first structure (see [src/features/README.md](src/features/README.md))
+- ✅ Maximum 200 lines per file
 - ✅ Functional components with hooks
 - ✅ Tailwind CSS via shadcn/ui
-- ✅ Descriptive, meaningful names
+- ✅ Path aliases: `@/features/*`, `@/shared/*`, `@/app/*`
+- ✅ Descriptive variable and function names
 - ✅ Documentation for complex logic
-- ✅ Tests for new features (when test suite is available)
-
-# Environment
-NODE_ENV=development
-# Security (Required)
-SESSION_SECRET=your_super_secret_key_at_least_32_chars_long
-
-# AI/Analytics (Optional - for future use)
-# OPENAI_API_KEY=your_api_key_here
-```
-
 
 ### Branch Naming Convention
 
 ```
-feature/issue-<id>-short-description
-bugfix/issue-<id>-short-description
-docs/issue-<id>-short-description
+feature/issue-123-add-notification-system
+bugfix/issue-456-fix-login-timeout
+docs/issue-789-update-readme
 ```
 
 For complete guidelines: See [CONTRIBUTING.md](CONTRIBUTING.md)
-
-For production, use encrypted secrets instead of plaintext values:
-
-```env
-DATABASE_URL_ENCRYPTED=ivhex:encryptedhex
-ENCRYPTION_KEY=your-32-byte-master-key
-```
-
-See CONFIGURATION.md for full details.
 
 ---
 
@@ -522,17 +448,30 @@ Found a bug or have an idea?
 
 ---
 
-## 🏗️ Architecture Highlights
+## 🏗️ Architecture & Tech Stack Highlights
 
-This project uses a **feature-first hybrid architecture** designed for:
-- **Scalability** - Easy to add new features without conflicts
-- **Maintainability** - Clear separation of concerns
-- **Team Collaboration** - Multiple developers can work on different features simultaneously
-- **Code Reusability** - Shared components and utilities across features
+### Feature-First Architecture
+This project uses a **feature-first architecture** designed for:
+- **Scalability** - Easy to add new features independently
+- **Maintainability** - Clear separation of concerns, max 200 lines per file
+- **Team Collaboration** - Multiple developers work on different features simultaneously
+- **Code Reusability** - Shared UI components and utilities across features
 
-Each feature is self-contained with its own actions, components, and business logic, while shared code provides common UI components and utilities used across features.
+### Key Technologies
+- **Next.js 15.5** - Server-side rendering, API routes, and modern React features
+- **TypeScript** - Type safety and better developer experience
+- **PostgreSQL** - Reliable relational database with ACID compliance
+- **shadcn/ui + Tailwind CSS** - Beautiful, accessible UI components
+- **Feature Modules** - Self-contained business logic with clear boundaries
 
-**Learn more:** [Architecture Documentation](reports/FEATURE-FIRST-ARCHITECTURE-PLAN.md)
+### Security & Performance
+- **Bcrypt password hashing** - Industry-standard secure authentication
+- **Role-based access control** - Fine-grained permissions (Admin/Supervisor/Nurse)
+- **Audit logging** - Complete trail of all user actions
+- **Optimized queries** - Database indexes for analytics performance
+- **Immutable logs** - Stage transitions cannot be deleted, only corrected
+
+**Learn more:** [Features Guide](src/features/README.md) | [Shared Code Guide](src/shared/README.md)
 
 ---
 

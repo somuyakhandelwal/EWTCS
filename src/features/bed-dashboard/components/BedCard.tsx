@@ -47,7 +47,6 @@ export const BedCard = memo(function BedCard({
         colorClasses.border,
         'border-2',
         isDelayed && 'ring-2 ring-red-500 animate-pulse',
-        // US-1.6: amber ring for disposition bottleneck (takes priority over delayed ring)
         isBottleneck && 'ring-2 ring-amber-500 animate-pulse'
       )}
       onClick={() => onClick?.(bed)}
@@ -60,7 +59,7 @@ export const BedCard = memo(function BedCard({
         </div>
       )}
 
-      {/* US-1.6: Disposition bottleneck indicator (overrides delay icon) */}
+      {/* US-1.6: Disposition bottleneck indicator */}
       {isBottleneck && (
         <div className="absolute top-2 right-2">
           <Hourglass className="h-5 w-5 text-amber-400" />
@@ -129,6 +128,7 @@ export const BedCard = memo(function BedCard({
               ))}
             </select>
           )}
+
           {/* US-1.6: Show recorded reason label when no handler (read-only) */}
           {isBottleneck && !onReasonSelect && bed.dispositionDelayReason && (
             <p className="text-[10px] text-amber-400/80">
