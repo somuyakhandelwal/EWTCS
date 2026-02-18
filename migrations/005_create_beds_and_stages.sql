@@ -2,6 +2,8 @@
 -- Purpose: Core tables for emergency ward bed tracking and stage management
 -- Epic: EPIC 1 - Nurse Desk Bed Dashboard
 
+-- Up Migration
+
 -- Create stages table (patient workflow stages)
 CREATE TABLE IF NOT EXISTS stages (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),

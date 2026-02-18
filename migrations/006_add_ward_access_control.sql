@@ -3,6 +3,8 @@
 -- Epic: EPIC 2 - One-Click Stage Update System with Access Control
 -- Security: Fixes IDOR vulnerability
 
+-- Up Migration
+
 -- Add ward_id to beds table
 ALTER TABLE beds
 ADD COLUMN IF NOT EXISTS ward_id UUID,

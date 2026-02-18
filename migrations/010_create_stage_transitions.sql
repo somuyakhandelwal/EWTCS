@@ -2,6 +2,8 @@
 -- Purpose: Define valid stage transitions for workflow validation (US-2.2)
 -- Epic: EPIC 2 - One-Click Stage Update System
 
+-- Up Migration
+
 -- Create stage_transitions table to define valid transitions
 CREATE TABLE IF NOT EXISTS stage_transitions (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),

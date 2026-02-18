@@ -2,6 +2,8 @@
 -- Purpose: Convert user_management_logs to generic audit_logs for all entities
 -- This allows tracking changes for users, beds, patients, and any future entities
 
+-- Up Migration
+
 -- Rename user_management_logs to audit_logs
 ALTER TABLE user_management_logs RENAME TO audit_logs;
 

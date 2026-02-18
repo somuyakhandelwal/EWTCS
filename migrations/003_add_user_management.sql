@@ -3,6 +3,8 @@
 -- Epic 5: Authentication & Role-Based Access
 -- User Story: US-5.3
 
+-- Up Migration
+
 -- Add is_active column to users table for deactivation feature
 ALTER TABLE users 
 ADD COLUMN IF NOT EXISTS is_active BOOLEAN DEFAULT TRUE;

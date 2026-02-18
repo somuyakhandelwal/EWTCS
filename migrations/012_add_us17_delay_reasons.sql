@@ -3,6 +3,8 @@
 -- Idempotent: works whether migration 011 ran before it or not.
 -- Uses EXECUTE inside DO $$ so all DDL runs in the same catalog snapshot.
 
+-- Up Migration
+
 DO $$
 DECLARE
     type_exists   boolean;
