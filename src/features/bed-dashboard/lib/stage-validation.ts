@@ -71,7 +71,25 @@ export async function validateTransition(
     }
   } catch (error) {
     logger.error('Failed to validate transition', error as Error)
-    throw error
+    
+    // BUG FIX #4: Provide fallback behavior instead of throwing
+    // If validation system fails, allow admin to proceed with override
+    if (userRole === 'admin') {
+      return {
+        isValid: true,
+        requiresSupervisorOverride: false,
+        reason: 'System validation unavailable - admin override allowed',
+        validNextStages: [], // Client should fetch valid stages separately
+      }
+    }
+    
+    // For nurses/supervisors, require supervisor approval as safety measure
+    return {
+      isValid: false,
+      requiresSupervisorOverride: true,
+      reason: 'Unable to validate transition. Supervisor approval required.',
+      validNextStages: [],
+    }
   }
 }
 
@@ -131,7 +149,14 @@ export async function categorizeStagesForTransition(
     return { allowed, requiresOverride, invalid }
   } catch (error) {
     logger.error('Failed to categorize stages for transition', error as Error)
-    throw error
+    
+    // BUG FIX #4: Fallback behavior when categorization fails
+    // Mark all stages as requiring override (safe default - prevents unauthorized transitions)
+    return {
+      allowed: [],
+      requiresOverride: allStageIds,
+      invalid: []
+    }
   }
 }
 

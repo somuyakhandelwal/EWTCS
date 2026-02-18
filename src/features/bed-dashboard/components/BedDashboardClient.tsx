@@ -4,8 +4,9 @@
 
 'use client'
 
-import { useCallback } from 'react'
+import { useCallback, useState, useRef, useEffect } from 'react'
 import { BedGrid } from './BedGrid'
+import { SearchInput } from './SearchInput'
 import type { BedGridData, BedWithElapsedTime } from '../types/bed'
 import { SupervisorOverrideModal } from './SupervisorOverrideModal'
 import { ConfirmationModal } from './ConfirmationModal'
@@ -38,6 +39,26 @@ export function BedDashboardClient({ initialData }: BedDashboardClientProps) {
     toggleConfirmation,
   } = useBedStageUpdate(initialData)
 
+  // Search state: immediate input and debounced query used for filtering
+  const [searchInput, setSearchInput] = useState('')
+  const [searchQuery, setSearchQuery] = useState('')
+  const searchDebounceRef = useRef<NodeJS.Timeout | null>(null)
+
+  useEffect(() => {
+    if (searchDebounceRef.current) clearTimeout(searchDebounceRef.current)
+    searchDebounceRef.current = setTimeout(() => {
+      setSearchQuery(searchInput.trim())
+      searchDebounceRef.current = null
+    }, 200)
+
+    return () => {
+      if (searchDebounceRef.current) {
+        clearTimeout(searchDebounceRef.current)
+        searchDebounceRef.current = null
+      }
+    }
+  }, [searchInput])
+
   // TODO: Implement real-time updates (US-1.2)
   const isLoading = false, connectionStatus = 'connected', reconnect = () => { }
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
@@ -50,6 +71,12 @@ export function BedDashboardClient({ initialData }: BedDashboardClientProps) {
 
   return (
     <div className="space-y-4">
+      {/* Search Input */}
+      <SearchInput
+        value={searchInput}
+        onChange={setSearchInput}
+        placeholder="Search by bed number (EW-01) or status (Triage)..."
+      />
       {/* Connection Status Indicator */}
       <div className="flex justify-end items-center gap-2">
         <DashboardSettings
@@ -71,6 +98,7 @@ export function BedDashboardClient({ initialData }: BedDashboardClientProps) {
         lastUpdatedStageId={lastUpdatedStageId}
         errorByBedId={errorByBedId}
         isRefreshing={isLoading}
+        searchQuery={searchQuery}
       />
 
       <SupervisorOverrideModal

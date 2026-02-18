@@ -1,12 +1,31 @@
 // Bed Card Component
 // Epic 1: Nurse Desk Bed Dashboard
 
-import { memo, type MouseEvent } from 'react'
+import { memo, type MouseEvent, Fragment } from 'react'
 import { Card, CardContent } from '@/shared/components/ui/card'
 import { Clock, AlertTriangle } from 'lucide-react'
 import type { BedWithElapsedTime } from '../types/bed'
 import { formatElapsedTime, getStageColorClasses } from '../lib/utils'
 import { cn } from '@/shared/lib/utils'
+
+function highlightMatch(text: string, query?: string) {
+  if (!query) return text
+  const q = query.trim().toLowerCase()
+  if (!q) return text
+  const lower = text.toLowerCase()
+  const idx = lower.indexOf(q)
+  if (idx === -1) return text
+  const before = text.slice(0, idx)
+  const match = text.slice(idx, idx + q.length)
+  const after = text.slice(idx + q.length)
+  return (
+    <Fragment>
+      {before}
+      <span className="bg-yellow-300 text-black px-1 rounded">{match}</span>
+      {after}
+    </Fragment>
+  )
+}
 
 interface BedCardProps {
   bed: BedWithElapsedTime
@@ -14,6 +33,7 @@ interface BedCardProps {
   onContextMenu?: (event: MouseEvent<HTMLDivElement>, bed: BedWithElapsedTime) => void
   showUpdated?: boolean
   errorMessage?: string | null
+  searchQuery?: string
 }
 
 export const BedCard = memo(function BedCard({
@@ -22,6 +42,7 @@ export const BedCard = memo(function BedCard({
   onContextMenu,
   showUpdated = false,
   errorMessage = null,
+  searchQuery = '',
 }: BedCardProps) {
   const stageName = bed.currentStage?.name || 'Empty'
   const stageColor = bed.currentStage?.colorCode || 'gray'
@@ -53,7 +74,7 @@ export const BedCard = memo(function BedCard({
         {/* Bed Number */}
         <div className="flex items-center justify-between">
           <h3 className={cn('text-2xl font-bold', colorClasses.text)}>
-            {bed.bedNumber}
+            {highlightMatch(bed.bedNumber, searchQuery)}
           </h3>
           {isOccupied && !isDelayed && (
             <div className="flex h-2 w-2">
@@ -67,7 +88,7 @@ export const BedCard = memo(function BedCard({
         <div className="space-y-1">
           <p className="text-xs text-zinc-500 uppercase tracking-wider">Current Stage</p>
           <p className={cn('text-sm font-semibold', colorClasses.text)}>
-            {stageName}
+            {highlightMatch(stageName, searchQuery)}
           </p>
           {onContextMenu && (
             <p className="text-[10px] text-zinc-500">
