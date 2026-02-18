@@ -96,3 +96,16 @@ export interface ConfirmationState {
   fromStageName: string | null
   toStage: Stage
 }
+
+/**
+ * State held while the DischargeModal is open (US-2.3)
+ * Created when a nurse selects the "Discharge Process" stage on an occupied bed.
+ */
+export interface DischargeState {
+  bedId: string
+  bedNumber: string
+  fromStageName: string | null
+  /** Total elapsed ms for the current patient — displayed in the modal */
+  elapsedTimeMs: number | null
+  patientStartTime: Date | null
+}

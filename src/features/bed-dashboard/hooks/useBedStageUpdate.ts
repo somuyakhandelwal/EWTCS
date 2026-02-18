@@ -5,11 +5,11 @@
 
 import { useCallback, useMemo, useState } from 'react'
 import { useRouter } from 'next/navigation'
-import type { BedGridData, BedWithElapsedTime, Stage, OverrideState, ConfirmationState } from '../types/bed'
+import type { BedGridData, BedWithElapsedTime, Stage, OverrideState, ConfirmationState, DischargeState } from '../types/bed'
 import { useErrorTimers, useSuccessFeedback } from './useBedUpdateState'
 import { useStageUpdateActions } from './useStageUpdateActions'
-
 import { useDashboardSettings } from './useDashboardSettings'
+import { useDischargeConfirm } from './useDischargeConfirm'
 
 const SUCCESS_FEEDBACK_MS = 3000
 
@@ -33,6 +33,11 @@ interface UseBedStageUpdateReturn {
   closeConfirmationModal: () => void
   settings: { confirmCriticalStages: boolean }
   toggleConfirmation: () => void
+  // US-2.3: Discharge workflow
+  dischargeState: DischargeState | null
+  isDischargeSubmitting: boolean
+  handleDischargeConfirm: () => Promise<void>
+  closeDischargeModal: () => void
 }
 
 export function useBedStageUpdate(initialData: BedGridData): UseBedStageUpdateReturn {
@@ -42,6 +47,8 @@ export function useBedStageUpdate(initialData: BedGridData): UseBedStageUpdateRe
   const [updatingStageId, setUpdatingStageId] = useState<string | null>(null)
   const [overrideState, setOverrideState] = useState<OverrideState | null>(null)
   const [confirmationState, setConfirmationState] = useState<ConfirmationState | null>(null)
+  // US-2.3
+  const [dischargeState, setDischargeState] = useState<DischargeState | null>(null)
 
   const { errorByBedId, setTemporaryError, clearError } = useErrorTimers()
   const { lastUpdatedBedId, lastUpdatedStageId, showSuccessFeedback } =
@@ -91,6 +98,31 @@ export function useBedStageUpdate(initialData: BedGridData): UseBedStageUpdateRe
     setConfirmationState(null)
   }, [])
 
+  // US-2.3: Discharge modal open/close
+  const openDischargeModal = useCallback((bed: BedWithElapsedTime) => {
+    setDischargeState({
+      bedId: bed.id,
+      bedNumber: bed.bedNumber,
+      fromStageName: bed.currentStage?.name ?? null,
+      elapsedTimeMs: bed.elapsedTimeMs,
+      patientStartTime: bed.patientStartTime,
+    })
+  }, [])
+
+  const closeDischargeModal = useCallback(() => {
+    setDischargeState(null)
+  }, [])
+
+  const { isDischargeSubmitting, handleDischargeConfirm } = useDischargeConfirm({
+    dischargeState,
+    data,
+    setData,
+    closeDischargeModal,
+    setTemporaryError,
+    showSuccessFeedback,
+    handleRefresh,
+  })
+
   const { isOverrideSubmitting, handleStageSelect, handleOverrideApprove, handleConfirmationConfirm } = useStageUpdateActions({
     data,
     stageById,
@@ -108,6 +140,8 @@ export function useBedStageUpdate(initialData: BedGridData): UseBedStageUpdateRe
     confirmationState,
     closeConfirmationModal,
     confirmCriticalStages: settings.confirmCriticalStages,
+    // US-2.3
+    openDischargeModal,
   })
 
   return {
@@ -128,5 +162,10 @@ export function useBedStageUpdate(initialData: BedGridData): UseBedStageUpdateRe
     closeConfirmationModal,
     settings,
     toggleConfirmation,
+    // US-2.3
+    dischargeState,
+    isDischargeSubmitting,
+    handleDischargeConfirm,
+    closeDischargeModal,
   }
 }
