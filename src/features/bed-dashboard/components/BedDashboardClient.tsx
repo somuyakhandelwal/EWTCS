@@ -10,6 +10,7 @@ import { SearchInput } from './SearchInput'
 import { ConnectionStatus } from './ConnectionStatus'
 import { SupervisorOverrideModal } from './SupervisorOverrideModal'
 import { ConfirmationModal } from './ConfirmationModal'
+import { DischargeModal } from './DischargeModal'
 import { DashboardSettings } from './DashboardSettings'
 import type { BedGridData, BedWithElapsedTime, DispositionDelayReason } from '../types/bed'
 import { useRealtimeBedUpdates } from '../hooks/useRealtimeBedUpdates'
@@ -46,6 +47,11 @@ export function BedDashboardClient({ initialData }: BedDashboardClientProps) {
     closeConfirmationModal,
     settings,
     toggleConfirmation,
+    // US-2.3
+    dischargeState,
+    isDischargeSubmitting,
+    handleDischargeConfirm,
+    closeDischargeModal,
   } = useBedStageUpdate(realtimeData)
 
   // Search state: immediate input and debounced query used for filtering (US-1.2)
@@ -133,6 +139,15 @@ export function BedDashboardClient({ initialData }: BedDashboardClientProps) {
         onConfirm={handleConfirmationConfirm}
         onCancel={closeConfirmationModal}
         isUpdating={confirmationState ? updatingBedId === confirmationState.bedId : false}
+      />
+
+      {/* US-2.3: Discharge confirmation modal */}
+      <DischargeModal
+        isOpen={Boolean(dischargeState)}
+        dischargeState={dischargeState}
+        onConfirm={handleDischargeConfirm}
+        onCancel={closeDischargeModal}
+        isSubmitting={isDischargeSubmitting}
       />
     </div>
   )
