@@ -1,24 +1,48 @@
 -- Migration 012: Expand disposition delay reasons (US-1.7)
 -- Purpose: Add 'no_icu_bed' and 'no_general_ward_bed' enum values
 -- to match acceptance criteria for US-1.7 Display Reason for Delay
+--
+-- ALTER TYPE ADD VALUE cannot run inside a transaction block (even inside DO $$).
+-- The safe transactional approach is to rename the old type, create a new one
+-- with all values, migrate the column, then drop the old type.
 
--- Use DO $$ blocks so these run safely inside --single-transaction mode.
--- ALTER TYPE ADD VALUE cannot be called directly inside a transaction block
--- in PostgreSQL, but wrapping in a PL/pgSQL DO block bypasses this restriction.
+-- Step 1: Rename the existing enum to a temporary name
+ALTER TYPE disposition_delay_reason_type RENAME TO disposition_delay_reason_type_old;
 
-DO $$ BEGIN
-    ALTER TYPE disposition_delay_reason_type ADD VALUE IF NOT EXISTS 'no_icu_bed';
-EXCEPTION
-    WHEN duplicate_object THEN null;
-END $$;
+-- Step 2: Create the new enum with all 7 values (original 5 + 2 new)
+CREATE TYPE disposition_delay_reason_type AS ENUM (
+    'no_bed_upstairs',
+    'awaiting_transport',
+    'family_consent',
+    'awaiting_specialist',
+    'other',
+    'no_icu_bed',
+    'no_general_ward_bed'
+);
 
-DO $$ BEGIN
-    ALTER TYPE disposition_delay_reason_type ADD VALUE IF NOT EXISTS 'no_general_ward_bed';
-EXCEPTION
-    WHEN duplicate_object THEN null;
-END $$;
+-- Step 3: Migrate the column to the new type
+ALTER TABLE disposition_delay_reasons
+    ALTER COLUMN reason TYPE disposition_delay_reason_type
+    USING reason::text::disposition_delay_reason_type;
+
+-- Step 4: Drop the old enum
+DROP TYPE disposition_delay_reason_type_old;
 
 -- Down Migration
--- ALTER TYPE ADD VALUE cannot be reversed in PostgreSQL without recreating the
--- entire type. These values are left in place as they are non-breaking additions.
-SELECT 1; -- no-op: enum value removal is intentionally unsupported
+-- Reverse: rename new back to old, recreate original 5-value enum, migrate, drop new
+
+ALTER TYPE disposition_delay_reason_type RENAME TO disposition_delay_reason_type_new;
+
+CREATE TYPE disposition_delay_reason_type AS ENUM (
+    'no_bed_upstairs',
+    'awaiting_transport',
+    'family_consent',
+    'awaiting_specialist',
+    'other'
+);
+
+ALTER TABLE disposition_delay_reasons
+    ALTER COLUMN reason TYPE disposition_delay_reason_type
+    USING reason::text::disposition_delay_reason_type;
+
+DROP TYPE disposition_delay_reason_type_new;
