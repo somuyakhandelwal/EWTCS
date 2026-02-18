@@ -11,6 +11,9 @@ import type { BedGridData, BedWithElapsedTime, Stage, OverrideState, Confirmatio
 import { executeStageUpdate } from '../lib/execute-stage-update'
 import { isCriticalStage } from '../lib/utils'
 
+/** Stage name that triggers the dedicated discharge modal (US-2.3) */
+const DISCHARGE_STAGE_NAME = 'Discharge Process'
+
 interface StageUpdateActionsDeps {
   data: BedGridData
   stageById: Map<string, Stage>
@@ -28,6 +31,8 @@ interface StageUpdateActionsDeps {
   confirmationState: ConfirmationState | null
   closeConfirmationModal: () => void
   confirmCriticalStages: boolean
+  // US-2.3: Discharge intercept
+  openDischargeModal: (bed: BedWithElapsedTime) => void
 }
 
 interface StageUpdateActionsResult {
@@ -54,6 +59,7 @@ export function useStageUpdateActions({
   confirmationState,
   closeConfirmationModal,
   confirmCriticalStages,
+  openDischargeModal,
 }: StageUpdateActionsDeps): StageUpdateActionsResult {
   const router = useRouter()
   const [isOverrideSubmitting, setIsOverrideSubmitting] = useState(false)
@@ -105,6 +111,18 @@ export function useStageUpdateActions({
       const stage = stageById.get(stageId)
       const bed = data.beds.find(b => b.id === bedId)
 
+      if (!stage || !bed) return
+
+      // US-2.3: Intercept "Discharge Process" on an occupied bed → show discharge modal
+      // This takes priority over the generic critical-stage confirmation.
+      if (
+        stage.name === DISCHARGE_STAGE_NAME &&
+        (bed.isOccupied || bed.patientStartTime !== null)
+      ) {
+        openDischargeModal(bed)
+        return
+      }
+
       // Only show confirmation if the setting is enabled AND it's a critical stage
       if (stage && bed && isCriticalStage(stage.name) && confirmCriticalStages) {
         openConfirmationModal(bed, stage)
@@ -113,7 +131,7 @@ export function useStageUpdateActions({
 
       await performStageUpdate(bedId, stageId)
     },
-    [performStageUpdate, stageById, data.beds, openConfirmationModal, confirmCriticalStages]
+    [performStageUpdate, stageById, data.beds, openConfirmationModal, confirmCriticalStages, openDischargeModal]
   )
 
   const handleConfirmationConfirm = useCallback(async () => {
