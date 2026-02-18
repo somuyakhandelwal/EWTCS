@@ -66,3 +66,11 @@ COMMENT ON COLUMN disposition_delay_reasons.bed_stage_log_id IS
     'Links to the log entry when the patient entered Decision Made stage';
 COMMENT ON COLUMN disposition_delay_reasons.resolved_at IS
     'Set when patient leaves Decision Made stage. NULL = bottleneck still active.';
+
+-- Down Migration
+DROP INDEX IF EXISTS idx_bed_stage_logs_bed_to_stage;
+DROP INDEX IF EXISTS idx_disposition_delay_resolved;
+DROP INDEX IF EXISTS idx_disposition_delay_log_id;
+DROP INDEX IF EXISTS idx_disposition_delay_bed_id;
+DROP TABLE IF EXISTS disposition_delay_reasons;
+DROP TYPE IF EXISTS disposition_delay_reason_type;
