@@ -129,7 +129,7 @@ const createAppConfig = (env: z.infer<typeof envSchema>): AppConfig => {
   return {
     database: {
       url: databaseSecret.value,
-      ssl: isProduction,
+      ssl: isProduction && process.env.NEXT_PHASE !== 'phase-production-build',
       encrypted: databaseSecret.encrypted,
     },
     app: {
