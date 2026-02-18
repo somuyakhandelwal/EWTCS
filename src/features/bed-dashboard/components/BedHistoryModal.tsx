@@ -116,6 +116,7 @@ export function BedHistoryModal({
                                                 {log.durationMs !== null && (
                                                     <div className="flex items-center gap-2 text-zinc-400">
                                                         <Clock className="h-3.5 w-3.5 text-zinc-500" />
+                                                       <span>Time spent in <span className="text-zinc-300">&quot;{log.fromStageName || 'Admission'}&quot;</span>: <span className="text-white font-medium">{formatDuration(log.durationMs)}</span></span>
                                                         <span>Time spent in <span className="text-zinc-300">&quot;{log.fromStageName || 'Admission'}&quot;</span>: <span className="text-white font-medium">{formatDuration(log.durationMs)}</span></span>
                                                     </div>
                                                 )}

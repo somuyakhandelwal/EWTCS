@@ -7,6 +7,7 @@ import { Clock, AlertTriangle, Hourglass } from 'lucide-react'
 import type { BedWithElapsedTime, DispositionDelayReason } from '../types/bed'
 import { DISPOSITION_DELAY_REASON_LABELS } from '../types/bed'
 import { formatElapsedTime, getStageColorClasses } from '../lib/utils'
+import { useElapsedTime } from '../hooks/useElapsedTime'
 import { cn } from '@/shared/lib/utils'
 
 const REASON_OPTIONS = Object.entries(DISPOSITION_DELAY_REASON_LABELS) as [
@@ -34,7 +35,7 @@ export const BedCard = memo(function BedCard({
   const stageName = bed.currentStage?.name || 'Empty'
   const stageColor = bed.currentStage?.colorCode || 'gray'
   const colorClasses = getStageColorClasses(stageColor)
-  const elapsedTime = formatElapsedTime(bed.elapsedTimeMs)
+  const elapsedTime = useElapsedTime(bed.patientStartTime)
   const isOccupied = bed.isOccupied
   const isDelayed = bed.isDelayed
   const isBottleneck = bed.isDispositionBottleneck
