@@ -133,3 +133,6 @@ ON CONFLICT (from_stage_id, to_stage_id) DO NOTHING;
 
 -- Create an audit history comment
 COMMENT ON TABLE stage_transitions IS 'Immutable workflow rules. Updated_at tracks rule changes but should maintain audit log separately.';
+
+-- Down Migration
+DROP TABLE IF EXISTS stage_transitions;

@@ -15,12 +15,35 @@ Closes #
 
 ## Checklist
 <!-- Ensure all items are checked before requesting review -->
+
+### Code Quality
 - [ ] No file exceeds 200 lines
 - [ ] Code is properly formatted
+- [ ] TypeScript types are properly defined
+- [ ] No ESLint errors or warnings
+
+### Testing
 - [ ] Tested locally and works as expected
 - [ ] Added/updated tests if applicable
+- [ ] All existing tests pass
+
+### Database & Environment
+- [ ] Database migrations tested (if applicable)
+- [ ] Migration rollback tested (if applicable)
+- [ ] Environment variables documented in .env.example (if new vars added)
+- [ ] Database schema changes documented (if applicable)
+- [ ] No modifications to existing migration files
+
+### Documentation
 - [ ] Updated documentation if needed
+- [ ] README updated (if setup process changed)
+- [ ] DATABASE_SETUP.md updated (if database changes)
+- [ ] Code comments added for complex logic
+
+### UI/UX (if applicable)
 - [ ] Screenshots attached (if UI changes)
+- [ ] Responsive design tested
+- [ ] Accessibility considerations addressed
 
 ## Screenshots
 <!-- If applicable, add screenshots to demonstrate UI changes -->

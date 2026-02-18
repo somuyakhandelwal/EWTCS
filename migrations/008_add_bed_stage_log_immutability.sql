@@ -28,3 +28,6 @@ COMMENT ON TABLE bed_stage_logs IS
 
 -- Note: Immutability is primarily enforced in application code
 -- If database correction is needed, use the bed_stage_log_corrections table (migration 007)
+
+-- Down Migration
+COMMENT ON TABLE bed_stage_logs IS NULL;

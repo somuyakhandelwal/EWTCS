@@ -1,0 +1,353 @@
+name: Pre-Merge Checks
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened]
+
+jobs:
+  environment-validation:
+    runs-on: ubuntu-latest
+    name: Validate Environment Configuration
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+      
+      - name: Install dependencies
+        run: npm ci
+      
+      - name: Validate .env.example exists and is complete
+        run: node scripts/validate-env-example.js
+      
+      - name: Check for required environment variables
+        run: |
+          echo "🔍 Checking .env.example for required variables..."
+          
+          REQUIRED_VARS=(
+            "DATABASE_URL"
+            "SESSION_SECRET"
+            "NEXT_PUBLIC_APP_URL"
+            "NODE_ENV"
+          )
+          
+          MISSING_VARS=()
+          
+          for var in "${REQUIRED_VARS[@]}"; do
+            if ! grep -q "^${var}=" .env.example; then
+              MISSING_VARS+=("$var")
+            fi
+          done
+          
+          if [ ${#MISSING_VARS[@]} -gt 0 ]; then
+            echo "❌ Missing required variables in .env.example:"
+            printf '%s\n' "${MISSING_VARS[@]}"
+            exit 1
+          fi
+          
+          echo "✅ All required environment variables present in .env.example"
+
+  database-setup-validation:
+    runs-on: ubuntu-latest
+    name: Validate Database Setup
+    
+    services:
+      postgres:
+        image: postgres:15
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: testpassword
+          POSTGRES_DB: ewtcs_test
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+        ports:
+          - 5432:5432
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+      
+      - name: Install dependencies
+        run: npm ci
+      
+      - name: Create test environment file
+        run: |
+          cat > .env.local << EOF
+          DATABASE_URL=postgresql://postgres:testpassword@localhost:5432/ewtcs_test
+          SESSION_SECRET=test-secret-key-minimum-32-characters-long-for-testing
+          NEXT_PUBLIC_APP_URL=http://localhost:3000
+          NODE_ENV=development
+          RED_ALERT_THRESHOLD_MS=10800000
+          EOF
+      
+      - name: Validate database connection
+        run: node scripts/validate-db-connection.js
+      
+      - name: Run migrations
+        run: npm run db:migrate
+      
+      - name: Validate migrations applied successfully
+        run: node scripts/validate-migrations.js
+      
+      - name: Verify database schema
+        run: node scripts/validate-db-schema.js
+      
+      - name: Test database rollback
+        run: |
+          echo "🔄 Testing migration rollback..."
+          npm run db:rollback
+          echo "✅ Rollback successful"
+          
+          echo "🔄 Re-applying migrations..."
+          npm run db:migrate
+          echo "✅ Re-migration successful"
+
+  migration-validation:
+    runs-on: ubuntu-latest
+    name: Validate Migration Files
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      
+      - name: Check for new or modified migrations
+        run: |
+          echo "🔍 Checking for migration file changes..."
+          
+          CHANGED_MIGRATIONS=$(git diff --name-only origin/${{ github.base_ref }}...HEAD | grep '^migrations/' || true)
+          
+          if [ -z "$CHANGED_MIGRATIONS" ]; then
+            echo "ℹ️  No migration files changed in this PR"
+            exit 0
+          fi
+          
+          echo "📝 Changed migration files:"
+          echo "$CHANGED_MIGRATIONS"
+          
+          # Check for modifications to existing migrations (not allowed)
+          MODIFIED_MIGRATIONS=$(echo "$CHANGED_MIGRATIONS" | grep -v "$(git diff --name-only --diff-filter=A origin/${{ github.base_ref }}...HEAD | grep '^migrations/')" || true)
+          
+          if [ -n "$MODIFIED_MIGRATIONS" ]; then
+            echo "❌ ERROR: Existing migration files were modified!"
+            echo "Modified migrations:"
+            echo "$MODIFIED_MIGRATIONS"
+            echo ""
+            echo "⚠️  Never modify existing migrations that have been merged."
+            echo "Instead, create a new migration to make changes."
+            exit 1
+          fi
+          
+          echo "✅ All migration changes are new files (not modifications)"
+      
+      - name: Validate migration file naming
+        run: |
+          echo "🔍 Validating migration file naming conventions..."
+          
+          # Enable nullglob so patterns with no matches disappear
+          shopt -s nullglob
+          for file in migrations/*.sql migrations/*.js migrations/*.ts; do
+            if [ -f "$file" ]; then
+              filename=$(basename "$file")
+              
+              # Check if filename starts with a number (timestamp or sequential)
+              if ! [[ "$filename" =~ ^[0-9] ]]; then
+                echo "❌ Invalid migration filename: $filename"
+                echo "Migration files must start with a number (timestamp or sequential)"
+                exit 1
+              fi
+            fi
+          done
+          
+          echo "✅ All migration files follow naming conventions"
+      
+      - name: Check for migration conflicts
+        run: |
+          echo "🔍 Checking for migration number conflicts..."
+          
+          # Get all migration files
+          MIGRATION_FILES=$(ls migrations/*.sql migrations/*.js migrations/*.ts 2>/dev/null | xargs -n1 basename | sort)
+          
+          # Check for duplicate prefixes
+          PREFIXES=$(echo "$MIGRATION_FILES" | sed 's/_.*$//' | sort)
+          DUPLICATES=$(echo "$PREFIXES" | uniq -d)
+          
+          if [ -n "$DUPLICATES" ]; then
+            echo "❌ Duplicate migration numbers found:"
+            echo "$DUPLICATES"
+            exit 1
+          fi
+          
+          echo "✅ No migration number conflicts detected"
+
+  build-validation:
+    runs-on: ubuntu-latest
+    name: Validate Build Process
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+      
+      - name: Install dependencies
+        run: npm ci
+      
+      - name: Create minimal .env.local for build
+        run: |
+          cat > .env.local << EOF
+          DATABASE_URL=postgresql://postgres:password@localhost:5432/ewtcs
+          SESSION_SECRET=build-test-secret-key-minimum-32-characters-long
+          NEXT_PUBLIC_APP_URL=http://localhost:3000
+          NODE_ENV=production
+          EOF
+      
+      - name: Run TypeScript type checking
+        run: npx tsc --noEmit
+      
+      - name: Build application
+        run: npm run build
+      
+      - name: Verify build output
+        run: |
+          if [ ! -d ".next" ]; then
+            echo "❌ Build output directory (.next) not found"
+            exit 1
+          fi
+          
+          echo "✅ Build completed successfully"
+
+  dependency-validation:
+    runs-on: ubuntu-latest
+    name: Validate Dependencies
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+      
+      - name: Validate package.json and package-lock.json are in sync
+        run: |
+          npm ci
+          
+          if git diff --exit-code package-lock.json; then
+            echo "✅ package-lock.json is in sync with package.json"
+          else
+            echo "❌ package-lock.json is out of sync with package.json"
+            echo "Run 'npm install' locally and commit the changes"
+            exit 1
+          fi
+      
+      - name: Check for security vulnerabilities
+        run: |
+          echo "🔍 Checking for security vulnerabilities..."
+          npm audit --audit-level=high || {
+            echo "⚠️  High or critical vulnerabilities found"
+            echo "Please run 'npm audit fix' to resolve them"
+            exit 1
+          }
+          echo "✅ No high or critical vulnerabilities found"
+
+  documentation-validation:
+    runs-on: ubuntu-latest
+    name: Validate Documentation
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      
+      - name: Check if database changes require documentation updates
+        run: |
+          echo "🔍 Checking if database changes require documentation..."
+          
+          DB_CHANGES=$(git diff --name-only origin/${{ github.base_ref }}...HEAD | grep -E '^(migrations/|src/db/)' || true)
+          
+          if [ -n "$DB_CHANGES" ]; then
+            echo "📝 Database-related files changed:"
+            echo "$DB_CHANGES"
+            
+            DOC_CHANGES=$(git diff --name-only origin/${{ github.base_ref }}...HEAD | grep -E '^(DATABASE_SETUP.md|README.md|CONFIGURATION.md)' || true)
+            
+            if [ -z "$DOC_CHANGES" ]; then
+              echo "⚠️  WARNING: Database files changed but no documentation updates found"
+              echo "Consider updating DATABASE_SETUP.md or README.md if needed"
+              # Don't fail, just warn
+            else
+              echo "✅ Documentation files also updated"
+            fi
+          else
+            echo "ℹ️  No database changes detected"
+          fi
+      
+      - name: Validate README has setup instructions
+        run: |
+          if ! grep -q "## Setup" README.md && ! grep -q "## Getting Started" README.md; then
+            echo "⚠️  README.md should contain setup instructions"
+          else
+            echo "✅ README.md contains setup instructions"
+          fi
+
+  pr-checklist-validation:
+    runs-on: ubuntu-latest
+    name: Validate PR Checklist
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      
+      - name: Check PR description
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const pr = context.payload.pull_request;
+            const body = pr.body || '';
+            
+            const requiredChecks = [
+              'No file exceeds 200 lines',
+              'Code is properly formatted',
+              'Tested locally and works as expected',
+              'Database migrations tested',
+              'Environment variables documented'
+            ];
+            
+            const missingChecks = [];
+            
+            for (const check of requiredChecks) {
+              if (!body.includes(check)) {
+                missingChecks.push(check);
+              }
+            }
+            
+            if (missingChecks.length > 0) {
+              core.warning('PR description is missing some checklist items. Please ensure all items are addressed.');
+              console.log('Missing checklist items:');
+              missingChecks.forEach(item => console.log(`- ${item}`));
+            } else {
+              console.log('✅ All required checklist items present in PR description');
+            }

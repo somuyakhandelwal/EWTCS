@@ -1,35 +1,35 @@
 // Bed Card Component
 // Epic 1: Nurse Desk Bed Dashboard
 
-import { memo } from 'react'
+import { memo, type MouseEvent } from 'react'
 import { Card, CardContent } from '@/shared/components/ui/card'
-import { Clock, AlertTriangle, CheckCircle } from 'lucide-react'
-import type { BedWithElapsedTime } from '../types/bed'
+import { Clock, AlertTriangle, Hourglass } from 'lucide-react'
+import type { BedWithElapsedTime, DispositionDelayReason } from '../types/bed'
+import { DISPOSITION_DELAY_REASON_LABELS } from '../types/bed'
 import { formatElapsedTime, getStageColorClasses } from '../lib/utils'
 import { cn } from '@/shared/lib/utils'
-import { BedStageButtons } from './BedStageButtons'
-import type { Stage } from '../types/bed'
+
+const REASON_OPTIONS = Object.entries(DISPOSITION_DELAY_REASON_LABELS) as [
+  DispositionDelayReason,
+  string,
+][]
 
 interface BedCardProps {
   bed: BedWithElapsedTime
-  stages: Stage[]
   onClick?: (bed: BedWithElapsedTime) => void
-  onStageSelect: (bedId: string, stageId: string) => void
-  isUpdating: boolean
-  updatingStageId: string | null
-  lastUpdatedStageId: string | null
+  onContextMenu?: (event: MouseEvent<HTMLDivElement>, bed: BedWithElapsedTime) => void
+  onReasonSelect?: (bedId: string, reason: DispositionDelayReason) => void
+  showUpdated?: boolean
   errorMessage?: string | null
 }
 
 export const BedCard = memo(function BedCard({
   bed,
-  stages,
   onClick,
-  onStageSelect,
-  isUpdating,
-  updatingStageId,
-  lastUpdatedStageId,
-  errorMessage,
+  onContextMenu,
+  onReasonSelect,
+  showUpdated = false,
+  errorMessage = null,
 }: BedCardProps) {
   const stageName = bed.currentStage?.name || 'Empty'
   const stageColor = bed.currentStage?.colorCode || 'gray'
@@ -37,6 +37,7 @@ export const BedCard = memo(function BedCard({
   const elapsedTime = formatElapsedTime(bed.elapsedTimeMs)
   const isOccupied = bed.isOccupied
   const isDelayed = bed.isDelayed
+  const isBottleneck = bed.isDispositionBottleneck
 
   return (
     <Card
@@ -45,14 +46,24 @@ export const BedCard = memo(function BedCard({
         colorClasses.bg,
         colorClasses.border,
         'border-2',
-        isDelayed && 'ring-2 ring-red-500 animate-pulse'
+        isDelayed && 'ring-2 ring-red-500 animate-pulse',
+        // US-1.6: amber ring for disposition bottleneck (takes priority over delayed ring)
+        isBottleneck && 'ring-2 ring-amber-500 animate-pulse'
       )}
       onClick={() => onClick?.(bed)}
+      onContextMenu={(event) => onContextMenu?.(event, bed)}
     >
       {/* Delay indicator */}
-      {isDelayed && (
+      {isDelayed && !isBottleneck && (
         <div className="absolute top-2 right-2">
           <AlertTriangle className="h-5 w-5 text-red-500" />
+        </div>
+      )}
+
+      {/* US-1.6: Disposition bottleneck indicator (overrides delay icon) */}
+      {isBottleneck && (
+        <div className="absolute top-2 right-2">
+          <Hourglass className="h-5 w-5 text-amber-400" />
         </div>
       )}
 
@@ -76,40 +87,69 @@ export const BedCard = memo(function BedCard({
           <p className={cn('text-sm font-semibold', colorClasses.text)}>
             {stageName}
           </p>
-          {lastUpdatedStageId && (
-            <div className="flex items-center gap-2 text-xs text-emerald-400">
-              <CheckCircle className="h-3.5 w-3.5" />
-              Updated
+          {onContextMenu && (
+            <p className="text-[10px] text-zinc-500">
+              Right-click to update stage
+            </p>
+          )}
+          {showUpdated && (
+            <p className="text-[10px] text-emerald-400">Updated</p>
+          )}
+          {errorMessage && (
+            <p className="text-[10px] text-red-400">{errorMessage}</p>
+          )}
+
+          {/* US-1.6: Disposition bottleneck badge */}
+          {isBottleneck && (
+            <div className="mt-1 flex items-center gap-1 rounded bg-amber-900/40 border border-amber-700/50 px-2 py-0.5">
+              <Hourglass className="h-3 w-3 text-amber-400 shrink-0" />
+              <span className="text-[10px] font-semibold text-amber-300">
+                Disposition Hold · {formatElapsedTime(bed.dispositionElapsedMs)}
+              </span>
             </div>
+          )}
+
+          {/* US-1.7: Inline reason selector when bottleneck and handler provided */}
+          {isBottleneck && onReasonSelect && (
+            <select
+              className={cn(
+                'mt-1 w-full rounded border border-amber-700/50 bg-zinc-900 px-1.5 py-1 text-[10px] text-zinc-200',
+                'focus:outline-none focus:ring-1 focus:ring-amber-500'
+              )}
+              value={bed.dispositionDelayReason ?? ''}
+              onClick={e => e.stopPropagation()}
+              onChange={e => {
+                e.stopPropagation()
+                onReasonSelect(bed.id, e.target.value as DispositionDelayReason)
+              }}
+            >
+              <option value="" disabled>Select reason…</option>
+              {REASON_OPTIONS.map(([value, label]) => (
+                <option key={value} value={value}>{label}</option>
+              ))}
+            </select>
+          )}
+          {/* US-1.6: Show recorded reason label when no handler (read-only) */}
+          {isBottleneck && !onReasonSelect && bed.dispositionDelayReason && (
+            <p className="text-[10px] text-amber-400/80">
+              {DISPOSITION_DELAY_REASON_LABELS[bed.dispositionDelayReason]}
+            </p>
           )}
         </div>
 
         {/* Elapsed Time */}
         {isOccupied && bed.patientStartTime && (
-          <div className="flex flex-col gap-2 pt-2 border-t border-zinc-700/50">
-            <div className="flex items-center gap-2">
-              <Clock className="h-4 w-4 text-zinc-500" />
-              <div className="flex-1">
-                <p className="text-[10px] text-zinc-500 uppercase">Total Stay</p>
-                <p className={cn(
-                  'text-base font-bold',
-                  isDelayed ? 'text-red-400' : 'text-zinc-300'
-                )}>
-                  {elapsedTime}
-                </p>
-              </div>
+          <div className="flex items-center gap-2 pt-2 border-t border-zinc-700/50">
+            <Clock className="h-4 w-4 text-zinc-500" />
+            <div className="flex-1">
+              <p className="text-xs text-zinc-500">Elapsed Time</p>
+              <p className={cn(
+                'text-lg font-bold',
+                isDelayed ? 'text-red-400' : 'text-zinc-300'
+              )}>
+                {elapsedTime}
+              </p>
             </div>
-
-            {bed.lastStageChange && (
-              <div className="flex items-center gap-2 pl-6">
-                <div className="flex-1">
-                  <p className="text-[10px] text-zinc-500 uppercase">In current stage</p>
-                  <p className="text-sm font-semibold text-zinc-400">
-                    {formatElapsedTime(Date.now() - new Date(bed.lastStageChange).getTime())}
-                  </p>
-                </div>
-              </div>
-            )}
           </div>
         )}
 
@@ -119,18 +159,6 @@ export const BedCard = memo(function BedCard({
             <p className="text-xs text-zinc-500">Status</p>
             <p className="text-sm font-medium text-zinc-400">Available</p>
           </div>
-        )}
-
-        <BedStageButtons
-          bed={bed}
-          stages={stages}
-          onStageSelect={onStageSelect}
-          isUpdating={isUpdating}
-          updatingStageId={updatingStageId}
-        />
-
-        {errorMessage && (
-          <p className="text-xs text-red-400">{errorMessage}</p>
         )}
       </CardContent>
     </Card>

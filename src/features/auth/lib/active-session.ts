@@ -1,5 +1,7 @@
 import 'server-only'
 import { verifySession, deleteSession } from './session'
+import { isTokenBlacklisted } from './auth-service'
+import { cookies } from 'next/headers'
 import pool from '@/shared/lib/db'
 
 /**
@@ -16,6 +18,14 @@ import pool from '@/shared/lib/db'
 export async function verifyActiveSession() {
     const session = await verifySession()
     if (!session) return null
+
+    // Check if token is blacklisted
+    const cookieStore = await cookies()
+    const token = cookieStore.get('session')?.value
+    if (token && await isTokenBlacklisted(token)) {
+        await deleteSession()
+        return null
+    }
 
     const { rows } = await pool.query(
         'SELECT is_active FROM users WHERE id = $1',

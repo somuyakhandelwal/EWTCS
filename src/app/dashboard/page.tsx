@@ -1,13 +1,16 @@
 import { verifyActiveSession } from "@/features/auth/lib/active-session"
-import { getBedGridData } from "@/features/bed-dashboard/actions/bed-actions"
+import { getBedGridData } from "@/features/bed-dashboard/actions/bed-grid-actions"
 import { BedDashboardClient } from "@/features/bed-dashboard/components/BedDashboardClient"
-import LogoutButton from "@/features/auth/components/LogoutButton"
-import { Button } from "@/shared/components/ui/button"
-import { AlertTriangle, BarChart3 } from "lucide-react"
-import Link from "next/link"
+import { AlertTriangle } from "lucide-react"
+import { LogoutButton } from "@/features/auth/components/LogoutButton"
+import { redirect } from "next/navigation"
 
 export default async function DashboardPage() {
     const session = await verifyActiveSession()
+
+    if (!session) {
+        redirect('/login')
+    }
     const bedGridResult = await getBedGridData()
 
     // Handle error state
@@ -45,22 +48,7 @@ export default async function DashboardPage() {
                         </h1>
                         <p className="text-zinc-400">Real-time bed status and ward overview</p>
                     </div>
-                    <div className="flex items-center gap-2">
-                        <span className="flex h-3 w-3 relative">
-                            <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
-                            <span className="relative inline-flex rounded-full h-3 w-3 bg-emerald-500"></span>
-                        </span>
-                        <span className="text-sm font-medium text-emerald-500">System Live</span>
-                        {(session?.role === 'supervisor' || session?.role === 'admin') && (
-                            <Link href="/analytics">
-                                <Button variant="outline" size="sm" className="gap-2">
-                                    <BarChart3 className="h-4 w-4" />
-                                    Analytics
-                                </Button>
-                            </Link>
-                        )}
-                        <LogoutButton />
-                    </div>
+                    <LogoutButton />
                 </div>
 
                 {/* Bed Grid */}

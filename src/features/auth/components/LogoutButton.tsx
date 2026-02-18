@@ -1,16 +1,45 @@
 'use client'
 
-import { Button } from "@/shared/components/ui/button"
-import { LogOut } from "lucide-react"
-import { logout } from "../actions/auth-actions"
+import { useRouter } from 'next/navigation'
+import { LogOut } from 'lucide-react'
 
-export default function LogoutButton() {
+export function LogoutButton({ className }: { className?: string }) {
+    const router = useRouter()
+
+    const handleLogout = async () => {
+        try {
+            // Call API endpoint
+            await fetch('/api/auth/logout', {
+                method: 'POST',
+            })
+        } catch (error) {
+            console.warn('Logout API failed, cleaning up locally', error)
+        } finally {
+            // Client-side cleanup
+            localStorage.clear()
+            sessionStorage.clear()
+
+            // Clear all cookies accessible via JS (optional, as httpOnly is cleared by server)
+            document.cookie.split(";").forEach((c) => {
+                document.cookie = c
+                    .replace(/^ +/, "")
+                    .replace(/=.*/, "=;expires=" + new Date().toUTCString() + ";path=/");
+            });
+
+            // Redirect to login
+            router.replace('/login')
+            router.refresh()
+        }
+    }
+
     return (
-        <form action={logout}>
-            <Button variant="outline" size="sm" className="text-zinc-400 hover:text-white hover:bg-zinc-800 gap-2">
-                <LogOut className="h-4 w-4" />
-                <span>Logout</span>
-            </Button>
-        </form>
+        <button
+            onClick={handleLogout}
+            className={`flex items-center gap-2 px-4 py-2 text-sm font-medium text-red-500 hover:text-red-400 transition-colors ${className}`}
+            aria-label="Logout"
+        >
+            <LogOut className="h-4 w-4" />
+            Logout
+        </button>
     )
 }

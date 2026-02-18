@@ -1,68 +1,26 @@
-// Bed Dashboard Server Actions
-// Epic 1: Nurse Desk Bed Dashboard
-
 'use server'
 
-import { getAllStages, getBedsWithElapsedTime, getBedStageHistory } from '../lib/queries'
-import { config } from '@/shared/config/env'
+import { getBedById } from '../lib/queries'
 import { logger } from '@/shared/config/logger'
-import type { BedGridData } from '../types/bed'
+import { UpdateBedStageSchema, type UpdateBedStageInput } from '../schemas/bed-schemas'
+import { updateBedStageInDB } from '../lib/bed-mutations'
+import { getUserWard, getBedWard } from '../lib/bed-queries'
 import { requireRole } from '@/shared/lib/auth'
 import { logAudit } from '@/shared/lib/audit'
-import { UpdateBedStageSchema } from '../schemas/bed-schemas'
-import { updateBedStageInDB } from '../lib/bed-mutations'
-import type { UpdateBedStageInput } from '../schemas/bed-schemas'
+import { validateTransition } from '../lib/stage-validation'
 
 /**
- * Get all beds with current status and elapsed time
- * Used by the nurse dashboard to display the bed grid
+ * Update bed stage (US-2.1, US-2.2)
+ * Validates stage transitions before updating
  */
-export async function getBedGridData(): Promise<{
+export async function updateBedStage(input: UpdateBedStageInput): Promise<{
   success: boolean
-  data?: BedGridData
+  data?: Awaited<ReturnType<typeof updateBedStageInDB>>
   error?: string
+  reason?: string // Why transition wasn't allowed or why override is needed
+  requiresOverride?: boolean // If true, transition needs supervisor approval
+  errors?: Record<string, string[]>
 }> {
-  try {
-    logger.info('Fetching bed grid data')
-
-    const delayThresholdMs = config.alert.delayThresholdMs
-
-    // Fetch beds and stages in parallel
-    const [beds, stages] = await Promise.all([
-      getBedsWithElapsedTime(delayThresholdMs),
-      getAllStages(),
-    ])
-
-    const data: BedGridData = {
-      beds,
-      stages,
-      delayThresholdMs,
-    }
-
-    logger.info('Bed grid data fetched successfully', {
-      bedCount: beds.length,
-      stageCount: stages.length,
-      delayedBeds: beds.filter(b => b.isDelayed).length,
-    })
-
-    return {
-      success: true,
-      data,
-    }
-  } catch (error) {
-    logger.error('Failed to fetch bed grid data', error as Error)
-    return {
-      success: false,
-      error: error instanceof Error ? error.message : 'Failed to fetch bed grid data',
-    }
-  }
-}
-
-/**
- * Update a bed stage with a single action
- * Epic 2: One-Click Stage Update System
- */
-export async function updateBedStage(input: UpdateBedStageInput) {
   try {
     const session = await requireRole(['nurse', 'supervisor', 'admin'])
 
@@ -74,32 +32,123 @@ export async function updateBedStage(input: UpdateBedStageInput) {
       }
     }
 
-    const { bedId, toStageId, notes } = result.data
+    // IDOR FIX: Verify user has access to this specific bed (ward-level access control)
+    const userWard = await getUserWard(session.userId)
+    const bedWard = await getBedWard(result.data.bedId)
 
+    // Allow access if:
+    // 1. Neither user nor bed has a ward assigned (ward system not configured)
+    // 2. Both have ward assignments and they match
+    // 3. User is an admin (admins can access all beds)
+    const hasWardAccess =
+      (!userWard && !bedWard) ||
+      (userWard && bedWard && userWard === bedWard) ||
+      session.role === 'admin'
+
+    if (!hasWardAccess) {
+      logger.warn('Unauthorized bed access attempt', {
+        userId: session.userId,
+        bedId: result.data.bedId,
+        userWard,
+        bedWard,
+        userRole: session.role,
+      })
+      return {
+        success: false,
+        error: 'You do not have permission to update this bed. Access is restricted to your assigned ward.',
+      }
+    }
+
+    // NEW: Get current bed to validate transition
+    const bed = await getBedById(result.data.bedId)
+    if (!bed) {
+      return {
+        success: false,
+        error: 'Bed not found',
+      }
+    }
+
+    // NEW: Validate stage transition (US-2.2)
+    const validationResult = await validateTransition(
+      bed.currentStageId,
+      result.data.toStageId,
+      session.role as 'nurse' | 'supervisor' | 'admin'
+    )
+
+    // NEW: If transition is invalid, return error with reason
+    if (!validationResult.isValid) {
+      logger.info('Stage transition rejected', {
+        bedId: result.data.bedId,
+        fromStageId: bed.currentStageId,
+        toStageId: result.data.toStageId,
+        userRole: session.role,
+        reason: validationResult.reason,
+      })
+      return {
+        success: false,
+        error: 'Invalid stage transition',
+        reason: validationResult.reason,
+      }
+    }
+
+    // NEW: If supervisor override is required but not provided, return error with flag
+    if (validationResult.requiresSupervisorOverride && !result.data.supervisorOverride) {
+      logger.info('Supervisor override required but not provided', {
+        bedId: result.data.bedId,
+        fromStageId: bed.currentStageId,
+        toStageId: result.data.toStageId,
+        userRole: session.role,
+      })
+      return {
+        success: false,
+        error: 'Supervisor override required for this transition',
+        reason: validationResult.reason,
+        requiresOverride: true, // Signal client to show override modal
+      }
+    }
+
+    // NEW: Log supervisor override if used
+    if (result.data.supervisorOverride && validationResult.requiresSupervisorOverride) {
+      await logAudit({
+        actionType: 'SUPERVISOR_OVERRIDE',
+        entityType: 'stage_transition',
+        entityId: result.data.bedId,
+        performedBy: session.userId,
+        changes: {
+          fromStageId: bed.currentStageId,
+          toStageId: result.data.toStageId,
+          overrideReason: result.data.overrideReason || 'Medical decision',
+        },
+      })
+
+      logger.info('Supervisor override applied', {
+        bedId: result.data.bedId,
+        fromStageId: bed.currentStageId,
+        toStageId: result.data.toStageId,
+        overriddenBy: session.userId,
+        reason: result.data.overrideReason,
+      })
+    }
+
+    // Proceed with update
     const updateResult = await updateBedStageInDB({
-      bedId,
-      toStageId,
+      bedId: result.data.bedId,
+      toStageId: result.data.toStageId,
       changedByUserId: session.userId,
-      notes,
+      notes: result.data.notes,
     })
 
     await logAudit({
       actionType: 'UPDATE',
       entityType: 'bed',
-      entityId: bedId,
+      entityId: updateResult.bedId,
       performedBy: session.userId,
       changes: {
         fromStageId: updateResult.fromStageId,
         toStageId: updateResult.toStageId,
         isOccupied: updateResult.isOccupied,
+        supervisorOverrideApplied: result.data.supervisorOverride,
       },
-      reason: notes,
-    })
-
-    logger.info('Bed stage updated', {
-      bedId,
-      toStageId,
-      changedBy: session.userId,
     })
 
     return {
@@ -107,62 +156,8 @@ export async function updateBedStage(input: UpdateBedStageInput) {
       data: updateResult,
     }
   } catch (error) {
+    const message = error instanceof Error ? error.message : 'Failed to update bed stage'
     logger.error('Failed to update bed stage', error as Error)
-    return {
-      success: false,
-      message: error instanceof Error ? error.message : 'Failed to update bed stage',
-    }
-  }
-}
-
-/**
- * Get only delayed beds (for filtering)
- */
-export async function getDelayedBeds(): Promise<{
-  success: boolean
-  beds?: Awaited<ReturnType<typeof getBedsWithElapsedTime>>
-  error?: string
-}> {
-  try {
-    const delayThresholdMs = config.alert.delayThresholdMs
-    const allBeds = await getBedsWithElapsedTime(delayThresholdMs)
-    const delayedBeds = allBeds.filter(bed => bed.isDelayed)
-
-    logger.info('Delayed beds fetched', { count: delayedBeds.length })
-
-    return {
-      success: true,
-      beds: delayedBeds,
-    }
-  } catch (error) {
-    logger.error('Failed to fetch delayed beds', error as Error)
-    return {
-      success: false,
-      error: error instanceof Error ? error.message : 'Failed to fetch delayed beds',
-    }
-  }
-}
-
-/**
- * Get bed stage history (US-3.2, US-3.6)
- */
-export async function getBedHistory(bedId: string): Promise<{
-  success: boolean
-  data?: any[]
-  error?: string
-}> {
-  try {
-    await requireRole(['nurse', 'supervisor', 'admin'])
-
-    const history = await getBedStageHistory(bedId)
-
-    return {
-      success: true,
-      data: history,
-    }
-  } catch (error) {
-    const message = error instanceof Error ? error.message : 'Failed to fetch bed history'
-    logger.error('Failed to fetch bed history', error as Error, { bedId })
     return {
       success: false,
       error: message,
