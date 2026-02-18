@@ -1,16 +1,18 @@
 // Bed Dashboard Client Wrapper
 // Epic 1: Nurse Desk Bed Dashboard
-// US-1.2: Real-time updates with intelligent polling
+// US-1.2: Real-time updates with intelligent polling + Search functionality
 
 'use client'
 
 import { useCallback, useState, useRef, useEffect } from 'react'
 import { BedGrid } from './BedGrid'
 import { SearchInput } from './SearchInput'
-import type { BedGridData, BedWithElapsedTime } from '../types/bed'
+import { ConnectionStatus } from './ConnectionStatus'
 import { SupervisorOverrideModal } from './SupervisorOverrideModal'
 import { ConfirmationModal } from './ConfirmationModal'
 import { DashboardSettings } from './DashboardSettings'
+import type { BedGridData, BedWithElapsedTime } from '../types/bed'
+import { useRealtimeBedUpdates } from '../hooks/useRealtimeBedUpdates'
 import { useBedStageUpdate } from '../hooks/useBedStageUpdate'
 
 interface BedDashboardClientProps {
@@ -19,27 +21,33 @@ interface BedDashboardClientProps {
 
 export function BedDashboardClient({ initialData }: BedDashboardClientProps) {
   const {
+    data: realtimeData,
+    connectionStatus,
+    isLoading,
+    reconnect,
+  } = useRealtimeBedUpdates(initialData)
+
+  const {
     data,
     updatingBedId,
     updatingStageId,
-    errorByBedId,
     lastUpdatedBedId,
     lastUpdatedStageId,
+    errorByBedId,
     isOverrideSubmitting,
     overrideState,
     handleRefresh,
     handleStageSelect,
     handleOverrideApprove,
-
     closeOverrideModal,
     confirmationState,
     handleConfirmationConfirm,
     closeConfirmationModal,
     settings,
     toggleConfirmation,
-  } = useBedStageUpdate(initialData)
+  } = useBedStageUpdate(realtimeData)
 
-  // Search state: immediate input and debounced query used for filtering
+  // Search state: immediate input and debounced query used for filtering (US-1.2)
   const [searchInput, setSearchInput] = useState('')
   const [searchQuery, setSearchQuery] = useState('')
   const searchDebounceRef = useRef<NodeJS.Timeout | null>(null)
@@ -59,13 +67,7 @@ export function BedDashboardClient({ initialData }: BedDashboardClientProps) {
     }
   }, [searchInput])
 
-  // TODO: Implement real-time updates (US-1.2)
-  const isLoading = false, connectionStatus = 'connected', reconnect = () => { }
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  const ConnectionStatus = (_props: { status: string; onReconnect: () => void }) => null
-
   const handleBedClick = useCallback((bed: BedWithElapsedTime) => {
-    // TODO US-1.2: Open bed details modal or navigate to bed page
     void bed
   }, [])
 
@@ -86,7 +88,6 @@ export function BedDashboardClient({ initialData }: BedDashboardClientProps) {
         <ConnectionStatus status={connectionStatus} onReconnect={reconnect} />
       </div>
 
-      {/* Bed Grid with real-time data */}
       <BedGrid
         data={data}
         onRefresh={handleRefresh}
@@ -124,4 +125,3 @@ export function BedDashboardClient({ initialData }: BedDashboardClientProps) {
     </div>
   )
 }
-

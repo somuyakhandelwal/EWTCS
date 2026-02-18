@@ -1,7 +1,8 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/shared/components/ui/card"
-import { Shield, Users, Settings, Activity } from "lucide-react"
+import { Shield, Users, Settings, Activity, Bed } from "lucide-react"
 import { LogoutButton } from "@/features/auth/components/LogoutButton"
 import { redirect } from "next/navigation"
+import Link from "next/link"
 
 import { verifyActiveSession } from "@/features/auth/lib/active-session"
 import { getAllUsers, getUserLogs } from "@/features/user-management/actions/user-management-actions"
@@ -82,6 +83,38 @@ export default async function AdminDashboard() {
                         </CardContent>
                     </Card>
                 </div>
+
+                {/* Quick Actions */}
+                <Card className="bg-zinc-900 border-zinc-800">
+                    <CardHeader>
+                        <CardTitle className="text-xl text-white">Quick Actions</CardTitle>
+                        <p className="text-sm text-zinc-400 mt-1">
+                            Manage system resources
+                        </p>
+                    </CardHeader>
+                    <CardContent>
+                        <div className="grid gap-4 md:grid-cols-2">
+                            <Link
+                                href="/admin/beds"
+                                className="p-4 rounded-lg bg-black/30 border border-zinc-800 hover:border-zinc-700 hover:bg-black/50 transition-all group"
+                            >
+                                <div className="flex items-start gap-3">
+                                    <div className="p-2 bg-blue-900/20 border border-blue-900/50 rounded-lg group-hover:bg-blue-900/30 transition-colors">
+                                        <Bed className="h-5 w-5 text-blue-500" />
+                                    </div>
+                                    <div>
+                                        <h3 className="font-semibold text-white group-hover:text-blue-400 transition-colors">
+                                            Manage Beds
+                                        </h3>
+                                        <p className="text-sm text-zinc-500 mt-1">
+                                            Add, edit, and manage hospital beds
+                                        </p>
+                                    </div>
+                                </div>
+                            </Link>
+                        </div>
+                    </CardContent>
+                </Card>
 
                 {/* User Management Section */}
                 <Card className="bg-zinc-900 border-zinc-800">

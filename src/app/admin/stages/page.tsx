@@ -1,6 +1,8 @@
 import { getStages } from '@/features/stage-management/actions/stage-actions';
 import { StageList } from '@/features/stage-management/components/StageList';
 
+// Force dynamic rendering - don't pre-render during build
+// This prevents build-time errors when database connection requires specific env config
 export const dynamic = 'force-dynamic';
 
 export default async function StagesPage() {

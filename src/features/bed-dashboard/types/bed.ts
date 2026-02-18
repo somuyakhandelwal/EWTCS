@@ -3,6 +3,25 @@
 
 export type BedStatus = 'empty' | 'occupied' | 'cleaning'
 
+// US-1.6: Disposition bottleneck delay reasons
+export type DispositionDelayReason =
+  | 'no_bed_upstairs'
+  | 'awaiting_transport'
+  | 'family_consent'
+  | 'awaiting_specialist'
+  | 'other'
+
+export const DISPOSITION_DELAY_REASON_LABELS: Record<DispositionDelayReason, string> = {
+  no_bed_upstairs: 'No Bed Upstairs',
+  awaiting_transport: 'Awaiting Transport',
+  family_consent: 'Awaiting Family Consent',
+  awaiting_specialist: 'Awaiting Specialist',
+  other: 'Other',
+}
+
+/** Threshold in ms before a patient in Decision Made is flagged as a bottleneck (30 min) */
+export const DISPOSITION_BOTTLENECK_THRESHOLD_MS = 30 * 60 * 1000
+
 export interface Stage {
   id: string
   name: string
@@ -31,6 +50,11 @@ export interface Bed {
 export interface BedWithElapsedTime extends Bed {
   elapsedTimeMs: number | null
   isDelayed: boolean
+  // US-1.6: Disposition bottleneck fields
+  isDispositionBottleneck: boolean
+  dispositionElapsedMs: number | null  // time spent in Decision Made stage specifically
+  dispositionDelayReason: DispositionDelayReason | null  // recorded reason if any
+  dispositionDelayLogId: string | null  // ID of the active disposition_delay_reasons row
 }
 
 export interface BedStageLog {
@@ -49,6 +73,7 @@ export interface BedGridData {
   beds: BedWithElapsedTime[]
   stages: Stage[]
   delayThresholdMs: number
+  bottleneckCount: number  // US-1.6: count of active disposition bottlenecks
 }
 
 export interface OverrideState {
