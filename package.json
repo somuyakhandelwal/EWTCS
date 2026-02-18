@@ -17,7 +17,12 @@
     "db:reset": "node scripts/reset-db.js",
     "seed:config": "npx ts-node scripts/seed.ts",
     "seed:beds": "node scripts/seed-beds.mjs",
-    "seed:simulate": "node scripts/simulate-occupied-beds.mjs"
+    "seed:simulate": "node scripts/simulate-occupied-beds.mjs",
+    "validate:env": "node scripts/validate-env-example.js",
+    "validate:db": "node scripts/validate-db-connection.js",
+    "validate:migrations": "node scripts/validate-migrations.js",
+    "validate:schema": "node scripts/validate-db-schema.js",
+    "validate:all": "npm run validate:env && npm run validate:db && npm run validate:migrations && npm run validate:schema && npm run build"
   },
   "dependencies": {
     "@radix-ui/react-context-menu": "^2.2.16",
@@ -25,6 +30,7 @@
     "@radix-ui/react-slot": "^1.2.4",
     "@types/bcrypt": "^6.0.0",
     "bcrypt": "^6.0.0",
+    "bcryptjs": "^3.0.3",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
     "dotenv": "^16.4.7",
@@ -44,14 +50,18 @@
     "@types/pg": "^8.11.0",
     "@types/react": "^19",
     "@types/react-dom": "^19",
-    "ajv": "^8.12.0",
+    "ajv": "^8.18.0",
     "autoprefixer": "^10.4.24",
-    "eslint": "^4.1.1",
-    "eslint-config-next": "^0.2.4",
+    "eslint": "^9.20.0",
+    "eslint-config-next": "^15.1.7",
     "postcss": "^8.5.6",
     "tailwindcss": "^3.4.17",
     "ts-node": "^10.9.2",
     "tsx": "^4.7.0",
     "typescript": "^5"
+  },
+  "overrides": {
+    "ajv": "^8.18.0",
+    "@eslint-community/eslint-utils": "^4.4.1"
   }
 }

@@ -3,7 +3,7 @@
 
 'use server'
 
-import { getAllStages, getBedsWithElapsedTime } from '../lib/queries'
+import { getAllStages, getBedsWithElapsedTime, getBedStageHistory } from '../lib/queries'
 import { config } from '@/shared/config/env'
 import { logger } from '@/shared/config/logger'
 import type { BedGridData } from '../types/bed'
@@ -24,7 +24,7 @@ export async function getBedGridData(): Promise<{
 }> {
   try {
     logger.info('Fetching bed grid data')
-    
+
     const delayThresholdMs = config.alert.delayThresholdMs
 
     // Fetch beds and stages in parallel
@@ -139,6 +139,33 @@ export async function getDelayedBeds(): Promise<{
     return {
       success: false,
       error: error instanceof Error ? error.message : 'Failed to fetch delayed beds',
+    }
+  }
+}
+
+/**
+ * Get bed stage history (US-3.2, US-3.6)
+ */
+export async function getBedHistory(bedId: string): Promise<{
+  success: boolean
+  data?: any[]
+  error?: string
+}> {
+  try {
+    await requireRole(['nurse', 'supervisor', 'admin'])
+
+    const history = await getBedStageHistory(bedId)
+
+    return {
+      success: true,
+      data: history,
+    }
+  } catch (error) {
+    const message = error instanceof Error ? error.message : 'Failed to fetch bed history'
+    logger.error('Failed to fetch bed history', error as Error, { bedId })
+    return {
+      success: false,
+      error: message,
     }
   }
 }

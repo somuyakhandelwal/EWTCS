@@ -1,4 +1,4 @@
--- Migration 008: Add Ward-Level Access Control
+-- Migration 006: Add Ward-Level Access Control
 -- Purpose: Prevent IDOR attacks by enforcing bed access based on user's ward assignment
 -- Epic: EPIC 2 - One-Click Stage Update System with Access Control
 -- Security: Fixes IDOR vulnerability

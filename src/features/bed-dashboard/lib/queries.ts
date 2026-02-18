@@ -8,4 +8,5 @@ export {
   getBedsWithElapsedTime,
   getBedById,
   getBedByNumber,
+  getBedStageHistory,
 } from './bed-queries'

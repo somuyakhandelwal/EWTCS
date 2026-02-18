@@ -35,7 +35,7 @@ export async function getAllBeds(): Promise<Bed[]> {
       WHERE b.is_active = true
       ORDER BY b.bed_number ASC
     `)
-    
+
     return result.rows
   } catch (error) {
     logger.error('Failed to fetch beds', error as Error)
@@ -84,7 +84,7 @@ export async function getBedsWithElapsedTime(delayThresholdMs: number): Promise<
       WHERE b.is_active = true
       ORDER BY b.bed_number ASC
     `, [delayThresholdMs])
-    
+
     return result.rows
   } catch (error) {
     logger.error('Failed to fetch beds with elapsed time', error as Error)
@@ -125,7 +125,7 @@ export async function getBedById(bedId: string): Promise<Bed | null> {
       `,
       [bedId]
     )
-    
+
     return result.rows[0] || null
   } catch (error) {
     logger.error('Failed to fetch bed', error as Error, { bedId })
@@ -157,10 +157,48 @@ export async function getBedByNumber(bedNumber: string): Promise<Bed | null> {
       `,
       [bedNumber]
     )
-    
+
     return result.rows[0] || null
   } catch (error) {
     logger.error('Failed to fetch bed by number', error as Error, { bedNumber })
     throw new Error('Failed to fetch bed from database')
+  }
+}
+
+/**
+ * Get stage transitions for a specific bed and current patient (US-3.2, US-3.6)
+ */
+export async function getBedStageHistory(bedId: string) {
+  try {
+    const currentBed = await getBedById(bedId)
+
+    if (!currentBed || !currentBed.patientStartTime) {
+      return []
+    }
+
+    const result = await query<any>(
+      `
+      SELECT 
+        btl.id,
+        s_from.name as "fromStageName",
+        s_to.name as "toStageName",
+        u.name as "changedByName",
+        btl.transition_time as "transitionTime",
+        btl.duration_in_previous_stage_ms as "durationMs",
+        btl.notes
+      FROM bed_stage_logs btl
+      JOIN stages s_to ON btl.to_stage_id = s_to.id
+      LEFT JOIN stages s_from ON btl.from_stage_id = s_from.id
+      JOIN users u ON btl.changed_by_user_id = u.id
+      WHERE btl.bed_id = $1 AND btl.transition_time >= $2
+      ORDER BY btl.transition_time ASC
+      `,
+      [bedId, currentBed.patientStartTime]
+    )
+
+    return result.rows
+  } catch (error) {
+    logger.error('Failed to fetch bed stage history', error as Error, { bedId })
+    throw new Error('Failed to fetch bed stage history from database')
   }
 }

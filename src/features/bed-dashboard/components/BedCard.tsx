@@ -86,17 +86,30 @@ export const BedCard = memo(function BedCard({
 
         {/* Elapsed Time */}
         {isOccupied && bed.patientStartTime && (
-          <div className="flex items-center gap-2 pt-2 border-t border-zinc-700/50">
-            <Clock className="h-4 w-4 text-zinc-500" />
-            <div className="flex-1">
-              <p className="text-xs text-zinc-500">Elapsed Time</p>
-              <p className={cn(
-                'text-lg font-bold',
-                isDelayed ? 'text-red-400' : 'text-zinc-300'
-              )}>
-                {elapsedTime}
-              </p>
+          <div className="flex flex-col gap-2 pt-2 border-t border-zinc-700/50">
+            <div className="flex items-center gap-2">
+              <Clock className="h-4 w-4 text-zinc-500" />
+              <div className="flex-1">
+                <p className="text-[10px] text-zinc-500 uppercase">Total Stay</p>
+                <p className={cn(
+                  'text-base font-bold',
+                  isDelayed ? 'text-red-400' : 'text-zinc-300'
+                )}>
+                  {elapsedTime}
+                </p>
+              </div>
             </div>
+
+            {bed.lastStageChange && (
+              <div className="flex items-center gap-2 pl-6">
+                <div className="flex-1">
+                  <p className="text-[10px] text-zinc-500 uppercase">In current stage</p>
+                  <p className="text-sm font-semibold text-zinc-400">
+                    {formatElapsedTime(Date.now() - new Date(bed.lastStageChange).getTime())}
+                  </p>
+                </div>
+              </div>
+            )}
           </div>
         )}
 

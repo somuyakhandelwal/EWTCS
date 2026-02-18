@@ -2,11 +2,20 @@
 
 import { useCallback, useMemo, useState } from 'react'
 import { BedGrid } from './BedGrid'
+import { BedHistoryModal } from './BedHistoryModal'
 import type { BedGridData, BedWithElapsedTime, Stage } from '../types/bed'
-import { updateBedStage } from '../actions/bed-actions'
+import { updateBedStage, getBedHistory } from '../actions/bed-actions'
 
 interface BedDashboardClientProps {
   initialData: BedGridData
+}
+
+interface HistoryState {
+  isOpen: boolean
+  isLoading: boolean
+  bedId: string | null
+  bedNumber: string | null
+  data: any[]
 }
 
 export function BedDashboardClient({ initialData }: BedDashboardClientProps) {
@@ -16,6 +25,14 @@ export function BedDashboardClient({ initialData }: BedDashboardClientProps) {
   const [errorByBedId, setErrorByBedId] = useState<Record<string, string | null>>({})
   const [lastUpdatedBedId, setLastUpdatedBedId] = useState<string | null>(null)
   const [lastUpdatedStageId, setLastUpdatedStageId] = useState<string | null>(null)
+
+  const [historyState, setHistoryState] = useState<HistoryState>({
+    isOpen: false,
+    isLoading: false,
+    bedId: null,
+    bedNumber: null,
+    data: [],
+  })
 
   const stageById = useMemo(() => {
     const map = new Map<string, Stage>()
@@ -27,9 +44,38 @@ export function BedDashboardClient({ initialData }: BedDashboardClientProps) {
     // Refresh logic can be added later
   }, [])
 
-  const handleBedClick = useCallback((bed: BedWithElapsedTime) => {
-    // TODO: Open bed details modal or navigate to bed page
-    void bed
+  const handleBedClick = useCallback(async (bed: BedWithElapsedTime) => {
+    if (!bed.isOccupied) return
+
+    setHistoryState(prev => ({
+      ...prev,
+      isOpen: true,
+      isLoading: true,
+      bedId: bed.id,
+      bedNumber: bed.bedNumber,
+      data: [],
+    }))
+
+    try {
+      const result = await getBedHistory(bed.id)
+      if (result.success) {
+        setHistoryState(prev => ({
+          ...prev,
+          isLoading: false,
+          data: result.data || [],
+        }))
+      } else {
+        setHistoryState(prev => ({ ...prev, isLoading: false }))
+        setErrorByBedId(prev => ({ ...prev, [bed.id]: result.error || 'Failed to fetch history' }))
+      }
+    } catch (error) {
+      setHistoryState(prev => ({ ...prev, isLoading: false }))
+      setErrorByBedId(prev => ({ ...prev, [bed.id]: 'Connection error while fetching history' }))
+    }
+  }, [])
+
+  const handleCloseHistory = useCallback(() => {
+    setHistoryState(prev => ({ ...prev, isOpen: false }))
   }, [])
 
   const handleStageSelect = useCallback(
@@ -82,17 +128,28 @@ export function BedDashboardClient({ initialData }: BedDashboardClientProps) {
   )
 
   return (
-    <BedGrid
-      data={data}
-      onRefresh={handleRefresh}
-      onBedClick={handleBedClick}
-      onStageSelect={handleStageSelect}
-      updatingBedId={updatingBedId}
-      updatingStageId={updatingStageId}
-      lastUpdatedBedId={lastUpdatedBedId}
-      lastUpdatedStageId={lastUpdatedStageId}
-      errorByBedId={errorByBedId}
-    />
+    <>
+      <BedGrid
+        data={data}
+        onRefresh={handleRefresh}
+        onBedClick={handleBedClick}
+        onStageSelect={handleStageSelect}
+        updatingBedId={updatingBedId}
+        updatingStageId={updatingStageId}
+        lastUpdatedBedId={lastUpdatedBedId}
+        lastUpdatedStageId={lastUpdatedStageId}
+        errorByBedId={errorByBedId}
+      />
+
+      <BedHistoryModal
+        isOpen={historyState.isOpen}
+        onClose={handleCloseHistory}
+        bedNumber={historyState.bedNumber}
+        history={historyState.data}
+        isLoading={historyState.isLoading}
+      />
+    </>
   )
 }
+
 
