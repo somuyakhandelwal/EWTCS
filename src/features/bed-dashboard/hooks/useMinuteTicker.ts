@@ -29,7 +29,7 @@ export function subscribeToMinuteTick(fn: (now: number) => void): () => void {
   // call immediately with current time so subscriber can initialize
   try {
     fn(Date.now())
-  } catch (e) {
+  } catch {
     // ignore subscriber errors
   }
   startTicker()

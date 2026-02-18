@@ -19,7 +19,7 @@ export function useElapsedTime(start: Date | string | null | undefined): string 
     if (start instanceof Date) return start.toISOString()
     if (typeof start === 'string') return start
     try {
-      return new Date(start as any).toISOString()
+      return new Date(start as Date | string).toISOString()
     } catch {
       return null
     }
@@ -58,7 +58,7 @@ export function useElapsedTime(start: Date | string | null | undefined): string 
 }
 
 function getElapsedMs(start: Date | string): number {
-  const startDate = start instanceof Date ? start : new Date(start as any)
+  const startDate = start instanceof Date ? start : new Date(start as Date | string)
   if (!startDate || Number.isNaN(startDate.getTime())) throw new Error('invalid date')
   const now = new Date()
   return Math.max(0, now.getTime() - startDate.getTime())
