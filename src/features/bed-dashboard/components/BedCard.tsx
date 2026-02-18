@@ -43,7 +43,7 @@ export const BedCard = memo(function BedCard({
   return (
     <Card
       className={cn(
-        'relative overflow-hidden transition-all cursor-pointer hover:scale-105 hover:shadow-lg',
+        'relative overflow-hidden transition-all cursor-pointer sm:hover:scale-105 sm:hover:shadow-lg active:scale-[0.97]',
         colorClasses.bg,
         colorClasses.border,
         'border-2',
@@ -89,7 +89,7 @@ export const BedCard = memo(function BedCard({
           </p>
           {onContextMenu && (
             <p className="text-[10px] text-zinc-500">
-              Right-click to update stage
+              Tap or right-click to update stage
             </p>
           )}
           {showUpdated && (

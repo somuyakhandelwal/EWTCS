@@ -48,47 +48,40 @@ export function BedGrid({
   const [overrideRequiredStages, setOverrideRequiredStages] = useState<string[]>([])
   const [isLoadingTransitions, setIsLoadingTransitions] = useState(false)
 
-  // Memoize filtered beds to prevent unnecessary recalculation
-  const displayedBeds = useMemo(() => {
-    return showDelayedOnly
-      ? data.beds.filter(bed => bed.isDelayed)
-      : data.beds
-  }, [data.beds, showDelayedOnly])
-
-  // Memoize statistics calculation
+  const displayedBeds = useMemo(
+    () => showDelayedOnly ? data.beds.filter(bed => bed.isDelayed) : data.beds,
+    [data.beds, showDelayedOnly]
+  )
   const stats = useMemo(() => getBedStatistics(data.beds), [data.beds])
 
   const toggleFilter = useCallback(() => {
     setShowDelayedOnly(prev => !prev)
   }, [])
 
-  const handleOpenMenu = useCallback(
-    async (event: MouseEvent<HTMLDivElement>, bed: BedWithElapsedTime) => {
-      if (!onStageSelect) {
-        return
+  const openMenuForBed = useCallback(async (bedId: string, position: { x: number; y: number }) => {
+    setMenuState({ bedId, position })
+    setIsLoadingTransitions(true)
+    try {
+      const result = await getValidTransitionsForBed(bedId)
+      if (result.success) {
+        setValidNextStages(result.allowed || [])
+        setOverrideRequiredStages(result.requiresOverride || [])
       }
-      event.preventDefault()
-      setMenuState({
-        bedId: bed.id,
-        position: { x: event.clientX, y: event.clientY },
-      })
+    } catch { /* fallback */ } finally { setIsLoadingTransitions(false) }
+  }, [])
 
-      // Fetch valid transitions for this bed
-      setIsLoadingTransitions(true)
-      try {
-        const result = await getValidTransitionsForBed(bed.id)
-        if (result.success) {
-          setValidNextStages(result.allowed || [])
-          setOverrideRequiredStages(result.requiresOverride || [])
-        }
-      } catch {
-        // transition fetch failed — menu will show all stages as fallback
-      } finally {
-        setIsLoadingTransitions(false)
-      }
-    },
-    [onStageSelect]
-  )
+  // Right-click (desktop)
+  const handleOpenMenu = useCallback(async (event: MouseEvent<HTMLDivElement>, bed: BedWithElapsedTime) => {
+    if (!onStageSelect) return
+    event.preventDefault()
+    await openMenuForBed(bed.id, { x: event.clientX, y: event.clientY })
+  }, [onStageSelect, openMenuForBed])
+
+  // Tap (mobile) — centre of viewport for bottom-sheet positioning
+  const handleBedTap = useCallback(async (bed: BedWithElapsedTime) => {
+    if (!onStageSelect) return
+    await openMenuForBed(bed.id, { x: window.innerWidth / 2 - 96, y: window.innerHeight / 2 })
+  }, [onStageSelect, openMenuForBed])
 
   const handleCloseMenu = useCallback(() => {
     setMenuState(null)
@@ -165,7 +158,7 @@ export function BedGrid({
             <BedCard
               key={bed.id}
               bed={bed}
-              onClick={onBedClick}
+              onClick={onStageSelect ? handleBedTap : onBedClick}
               onContextMenu={handleOpenMenu}
               onReasonSelect={onReasonSelect}
               showUpdated={lastUpdatedBedId === bed.id && lastUpdatedStageId !== null}

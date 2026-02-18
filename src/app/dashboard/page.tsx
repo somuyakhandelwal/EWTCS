@@ -16,14 +16,14 @@ export default async function DashboardPage() {
     // Handle error state
     if (!bedGridResult.success || !bedGridResult.data) {
         return (
-            <div className="min-h-screen bg-black text-foreground p-8">
-                <div className="max-w-7xl mx-auto space-y-8">
-                    <div className="flex items-center justify-between">
+            <div className="min-h-screen bg-black text-foreground p-3 sm:p-8">
+                <div className="max-w-7xl mx-auto space-y-6 sm:space-y-8">
+                    <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
                         <div>
-                            <h1 className="text-3xl font-bold tracking-tight text-white">
+                            <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-white">
                                 Hello, {session?.username || 'Nurse'}
                             </h1>
-                            <p className="text-zinc-400">Real-time bed status and ward overview</p>
+                            <p className="text-zinc-400 text-sm">Real-time bed status and ward overview</p>
                         </div>
                     </div>
 
@@ -38,17 +38,17 @@ export default async function DashboardPage() {
     }
 
     return (
-        <div className="min-h-screen bg-black text-foreground p-8">
-            <div className="max-w-7xl mx-auto space-y-8">
+        <div className="min-h-screen bg-black text-foreground p-3 sm:p-8">
+            <div className="max-w-7xl mx-auto space-y-6 sm:space-y-8">
                 {/* Header */}
-                <div className="flex items-center justify-between">
+                <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
                     <div>
-                        <h1 className="text-3xl font-bold tracking-tight text-white">
+                        <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-white">
                             Hello, {session?.username || 'Nurse'}
                         </h1>
-                        <p className="text-zinc-400">Real-time bed status and ward overview</p>
+                        <p className="text-zinc-400 text-sm">Real-time bed status and ward overview</p>
                     </div>
-                    <LogoutButton />
+                    <div className="self-end sm:self-auto"><LogoutButton /></div>
                 </div>
 
                 {/* Bed Grid */}
