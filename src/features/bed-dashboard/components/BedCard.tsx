@@ -4,15 +4,21 @@
 import { memo, type MouseEvent } from 'react'
 import { Card, CardContent } from '@/shared/components/ui/card'
 import { Clock, AlertTriangle, Hourglass } from 'lucide-react'
-import type { BedWithElapsedTime } from '../types/bed'
+import type { BedWithElapsedTime, DispositionDelayReason } from '../types/bed'
 import { DISPOSITION_DELAY_REASON_LABELS } from '../types/bed'
 import { formatElapsedTime, getStageColorClasses } from '../lib/utils'
 import { cn } from '@/shared/lib/utils'
+
+const REASON_OPTIONS = Object.entries(DISPOSITION_DELAY_REASON_LABELS) as [
+  DispositionDelayReason,
+  string,
+][]
 
 interface BedCardProps {
   bed: BedWithElapsedTime
   onClick?: (bed: BedWithElapsedTime) => void
   onContextMenu?: (event: MouseEvent<HTMLDivElement>, bed: BedWithElapsedTime) => void
+  onReasonSelect?: (bedId: string, reason: DispositionDelayReason) => void
   showUpdated?: boolean
   errorMessage?: string | null
 }
@@ -21,6 +27,7 @@ export const BedCard = memo(function BedCard({
   bed,
   onClick,
   onContextMenu,
+  onReasonSelect,
   showUpdated = false,
   errorMessage = null,
 }: BedCardProps) {
@@ -102,8 +109,28 @@ export const BedCard = memo(function BedCard({
             </div>
           )}
 
-          {/* US-1.6: Show recorded delay reason if present */}
-          {isBottleneck && bed.dispositionDelayReason && (
+          {/* US-1.7: Inline reason selector when bottleneck and handler provided */}
+          {isBottleneck && onReasonSelect && (
+            <select
+              className={cn(
+                'mt-1 w-full rounded border border-amber-700/50 bg-zinc-900 px-1.5 py-1 text-[10px] text-zinc-200',
+                'focus:outline-none focus:ring-1 focus:ring-amber-500'
+              )}
+              value={bed.dispositionDelayReason ?? ''}
+              onClick={e => e.stopPropagation()}
+              onChange={e => {
+                e.stopPropagation()
+                onReasonSelect(bed.id, e.target.value as DispositionDelayReason)
+              }}
+            >
+              <option value="" disabled>Select reason…</option>
+              {REASON_OPTIONS.map(([value, label]) => (
+                <option key={value} value={value}>{label}</option>
+              ))}
+            </select>
+          )}
+          {/* US-1.6: Show recorded reason label when no handler (read-only) */}
+          {isBottleneck && !onReasonSelect && bed.dispositionDelayReason && (
             <p className="text-[10px] text-amber-400/80">
               {DISPOSITION_DELAY_REASON_LABELS[bed.dispositionDelayReason]}
             </p>

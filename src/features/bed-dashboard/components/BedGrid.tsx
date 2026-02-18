@@ -8,7 +8,7 @@ import { BottleneckPanel } from './BottleneckPanel'
 import { BedGridStats } from './BedGridStats'
 import { Button } from '@/shared/components/ui/button'
 import { Filter, RefreshCw } from 'lucide-react'
-import type { BedGridData, BedWithElapsedTime } from '../types/bed'
+import type { BedGridData, BedWithElapsedTime, DispositionDelayReason } from '../types/bed'
 import { getBedStatistics } from '../lib/utils'
 import { getValidTransitionsForBed } from '../actions/bed-grid-actions'
 
@@ -17,6 +17,7 @@ interface BedGridProps {
   onRefresh?: () => void
   onBedClick?: (bed: BedWithElapsedTime) => void
   onStageSelect?: (bedId: string, stageId: string) => void
+  onReasonSelect?: (bedId: string, reason: DispositionDelayReason) => void
   updatingBedId?: string | null
   updatingStageId?: string | null
   lastUpdatedBedId?: string | null
@@ -30,6 +31,7 @@ export function BedGrid({
   onRefresh,
   onBedClick,
   onStageSelect,
+  onReasonSelect,
   updatingBedId = null,
   updatingStageId = null,
   lastUpdatedBedId = null,
@@ -56,10 +58,6 @@ export function BedGrid({
   // Memoize statistics calculation
   const stats = useMemo(() => getBedStatistics(data.beds), [data.beds])
 
-  const handleRefresh = useCallback(() => {
-    onRefresh?.()
-  }, [onRefresh])
-  
   const toggleFilter = useCallback(() => {
     setShowDelayedOnly(prev => !prev)
   }, [])
@@ -83,8 +81,8 @@ export function BedGrid({
           setValidNextStages(result.allowed || [])
           setOverrideRequiredStages(result.requiresOverride || [])
         }
-      } catch (error) {
-        console.error('Failed to fetch valid transitions:', error)
+      } catch {
+        // transition fetch failed — menu will show all stages as fallback
       } finally {
         setIsLoadingTransitions(false)
       }
@@ -129,7 +127,7 @@ export function BedGrid({
         <Button
           variant="ghost"
           size="sm"
-          onClick={handleRefresh}
+          onClick={onRefresh}
           disabled={isRefreshing}
         >
           <RefreshCw className={`h-4 w-4 mr-2 ${isRefreshing ? 'animate-spin' : ''}`} />
@@ -150,7 +148,7 @@ export function BedGrid({
       <BedStatusLegend stages={data.stages} />
 
       {/* US-1.6: Disposition bottleneck panel */}
-      <BottleneckPanel beds={data.beds} onReasonRecorded={handleRefresh} />
+      <BottleneckPanel beds={data.beds} onReasonRecorded={onRefresh} />
 
       {/* Bed Grid */}
       {displayedBeds.length === 0 ? (
@@ -169,6 +167,7 @@ export function BedGrid({
               bed={bed}
               onClick={onBedClick}
               onContextMenu={handleOpenMenu}
+              onReasonSelect={onReasonSelect}
               showUpdated={lastUpdatedBedId === bed.id && lastUpdatedStageId !== null}
               errorMessage={errorByBedId[bed.id] || null}
             />

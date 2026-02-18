@@ -37,9 +37,11 @@ export async function updateBedStage(input: UpdateBedStageInput): Promise<{
     const bedWard = await getBedWard(result.data.bedId)
 
     // Allow access if:
-    // 1. Both user and bed have ward assignments and they match, OR
-    // 2. User is an admin (admins can access all beds)
+    // 1. Neither user nor bed has a ward assigned (ward system not configured)
+    // 2. Both have ward assignments and they match
+    // 3. User is an admin (admins can access all beds)
     const hasWardAccess =
+      (!userWard && !bedWard) ||
       (userWard && bedWard && userWard === bedWard) ||
       session.role === 'admin'
 

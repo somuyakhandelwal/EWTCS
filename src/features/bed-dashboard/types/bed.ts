@@ -3,8 +3,10 @@
 
 export type BedStatus = 'empty' | 'occupied' | 'cleaning'
 
-// US-1.6: Disposition bottleneck delay reasons
+// US-1.6 / US-1.7: Disposition bottleneck delay reasons
 export type DispositionDelayReason =
+  | 'no_icu_bed'
+  | 'no_general_ward_bed'
   | 'no_bed_upstairs'
   | 'awaiting_transport'
   | 'family_consent'
@@ -12,6 +14,8 @@ export type DispositionDelayReason =
   | 'other'
 
 export const DISPOSITION_DELAY_REASON_LABELS: Record<DispositionDelayReason, string> = {
+  no_icu_bed: 'No ICU Bed',
+  no_general_ward_bed: 'No General Ward Bed',
   no_bed_upstairs: 'No Bed Upstairs',
   awaiting_transport: 'Awaiting Transport',
   family_consent: 'Awaiting Family Consent',
