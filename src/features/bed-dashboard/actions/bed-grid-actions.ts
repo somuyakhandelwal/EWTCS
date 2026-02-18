@@ -28,16 +28,20 @@ export async function getBedGridData(): Promise<{
       getAllStages(),
     ])
 
+    const bottleneckCount = beds.filter(b => b.isDispositionBottleneck).length
+
     const data: BedGridData = {
       beds,
       stages,
       delayThresholdMs,
+      bottleneckCount,
     }
 
     logger.info('Bed grid data fetched successfully', {
       bedCount: beds.length,
       stageCount: stages.length,
       delayedBeds: beds.filter(b => b.isDelayed).length,
+      bottleneckBeds: bottleneckCount,
     })
 
     return {
