@@ -3,7 +3,7 @@
 
 import { memo } from 'react'
 import type { Stage } from '../types/bed'
-import { getStageColorClasses } from '../lib/utils'
+import { getStageColorClasses } from '@/shared/utils/stage-colors'
 import { cn } from '@/shared/lib/utils'
 
 interface BedStatusLegendProps {

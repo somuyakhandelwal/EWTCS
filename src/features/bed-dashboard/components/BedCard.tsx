@@ -5,7 +5,8 @@ import { memo, type MouseEvent } from 'react'
 import { Card, CardContent } from '@/shared/components/ui/card'
 import { Clock, AlertTriangle } from 'lucide-react'
 import type { BedWithElapsedTime } from '../types/bed'
-import { formatElapsedTime, getStageColorClasses } from '../lib/utils'
+import { formatElapsedTime } from '../lib/utils'
+import { getStageColorClasses } from '@/shared/utils/stage-colors'
 import { cn } from '@/shared/lib/utils'
 
 interface BedCardProps {

@@ -6,7 +6,7 @@ import { Button } from '@/shared/components/ui/button'
 import { cn } from '@/shared/lib/utils'
 import { Loader2 } from 'lucide-react'
 import type { BedWithElapsedTime, Stage } from '../types/bed'
-import { getStageColorClasses } from '../lib/utils'
+import { getStageColorClasses } from '@/shared/utils/stage-colors'
 
 interface BedStageButtonsProps {
   bed: BedWithElapsedTime
