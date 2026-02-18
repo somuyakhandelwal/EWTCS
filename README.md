@@ -171,6 +171,15 @@ The setup script will:
 
    Open [http://localhost:3000](http://localhost:3000) and login with `admin1`/`Nurse@123`
 
+8. **Running Tests** (Optional)
+   ```bash
+   npm test                  # Run all tests once
+   npm run test:watch       # Run tests in watch mode (auto-rerun on file changes)
+   npm run test:coverage    # Generate coverage report
+   ```
+
+   Tests are located in `src/features/bed-dashboard/__tests__/`
+
 ---
 
 #### Troubleshooting Setup
