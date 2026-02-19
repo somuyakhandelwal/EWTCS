@@ -17,7 +17,7 @@ type SessionPayload = {
     username: string
     role: string
     expiresAt: Date
-    lastActivity?: number
+    lastActivity?: number  // US-5.2 AC-4: epoch ms of last activity for inactivity timeout
     isKiosk?: boolean
     kioskIp?: string
     kioskSessionId?: string
@@ -39,8 +39,10 @@ export async function createSession(
     const expiresAt = kiosk
         ? new Date(Date.now() + 365 * 24 * 60 * 60 * 1000) // 1 year for kiosk
         : new Date(Date.now() + 7 * 24 * 60 * 60 * 1000)   // 7 days standard
+    const now = Date.now()
     const jwtPayload = {
         userId, username, role,
+        lastActivity: now, // US-5.2 AC-4: track last activity
         ...(kiosk && { isKiosk: true, kioskIp: kiosk.kioskIp, kioskSessionId: kiosk.kioskSessionId }),
     }
     const session = await new SignJWT(jwtPayload)
@@ -96,12 +98,7 @@ export async function verifySession() {
         }
 
         // US-5.2 AC-5: Renew session on activity (sliding expiry)
-        // Only works in Server Actions/Route Handlers, silently skip elsewhere
-        try {
-            await renewSession(sessionData)
-        } catch {
-            // Cookie modification not allowed in this context — skip renewal
-        }
+        // This is now handled by Middleware or explicit updateSessionCookie calls
 
         return sessionData
     } catch (err) {
@@ -114,29 +111,44 @@ export async function verifySession() {
 }
 
 /**
- * US-5.2 AC-5: Renew session cookie on every activity.
- * Resets both the JWT expiry and the inactivity timer.
+ * US-5.2 AC-5: Renew session JWT with updated lastActivity.
+ * Returns the new JWT string.
  */
-async function renewSession(sessionData: SessionPayload) {
-    const expiresAt = new Date(Date.now() + SESSION_MAX_AGE_MS)
+export async function renewSession(sessionData: SessionPayload): Promise<string> {
+    const expiresAt = sessionData.isKiosk ? '1y' : '7d'
 
-    const newSession = await new SignJWT({
+    return await new SignJWT({
         userId: sessionData.userId,
         username: sessionData.username,
         role: sessionData.role,
-        lastActivity: Date.now(),  // reset inactivity timer
+        lastActivity: Date.now(), // reset inactivity timer
+        ...(sessionData.isKiosk && {
+            isKiosk: true,
+            kioskIp: sessionData.kioskIp,
+            kioskSessionId: sessionData.kioskSessionId
+        }),
     })
         .setProtectedHeader({ alg: 'HS256' })
         .setIssuedAt()
-        .setExpirationTime('12h')
+        .setExpirationTime(expiresAt)
         .sign(encodedKey)
+}
 
+/**
+ * Update the session cookie in the browser.
+ * Only works in Server Actions/Route Handlers.
+ */
+export async function updateSessionCookie(token: string, isKiosk?: boolean) {
     const cookieStore = await cookies()
-    cookieStore.set('session', newSession, {
+    const expiresAt = isKiosk
+        ? new Date(Date.now() + 365 * 24 * 60 * 60 * 1000)
+        : new Date(Date.now() + 7 * 24 * 60 * 60 * 1000)
+
+    cookieStore.set('session', token, {
         httpOnly: true,
         secure: process.env.NODE_ENV === 'production',
         expires: expiresAt,
-        maxAge: SESSION_MAX_AGE_MS / 1000,
+        maxAge: isKiosk ? 365 * 24 * 60 * 60 : SESSION_MAX_AGE_MS / 1000,
         sameSite: 'lax',
         path: '/',
     })

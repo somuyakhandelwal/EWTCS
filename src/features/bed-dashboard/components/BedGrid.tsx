@@ -65,40 +65,35 @@ export function BedGrid({
       return false
     })
   }, [data.beds, showDelayedOnly, searchQuery])
-
-  // Memoize statistics calculation
   const stats = useMemo(() => getBedStatistics(data.beds), [data.beds])
 
   const toggleFilter = useCallback(() => {
     setShowDelayedOnly(prev => !prev)
   }, [])
 
-  const openMenuForBed = useCallback(
-    async (bedId: string, position: { x: number; y: number }) => {
-      setMenuState({ bedId, position })
-      setMenuError(null)
-      setIsLoadingTransitions(true)
-      try {
-        const result = await getValidTransitionsForBed(bedId)
-        if (result.success && result.allowed) {
-          setValidNextStages(result.allowed)
-          setOverrideRequiredStages(result.requiresOverride || [])
-        } else {
-          setMenuError(result.error || 'Unable to load available stages')
-          setValidNextStages([])
-          setOverrideRequiredStages([])
-        }
-      } catch (error) {
-        console.error('Failed to fetch valid transitions:', error)
-        setMenuError('Connection error. Please try again.')
+  const openMenuForBed = useCallback(async (bedId: string, position: { x: number; y: number }) => {
+    setMenuState({ bedId, position })
+    setMenuError(null)
+    setIsLoadingTransitions(true)
+    try {
+      const result = await getValidTransitionsForBed(bedId)
+      if (result.success && result.allowed) {
+        setValidNextStages(result.allowed)
+        setOverrideRequiredStages(result.requiresOverride || [])
+      } else {
+        setMenuError(result.error || 'Unable to load available stages')
         setValidNextStages([])
         setOverrideRequiredStages([])
-      } finally {
-        setIsLoadingTransitions(false)
       }
-    },
-    []
-  )
+    } catch (error) {
+      console.error('Failed to fetch valid transitions:', error)
+      setMenuError('Connection error. Please try again.')
+      setValidNextStages([])
+      setOverrideRequiredStages([])
+    } finally {
+      setIsLoadingTransitions(false)
+    }
+  }, [])
 
   // Right-click (desktop)
   const handleOpenMenu = useCallback(async (event: MouseEvent<HTMLDivElement>, bed: BedWithElapsedTime) => {
@@ -172,6 +167,9 @@ export function BedGrid({
               showUpdated={lastUpdatedBedId === bed.id && lastUpdatedStageId !== null}
               errorMessage={errorByBedId[bed.id] || null}
               searchQuery={searchQuery}
+              showUndo={undoState?.bedId === bed.id}
+              onUndo={onUndo}
+              undoTimerSeconds={undoState?.timer}
             />
           ))}
         </div>

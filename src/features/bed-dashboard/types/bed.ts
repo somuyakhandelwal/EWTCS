@@ -76,7 +76,8 @@ export interface BedStageLog {
 export interface BedGridData {
   beds: BedWithElapsedTime[]
   stages: Stage[]
-  delayThresholdMs: number
+  delayThresholds: Record<string, number>; // stageId -> threshold in ms
+  delayThresholdMs: number; // Global default threshold in ms
   bottleneckCount: number  // US-1.6: count of active disposition bottlenecks
 }
 

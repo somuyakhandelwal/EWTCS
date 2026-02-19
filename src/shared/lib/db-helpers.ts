@@ -1,7 +1,7 @@
 import 'server-only'
 import pool from '@/shared/lib/db'
 import { logger } from '@/shared/config/logger'
-import { validateTableName, validateColumnName, validateOrderBy } from './db-validators'
+import { validateTableName, validateColumnName, validateOrderBy, validateWhereClause } from './db-validators'
 
 /**
  * Generic database query helpers for common CRUD patterns
@@ -24,6 +24,7 @@ export async function getAll<T = unknown>(
   try {
     validateTableName(table)
     validateOrderBy(orderBy)
+    validateWhereClause(where || '')
 
     let query = `SELECT * FROM ${table}`
     if (where) {
@@ -78,6 +79,7 @@ export async function exists(
 ): Promise<boolean> {
   try {
     validateTableName(table)
+    validateWhereClause(where)
 
     const { rows } = await pool.query(
       `SELECT EXISTS(SELECT 1 FROM ${table} WHERE ${where})`,
@@ -159,7 +161,7 @@ export async function updateRecord(
 
     const fields = Object.keys(updates)
     const values = Object.values(updates)
-    
+
     // Validate all field names
     fields.forEach(field => validateColumnName(field))
 
@@ -190,6 +192,7 @@ export async function count(
 ): Promise<number> {
   try {
     validateTableName(table)
+    validateWhereClause(where || '')
 
     let query = `SELECT COUNT(*) as count FROM ${table}`
     if (where) {

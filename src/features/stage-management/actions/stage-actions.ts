@@ -3,11 +3,45 @@
 import { query, default as pool } from '@/shared/lib/db';
 import { revalidatePath } from 'next/cache';
 import type { Stage, CreateStageInput, UpdateStageInput } from '../types/stage.types';
+import { getDefaultDelayThreshold } from '@/shared/actions/settings-actions';
 
-// Fetch all active stages ordered by display order
-export async function getStages(): Promise<Stage[]> {
+
+
+// Fetch delay threshold for a stage (returns global default if not set)
+export async function getStageDelayThreshold(stageId: string): Promise<number> {
   const result = await query(
-    'SELECT * FROM stages WHERE is_active = TRUE ORDER BY display_order ASC'
+    'SELECT threshold_minutes FROM stage_delay_thresholds WHERE stage_id = $1',
+    [stageId]
+  );
+  if (result.rows.length > 0) {
+    return result.rows[0].threshold_minutes;
+  }
+  return await getDefaultDelayThreshold();
+}
+
+// Set/update delay threshold for a stage
+export async function setStageDelayThreshold(stageId: string, thresholdMinutes: number): Promise<void> {
+  if (thresholdMinutes < 1 || thresholdMinutes > 1440) {
+    throw new Error('Threshold must be between 1 and 1440 minutes');
+  }
+  await query(
+    `INSERT INTO stage_delay_thresholds (stage_id, threshold_minutes, updated_at)\n     VALUES ($1, $2, NOW())\n     ON CONFLICT (stage_id) DO UPDATE SET threshold_minutes = $2, updated_at = NOW()`,
+    [stageId, thresholdMinutes]
+  );
+  revalidatePath('/admin/stages');
+}
+
+// Fetch all active stages ordered by display order, including their delay threshold
+export async function getStages(): Promise<Stage[]> {
+  const defaultThreshold = await getDefaultDelayThreshold();
+  const result = await query(
+    `SELECT s.*,
+            COALESCE(sdt.threshold_minutes, $1) AS delay_threshold_minutes
+     FROM stages s
+     LEFT JOIN stage_delay_thresholds sdt ON sdt.stage_id = s.id
+     WHERE s.is_active = TRUE
+     ORDER BY s.display_order ASC`,
+    [defaultThreshold]
   );
   return result.rows as Stage[];
 }

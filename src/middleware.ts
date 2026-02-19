@@ -1,34 +1,9 @@
 import { NextResponse } from 'next/server'
 import type { NextRequest } from 'next/server'
-import { jwtVerify } from 'jose'
-
-const secretKey = process.env.SESSION_SECRET
-const encodedKey = new TextEncoder().encode(secretKey!)
-const INACTIVITY_TIMEOUT_MS = Number(process.env.INACTIVITY_TIMEOUT_MS) || 30 * 60 * 1000
+import { verifySession, renewSession } from './features/auth/lib/session'
 
 export async function middleware(request: NextRequest) {
-    const token = request.cookies.get('session')?.value
-
-    let session = null
-
-    if (token) {
-        try {
-            const { payload } = await jwtVerify(token, encodedKey, {
-                algorithms: ['HS256'],
-            })
-
-            // US-5.2 AC-4: Check inactivity timeout in middleware
-            const lastActivity = (payload.lastActivity as number) || Date.now()
-            if (Date.now() - lastActivity > INACTIVITY_TIMEOUT_MS) {
-                // Idle timeout — treat as no session
-                session = null
-            } else {
-                session = payload
-            }
-        } catch {
-            session = null
-        }
-    }
+    const session = await verifySession()
 
     const { pathname } = request.nextUrl
 
@@ -79,7 +54,25 @@ export async function middleware(request: NextRequest) {
         }
     }
 
-    return NextResponse.next()
+    const response = NextResponse.next()
+
+    // Sliding window renewal: if we have a valid session, refresh it
+    if (session) {
+        const newToken = await renewSession(session)
+        const expiresAt = session.isKiosk
+            ? new Date(Date.now() + 365 * 24 * 60 * 60 * 1000)
+            : new Date(Date.now() + 7 * 24 * 60 * 60 * 1000)
+
+        response.cookies.set('session', newToken, {
+            httpOnly: true,
+            secure: process.env.NODE_ENV === 'production',
+            expires: expiresAt,
+            sameSite: 'lax',
+            path: '/',
+        })
+    }
+
+    return response
 }
 
 export const config = {

@@ -32,12 +32,7 @@ export async function updateBedStage(input: UpdateBedStageInput): Promise<{
       }
     }
 
-    // IDOR FIX: Ward-level access control (checkWardAccess in bed-queries.ts)
-    const wardError = await checkWardAccess(session.userId, result.data.bedId, session.role)
-    if (wardError) {
-      logger.warn('Ward access denied', { userId: session.userId, bedId: result.data.bedId })
-      return { success: false, error: wardError }
-    }
+  // Ward-level access control removed: all nurses can update any bed stage in Emergency Ward
 
     // NEW: Get current bed to validate transition
     const bed = await getBedById(result.data.bedId)
