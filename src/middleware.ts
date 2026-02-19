@@ -32,6 +32,17 @@ export async function middleware(request: NextRequest) {
 
     const { pathname } = request.nextUrl
 
+    // US-5.3: Kiosk IP binding — if the session was created in kiosk mode,
+    // reject any request coming from a different IP address.
+    if (session?.isKiosk && session.kioskIp && session.kioskIp !== 'unknown') {
+        const clientIp =
+            request.headers.get('x-forwarded-for')?.split(',')[0].trim() ?? 'unknown'
+        if (clientIp !== session.kioskIp) {
+            const res = NextResponse.redirect(new URL('/login', request.url))
+            res.cookies.delete('session')
+            return res
+        }
+    }
     // Protected routes
     if (pathname.startsWith('/admin')) {
         if (!session || session.role !== 'admin') {

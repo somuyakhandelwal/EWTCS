@@ -7,6 +7,10 @@
     "build": "next build",
     "start": "node scripts/run-migrations.js up && next start",
     "lint": "next lint",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "test:coverage": "vitest run --coverage",
+    "test:bugs": "tsx scripts/run-bug-tests.ts",
     "setup": "node scripts/quick-start-setup.mjs",
     "db:migrate": "node scripts/run-migrations.js up",
     "db:rollback": "node scripts/run-migrations.js down 1",
@@ -22,12 +26,10 @@
     "validate:db": "node scripts/validate-db-connection.js",
     "validate:migrations": "node scripts/validate-migrations.js",
     "validate:schema": "node scripts/validate-db-schema.js",
-    "validate:all": "npm run validate:env && npm run validate:db && npm run validate:migrations && npm run validate:schema && npm run build",
-    "test": "vitest run",
-    "test:watch": "vitest",
-    "test:coverage": "vitest run --coverage"
+    "validate:all": "npm run validate:env && npm run validate:db && npm run validate:migrations && npm run validate:schema && npm run build"
   },
   "dependencies": {
+    "@radix-ui/react-context-menu": "^2.2.16",
     "@radix-ui/react-label": "^2.1.8",
     "@radix-ui/react-slot": "^1.2.4",
     "@types/bcrypt": "^6.0.0",
@@ -57,10 +59,9 @@
     "@types/react-dom": "^19",
     "@vitejs/plugin-react": "^5.1.4",
     "@vitest/coverage-v8": "^4.0.18",
-    "ajv": "^8.12.0",
     "autoprefixer": "^10.4.24",
-    "eslint": "^9",
-    "eslint-config-next": "^15.1.6",
+    "eslint": "^9.20.0",
+    "eslint-config-next": "^15.1.7",
     "jsdom": "^28.1.0",
     "postcss": "^8.5.6",
     "tailwindcss": "^3.4.17",
@@ -68,5 +69,8 @@
     "tsx": "^4.7.0",
     "typescript": "^5",
     "vitest": "^4.0.18"
+  },
+  "overrides": {
+    "@eslint-community/eslint-utils": "^4.4.1"
   }
 }

@@ -5,6 +5,7 @@ import { Button } from '@/shared/components/ui/button'
 import { Loader2, AlertTriangle, X } from 'lucide-react'
 import type { Stage } from '../types/bed'
 import { cn } from '@/shared/lib/utils'
+import { getStageColorClasses } from '@/shared/utils/stage-colors'
 
 interface ConfirmationModalProps {
     isOpen: boolean
@@ -25,6 +26,7 @@ export const ConfirmationModal = memo(function ConfirmationModal({
     onCancel,
     isUpdating = false,
 }: ConfirmationModalProps) {
+    const colorClasses = getStageColorClasses(toStage?.colorCode)
     useEffect(() => {
         const handleKeyDown = (e: KeyboardEvent) => {
             if (!isOpen) return
@@ -79,12 +81,12 @@ export const ConfirmationModal = memo(function ConfirmationModal({
                         <div className="flex justify-between items-center border-t border-gray-200 dark:border-zinc-700 pt-2">
                             <span className="text-gray-500 dark:text-gray-400">To Stage:</span>
                             <span
-                                className={cn("font-bold px-2 py-0.5 rounded text-xs uppercase tracking-wider")}
-                                style={{
-                                    backgroundColor: `${toStage?.colorCode}20`,
-                                    color: toStage?.colorCode,
-                                    borderColor: `${toStage?.colorCode}40`
-                                }}
+                                className={cn(
+                                    'font-bold px-2 py-0.5 rounded text-xs uppercase tracking-wider border',
+                                    colorClasses.bg,
+                                    colorClasses.text,
+                                    colorClasses.border
+                                )}
                             >
                                 {toStage?.name}
                             </span>

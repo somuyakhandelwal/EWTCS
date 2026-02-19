@@ -13,13 +13,17 @@ interface User {
     role: string
     is_active: boolean
     created_at: string
+    ward_id?: string | null
 }
+
+interface Ward { id: string; name: string; code: string }
 
 interface UserManagementTableProps {
     users: User[]
+    wards?: Ward[]
 }
 
-export default function UserManagementTable({ users }: UserManagementTableProps) {
+export default function UserManagementTable({ users, wards = [] }: UserManagementTableProps) {
     const router = useRouter()
     const [selectedUser, setSelectedUser] = useState<User | null>(null)
     const [isEditing, setIsEditing] = useState(false)
@@ -93,6 +97,9 @@ export default function UserManagementTable({ users }: UserManagementTableProps)
                                 Role
                             </th>
                             <th className="px-4 py-3 text-left text-xs font-medium text-zinc-400 uppercase tracking-wider">
+                                Ward
+                            </th>
+                            <th className="px-4 py-3 text-left text-xs font-medium text-zinc-400 uppercase tracking-wider">
                                 Status
                             </th>
                             <th className="px-4 py-3 text-left text-xs font-medium text-zinc-400 uppercase tracking-wider">
@@ -113,6 +120,11 @@ export default function UserManagementTable({ users }: UserManagementTableProps)
                                     <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium border ${getRoleBadgeColor(user.role)}`}>
                                         {user.role}
                                     </span>
+                                </td>
+                                <td className="px-4 py-3 whitespace-nowrap text-sm text-zinc-400">
+                                    {user.ward_id
+                                        ? (wards.find(w => w.id === user.ward_id)?.name ?? '—')
+                                        : <span className="text-amber-500/70 text-xs">Unassigned</span>}
                                 </td>
                                 <td className="px-4 py-3 whitespace-nowrap">
                                     <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
@@ -174,6 +186,7 @@ export default function UserManagementTable({ users }: UserManagementTableProps)
                     user={selectedUser}
                     isOpen={isEditing}
                     onClose={handleCloseEdit}
+                    wards={wards}
                 />
             )}
         </>

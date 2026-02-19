@@ -1,13 +1,33 @@
 // Bed Card Component
 // Epic 1: Nurse Desk Bed Dashboard
 
-import { memo, type MouseEvent } from 'react'
+import { memo, type MouseEvent, Fragment } from 'react'
 import { Card, CardContent } from '@/shared/components/ui/card'
 import { Clock, AlertTriangle, Hourglass } from 'lucide-react'
 import type { BedWithElapsedTime, DispositionDelayReason } from '../types/bed'
 import { DISPOSITION_DELAY_REASON_LABELS } from '../types/bed'
 import { formatElapsedTime, getStageColorClasses } from '../lib/utils'
+import { useElapsedTime } from '../hooks/useElapsedTime'
 import { cn } from '@/shared/lib/utils'
+
+function highlightMatch(text: string, query?: string) {
+  if (!query) return text
+  const q = query.trim().toLowerCase()
+  if (!q) return text
+  const lower = text.toLowerCase()
+  const idx = lower.indexOf(q)
+  if (idx === -1) return text
+  const before = text.slice(0, idx)
+  const match = text.slice(idx, idx + q.length)
+  const after = text.slice(idx + q.length)
+  return (
+    <Fragment>
+      {before}
+      <span className="bg-yellow-300 text-black px-1 rounded">{match}</span>
+      {after}
+    </Fragment>
+  )
+}
 
 const REASON_OPTIONS = Object.entries(DISPOSITION_DELAY_REASON_LABELS) as [
   DispositionDelayReason,
@@ -21,6 +41,7 @@ interface BedCardProps {
   onReasonSelect?: (bedId: string, reason: DispositionDelayReason) => void
   showUpdated?: boolean
   errorMessage?: string | null
+  searchQuery?: string
 }
 
 export const BedCard = memo(function BedCard({
@@ -30,11 +51,12 @@ export const BedCard = memo(function BedCard({
   onReasonSelect,
   showUpdated = false,
   errorMessage = null,
+  searchQuery = '',
 }: BedCardProps) {
   const stageName = bed.currentStage?.name || 'Empty'
   const stageColor = bed.currentStage?.colorCode || 'gray'
   const colorClasses = getStageColorClasses(stageColor)
-  const elapsedTime = formatElapsedTime(bed.elapsedTimeMs)
+  const elapsedTime = useElapsedTime(bed.patientStartTime)
   const isOccupied = bed.isOccupied
   const isDelayed = bed.isDelayed
   const isBottleneck = bed.isDispositionBottleneck
@@ -42,12 +64,11 @@ export const BedCard = memo(function BedCard({
   return (
     <Card
       className={cn(
-        'relative overflow-hidden transition-all cursor-pointer hover:scale-105 hover:shadow-lg',
+        'relative overflow-hidden transition-all cursor-pointer sm:hover:scale-105 sm:hover:shadow-lg active:scale-[0.97]',
         colorClasses.bg,
         colorClasses.border,
         'border-2',
         isDelayed && 'ring-2 ring-red-500 animate-pulse',
-        // US-1.6: amber ring for disposition bottleneck (takes priority over delayed ring)
         isBottleneck && 'ring-2 ring-amber-500 animate-pulse'
       )}
       onClick={() => onClick?.(bed)}
@@ -60,7 +81,7 @@ export const BedCard = memo(function BedCard({
         </div>
       )}
 
-      {/* US-1.6: Disposition bottleneck indicator (overrides delay icon) */}
+      {/* US-1.6: Disposition bottleneck indicator */}
       {isBottleneck && (
         <div className="absolute top-2 right-2">
           <Hourglass className="h-5 w-5 text-amber-400" />
@@ -71,7 +92,7 @@ export const BedCard = memo(function BedCard({
         {/* Bed Number */}
         <div className="flex items-center justify-between">
           <h3 className={cn('text-2xl font-bold', colorClasses.text)}>
-            {bed.bedNumber}
+            {highlightMatch(bed.bedNumber, searchQuery)}
           </h3>
           {isOccupied && !isDelayed && (
             <div className="flex h-2 w-2">
@@ -85,11 +106,11 @@ export const BedCard = memo(function BedCard({
         <div className="space-y-1">
           <p className="text-xs text-zinc-500 uppercase tracking-wider">Current Stage</p>
           <p className={cn('text-sm font-semibold', colorClasses.text)}>
-            {stageName}
+            {highlightMatch(stageName, searchQuery)}
           </p>
           {onContextMenu && (
             <p className="text-[10px] text-zinc-500">
-              Right-click to update stage
+              Tap or right-click to update stage
             </p>
           )}
           {showUpdated && (
@@ -129,6 +150,7 @@ export const BedCard = memo(function BedCard({
               ))}
             </select>
           )}
+
           {/* US-1.6: Show recorded reason label when no handler (read-only) */}
           {isBottleneck && !onReasonSelect && bed.dispositionDelayReason && (
             <p className="text-[10px] text-amber-400/80">

@@ -21,7 +21,9 @@ function SubmitButton() {
     )
 }
 
-export default function CreateUserDialog() {
+interface Ward { id: string; name: string; code: string }
+
+export default function CreateUserDialog({ wards = [] }: { wards?: Ward[] }) {
     const [isOpen, setIsOpen] = useState(false)
     const [state, action] = useActionState(createUser, undefined)
 
@@ -118,6 +120,24 @@ export default function CreateUserDialog() {
                             <p className="text-sm text-red-500">{state.errors.role}</p>
                         )}
                     </div>
+
+                    {wards.length > 0 && (
+                        <div className="space-y-2">
+                            <Label htmlFor="wardId" className="text-zinc-200">
+                                Ward Assignment <span className="text-zinc-500 font-normal">(Optional)</span>
+                            </Label>
+                            <select
+                                id="wardId"
+                                name="wardId"
+                                className="w-full px-3 py-2 bg-black/50 border border-zinc-700 rounded-md text-white focus:outline-none focus:ring-2 focus:ring-emerald-500"
+                            >
+                                <option value="">No ward assigned</option>
+                                {wards.map(w => (
+                                    <option key={w.id} value={w.id}>{w.name} ({w.code})</option>
+                                ))}
+                            </select>
+                        </div>
+                    )}
 
                     {state?.message && (
                         <div className={`p-3 rounded-md text-sm ${
