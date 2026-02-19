@@ -143,7 +143,7 @@ export function BedGrid({
       />
 
       {/* Legend */}
-      <BedStatusLegend stages={data.stages} />
+      <BedStatusLegend stages={data.stages} delayThresholdMs={data.delayThresholdMs} />
 
       {/* US-1.6: Disposition bottleneck panel */}
       <BottleneckPanel beds={data.beds} onReasonRecorded={onRefresh} />

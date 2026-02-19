@@ -6,11 +6,14 @@ import { ChevronDown, ChevronRight } from 'lucide-react'
 
 interface BedStatusLegendProps {
   stages: Stage[]
+  delayThresholdMs?: number
 }
 
-export const BedStatusLegend = memo(function BedStatusLegend({ stages }: BedStatusLegendProps) {
+export const BedStatusLegend = memo(function BedStatusLegend({ stages, delayThresholdMs }: BedStatusLegendProps) {
   const [isCollapsed, setIsCollapsed] = useState(false)
-
+  const thresholdLabel = delayThresholdMs
+    ? `${Math.round(delayThresholdMs / 3600000)} hours`
+    : '3 hours'
   return (
     <div className="bg-zinc-900/50 rounded-lg border border-zinc-800 overflow-hidden">
       <button
@@ -56,14 +59,14 @@ export const BedStatusLegend = memo(function BedStatusLegend({ stages }: BedStat
           {/* Delay indicator */}
           <div className="mt-3 pt-3 border-t border-zinc-800 flex flex-wrap gap-4">
             <div className="flex items-center gap-2">
-              <div className="w-4 h-4 rounded border-2 border-red-700 bg-red-900/50 animate-pulse" />
+              <div className="w-4 h-4 rounded border-2 border-red-700 bg-red-900/50 motion-safe:animate-pulse" />
               <span className="text-xs text-zinc-400">
-                Delayed (&gt;3 hours)
+                Delayed (&gt;{thresholdLabel})
               </span>
             </div>
             {/* US-1.6: Disposition bottleneck key */}
             <div className="flex items-center gap-2">
-              <div className="w-4 h-4 rounded border-2 border-amber-700 bg-amber-900/40 animate-pulse" />
+              <div className="w-4 h-4 rounded border-2 border-amber-700 bg-amber-900/40 motion-safe:animate-pulse" />
               <span className="text-xs text-zinc-400">
                 Disposition Hold (&gt;30 min in Decision Made)
               </span>

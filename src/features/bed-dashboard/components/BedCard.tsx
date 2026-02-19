@@ -6,7 +6,7 @@ import { Card, CardContent } from '@/shared/components/ui/card'
 import { Clock, AlertTriangle, Hourglass } from 'lucide-react'
 import type { BedWithElapsedTime, DispositionDelayReason } from '../types/bed'
 import { DISPOSITION_DELAY_REASON_LABELS } from '../types/bed'
-import { formatElapsedTime, getStageColorClasses } from '../lib/utils'
+import { formatElapsedTime, getStageColorClasses, getDelayColorClasses } from '../lib/utils'
 import { useElapsedTime } from '../hooks/useElapsedTime'
 import { cn } from '@/shared/lib/utils'
 
@@ -55,7 +55,7 @@ export const BedCard = memo(function BedCard({
 }: BedCardProps) {
   const stageName = bed.currentStage?.name || 'Empty'
   const stageColor = bed.currentStage?.colorCode || 'gray'
-  const colorClasses = getStageColorClasses(stageColor)
+  const colorClasses = bed.isDelayed ? getDelayColorClasses(true) : getStageColorClasses(stageColor)
   const elapsedTime = useElapsedTime(bed.patientStartTime)
   const isOccupied = bed.isOccupied
   const isDelayed = bed.isDelayed
@@ -68,8 +68,8 @@ export const BedCard = memo(function BedCard({
         colorClasses.bg,
         colorClasses.border,
         'border-2',
-        isDelayed && 'ring-2 ring-red-500 animate-pulse',
-        isBottleneck && 'ring-2 ring-amber-500 animate-pulse'
+        isDelayed && 'ring-2 ring-red-500 motion-safe:animate-pulse',
+        isBottleneck && !isDelayed && 'ring-2 ring-amber-500 motion-safe:animate-pulse'
       )}
       onClick={() => onClick?.(bed)}
       onContextMenu={(event) => onContextMenu?.(event, bed)}

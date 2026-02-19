@@ -71,6 +71,10 @@
     "vitest": "^4.0.18"
   },
   "overrides": {
-    "@eslint-community/eslint-utils": "^4.4.1"
+    "@eslint-community/eslint-utils": "^4.4.1",
+    "minimatch": ">=10.2.1",
+    "@eslint/eslintrc": {
+      "minimatch": "3.1.2"
+    }
   }
 }
