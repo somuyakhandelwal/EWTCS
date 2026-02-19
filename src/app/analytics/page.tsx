@@ -1,5 +1,5 @@
 import { StageAnalyticsView } from '@/features/bed-dashboard/components/StageAnalyticsView'
-import { verifyActiveSession } from '@/features/auth/lib/active-session'
+import { verifyActiveSession } from '@/shared/lib/active-session'
 import { redirect } from 'next/navigation'
 import { Button } from '@/shared/components/ui/button'
 import { ArrowLeft } from 'lucide-react'

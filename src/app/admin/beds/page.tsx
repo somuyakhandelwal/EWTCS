@@ -1,4 +1,4 @@
-import { verifyActiveSession } from '@/features/auth/lib/active-session'
+import { verifyActiveSession } from '@/shared/lib/active-session'
 import { redirect } from 'next/navigation'
 import { getAllBeds, getWardsList } from '@/features/bed-management/actions/bed-queries-actions'
 import { BedManagementClient } from '@/features/bed-management/components/BedManagementClient'

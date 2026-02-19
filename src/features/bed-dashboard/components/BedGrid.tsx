@@ -54,7 +54,10 @@ export function BedGrid({
     showDelayedOnly,
     sortOrder,
     displayedBeds,
+    isFilterActive,
     toggleDelayedFilter,
+    toggleSortOrder,
+    clearFilter,
   } = useBedFilter(data.beds)
 
   const stats = useMemo(() => getBedStatistics(data.beds), [data.beds])
@@ -117,9 +120,13 @@ export function BedGrid({
     <div className="space-y-6">
       <BedGridHeader
         showDelayedOnly={showDelayedOnly}
+        sortOrder={sortOrder}
         delayedCount={stats.delayed}
+        isFilterActive={isFilterActive}
         isRefreshing={isRefreshing}
         onToggleFilter={toggleDelayedFilter}
+        onToggleSortOrder={toggleSortOrder}
+        onClearFilter={clearFilter}
         onRefresh={onRefresh}
       />
 

@@ -8,7 +8,7 @@ export const ALLOWED_TABLES = new Set([
   'users',
   'beds',
   'stages',
-  'ward',
+  'wards',
   'audit_logs',
   'bed_stage_logs',
   'token_blacklist',
