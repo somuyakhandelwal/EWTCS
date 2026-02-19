@@ -6,8 +6,7 @@ import { BedStatusLegend } from './BedStatusLegend'
 import { BedStageContextMenu } from './BedStageContextMenu'
 import { BottleneckPanel } from './BottleneckPanel'
 import { BedGridStats } from './BedGridStats'
-import { Button } from '@/shared/components/ui/button'
-import { Filter, RefreshCw } from 'lucide-react'
+import { BedGridHeader } from './BedGridHeader'
 import type { BedGridData, BedWithElapsedTime, DispositionDelayReason } from '../types/bed'
 import { getBedStatistics } from '../lib/utils'
 import { getValidTransitionsForBed } from '../actions/bed-grid-actions'
@@ -70,43 +69,40 @@ export function BedGrid({
     setShowDelayedOnly(prev => !prev)
   }, [])
 
-  const handleOpenMenu = useCallback(
-    async (event: MouseEvent<HTMLDivElement>, bed: BedWithElapsedTime) => {
-      if (!onStageSelect) {
-        return
-      }
-      event.preventDefault()
-      setMenuState({
-        bedId: bed.id,
-        position: { x: event.clientX, y: event.clientY },
-      })
-      setMenuError(null)
-
-      // Fetch valid transitions for this bed
-      setIsLoadingTransitions(true)
-      try {
-        const result = await getValidTransitionsForBed(bed.id)
-        if (result.success && result.allowed) {
-          setValidNextStages(result.allowed)
-          setOverrideRequiredStages(result.requiresOverride || [])
-        } else {
-          // BUG FIX #2: Show error message when transitions can't be loaded
-          setMenuError(result.error || 'Unable to load available stages')
-          setValidNextStages([])
-          setOverrideRequiredStages([])
-        }
-      } catch (error) {
-        // BUG FIX #2: Catch and display error to user
-        console.error('Failed to fetch valid transitions:', error)
-        setMenuError('Connection error. Please try again.')
+  const openMenuForBed = useCallback(async (bedId: string, position: { x: number; y: number }) => {
+    setMenuState({ bedId, position })
+    setMenuError(null)
+    setIsLoadingTransitions(true)
+    try {
+      const result = await getValidTransitionsForBed(bedId)
+      if (result.success && result.allowed) {
+        setValidNextStages(result.allowed)
+        setOverrideRequiredStages(result.requiresOverride || [])
+      } else {
+        setMenuError(result.error || 'Unable to load available stages')
         setValidNextStages([])
         setOverrideRequiredStages([])
-      } finally {
-        setIsLoadingTransitions(false)
       }
-    },
-    [onStageSelect]
-  )
+    } catch (error) {
+      console.error('Failed to fetch valid transitions:', error)
+      setMenuError('Connection error. Please try again.')
+      setValidNextStages([])
+      setOverrideRequiredStages([])
+    } finally { setIsLoadingTransitions(false) }
+  }, [])
+
+  // Right-click (desktop)
+  const handleOpenMenu = useCallback(async (event: MouseEvent<HTMLDivElement>, bed: BedWithElapsedTime) => {
+    if (!onStageSelect) return
+    event.preventDefault()
+    await openMenuForBed(bed.id, { x: event.clientX, y: event.clientY })
+  }, [onStageSelect, openMenuForBed])
+
+  // Tap (mobile) — centre of viewport for bottom-sheet positioning
+  const handleBedTap = useCallback(async (bed: BedWithElapsedTime) => {
+    if (!onStageSelect) return
+    await openMenuForBed(bed.id, { x: window.innerWidth / 2 - 96, y: window.innerHeight / 2 })
+  }, [onStageSelect, openMenuForBed])
 
   const handleCloseMenu = useCallback(() => {
     setMenuState(null)
@@ -125,34 +121,13 @@ export function BedGrid({
   return (
     <div className="space-y-6">
       {/* Header with filters and actions */}
-      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-        <div className="flex items-center gap-4">
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={toggleFilter}
-            className={showDelayedOnly ? 'bg-red-900/30 border-red-700' : ''}
-          >
-            <Filter className="h-4 w-4 mr-2" />
-            {showDelayedOnly ? 'Show All Beds' : 'Show Delayed Only'}
-            {stats.delayed > 0 && (
-              <span className="ml-2 px-2 py-0.5 text-xs bg-red-500 text-white rounded-full">
-                {stats.delayed}
-              </span>
-            )}
-          </Button>
-        </div>
-
-        <Button
-          variant="ghost"
-          size="sm"
-          onClick={onRefresh}
-          disabled={isRefreshing}
-        >
-          <RefreshCw className={`h-4 w-4 mr-2 ${isRefreshing ? 'animate-spin' : ''}`} />
-          Refresh
-        </Button>
-      </div>
+      <BedGridHeader
+        showDelayedOnly={showDelayedOnly}
+        delayedCount={stats.delayed}
+        isRefreshing={isRefreshing}
+        onToggleFilter={toggleFilter}
+        onRefresh={onRefresh}
+      />
 
       {/* Statistics bar */}
       <BedGridStats
@@ -184,7 +159,7 @@ export function BedGrid({
             <BedCard
               key={bed.id}
               bed={bed}
-              onClick={onBedClick}
+              onClick={onStageSelect ? handleBedTap : onBedClick}
               onContextMenu={handleOpenMenu}
               onReasonSelect={onReasonSelect}
               showUpdated={lastUpdatedBedId === bed.id && lastUpdatedStageId !== null}

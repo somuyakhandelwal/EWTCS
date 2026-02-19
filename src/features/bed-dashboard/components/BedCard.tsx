@@ -7,6 +7,7 @@ import { Clock, AlertTriangle, Hourglass } from 'lucide-react'
 import type { BedWithElapsedTime, DispositionDelayReason } from '../types/bed'
 import { DISPOSITION_DELAY_REASON_LABELS } from '../types/bed'
 import { formatElapsedTime, getStageColorClasses } from '../lib/utils'
+import { useElapsedTime } from '../hooks/useElapsedTime'
 import { cn } from '@/shared/lib/utils'
 
 function highlightMatch(text: string, query?: string) {
@@ -55,7 +56,7 @@ export const BedCard = memo(function BedCard({
   const stageName = bed.currentStage?.name || 'Empty'
   const stageColor = bed.currentStage?.colorCode || 'gray'
   const colorClasses = getStageColorClasses(stageColor)
-  const elapsedTime = formatElapsedTime(bed.elapsedTimeMs)
+  const elapsedTime = useElapsedTime(bed.patientStartTime)
   const isOccupied = bed.isOccupied
   const isDelayed = bed.isDelayed
   const isBottleneck = bed.isDispositionBottleneck
@@ -63,7 +64,7 @@ export const BedCard = memo(function BedCard({
   return (
     <Card
       className={cn(
-        'relative overflow-hidden transition-all cursor-pointer hover:scale-105 hover:shadow-lg',
+        'relative overflow-hidden transition-all cursor-pointer sm:hover:scale-105 sm:hover:shadow-lg active:scale-[0.97]',
         colorClasses.bg,
         colorClasses.border,
         'border-2',
@@ -109,7 +110,7 @@ export const BedCard = memo(function BedCard({
           </p>
           {onContextMenu && (
             <p className="text-[10px] text-zinc-500">
-              Right-click to update stage
+              Tap or right-click to update stage
             </p>
           )}
           {showUpdated && (
