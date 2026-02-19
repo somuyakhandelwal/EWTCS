@@ -7,6 +7,8 @@ import { BedStageContextMenu } from './BedStageContextMenu'
 import { BottleneckPanel } from './BottleneckPanel'
 import { BedGridStats } from './BedGridStats'
 import { BedGridHeader } from './BedGridHeader'
+import { BedGridFooter } from './BedGridFooter'
+import { useBedFilter } from '../hooks/useBedFilter'
 import type { BedGridData, BedWithElapsedTime, DispositionDelayReason } from '../types/bed'
 import { getBedStatistics } from '../lib/utils'
 import { getValidTransitionsForBed } from '../actions/bed-grid-actions'
@@ -44,7 +46,6 @@ export function BedGrid({
   undoState,
   onUndo,
 }: BedGridProps) {
-  const [showDelayedOnly, setShowDelayedOnly] = useState(false)
   const [menuState, setMenuState] = useState<{
     bedId: string
     position: { x: number; y: number }
@@ -54,46 +55,55 @@ export function BedGrid({
   const [isLoadingTransitions, setIsLoadingTransitions] = useState(false)
   const [menuError, setMenuError] = useState<string | null>(null)
 
-  // Memoize filtered beds to prevent unnecessary recalculation
+  const {
+    showDelayedOnly,
+    sortOrder,
+    displayedBeds: baseDisplayedBeds,
+    isFilterActive,
+    toggleDelayedFilter,
+    toggleSortOrder,
+    clearFilter,
+  } = useBedFilter(data.beds)
+
+  // Further filter by search query
   const displayedBeds = useMemo(() => {
-    const base = showDelayedOnly ? data.beds.filter(b => b.isDelayed) : data.beds
-    if (!searchQuery.trim()) return base
+    if (!searchQuery.trim()) return baseDisplayedBeds
     const q = searchQuery.toLowerCase()
-    return base.filter(bed => {
+    return baseDisplayedBeds.filter(bed => {
       if (bed.bedNumber.toLowerCase().includes(q)) return true
       if (bed.currentStage?.name.toLowerCase().includes(q)) return true
       return false
     })
-  }, [data.beds, showDelayedOnly, searchQuery])
+  }, [baseDisplayedBeds, searchQuery])
+
   const stats = useMemo(() => getBedStatistics(data.beds), [data.beds])
 
-  const toggleFilter = useCallback(() => {
-    setShowDelayedOnly(prev => !prev)
-  }, [])
-
-  const openMenuForBed = useCallback(async (bedId: string, position: { x: number; y: number }) => {
-    setMenuState({ bedId, position })
-    setMenuError(null)
-    setIsLoadingTransitions(true)
-    try {
-      const result = await getValidTransitionsForBed(bedId)
-      if (result.success && result.allowed) {
-        setValidNextStages(result.allowed)
-        setOverrideRequiredStages(result.requiresOverride || [])
-      } else {
-        setMenuError(result.error || 'Unable to load available stages')
+  const openMenuForBed = useCallback(
+    async (bedId: string, position: { x: number; y: number }) => {
+      setMenuState({ bedId, position })
+      setMenuError(null)
+      setIsLoadingTransitions(true)
+      try {
+        const result = await getValidTransitionsForBed(bedId)
+        if (result.success && result.allowed) {
+          setValidNextStages(result.allowed)
+          setOverrideRequiredStages(result.requiresOverride || [])
+        } else {
+          setMenuError(result.error || 'Unable to load available stages')
+          setValidNextStages([])
+          setOverrideRequiredStages([])
+        }
+      } catch (error) {
+        console.error('Failed to fetch valid transitions:', error)
+        setMenuError('Connection error. Please try again.')
         setValidNextStages([])
         setOverrideRequiredStages([])
+      } finally {
+        setIsLoadingTransitions(false)
       }
-    } catch (error) {
-      console.error('Failed to fetch valid transitions:', error)
-      setMenuError('Connection error. Please try again.')
-      setValidNextStages([])
-      setOverrideRequiredStages([])
-    } finally {
-      setIsLoadingTransitions(false)
-    }
-  }, [])
+    },
+    []
+  )
 
   // Right-click (desktop)
   const handleOpenMenu = useCallback(async (event: MouseEvent<HTMLDivElement>, bed: BedWithElapsedTime) => {
@@ -125,9 +135,13 @@ export function BedGrid({
       {/* Header with filters and actions */}
       <BedGridHeader
         showDelayedOnly={showDelayedOnly}
+        sortOrder={sortOrder}
         delayedCount={stats.delayed}
+        isFilterActive={isFilterActive}
         isRefreshing={isRefreshing}
-        onToggleFilter={toggleFilter}
+        onToggleFilter={toggleDelayedFilter}
+        onToggleSortOrder={toggleSortOrder}
+        onClearFilter={clearFilter}
         onRefresh={onRefresh}
       />
 
@@ -168,8 +182,8 @@ export function BedGrid({
               errorMessage={errorByBedId[bed.id] || null}
               searchQuery={searchQuery}
               showUndo={undoState?.bedId === bed.id}
-              onUndo={onUndo}
-              undoTimerSeconds={undoState?.timer}
+              undoTimerSeconds={undoState?.bedId === bed.id ? undoState.timer : 0}
+              onUndo={undoState?.bedId === bed.id ? onUndo : undefined}
             />
           ))}
         </div>
@@ -191,10 +205,7 @@ export function BedGrid({
         />
       )}
 
-      <div className="text-center text-xs text-zinc-500">
-        Showing {displayedBeds.length} of {data.beds.length} beds
-        {showDelayedOnly && ' (delayed only)'}
-      </div>
+      <BedGridFooter displayedCount={displayedBeds.length} totalCount={data.beds.length} showDelayedOnly={showDelayedOnly} sortOrder={sortOrder} />
     </div>
   )
 }

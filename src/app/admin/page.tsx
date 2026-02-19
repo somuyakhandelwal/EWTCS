@@ -4,7 +4,7 @@ import { LogoutButton } from "@/features/auth/components/LogoutButton"
 import { redirect } from "next/navigation"
 import Link from "next/link"
 
-import { verifyActiveSession } from "@/features/auth/lib/active-session"
+import { verifyActiveSession } from "@/shared/lib/active-session"
 import { getAllUsers, getUserLogs } from "@/features/user-management/actions/user-management-actions"
 import { getWards } from "@/features/user-management/lib/queries"
 import UserManagementTable from "@/features/user-management/components/UserManagementTable"

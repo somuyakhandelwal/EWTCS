@@ -13,17 +13,9 @@ export type ConnectionStatus =
 
 /**
  * Real-time update configuration
+ * Source of truth is shared/config/realtime.ts; re-exported here for feature consumers.
  */
-export interface RealtimeConfig {
-  /** Whether real-time updates are enabled */
-  enabled: boolean
-  /** Polling interval in milliseconds */
-  pollingInterval: number
-  /** Retry interval after error */
-  retryInterval: number
-  /** Maximum retry interval (exponential backoff cap) */
-  maxRetryInterval: number
-}
+export type { RealtimeConfig } from '@/shared/config/realtime'
 
 /**
  * Connection status details
