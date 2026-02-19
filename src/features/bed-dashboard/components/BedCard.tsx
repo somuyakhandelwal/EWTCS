@@ -1,33 +1,15 @@
 // Bed Card Component
 // Epic 1: Nurse Desk Bed Dashboard
 
-import { memo, type MouseEvent, Fragment } from 'react'
+import { memo, type MouseEvent } from 'react'
 import { Card, CardContent } from '@/shared/components/ui/card'
 import { Clock, AlertTriangle, Hourglass } from 'lucide-react'
 import type { BedWithElapsedTime, DispositionDelayReason } from '../types/bed'
 import { DISPOSITION_DELAY_REASON_LABELS } from '../types/bed'
-import { formatElapsedTime, getStageColorClasses } from '../lib/utils'
+import { formatElapsedTime, getStageColorClasses, getDelayColorClasses } from '../lib/utils'
 import { useElapsedTime } from '../hooks/useElapsedTime'
 import { cn } from '@/shared/lib/utils'
-
-function highlightMatch(text: string, query?: string) {
-  if (!query) return text
-  const q = query.trim().toLowerCase()
-  if (!q) return text
-  const lower = text.toLowerCase()
-  const idx = lower.indexOf(q)
-  if (idx === -1) return text
-  const before = text.slice(0, idx)
-  const match = text.slice(idx, idx + q.length)
-  const after = text.slice(idx + q.length)
-  return (
-    <Fragment>
-      {before}
-      <span className="bg-yellow-300 text-black px-1 rounded">{match}</span>
-      {after}
-    </Fragment>
-  )
-}
+import { highlightMatch } from '../lib/highlight-match'
 
 const REASON_OPTIONS = Object.entries(DISPOSITION_DELAY_REASON_LABELS) as [
   DispositionDelayReason,
@@ -42,6 +24,9 @@ interface BedCardProps {
   showUpdated?: boolean
   errorMessage?: string | null
   searchQuery?: string
+  showUndo?: boolean
+  onUndo?: () => void
+  undoTimerSeconds?: number
 }
 
 export const BedCard = memo(function BedCard({
@@ -52,10 +37,13 @@ export const BedCard = memo(function BedCard({
   showUpdated = false,
   errorMessage = null,
   searchQuery = '',
+  showUndo = false,
+  onUndo,
+  undoTimerSeconds = 0,
 }: BedCardProps) {
   const stageName = bed.currentStage?.name || 'Empty'
   const stageColor = bed.currentStage?.colorCode || 'gray'
-  const colorClasses = getStageColorClasses(stageColor)
+  const colorClasses = bed.isDelayed ? getDelayColorClasses(true) : getStageColorClasses(stageColor)
   const elapsedTime = useElapsedTime(bed.patientStartTime)
   const isOccupied = bed.isOccupied
   const isDelayed = bed.isDelayed
@@ -68,8 +56,8 @@ export const BedCard = memo(function BedCard({
         colorClasses.bg,
         colorClasses.border,
         'border-2',
-        isDelayed && 'ring-2 ring-red-500 animate-pulse',
-        isBottleneck && 'ring-2 ring-amber-500 animate-pulse'
+        isDelayed && 'ring-2 ring-red-500 motion-safe:animate-pulse',
+        isBottleneck && !isDelayed && 'ring-2 ring-amber-500 motion-safe:animate-pulse'
       )}
       onClick={() => onClick?.(bed)}
       onContextMenu={(event) => onContextMenu?.(event, bed)}
@@ -118,6 +106,18 @@ export const BedCard = memo(function BedCard({
           )}
           {errorMessage && (
             <p className="text-[10px] text-red-400">{errorMessage}</p>
+          )}
+          {/* Undo Button (inline) */}
+          {showUndo && onUndo && (
+            <div className="mt-2 flex items-center gap-2">
+              <button
+                className="px-3 py-1 bg-blue-600 hover:bg-blue-700 text-white text-xs rounded transition-colors font-semibold shadow"
+                onClick={e => { e.stopPropagation(); onUndo(); }}
+              >
+                Undo
+              </button>
+              <span className="text-xs text-zinc-400">({undoTimerSeconds}s)</span>
+            </div>
           )}
 
           {/* US-1.6: Disposition bottleneck badge */}

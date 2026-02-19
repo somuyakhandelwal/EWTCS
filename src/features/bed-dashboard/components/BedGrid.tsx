@@ -7,6 +7,7 @@ import { BedStageContextMenu } from './BedStageContextMenu'
 import { BottleneckPanel } from './BottleneckPanel'
 import { BedGridStats } from './BedGridStats'
 import { BedGridHeader } from './BedGridHeader'
+import { useBedFilter } from '../hooks/useBedFilter'
 import type { BedGridData, BedWithElapsedTime, DispositionDelayReason } from '../types/bed'
 import { getBedStatistics } from '../lib/utils'
 import { getValidTransitionsForBed } from '../actions/bed-grid-actions'
@@ -24,6 +25,8 @@ interface BedGridProps {
   lastUpdatedStageId?: string | null
   errorByBedId?: Record<string, string>
   isRefreshing?: boolean
+  undoState?: { bedId: string; prevStageId: string; timer: number } | null
+  onUndo?: () => void
 }
 
 export function BedGrid({
@@ -39,8 +42,9 @@ export function BedGrid({
   lastUpdatedStageId = null,
   errorByBedId = {},
   isRefreshing = false,
+  undoState,
+  onUndo,
 }: BedGridProps) {
-  const [showDelayedOnly, setShowDelayedOnly] = useState(false)
   const [menuState, setMenuState] = useState<{
     bedId: string
     position: { x: number; y: number }
@@ -50,24 +54,17 @@ export function BedGrid({
   const [isLoadingTransitions, setIsLoadingTransitions] = useState(false)
   const [menuError, setMenuError] = useState<string | null>(null)
 
-  // Memoize filtered beds to prevent unnecessary recalculation
-  const displayedBeds = useMemo(() => {
-    const base = showDelayedOnly ? data.beds.filter(b => b.isDelayed) : data.beds
-    if (!searchQuery.trim()) return base
-    const q = searchQuery.toLowerCase()
-    return base.filter(bed => {
-      if (bed.bedNumber.toLowerCase().includes(q)) return true
-      if (bed.currentStage?.name.toLowerCase().includes(q)) return true
-      return false
-    })
-  }, [data.beds, showDelayedOnly, searchQuery])
+  const {
+    showDelayedOnly,
+    sortOrder,
+    displayedBeds,
+    isFilterActive,
+    toggleDelayedFilter,
+    toggleSortOrder,
+    clearFilter,
+  } = useBedFilter(data.beds)
 
-  // Memoize statistics calculation
   const stats = useMemo(() => getBedStatistics(data.beds), [data.beds])
-
-  const toggleFilter = useCallback(() => {
-    setShowDelayedOnly(prev => !prev)
-  }, [])
 
   const openMenuForBed = useCallback(
     async (bedId: string, position: { x: number; y: number }) => {
@@ -116,19 +113,22 @@ export function BedGrid({
   }, [])
 
   const activeBed = useMemo(() => {
-    if (!menuState) {
-      return null
-    }
-    return data.beds.find((bed) => bed.id === menuState.bedId) ?? null
+    if (!menuState) return null
+    return data.beds.find(bed => bed.id === menuState.bedId) ?? null
   }, [data.beds, menuState])
 
   return (
     <div className="space-y-6">
+      {/* Header with filters and actions */}
       <BedGridHeader
         showDelayedOnly={showDelayedOnly}
+        sortOrder={sortOrder}
         delayedCount={stats.delayed}
+        isFilterActive={isFilterActive}
         isRefreshing={isRefreshing}
-        onToggleFilter={toggleFilter}
+        onToggleFilter={toggleDelayedFilter}
+        onToggleSortOrder={toggleSortOrder}
+        onClearFilter={clearFilter}
         onRefresh={onRefresh}
       />
 
@@ -142,7 +142,7 @@ export function BedGrid({
       />
 
       {/* Legend */}
-      <BedStatusLegend stages={data.stages} />
+      <BedStatusLegend stages={data.stages} delayThresholdMs={data.delayThresholdMs} />
 
       {/* US-1.6: Disposition bottleneck panel */}
       <BottleneckPanel beds={data.beds} onReasonRecorded={onRefresh} />
@@ -191,7 +191,8 @@ export function BedGrid({
 
       <div className="text-center text-xs text-zinc-500">
         Showing {displayedBeds.length} of {data.beds.length} beds
-        {showDelayedOnly && ' (delayed only)'}
+        {showDelayedOnly && ' · delayed only'}
+        {sortOrder === 'desc' && ' · sorted by delay'}
       </div>
     </div>
   )

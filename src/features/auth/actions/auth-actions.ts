@@ -1,7 +1,7 @@
 'use server'
 
 import { z } from 'zod'
-import { createSession, deleteSession, type KioskOptions } from '@/features/auth/lib/session'
+import { createSession, deleteSession, type KioskOptions } from '@/shared/lib/session'
 import pool from '@/shared/lib/db'
 import bcrypt from 'bcrypt'
 import { redirect } from 'next/navigation'

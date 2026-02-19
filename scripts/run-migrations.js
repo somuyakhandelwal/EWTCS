@@ -4,6 +4,7 @@ const path = require('path');
 const { spawnSync } = require('child_process');
 const { createDecipheriv, scryptSync } = require('crypto');
 const dotenv = require('dotenv');
+const { printStatus } = require('./migration-status');
 
 const SALT = 'EWTCS_SALT_2026';
 const DEFAULT_ENV = 'development';
@@ -179,5 +180,3 @@ run().catch((err) => {
     console.error(`[migrations] fatal: ${err.message}`);
     process.exit(1);
 });
-
-const { printStatus } = require('./migration-status');

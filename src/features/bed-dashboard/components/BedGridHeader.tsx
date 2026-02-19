@@ -1,41 +1,45 @@
 'use client'
 
 import { Button } from '@/shared/components/ui/button'
-import { Filter, RefreshCw } from 'lucide-react'
+import { RefreshCw } from 'lucide-react'
+import { BedFilterBar } from './BedFilterBar'
+import type { SortOrder } from '../hooks/useBedFilter'
 
 interface BedGridHeaderProps {
   showDelayedOnly: boolean
+  sortOrder: SortOrder
   delayedCount: number
+  isFilterActive: boolean
   isRefreshing: boolean
   onToggleFilter: () => void
+  onToggleSortOrder: () => void
+  onClearFilter: () => void
   onRefresh?: () => void
 }
 
 export function BedGridHeader({
   showDelayedOnly,
+  sortOrder,
   delayedCount,
+  isFilterActive,
   isRefreshing,
   onToggleFilter,
+  onToggleSortOrder,
+  onClearFilter,
   onRefresh,
 }: BedGridHeaderProps) {
   return (
     <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-      <div className="flex items-center gap-4">
-        <Button
-          variant="outline"
-          size="sm"
-          onClick={onToggleFilter}
-          className={showDelayedOnly ? 'bg-red-900/30 border-red-700' : ''}
-        >
-          <Filter className="h-4 w-4 mr-2" />
-          {showDelayedOnly ? 'Show All Beds' : 'Show Delayed Only'}
-          {delayedCount > 0 && (
-            <span className="ml-2 px-2 py-0.5 text-xs bg-red-500 text-white rounded-full">
-              {delayedCount}
-            </span>
-          )}
-        </Button>
-      </div>
+      {/* AC: Filter bar — Show Delayed Only, Sort by Delay, Filter Active badge, Clear */}
+      <BedFilterBar
+        showDelayedOnly={showDelayedOnly}
+        sortOrder={sortOrder}
+        delayedCount={delayedCount}
+        isFilterActive={isFilterActive}
+        onToggleFilter={onToggleFilter}
+        onToggleSortOrder={onToggleSortOrder}
+        onClear={onClearFilter}
+      />
 
       <Button
         variant="ghost"

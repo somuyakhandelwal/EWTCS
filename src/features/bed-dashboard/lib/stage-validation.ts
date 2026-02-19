@@ -172,5 +172,5 @@ export {
   getTransitionRule,
   getValidNextStages,
   getStageTransitionMap,
-  validateTransitionRulesConsistency,
 } from './stage-validation-rules'
+export { validateTransitionRulesConsistency } from './stage-validation-consistency'
