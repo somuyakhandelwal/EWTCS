@@ -3,6 +3,7 @@ import { getBedGridData } from "@/features/bed-dashboard/actions/bed-grid-action
 import { BedDashboardClient } from "@/features/bed-dashboard/components/BedDashboardClient"
 import { AlertTriangle } from "lucide-react"
 import { LogoutButton } from "@/features/auth/components/LogoutButton"
+import { KioskBanner } from "@/features/auth/components/KioskBanner"
 import { redirect } from "next/navigation"
 
 export default async function DashboardPage() {
@@ -17,6 +18,9 @@ export default async function DashboardPage() {
     if (!bedGridResult.success || !bedGridResult.data) {
         return (
             <div className="min-h-screen bg-black text-foreground p-3 sm:p-8">
+                {session.isKiosk && (
+                    <KioskBanner username={session.username} kioskIp={session.kioskIp} />
+                )}
                 <div className="max-w-7xl mx-auto space-y-6 sm:space-y-8">
                     <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
                         <div>
@@ -39,6 +43,9 @@ export default async function DashboardPage() {
 
     return (
         <div className="min-h-screen bg-black text-foreground p-3 sm:p-8">
+            {session.isKiosk && (
+                <KioskBanner username={session.username} kioskIp={session.kioskIp} />
+            )}
             <div className="max-w-7xl mx-auto space-y-6 sm:space-y-8">
                 {/* Header */}
                 <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">

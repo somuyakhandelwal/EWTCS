@@ -20,6 +20,7 @@ export interface UserSummary {
     is_active: boolean
     created_at: string
     updated_at: string
+    ward_id?: string | null
 }
 
 export interface CreateUserInput {

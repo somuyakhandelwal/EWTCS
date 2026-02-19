@@ -78,7 +78,7 @@ const resolveDatabaseUrl = () => {
     return plaintext;
 };
 
-const run = () => {
+const run = async () => {
     loadEnvFiles();
 
     const command = process.argv[2];
@@ -129,6 +129,30 @@ const run = () => {
         args.push('--single-transaction');
     }
 
+    // Self-heal: fix migration tracker entries mis-ordered by the 007/009 renumbering in PRs #161/#162.
+    // IDs 7 and 9 had their names swapped relative to their run_on/id sequence, causing node-pg-migrate
+    // checkOrder to fail for any developer who ran migrations before the renaming PRs were merged.
+    // Using id-based WHERE clauses is idempotent: rows already correct are unaffected; fresh installs
+    // have no pgmigrations table yet and the catch handles that safely.
+    if (command === 'up') {
+        const { Client } = require('pg');
+        const healClient = new Client({ connectionString: databaseUrl });
+        try {
+            await healClient.connect();
+            // id=7 must carry the 007-prefixed name so it sorts before id=9's 009-prefixed name
+            await healClient.query(
+                "UPDATE pgmigrations SET name = '007_create_bed_stage_log_corrections' WHERE id = 7 AND name <> '007_create_bed_stage_log_corrections'"
+            );
+            await healClient.query(
+                "UPDATE pgmigrations SET name = '009_token_blacklist' WHERE id = 9 AND name <> '009_token_blacklist'"
+            );
+        } catch {
+            // pgmigrations may not exist yet on a fresh install — safe to ignore
+        } finally {
+            await healClient.end().catch(() => {});
+        }
+    }
+
     console.log(`[migrations] start: ${new Date().toISOString()}`);
     console.log(`[migrations] command: node-pg-migrate ${args.join(' ')}`);
 
@@ -148,50 +172,9 @@ const run = () => {
     process.exit(exitCode);
 };
 
-run();
+run().catch((err) => {
+    console.error(`[migrations] fatal: ${err.message}`);
+    process.exit(1);
+});
 
-async function printStatus(databaseUrl) {
-    const { Client } = require('pg');
-    const migrationsDir = path.resolve(process.cwd(), 'migrations');
-    const files = fs
-        .readdirSync(migrationsDir)
-        .filter((file) => file.endsWith('.js') || file.endsWith('.ts') || file.endsWith('.sql'))
-        .map((file) => path.parse(file).name)
-        .sort();
-
-    const client = new Client({ connectionString: databaseUrl });
-    await client.connect();
-    try {
-        const existsResult = await client.query(
-            "SELECT to_regclass('public.pgmigrations') AS table_name"
-        );
-        const tableExists = Boolean(existsResult.rows[0]?.table_name);
-        const applied = tableExists
-            ? (await client.query('SELECT name FROM public.pgmigrations ORDER BY run_on')).rows.map(
-                (row) => row.name
-            )
-            : [];
-
-        const pending = files.filter((name) => !applied.includes(name));
-
-        console.log(`[migrations] start: ${new Date().toISOString()}`);
-        console.log(`[migrations] applied: ${applied.length}`);
-        console.log(`[migrations] pending: ${pending.length}`);
-
-        if (applied.length > 0) {
-            console.log('[migrations] applied list:');
-            applied.forEach((name) => console.log(`- ${name}`));
-        }
-
-        if (pending.length > 0) {
-            console.log('[migrations] pending list:');
-            pending.forEach((name) => console.log(`- ${name}`));
-        } else {
-            console.log('[migrations] no pending migrations');
-        }
-
-        console.log(`[migrations] end: ${new Date().toISOString()} (success)`);
-    } finally {
-        await client.end();
-    }
-}
+const { printStatus } = require('./migration-status');

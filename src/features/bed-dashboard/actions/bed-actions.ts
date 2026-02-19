@@ -4,7 +4,7 @@ import { getBedById } from '../lib/queries'
 import { logger } from '@/shared/config/logger'
 import { UpdateBedStageSchema, type UpdateBedStageInput } from '../schemas/bed-schemas'
 import { updateBedStageInDB } from '../lib/bed-mutations'
-import { getUserWard, getBedWard } from '../lib/bed-queries'
+import { checkWardAccess } from '../lib/bed-queries'
 import { requireRole } from '@/shared/lib/auth'
 import { logAudit } from '@/shared/lib/audit'
 import { validateTransition } from '../lib/stage-validation'
@@ -32,55 +32,11 @@ export async function updateBedStage(input: UpdateBedStageInput): Promise<{
       }
     }
 
-    // IDOR FIX: Verify user has access to this specific bed (ward-level access control)
-    const userWard = await getUserWard(session.userId)
-    const bedWard = await getBedWard(result.data.bedId)
-
-    // BUG FIX #6: Explicit null checks with helpful error messages
-    if (!userWard && session.role !== 'admin') {
-      logger.warn('User without ward assignment attempted bed access', {
-        userId: session.userId,
-        userRole: session.role,
-      })
-      return {
-        success: false,
-        error: 'Your user account does not have a ward assignment. Contact your administrator.',
-      }
-    }
-
-    if (!bedWard && session.role !== 'admin') {
-      logger.warn('Attempt to access bed without ward assignment', {
-        userId: session.userId,
-        bedId: result.data.bedId,
-        userRole: session.role,
-      })
-      return {
-        success: false,
-        error: 'This bed does not belong to any ward. Contact your administrator.',
-      }
-    }
-
-    // Allow access if:
-    // 1. Neither user nor bed has a ward assigned (ward system not configured)
-    // 2. Both have ward assignments and they match
-    // 3. User is an admin (admins can access all beds)
-    const hasWardAccess =
-      (!userWard && !bedWard) ||
-      (userWard && bedWard && userWard === bedWard) ||
-      session.role === 'admin'
-
-    if (!hasWardAccess) {
-      logger.warn('Unauthorized bed access attempt', {
-        userId: session.userId,
-        bedId: result.data.bedId,
-        userWard,
-        bedWard,
-        userRole: session.role,
-      })
-      return {
-        success: false,
-        error: 'You do not have permission to update this bed. Access is restricted to your assigned ward.',
-      }
+    // IDOR FIX: Ward-level access control (checkWardAccess in bed-queries.ts)
+    const wardError = await checkWardAccess(session.userId, result.data.bedId, session.role)
+    if (wardError) {
+      logger.warn('Ward access denied', { userId: session.userId, bedId: result.data.bedId })
+      return { success: false, error: wardError }
     }
 
     // NEW: Get current bed to validate transition
