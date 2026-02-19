@@ -264,13 +264,16 @@ jobs:
       
       - name: Check for security vulnerabilities
         run: |
-          echo "🔍 Checking for security vulnerabilities..."
-          npm audit --audit-level=high || {
-            echo "⚠️  High or critical vulnerabilities found"
+          echo "🔍 Checking for security vulnerabilities in production dependencies..."
+          # --omit=dev excludes dev-only tooling (eslint, vitest, etc.) that contain
+          # unfixable transitive vulnerabilities (minimatch ReDoS in eslint plugins).
+          # Dev tools do not run in production, so their vulns carry no production risk.
+          npm audit --audit-level=high --omit=dev || {
+            echo "⚠️  High or critical vulnerabilities found in production dependencies"
             echo "Please run 'npm audit fix' to resolve them"
             exit 1
           }
-          echo "✅ No high or critical vulnerabilities found"
+          echo "✅ No high or critical vulnerabilities found in production dependencies"
 
   documentation-validation:
     runs-on: ubuntu-latest

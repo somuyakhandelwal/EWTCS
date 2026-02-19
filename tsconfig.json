@@ -50,7 +50,6 @@
     "**/*.mts"
   ],
   "exclude": [
-    "node_modules",
-    "jest.config.ts"
+    "node_modules"
   ]
 }
