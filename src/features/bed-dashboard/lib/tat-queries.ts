@@ -27,6 +27,26 @@ export interface TATSummary {
   p90DurationMs: number | null
 }
 
+interface RawTATSummary {
+  totalCycles: string // pg returns COUNT as string
+  averageDurationMs: string | null
+  minDurationMs: string | null
+  maxDurationMs: string | null
+  medianDurationMs: string | null
+  p90DurationMs: string | null
+}
+
+function parseTATSummary(raw: RawTATSummary): TATSummary {
+  return {
+    totalCycles: parseInt(raw.totalCycles, 10) || 0,
+    averageDurationMs: parseFloat(raw.averageDurationMs ?? '0') || 0,
+    minDurationMs: raw.minDurationMs !== null ? parseFloat(raw.minDurationMs) : null,
+    maxDurationMs: raw.maxDurationMs !== null ? parseFloat(raw.maxDurationMs) : null,
+    medianDurationMs: raw.medianDurationMs !== null ? parseFloat(raw.medianDurationMs) : null,
+    p90DurationMs: raw.p90DurationMs !== null ? parseFloat(raw.p90DurationMs) : null,
+  }
+}
+
 /**
  * Fetch all completed TAT cycles (Cleaning → Empty transitions).
  * Only rows with a measured duration are included.
@@ -123,17 +143,17 @@ export async function getTATSummary(
       sql += ` AND bsl.transition_time <= $${params.length}`
     }
 
-    const result = await query<TATSummary>(sql, params)
-    return (
-      result.rows[0] ?? {
-        totalCycles: 0,
-        averageDurationMs: 0,
-        minDurationMs: null,
-        maxDurationMs: null,
-        medianDurationMs: null,
-        p90DurationMs: null,
-      }
-    )
+    const result = await query<RawTATSummary>(sql, params)
+    return result.rows[0]
+      ? parseTATSummary(result.rows[0])
+      : {
+          totalCycles: 0,
+          averageDurationMs: 0,
+          minDurationMs: null,
+          maxDurationMs: null,
+          medianDurationMs: null,
+          p90DurationMs: null,
+        }
   } catch (error) {
     logger.error('Failed to fetch TAT summary', error as Error)
     throw new Error('Failed to fetch turnaround time summary from database')

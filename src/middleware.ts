@@ -28,6 +28,12 @@ export async function middleware(request: NextRequest) {
         }
     }
 
+    if (request.nextUrl.pathname.startsWith('/analytics')) {
+        if (!session || (session.role !== 'supervisor' && session.role !== 'admin')) {
+            return NextResponse.redirect(new URL('/login', request.url))
+        }
+    }
+
     // Redirect if already logged in
     if (request.nextUrl.pathname.startsWith('/login')) {
         if (session) {
@@ -41,5 +47,5 @@ export async function middleware(request: NextRequest) {
 }
 
 export const config = {
-    matcher: ['/dashboard/:path*', '/admin/:path*', '/supervisor/:path*', '/login'],
+    matcher: ['/dashboard/:path*', '/admin/:path*', '/supervisor/:path*', '/analytics/:path*', '/login'],
 }

@@ -6,6 +6,19 @@ import { query } from '@/shared/lib/db'
 import { logger } from '@/shared/config/logger'
 import type { StageDurationStats } from './stage-analytics'
 
+// pg returns COUNT as string — raw row before coercion
+interface RawStageDurationStats {
+  stageName: string
+  stageId: string
+  totalTransitions: string
+  averageDurationMs: string | null
+  minDurationMs: string | null
+  maxDurationMs: string | null
+  medianDurationMs: string | null
+  p90DurationMs: string | null
+  p95DurationMs: string | null
+}
+
 /**
  * Get duration statistics for each stage
  * @param startDate - Filter from this date
@@ -49,8 +62,19 @@ export async function getStageDurationStats(
       ORDER BY s.display_order ASC
     `
 
-    const result = await query<StageDurationStats>(sql, params)
-    return result.rows
+    const result = await query<RawStageDurationStats>(sql, params)
+    // Coerce pg string results to numbers
+    return result.rows.map((row) => ({
+      stageName: row.stageName,
+      stageId: row.stageId,
+      totalTransitions: parseInt(row.totalTransitions, 10) || 0,
+      averageDurationMs: row.averageDurationMs !== null ? parseFloat(row.averageDurationMs) : 0,
+      minDurationMs: row.minDurationMs !== null ? parseFloat(row.minDurationMs) : null,
+      maxDurationMs: row.maxDurationMs !== null ? parseFloat(row.maxDurationMs) : null,
+      medianDurationMs: row.medianDurationMs !== null ? parseFloat(row.medianDurationMs) : null,
+      p90DurationMs: row.p90DurationMs !== null ? parseFloat(row.p90DurationMs) : null,
+      p95DurationMs: row.p95DurationMs !== null ? parseFloat(row.p95DurationMs) : null,
+    }))
   } catch (error) {
     logger.error('Failed to fetch stage duration stats', error as Error)
     throw new Error('Failed to fetch stage duration statistics from database')
