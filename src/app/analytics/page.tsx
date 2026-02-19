@@ -1,5 +1,6 @@
 import { StageAnalyticsView } from '@/features/bed-dashboard/components/StageAnalyticsView'
-import { verifyActiveSession } from '@/shared/lib/active-session'
+import { AuditorHistoryView } from '@/features/bed-dashboard/components/AuditorHistoryView'
+import { verifyActiveSession } from '@/features/auth/lib/active-session'
 import { redirect } from 'next/navigation'
 import { Button } from '@/shared/components/ui/button'
 import { ArrowLeft } from 'lucide-react'
@@ -12,8 +13,8 @@ export default async function AnalyticsPage() {
     redirect('/login')
   }
 
-  // Only supervisor and admin can view analytics
-  if (session.role !== 'supervisor' && session.role !== 'admin') {
+  // Only supervisor, admin, and auditor can view analytics
+  if (session.role !== 'supervisor' && session.role !== 'admin' && session.role !== 'auditor') {
     redirect('/dashboard')
   }
 
@@ -41,6 +42,9 @@ export default async function AnalyticsPage() {
 
         {/* Analytics View */}
         <StageAnalyticsView />
+
+        {/* EPIC 12: Auditor read-only stage history */}
+        <AuditorHistoryView />
       </div>
     </div>
   )

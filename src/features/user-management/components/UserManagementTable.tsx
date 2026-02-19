@@ -74,6 +74,8 @@ export default function UserManagementTable({ users, wards = [] }: UserManagemen
                 return 'bg-blue-900/30 text-blue-400 border-blue-900/50'
             case 'nurse':
                 return 'bg-green-900/30 text-green-400 border-green-900/50'
+            case 'auditor':
+                return 'bg-amber-900/30 text-amber-400 border-amber-900/50'
             default:
                 return 'bg-zinc-800 text-zinc-400 border-zinc-700'
         }

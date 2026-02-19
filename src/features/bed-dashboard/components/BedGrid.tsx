@@ -25,7 +25,7 @@ interface BedGridProps {
   lastUpdatedStageId?: string | null
   errorByBedId?: Record<string, string>
   isRefreshing?: boolean
-  undoState?: { bedId: string; prevStageId: string; timer: number } | null
+  undoState?: { bedId: string; timer: number } | null
   onUndo?: () => void
 }
 
@@ -168,6 +168,9 @@ export function BedGrid({
               showUpdated={lastUpdatedBedId === bed.id && lastUpdatedStageId !== null}
               errorMessage={errorByBedId[bed.id] || null}
               searchQuery={searchQuery}
+              showUndo={undoState?.bedId === bed.id}
+              onUndo={undoState?.bedId === bed.id ? onUndo : undefined}
+              undoTimerSeconds={undoState?.bedId === bed.id ? undoState.timer : 0}
             />
           ))}
         </div>

@@ -25,7 +25,6 @@ export function BedDashboardClient({ initialData }: BedDashboardClientProps) {
   // Undo state: which bed can be undone, timer, and previous stage info
   const [undoState, setUndoState] = useState<{
     bedId: string;
-    prevStageId: string;
     timer: number;
   } | null>(null);
   const undoTimerRef = useRef<NodeJS.Timeout | null>(null);
@@ -65,7 +64,7 @@ export function BedDashboardClient({ initialData }: BedDashboardClientProps) {
   // Watch for stage update to enable Undo
   useEffect(() => {
     if (lastUpdatedBedId && lastUpdatedStageId) {
-      setUndoState({ bedId: lastUpdatedBedId, prevStageId: lastUpdatedStageId, timer: 30 });
+      setUndoState({ bedId: lastUpdatedBedId, timer: 30 });
       if (undoTimerRef.current) clearInterval(undoTimerRef.current);
       undoTimerRef.current = setInterval(() => {
         setUndoState(prev => {
@@ -90,16 +89,16 @@ export function BedDashboardClient({ initialData }: BedDashboardClientProps) {
     if (!undoState) return;
     setUndoError(null);
     try {
-      const res = await fetch('/src/features/bed-dashboard/api/undo', {
+      const res = await fetch('/api/bed-dashboard/undo', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ bedId: undoState.bedId, prevStageId: undoState.prevStageId }),
+        body: JSON.stringify({ bedId: undoState.bedId }),
       });
       const data = await res.json();
       if (!data.success) {
         setUndoError(data.error || 'Undo failed');
       }
-    } catch (e) {
+    } catch {
       setUndoError('Undo failed');
     }
     setUndoState(null);
@@ -171,6 +170,8 @@ export function BedDashboardClient({ initialData }: BedDashboardClientProps) {
         errorByBedId={errorByBedId}
         isRefreshing={isLoading}
         searchQuery={searchQuery}
+        undoState={undoState}
+        onUndo={handleUndo}
       />
       {undoError && (
         <div className="text-center text-xs text-red-500 font-semibold mt-2">{undoError}</div>

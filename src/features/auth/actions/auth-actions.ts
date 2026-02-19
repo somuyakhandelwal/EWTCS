@@ -166,6 +166,8 @@ export async function login(prevState: unknown, formData: FormData) {
             redirect('/admin')
         } else if (user.role === 'supervisor') {
             redirect('/supervisor')
+        } else if (user.role === 'auditor') {
+            redirect('/analytics')
         } else {
             redirect('/dashboard')
         }
