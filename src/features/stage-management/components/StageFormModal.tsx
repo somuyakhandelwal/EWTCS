@@ -2,21 +2,16 @@
 import { useState } from 'react';
 import type { Stage } from '../types/stage.types';
 import { createStage, updateStage } from '../actions/stage-actions';
+import { getStageColorClasses, getSupportedStageColors } from '@/shared/utils/stage-colors';
 
-const COLORS = ['yellow', 'orange', 'blue', 'purple', 'green', 'grey'];
-const COLOR_PREVIEW: Record<string, string> = {
-  yellow: 'bg-yellow-400',
-  orange: 'bg-orange-400',
-  blue:   'bg-blue-500',
-  purple: 'bg-purple-400',
-  green:  'bg-green-400',
-  grey:   'bg-gray-400',
-};
+const COLORS = getSupportedStageColors();
+const normalizeStageColor = (value?: string) =>
+  value?.toLowerCase() === 'grey' ? 'gray' : value;
 
 export function StageFormModal({ stage, onClose, onSaved }:
   { stage?: Stage; onClose: () => void; onSaved: (s: Stage) => void }) {
   const [name, setName] = useState(stage?.name ?? '');
-  const [color, setColor] = useState(stage?.color_code ?? 'blue');
+  const [color, setColor] = useState(normalizeStageColor(stage?.color_code) ?? 'blue');
   const [desc, setDesc] = useState(stage?.description ?? '');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
@@ -63,12 +58,22 @@ export function StageFormModal({ stage, onClose, onSaved }:
         {/* Color */}
         <label className='block text-sm font-semibold text-gray-700 mb-2'>Color</label>
         <div className='flex gap-3 mb-4'>
-          {COLORS.map(c => (
-            <button key={c} onClick={() => setColor(c)} title={c}
-              className={`w-9 h-9 rounded-full border-4 ${COLOR_PREVIEW[c]} ${
-                color === c ? 'border-blue-600 scale-110' : 'border-transparent'
-              } transition-all`} />
-          ))}
+          {COLORS.map(c => {
+            const colorClasses = getStageColorClasses(c);
+            return (
+              <button
+                key={c}
+                type="button"
+                onClick={() => setColor(c)}
+                title={c}
+                aria-label={`Select ${c} stage color`}
+                aria-pressed={color === c}
+                className={`w-9 h-9 rounded-full border-2 ${colorClasses.bg} ${colorClasses.border} ${
+                  color === c ? 'ring-2 ring-blue-600 ring-offset-2 ring-offset-white scale-110' : ''
+                } transition-all`}
+              />
+            );
+          })}
         </div>
 
         {/* Description */}

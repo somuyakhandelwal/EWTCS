@@ -72,6 +72,24 @@ export default function LoginPage() {
                                 {state.message}
                             </div>
                         )}
+
+                        {/* US-5.3: Kiosk Mode option — for dedicated nurse workstations */}
+                        <div className="flex items-start gap-3 pt-1">
+                            <input
+                                id="kioskMode"
+                                name="kioskMode"
+                                type="checkbox"
+                                className="mt-0.5 h-4 w-4 rounded border-white/20 bg-black/50 accent-emerald-500 cursor-pointer"
+                            />
+                            <div>
+                                <Label htmlFor="kioskMode" className="text-zinc-300 font-normal cursor-pointer">
+                                    Enable Kiosk Mode
+                                </Label>
+                                <p className="text-[11px] text-zinc-500 mt-0.5">
+                                    Session never expires — for dedicated nurse workstations only
+                                </p>
+                            </div>
+                        </div>
                     </CardContent>
                     <CardFooter>
                         <SubmitButton />

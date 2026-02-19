@@ -1,10 +1,12 @@
 'use server'
 
 import { z } from 'zod'
-import { createSession, deleteSession } from '@/features/auth/lib/session'
+import { createSession, deleteSession, type KioskOptions } from '@/features/auth/lib/session'
 import pool from '@/shared/lib/db'
 import bcrypt from 'bcrypt'
 import { redirect } from 'next/navigation'
+import { headers } from 'next/headers'
+import { createKioskSession } from '@/features/auth/lib/kiosk'
 
 const loginSchema = z.object({
     username: z.string().min(1, 'Username is required'),
@@ -72,7 +74,18 @@ export async function login(prevState: unknown, formData: FormData) {
             [user.id]
         )
 
-        await createSession(user.id, user.username, user.role)
+        // US-5.3: Kiosk mode — long-lived session bound to the login IP
+        const isKiosk = formData.get('kioskMode') === 'on'
+        let kioskOpts: KioskOptions | undefined
+        if (isKiosk) {
+            const headerStore = await headers()
+            const boundIp = headerStore.get('x-forwarded-for')?.split(',')[0].trim()
+                ?? headerStore.get('x-real-ip')
+                ?? 'unknown'
+            const kioskSessionId = await createKioskSession(user.id, boundIp)
+            kioskOpts = { isKiosk: true, kioskIp: boundIp, kioskSessionId }
+        }
+        await createSession(user.id, user.username, user.role, kioskOpts)
 
         // Redirect based on role
         if (user.role === 'admin') {
