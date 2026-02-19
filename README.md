@@ -364,12 +364,17 @@ Full environment variable reference: See [CONFIGURATION.md](CONFIGURATION.md)
 - [x] CSV export functionality for analysts
 - [x] Performance-optimized queries with indexes
 
-### 🔄 Phase 2: Real-Time Updates & Advanced Features (IN PROGRESS)
+### 🔄 Phase 2: Real-Time Updates & Advanced Features (PARTIALLY COMPLETE)
 
-- [ ] Real-time updates with WebSocket/polling (US-1.2)
+- [x] Real-time updates with intelligent polling (US-1.2)
+- [x] Search by bed number and stage name with highlighting (US-1.2)
+- [x] Connection status indicator with auto-reconnect
+- [x] Disposition bottleneck tracking with delay reasons (US-1.6, US-17)
+- [x] Bed history modal with full stage transition log
+- [x] Admin pages for bed and stage management (US-6.1)
+- [x] Stage color configuration (EPIC 4)
 - [ ] Push notifications for delayed beds
 - [ ] Enhanced mobile responsiveness
-- [ ] Advanced filtering and search capabilities
 - [ ] Batch operations for multiple beds
 
 ### ⏳ Phase 3: AI & Reporting (PLANNED)

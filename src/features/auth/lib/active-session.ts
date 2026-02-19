@@ -38,5 +38,17 @@ export async function verifyActiveSession() {
         return null
     }
 
+    // US-5.3: Kiosk session — verify it hasn't been revoked by an admin
+    if (session.isKiosk && session.kioskSessionId) {
+        const { rows: kioskRows } = await pool.query(
+            'SELECT 1 FROM kiosk_sessions WHERE id = $1 AND is_active = true',
+            [session.kioskSessionId]
+        )
+        if (kioskRows.length === 0) {
+            await deleteSession()
+            return null
+        }
+    }
+
     return session
 }

@@ -13,12 +13,16 @@ interface User {
     username: string
     role: string
     is_active: boolean
+    ward_id?: string | null
 }
+
+interface Ward { id: string; name: string; code: string }
 
 interface EditUserDialogProps {
     user: User
     isOpen: boolean
     onClose: () => void
+    wards?: Ward[]
 }
 
 function SubmitButton() {
@@ -34,7 +38,7 @@ function SubmitButton() {
     )
 }
 
-export default function EditUserDialog({ user, isOpen, onClose }: EditUserDialogProps) {
+export default function EditUserDialog({ user, isOpen, onClose, wards = [] }: EditUserDialogProps) {
     const [state, action] = useActionState(updateUser, undefined)
     const formRef = useRef<HTMLFormElement>(null)
 
@@ -142,6 +146,25 @@ export default function EditUserDialog({ user, isOpen, onClose }: EditUserDialog
                             <p className="text-sm text-red-500">{state.errors.role}</p>
                         )}
                     </div>
+
+                    {wards.length > 0 && (
+                        <div className="space-y-2">
+                            <Label htmlFor="wardId" className="text-zinc-200">
+                                Ward Assignment <span className="text-zinc-500 font-normal">(Optional)</span>
+                            </Label>
+                            <select
+                                id="wardId"
+                                name="wardId"
+                                defaultValue={user.ward_id ?? ''}
+                                className="w-full px-3 py-2 bg-black/50 border border-zinc-700 rounded-md text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+                            >
+                                <option value="">No ward assigned</option>
+                                {wards.map(w => (
+                                    <option key={w.id} value={w.id}>{w.name} ({w.code})</option>
+                                ))}
+                            </select>
+                        </div>
+                    )}
 
                     {state?.message && (
                         <div className={`p-3 rounded-md text-sm flex items-center gap-2 ${

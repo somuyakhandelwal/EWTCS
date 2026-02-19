@@ -2,6 +2,7 @@
 
 import { useState, useCallback } from "react"
 import type { Stage } from "../types/bed"
+import { getStageColorClasses } from '@/shared/utils/stage-colors'
 
 interface SupervisorOverrideModalProps {
   isOpen: boolean
@@ -26,6 +27,7 @@ export function SupervisorOverrideModal({
 }: SupervisorOverrideModalProps) {
   const [overrideReason, setOverrideReason] = useState("")
   const [error, setError] = useState<string | null>(null)
+  const colorClasses = getStageColorClasses(toStage?.colorCode)
 
   const handleApprove = useCallback(() => {
     if (!overrideReason.trim()) {
@@ -76,7 +78,7 @@ export function SupervisorOverrideModal({
           </div>
           <div className="flex justify-between">
             <span className="text-gray-600">To:</span>
-            <span className="font-medium" style={{ color: toStage?.colorCode || "gray" }}>
+            <span className={`font-medium ${colorClasses.text}`}>
               {toStage?.name}
             </span>
           </div>

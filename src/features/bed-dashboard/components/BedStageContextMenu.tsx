@@ -14,6 +14,7 @@ interface BedStageContextMenuProps {
   updatingStageId: string | null
   validNextStages?: string[] // Stages without override requirement
   overrideRequiredStages?: string[] // Stages requiring supervisor approval
+  error?: string | null // Error message when loading stages fails
   onStageSelect: (bedId: string, stageId: string) => void
   onClose: () => void
 }
@@ -27,6 +28,7 @@ export function BedStageContextMenu({
   updatingStageId,
   validNextStages = [],
   overrideRequiredStages = [],
+  error,
   onStageSelect,
   onClose,
 }: BedStageContextMenuProps) {
@@ -66,9 +68,10 @@ export function BedStageContextMenu({
     <ContextMenu
       isOpen={isOpen}
       position={position}
-      items={items}
+      items={error ? [] : items}
       onClose={onClose}
       header={`Update ${bed.bedNumber}`}
+      error={error}
     />
   )
 }

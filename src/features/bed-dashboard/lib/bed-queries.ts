@@ -152,3 +152,30 @@ export async function getUserWard(userId: string): Promise<string | null> {
     throw new Error('Failed to verify access permissions')
   }
 }
+
+/**
+ * Verify ward-level access for a user/bed pair.
+ * Returns null when access is granted, or an error string to return to the client.
+ * Extracted here to keep action files under 200 lines.
+ */
+export async function checkWardAccess(
+  userId: string,
+  bedId: string,
+  role: string
+): Promise<string | null> {
+  const userWard = await getUserWard(userId)
+  const bedWard = await getBedWard(bedId)
+
+  if (!userWard && bedWard && role !== 'admin')
+    return 'Your user account does not have a ward assignment. Contact your administrator.'
+
+  if (userWard && !bedWard && role !== 'admin')
+    return 'This bed does not belong to any ward. Contact your administrator.'
+
+  const allowed =
+    (!userWard && !bedWard) ||
+    (userWard && bedWard && userWard === bedWard) ||
+    role === 'admin'
+
+  return allowed ? null : 'You do not have permission to update this bed. Access is restricted to your assigned ward.'
+}
