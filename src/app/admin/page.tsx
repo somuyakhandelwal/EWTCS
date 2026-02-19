@@ -1,5 +1,5 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/shared/components/ui/card"
-import { Shield, Users, Settings, Activity, Bed, BarChart3 } from "lucide-react"
+import { Shield, Users, Settings, Activity, Bed, BarChart3, Clock, Layers } from "lucide-react"
 import { LogoutButton } from "@/features/auth/components/LogoutButton"
 import { redirect } from "next/navigation"
 import Link from "next/link"
@@ -128,6 +128,42 @@ export default async function AdminDashboard() {
                                         </h3>
                                         <p className="text-sm text-zinc-500 mt-1">
                                             Stage flow and turnaround time analytics
+                                        </p>
+                                    </div>
+                                </div>
+                            </Link>
+                            <Link
+                                href="/admin/stages"
+                                className="p-4 rounded-lg bg-black/30 border border-zinc-800 hover:border-zinc-700 hover:bg-black/50 transition-all group"
+                            >
+                                <div className="flex items-start gap-3">
+                                    <div className="p-2 bg-purple-900/20 border border-purple-900/50 rounded-lg group-hover:bg-purple-900/30 transition-colors">
+                                        <Layers className="h-5 w-5 text-purple-500" />
+                                    </div>
+                                    <div>
+                                        <h3 className="font-semibold text-white group-hover:text-purple-400 transition-colors">
+                                            Manage Stages
+                                        </h3>
+                                        <p className="text-sm text-zinc-500 mt-1">
+                                            Configure patient workflow stages
+                                        </p>
+                                    </div>
+                                </div>
+                            </Link>
+                            <Link
+                                href="/admin/shifts"
+                                className="p-4 rounded-lg bg-black/30 border border-zinc-800 hover:border-zinc-700 hover:bg-black/50 transition-all group"
+                            >
+                                <div className="flex items-start gap-3">
+                                    <div className="p-2 bg-teal-900/20 border border-teal-900/50 rounded-lg group-hover:bg-teal-900/30 transition-colors">
+                                        <Clock className="h-5 w-5 text-teal-500" />
+                                    </div>
+                                    <div>
+                                        <h3 className="font-semibold text-white group-hover:text-teal-400 transition-colors">
+                                            Shift Schedules
+                                        </h3>
+                                        <p className="text-sm text-zinc-500 mt-1">
+                                            Configure Morning, Evening &amp; Night shifts
                                         </p>
                                     </div>
                                 </div>

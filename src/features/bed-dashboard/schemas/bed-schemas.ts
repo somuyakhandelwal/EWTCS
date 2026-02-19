@@ -41,6 +41,8 @@ export const UpdateBedStageSchema = z.object({
   supervisorOverride: z.boolean().optional().default(false),
   overrideReason: z.string().max(500).optional(),
   notes: z.string().max(500).optional(),
+  /** US-8.2: Supervisor-provided shift ID to override auto-resolution for this log entry */
+  shiftOverrideId: z.string().uuid('Invalid shift ID').optional().nullable(),
 })
 
 export type CreateBedInput = z.infer<typeof CreateBedSchema>

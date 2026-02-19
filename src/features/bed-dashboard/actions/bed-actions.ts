@@ -111,11 +111,16 @@ export async function updateBedStage(input: UpdateBedStageInput): Promise<{
     }
 
     // Proceed with update
+    // US-8.2: Pass shift override fields — supervisor can tag the log with a specific
+    // shift instead of the auto-resolved one (e.g. during shift handover).
+    const canOverrideShift = session.role === 'supervisor' || session.role === 'admin'
     const updateResult = await updateBedStageInDB({
       bedId: result.data.bedId,
       toStageId: result.data.toStageId,
       changedByUserId: session.userId,
       notes: result.data.notes,
+      shiftOverrideId: canOverrideShift ? (result.data.shiftOverrideId ?? null) : null,
+      shiftOverrideByUserId: canOverrideShift && result.data.shiftOverrideId ? session.userId : null,
     })
 
     // BUG FIX #7: Log audit AFTER update with error handling
