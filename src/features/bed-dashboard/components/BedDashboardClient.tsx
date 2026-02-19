@@ -99,7 +99,7 @@ export function BedDashboardClient({ initialData }: BedDashboardClientProps) {
       if (!data.success) {
         setUndoError(data.error || 'Undo failed');
       }
-    } catch (e) {
+    } catch {
       setUndoError('Undo failed');
     }
     setUndoState(null);
@@ -171,6 +171,8 @@ export function BedDashboardClient({ initialData }: BedDashboardClientProps) {
         errorByBedId={errorByBedId}
         isRefreshing={isLoading}
         searchQuery={searchQuery}
+        undoState={undoState}
+        onUndo={handleUndo}
       />
       {undoError && (
         <div className="text-center text-xs text-red-500 font-semibold mt-2">{undoError}</div>

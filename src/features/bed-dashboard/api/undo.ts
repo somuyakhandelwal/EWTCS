@@ -13,7 +13,7 @@ export async function POST(req: NextRequest) {
       return NextResponse.json(result, { status: 400 })
     }
     return NextResponse.json(result)
-  } catch (error) {
+  } catch {
     return NextResponse.json({ success: false, error: 'Server error' }, { status: 500 })
   }
 }
