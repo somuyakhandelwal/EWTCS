@@ -2,6 +2,7 @@
 // Delay Attribution Breakdown Component
 // Epic 3: Time Tracking & Stage Logging (US-3.4)
 // Shows delay totals split by Emergency Staff vs Hospital Capacity
+// Includes SVG donut chart (AC: "Pie chart or breakdown is available")
 
 import { memo } from 'react'
 import { AlertTriangle, Building2, HelpCircle } from 'lucide-react'
@@ -9,6 +10,7 @@ import { Card } from '@/shared/components/ui/card'
 import { cn } from '@/shared/lib/utils'
 import { ATTRIBUTION_COLORS } from '../lib/delay-attribution-config'
 import type { DelayAttributionStats } from '../lib/stage-analytics'
+import { AttributionDonutChart } from './AttributionDonutChart'
 
 interface Props {
   stats: DelayAttributionStats[] | null
@@ -59,6 +61,36 @@ export const StageAnalyticsAttribution = memo(function StageAnalyticsAttribution
         </p>
       ) : (
         <div className="space-y-4">
+          {/* Donut chart + legend row */}
+          <div className="flex items-center gap-6">
+            <div className="shrink-0">
+              <AttributionDonutChart stats={stats} />
+            </div>
+
+            {/* Legend */}
+            <div className="flex flex-col gap-2 min-w-0">
+              {stats
+                .filter((s) => s.totalDelayedMs > 0)
+                .map((stat) => {
+                  const colors = ATTRIBUTION_COLORS[stat.attribution]
+                  return (
+                    <div key={stat.attribution} className="flex items-center gap-2 min-w-0">
+                      <span
+                        className={cn('h-3 w-3 rounded-sm shrink-0', colors.bar)}
+                        aria-hidden="true"
+                      />
+                      <span className={cn('text-xs font-medium truncate', colors.text)}>
+                        {stat.label}
+                      </span>
+                      <span className={cn('text-xs font-bold tabular-nums ml-auto pl-2', colors.text)}>
+                        {stat.percentage}%
+                      </span>
+                    </div>
+                  )
+                })}
+            </div>
+          </div>
+
           {/* Breakdown bars */}
           {stats.map((stat) => {
             const colors = ATTRIBUTION_COLORS[stat.attribution]

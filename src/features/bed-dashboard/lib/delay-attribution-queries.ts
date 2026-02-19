@@ -20,9 +20,10 @@ export interface DelayAttributionRow {
   incidentCount: number
 }
 
+// pg returns INTEGER and BIGINT as strings — raw row before coercion
 interface RawDelayRow {
-  stageDisplayOrder: number
-  durationMs: number
+  stageDisplayOrder: string
+  durationMs: string
   reason: DispositionDelayReason | null
 }
 
@@ -55,8 +56,10 @@ export async function getDelaysByAttribution(
     }
 
     // Fetch every completed stage stay that exceeded the threshold.
-    // We join disposition_delay_reasons (LEFT JOIN) so Stage-5 rows carry
-    // the nurse-recorded reason when one exists.
+    // We join disposition_delay_reasons (LEFT JOIN LATERAL) so Stage-5 rows carry
+    // the nurse-recorded reason. We match by bed_stage_log_id when available,
+    // otherwise fall back to bed_id — and we do NOT filter by resolved_at because
+    // historical (already-resolved) reasons must also count for reports.
     const result = await query<RawDelayRow>(
       `
       SELECT
@@ -69,8 +72,7 @@ export async function getDelaysByAttribution(
       LEFT JOIN LATERAL (
         SELECT reason
         FROM disposition_delay_reasons
-        WHERE bed_id = bsl.bed_id
-          AND resolved_at IS NULL
+        WHERE (bed_stage_log_id = bsl.id OR bed_id = bsl.bed_id)
         ORDER BY recorded_at DESC
         LIMIT 1
       ) ddr ON true
@@ -83,21 +85,24 @@ export async function getDelaysByAttribution(
     )
 
     // Aggregate in-process (avoids a complex GROUP BY in SQL while keeping
-    // the attribution logic in one place — the config file)
+    // the attribution logic in one place — the config file).
+    // Coerce pg string results to numbers before arithmetic.
     const totals = new Map<
       DelayAttribution,
       { totalDelayedMs: number; incidentCount: number }
     >()
 
     for (const row of result.rows) {
+      const stageOrder = parseInt(row.stageDisplayOrder, 10)
+      const durationMs = parseFloat(row.durationMs)
       const attr = getAttributionForDelay(
-        row.stageDisplayOrder,
+        stageOrder,
         row.reason,
         ATTRIBUTION_CONFIG
       )
       const existing = totals.get(attr) ?? { totalDelayedMs: 0, incidentCount: 0 }
       totals.set(attr, {
-        totalDelayedMs: existing.totalDelayedMs + row.durationMs,
+        totalDelayedMs: existing.totalDelayedMs + durationMs,
         incidentCount: existing.incidentCount + 1,
       })
     }
