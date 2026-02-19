@@ -1,4 +1,4 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest'
+import { describe, it, expect, vi } from 'vitest'
 
 describe('US-1.3 Acceptance Criteria - Integration Tests', () => {
   describe('AC-1: Elapsed time displays in hours and minutes (e.g., "2h 45m")', () => {
