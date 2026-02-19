@@ -99,8 +99,7 @@ export function BedDashboardClient({ initialData }: BedDashboardClientProps) {
     try {
       const result = await markBedClean(bedId)
       if (!result.success) {
-        // eslint-disable-next-line no-console
-        console.error('Mark clean failed:', result.error)
+          console.error('Mark clean failed:', result.error)
       }
       handleRefresh()
     } catch {

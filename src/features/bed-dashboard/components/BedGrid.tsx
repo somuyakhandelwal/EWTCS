@@ -53,6 +53,7 @@ export function BedGrid({
   undoState,
   onUndo,
 }: BedGridProps) {
+  const [showDelayedOnly, setShowDelayedOnly] = useState(false)
   const [menuState, setMenuState] = useState<{
     bedId: string
     position: { x: number; y: number }
