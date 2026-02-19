@@ -118,8 +118,9 @@ export async function verifySession() {
 /**
  * US-5.2 AC-5: Renew session cookie on every activity.
  * Resets both the JWT expiry and the inactivity timer.
+ * Returns the new JWT string.
  */
-async function renewSession(sessionData: SessionPayload) {
+export async function renewSession(sessionData: SessionPayload): Promise<string> {
     const expiresAt = new Date(Date.now() + SESSION_MAX_AGE_MS)
 
     const jwtPayload: Record<string, unknown> = {
@@ -139,18 +140,24 @@ async function renewSession(sessionData: SessionPayload) {
     const newSession = await new SignJWT(jwtPayload)
         .setProtectedHeader({ alg: 'HS256' })
         .setIssuedAt()
-        .setExpirationTime('12h')
+        .setExpirationTime(sessionData.isKiosk ? '1y' : '12h')
         .sign(encodedKey)
 
-    const cookieStore = await cookies()
-    cookieStore.set('session', newSession, {
-        httpOnly: true,
-        secure: process.env.NODE_ENV === 'production',
-        expires: expiresAt,
-        maxAge: SESSION_MAX_AGE_MS / 1000,
-        sameSite: 'lax',
-        path: '/',
-    })
+    try {
+        const cookieStore = await cookies()
+        cookieStore.set('session', newSession, {
+            httpOnly: true,
+            secure: process.env.NODE_ENV === 'production',
+            expires: expiresAt,
+            maxAge: SESSION_MAX_AGE_MS / 1000,
+            sameSite: 'lax',
+            path: '/',
+        })
+    } catch {
+        // Cookie modification might not be allowed in all contexts (e.g. some RSCs)
+    }
+
+    return newSession
 }
 
 export async function deleteSession() {
