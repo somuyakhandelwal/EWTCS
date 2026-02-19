@@ -19,6 +19,12 @@ export const metadata: Metadata = {
   description: "Real-time digital dashboard for hospital emergency ward management with AI-powered daily reports",
 };
 
+export const viewport = {
+  width: 'device-width',
+  initialScale: 1,
+  maximumScale: 1,
+}
+
 if (typeof window === "undefined") {
   void initializeSystem();
 }

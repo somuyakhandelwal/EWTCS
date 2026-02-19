@@ -1,6 +1,6 @@
 "use client"
 
-import { useEffect, useMemo } from "react"
+import { useEffect, useMemo, useState } from "react"
 import { cn } from "@/shared/lib/utils"
 
 export interface ContextMenuItem {
@@ -84,20 +84,42 @@ export function ContextMenu({
     return () => document.removeEventListener("keydown", handleKeyDown)
   }, [isOpen, onClose])
 
+  // Detect mobile viewport so the menu renders as a bottom sheet on small screens
+  const [isMobile, setIsMobile] = useState(() =>
+    typeof window !== 'undefined' ? window.innerWidth < 640 : false
+  )
+  useEffect(() => {
+    const handler = () => setIsMobile(window.innerWidth < 640)
+    window.addEventListener('resize', handler)
+    return () => window.removeEventListener('resize', handler)
+  }, [])
+
   if (!isOpen || !clampedPosition) {
     return null
   }
 
   return (
-    <div className="fixed inset-0 z-50" onMouseDown={onClose}>
+    <div
+      className={cn('fixed inset-0 z-50', isMobile && 'flex items-end justify-center')}
+      onMouseDown={!isMobile ? onClose : undefined}
+      onTouchStart={isMobile ? onClose : undefined}
+    >
       <div
-        className="absolute min-w-48 rounded-md border border-zinc-800 bg-zinc-950/95 p-2 shadow-lg backdrop-blur"
-        style={{ top: clampedPosition.y, left: clampedPosition.x }}
-        onMouseDown={(event) => event.stopPropagation()}
+        className={cn(
+          isMobile
+            ? 'w-full rounded-t-2xl border-t border-zinc-800 bg-zinc-950 px-4 pb-10 shadow-2xl'
+            : 'absolute min-w-48 rounded-md border border-zinc-800 bg-zinc-950/95 p-2 shadow-lg backdrop-blur'
+        )}
+        style={!isMobile ? { top: clampedPosition.y, left: clampedPosition.x } : undefined}
+        onMouseDown={!isMobile ? (event) => event.stopPropagation() : undefined}
+        onTouchStart={isMobile ? (event) => event.stopPropagation() : undefined}
         role="menu"
       >
+        {isMobile && <div className="mx-auto my-3 h-1.5 w-12 rounded-full bg-zinc-600" />}
         {header && (
-          <div className="px-2 py-1 text-xs text-zinc-500">{header}</div>
+          <div className={cn('py-1', isMobile ? 'pb-2 text-sm font-semibold text-zinc-200' : 'px-2 text-xs text-zinc-500')}>
+            {header}
+          </div>
         )}
         <div className="space-y-1">
           {items.map((item) => (
@@ -105,7 +127,8 @@ export function ContextMenu({
               key={item.id}
               type="button"
               className={cn(
-                "flex w-full items-center gap-2 rounded px-2 py-1.5 text-left text-sm text-zinc-200 hover:bg-zinc-800/70 disabled:cursor-not-allowed disabled:opacity-50",
+                'flex w-full items-center gap-2 rounded text-left text-zinc-200 disabled:cursor-not-allowed disabled:opacity-50',
+                isMobile ? 'px-0 py-3 text-base active:bg-zinc-800/50' : 'px-2 py-1.5 text-sm hover:bg-zinc-800/70',
                 item.className
               )}
               disabled={item.disabled}

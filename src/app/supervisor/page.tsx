@@ -17,16 +17,16 @@ export default async function SupervisorDashboard() {
     const bedGridResult = await getBedGridData()
 
     return (
-        <div className="min-h-screen bg-black text-foreground p-8">
-            <div className="max-w-7xl mx-auto space-y-8">
-                <div className="flex items-center justify-between">
+        <div className="min-h-screen bg-black text-foreground p-3 sm:p-8">
+            <div className="max-w-7xl mx-auto space-y-6 sm:space-y-8">
+                <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
                     <div>
-                        <h1 className="text-3xl font-bold tracking-tight text-white">
+                        <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-white">
                             Supervisor {session.username}
                         </h1>
-                        <p className="text-zinc-400">Ward performance and delay monitoring</p>
+                        <p className="text-zinc-400 text-sm">Ward performance and delay monitoring</p>
                     </div>
-                    <div className="flex items-center gap-6">
+                    <div className="flex items-center gap-4 self-end sm:self-auto">
                         <div className="p-2 bg-amber-900/20 border border-amber-900/50 rounded-full">
                             <ClipboardList className="h-6 w-6 text-amber-500" />
                         </div>
