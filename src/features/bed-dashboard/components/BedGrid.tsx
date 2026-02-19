@@ -7,6 +7,7 @@ import { BedStageContextMenu } from './BedStageContextMenu'
 import { BottleneckPanel } from './BottleneckPanel'
 import { BedGridStats } from './BedGridStats'
 import { BedGridHeader } from './BedGridHeader'
+import { BedGridFooter } from './BedGridFooter'
 import { useBedFilter } from '../hooks/useBedFilter'
 import type { BedGridData, BedWithElapsedTime, DispositionDelayReason } from '../types/bed'
 import { getBedStatistics } from '../lib/utils'
@@ -193,11 +194,7 @@ export function BedGrid({
         />
       )}
 
-      <div className="text-center text-xs text-zinc-500">
-        Showing {displayedBeds.length} of {data.beds.length} beds
-        {showDelayedOnly && ' · delayed only'}
-        {sortOrder === 'desc' && ' · sorted by delay'}
-      </div>
+      <BedGridFooter displayedCount={displayedBeds.length} totalCount={data.beds.length} showDelayedOnly={showDelayedOnly} sortOrder={sortOrder} />
     </div>
   )
 }
