@@ -18,10 +18,6 @@ export const ALLOWED_TABLES = new Set([
   'disposition_delay_reasons',    // migration 011/012
   'patient_admissions',           // migration 013
   'kiosk_sessions',               // migration 014
-  'stage_delay_thresholds',       // migration 014
-  'system_settings',              // migration 016
-  'ward_access_control',          // migration 006
-  'pgmigrations',                 // internal
 ])
 
 /**
@@ -52,8 +48,6 @@ export const ALLOWED_COLUMNS = new Set([
   'display_order',
   'color_code',
   'description',
-  'key',
-  'value',
 ])
 
 /**
@@ -88,31 +82,5 @@ export function validateColumnName(column: string): void {
 export function validateOrderBy(orderBy: string): void {
   if (orderBy && !orderBy.match(/^[a-zA-Z_][a-zA-Z0-9_]*\s+(ASC|DESC)?$/i)) {
     throw new Error(`Invalid ORDER BY clause: "${orderBy}"`)
-  }
-}
-
-/**
- * Basic heuristic to detect potential SQL injection in WHERE clauses.
- * Note: Always prefer parameterized queries. This is a fallback for simple filters.
- * @throws Error if suspicious patterns are detected
- */
-export function validateWhereClause(where: string): void {
-  if (!where) return;
-
-  const suspicious = [
-    /;\s*/i,           // Statement terminators
-    /--/i,             // Comment prefixes
-    /\/\*/i,           // Comment prefixes
-    /DROP\s+/i,        // DDL
-    /DELETE\s+FROM/i,  // Dangerous DML
-    /TRUNCATE\s+/i,    // Dangerous DML
-    /UPDATE\s+.*SET/i, // Dangerous DML
-    /UNION\s+SELECT/i, // Union based injection
-  ];
-
-  for (const pattern of suspicious) {
-    if (pattern.test(where)) {
-      throw new Error(`Suspicious pattern detected in WHERE clause: "${where}"`);
-    }
   }
 }

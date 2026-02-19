@@ -7,7 +7,6 @@ import type { BedGridData } from '../types/bed'
 import { getUserWard, getBedWard } from '../lib/bed-queries'
 import { requireRole } from '@/shared/lib/auth'
 import { categorizeStagesForTransition } from '../lib/stage-validation'
-import { getDefaultDelayThreshold } from '@/shared/actions/settings-actions'
 
 /**
  * Get all beds with current status and elapsed time
@@ -24,31 +23,22 @@ export async function getBedGridData(): Promise<{
 
     logger.info('Fetching bed grid data')
 
+    const delayThresholdMs = config.alert.delayThresholdMs
 
-    // Fetch beds, stages, and default threshold
-    const [beds, stages, defaultThreshold] = await Promise.all([
-      getBedsWithElapsedTime(),
+    // Fetch beds and stages in parallel
+    const [beds, stages] = await Promise.all([
+      getBedsWithElapsedTime(delayThresholdMs),
       getAllStages(),
-      getDefaultDelayThreshold(),
     ])
 
-
-    const bottleneckCount = beds.filter(b => b.isDispositionBottleneck).length;
-
-    // Build per-stage delay thresholds (ms) from stages array
-    const delayThresholds: Record<string, number> = {};
-    for (const stage of stages) {
-      // @ts-expect-error: delay_threshold_minutes might be added to Stage type later
-      delayThresholds[stage.id] = (stage.delay_threshold_minutes ?? defaultThreshold) * 60 * 1000;
-    }
+    const bottleneckCount = beds.filter(b => b.isDispositionBottleneck).length
 
     const data: BedGridData = {
       beds,
       stages,
-      delayThresholds,
-      delayThresholdMs: defaultThreshold * 60 * 1000,
+      delayThresholdMs,
       bottleneckCount,
-    };
+    }
 
     logger.info('Bed grid data fetched successfully', {
       bedCount: beds.length,
@@ -79,7 +69,8 @@ export async function getDelayedBeds(): Promise<{
   error?: string
 }> {
   try {
-    const allBeds = await getBedsWithElapsedTime()
+    const delayThresholdMs = config.alert.delayThresholdMs
+    const allBeds = await getBedsWithElapsedTime(delayThresholdMs)
     const delayedBeds = allBeds.filter(bed => bed.isDelayed)
 
     logger.info('Delayed beds fetched', { count: delayedBeds.length })
@@ -111,7 +102,21 @@ export async function getValidTransitionsForBed(bedId: string): Promise<{
   try {
     const session = await requireRole(['nurse', 'supervisor', 'admin'])
 
-    // Ward-level access control removed: all nurses can access all beds in Emergency Ward
+    // Verify user has access to this bed — mirrors the same logic in bed-actions.ts
+    const userWard = await getUserWard(session.userId)
+    const bedWard = await getBedWard(bedId)
+
+    const hasWardAccess =
+      session.role === 'admin' ||
+      (!userWard && !bedWard) ||
+      (userWard && bedWard && userWard === bedWard)
+
+    if (!hasWardAccess) {
+      return {
+        success: false,
+        error: 'Access denied to this bed',
+      }
+    }
 
     // Get the bed to find current stage
     const bed = await getBedById(bedId)
