@@ -51,6 +51,7 @@ export function BedGrid({
   const [isLoadingTransitions, setIsLoadingTransitions] = useState(false)
   const [menuError, setMenuError] = useState<string | null>(null)
 
+<<<<<<< feature/issue-14-search-bed-by-number
   // Memoize filtered beds to prevent unnecessary recalculation
   const displayedBeds = useMemo(() => {
     const base = showDelayedOnly ? data.beds.filter(b => b.isDelayed) : data.beds
@@ -64,12 +65,19 @@ export function BedGrid({
   }, [data.beds, showDelayedOnly, searchQuery])
 
   // Memoize statistics calculation
+=======
+  const displayedBeds = useMemo(
+    () => showDelayedOnly ? data.beds.filter(bed => bed.isDelayed) : data.beds,
+    [data.beds, showDelayedOnly]
+  )
+>>>>>>> main
   const stats = useMemo(() => getBedStatistics(data.beds), [data.beds])
 
   const toggleFilter = useCallback(() => {
     setShowDelayedOnly(prev => !prev)
   }, [])
 
+<<<<<<< feature/issue-14-search-bed-by-number
   const handleOpenMenu = useCallback(
     async (event: MouseEvent<HTMLDivElement>, bed: BedWithElapsedTime) => {
       if (!onStageSelect) {
@@ -103,10 +111,32 @@ export function BedGrid({
         setOverrideRequiredStages([])
       } finally {
         setIsLoadingTransitions(false)
+=======
+  const openMenuForBed = useCallback(async (bedId: string, position: { x: number; y: number }) => {
+    setMenuState({ bedId, position })
+    setIsLoadingTransitions(true)
+    try {
+      const result = await getValidTransitionsForBed(bedId)
+      if (result.success) {
+        setValidNextStages(result.allowed || [])
+        setOverrideRequiredStages(result.requiresOverride || [])
+>>>>>>> main
       }
-    },
-    [onStageSelect]
-  )
+    } catch { /* fallback */ } finally { setIsLoadingTransitions(false) }
+  }, [])
+
+  // Right-click (desktop)
+  const handleOpenMenu = useCallback(async (event: MouseEvent<HTMLDivElement>, bed: BedWithElapsedTime) => {
+    if (!onStageSelect) return
+    event.preventDefault()
+    await openMenuForBed(bed.id, { x: event.clientX, y: event.clientY })
+  }, [onStageSelect, openMenuForBed])
+
+  // Tap (mobile) — centre of viewport for bottom-sheet positioning
+  const handleBedTap = useCallback(async (bed: BedWithElapsedTime) => {
+    if (!onStageSelect) return
+    await openMenuForBed(bed.id, { x: window.innerWidth / 2 - 96, y: window.innerHeight / 2 })
+  }, [onStageSelect, openMenuForBed])
 
   const handleCloseMenu = useCallback(() => {
     setMenuState(null)
@@ -184,7 +214,7 @@ export function BedGrid({
             <BedCard
               key={bed.id}
               bed={bed}
-              onClick={onBedClick}
+              onClick={onStageSelect ? handleBedTap : onBedClick}
               onContextMenu={handleOpenMenu}
               onReasonSelect={onReasonSelect}
               showUpdated={lastUpdatedBedId === bed.id && lastUpdatedStageId !== null}

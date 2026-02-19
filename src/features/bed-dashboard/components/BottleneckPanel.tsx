@@ -66,7 +66,7 @@ export function BottleneckPanel({ beds, onReasonRecorded }: BottleneckPanelProps
           <span className="ml-1 rounded-full bg-amber-500 px-2 py-0.5 text-xs font-bold text-black">
             {bottleneckBeds.length}
           </span>
-          <span className="text-xs text-amber-400/70">
+          <span className="hidden sm:inline text-xs text-amber-400/70">
             patient{bottleneckBeds.length !== 1 ? 's' : ''} waiting for beds upstairs
           </span>
         </div>
@@ -80,53 +80,38 @@ export function BottleneckPanel({ beds, onReasonRecorded }: BottleneckPanelProps
       {/* Expanded table */}
       {isExpanded && (
         <div className="border-t border-amber-700/30 px-4 pb-4">
-          <table className="w-full text-sm mt-3">
-            <thead>
-              <tr className="text-left text-xs text-amber-400/60 uppercase tracking-wider">
-                <th className="pb-2 pr-4 font-medium">Bed</th>
-                <th className="pb-2 pr-4 font-medium">Time in Stage</th>
-                <th className="pb-2 font-medium">Reason for Delay</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-amber-900/30">
-              {bottleneckBeds.map(bed => (
-                <tr key={bed.id}>
-                  <td className="py-2 pr-4 font-bold text-white">{bed.bedNumber}</td>
-                  <td className="py-2 pr-4 text-amber-300 font-mono">
-                    {formatElapsedTime(bed.dispositionElapsedMs)}
-                  </td>
-                  <td className="py-2">
-                    <div className="flex flex-col gap-1">
-                      <select
-                        className={cn(
-                          'rounded border border-amber-700/50 bg-zinc-900 px-2 py-1 text-xs text-zinc-200',
-                          'focus:outline-none focus:ring-1 focus:ring-amber-500',
-                          'disabled:opacity-50'
-                        )}
-                        value={bed.dispositionDelayReason ?? ''}
-                        disabled={savingBedId === bed.id}
-                        onChange={e =>
-                          handleReasonChange(bed.id, e.target.value as DispositionDelayReason)
-                        }
-                      >
-                        <option value="" disabled>
-                          Select reason…
-                        </option>
-                        {REASON_OPTIONS.map(([value, label]) => (
-                          <option key={value} value={value}>
-                            {label}
-                          </option>
-                        ))}
-                      </select>
-                      {errorByBedId[bed.id] && (
-                        <p className="text-[10px] text-red-400">{errorByBedId[bed.id]}</p>
-                      )}
-                    </div>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
+          <div className="mt-3 divide-y divide-amber-900/30">
+            {bottleneckBeds.map(bed => (
+              <div key={bed.id} className="py-2 flex flex-wrap items-start gap-x-4 gap-y-2 text-sm">
+                <span className="font-bold text-white min-w-[2.5rem]">{bed.bedNumber}</span>
+                <span className="text-amber-300 font-mono min-w-[4.5rem]">
+                  {formatElapsedTime(bed.dispositionElapsedMs)}
+                </span>
+                <div className="flex-1 min-w-[10rem] flex flex-col gap-1">
+                  <select
+                    className={cn(
+                      'w-full rounded border border-amber-700/50 bg-zinc-900 px-2 py-1 text-xs text-zinc-200',
+                      'focus:outline-none focus:ring-1 focus:ring-amber-500',
+                      'disabled:opacity-50'
+                    )}
+                    value={bed.dispositionDelayReason ?? ''}
+                    disabled={savingBedId === bed.id}
+                    onChange={e =>
+                      handleReasonChange(bed.id, e.target.value as DispositionDelayReason)
+                    }
+                  >
+                    <option value="" disabled>Select reason…</option>
+                    {REASON_OPTIONS.map(([value, label]) => (
+                      <option key={value} value={value}>{label}</option>
+                    ))}
+                  </select>
+                  {errorByBedId[bed.id] && (
+                    <p className="text-[10px] text-red-400">{errorByBedId[bed.id]}</p>
+                  )}
+                </div>
+              </div>
+            ))}
+          </div>
         </div>
       )}
     </div>
