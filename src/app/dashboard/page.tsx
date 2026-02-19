@@ -1,4 +1,4 @@
-import { verifyActiveSession } from "@/features/auth/lib/active-session"
+import { verifyActiveSession } from "@/shared/lib/active-session"
 import { getBedGridData } from "@/features/bed-dashboard/actions/bed-grid-actions"
 import { BedDashboardClient } from "@/features/bed-dashboard/components/BedDashboardClient"
 import { AlertTriangle } from "lucide-react"

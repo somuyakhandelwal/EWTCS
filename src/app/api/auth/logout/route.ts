@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server'
 import { cookies } from 'next/headers'
-import { deleteSession, verifySession } from '@/features/auth/lib/session'
-import { invalidateToken } from '@/features/auth/lib/auth-service'
+import { deleteSession, verifySession } from '@/shared/lib/session'
+import { invalidateToken } from '@/shared/lib/auth-service'
 import { logAudit } from '@/shared/lib/audit'
 
 export async function POST() {

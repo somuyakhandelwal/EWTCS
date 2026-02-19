@@ -1,7 +1,7 @@
 // Bed Card Component
 // Epic 1: Nurse Desk Bed Dashboard
 
-import { memo, type MouseEvent, Fragment } from 'react'
+import { memo, type MouseEvent } from 'react'
 import { Card, CardContent } from '@/shared/components/ui/card'
 import { Clock, AlertTriangle, Hourglass } from 'lucide-react'
 import type { BedWithElapsedTime, DispositionDelayReason } from '../types/bed'
@@ -9,25 +9,7 @@ import { DISPOSITION_DELAY_REASON_LABELS } from '../types/bed'
 import { formatElapsedTime, getStageColorClasses, getDelayColorClasses } from '../lib/utils'
 import { useElapsedTime } from '../hooks/useElapsedTime'
 import { cn } from '@/shared/lib/utils'
-
-function highlightMatch(text: string, query?: string) {
-  if (!query) return text
-  const q = query.trim().toLowerCase()
-  if (!q) return text
-  const lower = text.toLowerCase()
-  const idx = lower.indexOf(q)
-  if (idx === -1) return text
-  const before = text.slice(0, idx)
-  const match = text.slice(idx, idx + q.length)
-  const after = text.slice(idx + q.length)
-  return (
-    <Fragment>
-      {before}
-      <span className="bg-yellow-300 text-black px-1 rounded">{match}</span>
-      {after}
-    </Fragment>
-  )
-}
+import { highlightMatch } from '../lib/highlight-match'
 
 const REASON_OPTIONS = Object.entries(DISPOSITION_DELAY_REASON_LABELS) as [
   DispositionDelayReason,
@@ -42,6 +24,9 @@ interface BedCardProps {
   showUpdated?: boolean
   errorMessage?: string | null
   searchQuery?: string
+  showUndo?: boolean
+  onUndo?: () => void
+  undoTimerSeconds?: number
 }
 
 export const BedCard = memo(function BedCard({
@@ -52,6 +37,9 @@ export const BedCard = memo(function BedCard({
   showUpdated = false,
   errorMessage = null,
   searchQuery = '',
+  showUndo = false,
+  onUndo,
+  undoTimerSeconds = 0,
 }: BedCardProps) {
   const stageName = bed.currentStage?.name || 'Empty'
   const stageColor = bed.currentStage?.colorCode || 'gray'

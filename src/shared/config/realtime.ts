@@ -1,7 +1,21 @@
 // Real-time Configuration
 // Centralized configuration for real-time updates
 
-import type { RealtimeConfig } from '@/features/bed-dashboard/types/realtime'
+/**
+ * Real-time update configuration.
+ * Defined here (shared) because getRealtimeConfig() produces it from env vars.
+ * Re-exported by features/bed-dashboard/types/realtime.ts for backward compat.
+ */
+export interface RealtimeConfig {
+  /** Whether real-time updates are enabled */
+  enabled: boolean
+  /** Polling interval in milliseconds */
+  pollingInterval: number
+  /** Retry interval after error */
+  retryInterval: number
+  /** Maximum retry interval (exponential backoff cap) */
+  maxRetryInterval: number
+}
 
 /**
  * Get real-time update configuration from environment
