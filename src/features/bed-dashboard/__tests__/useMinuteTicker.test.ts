@@ -1,14 +1,14 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
 
 describe('useMinuteTicker', () => {
-  let subscribeToMinuteTick: any
+  let subscribeToMinuteTick: (cb: (ts: number) => void) => () => void
 
   beforeEach(async () => {
     vi.clearAllMocks()
     vi.resetModules()
     vi.useFakeTimers()
-    const module = await import('../hooks/useMinuteTicker')
-    subscribeToMinuteTick = module.subscribeToMinuteTick
+    const tickerModule = await import('../hooks/useMinuteTicker')
+    subscribeToMinuteTick = tickerModule.subscribeToMinuteTick
   })
 
   afterEach(() => {

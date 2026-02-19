@@ -6,8 +6,10 @@ import { BedStatusLegend } from './BedStatusLegend'
 import { BedStageContextMenu } from './BedStageContextMenu'
 import { BottleneckPanel } from './BottleneckPanel'
 import { BedGridStats } from './BedGridStats'
+import { BedFilterBar } from './BedFilterBar'
 import { Button } from '@/shared/components/ui/button'
-import { Filter, RefreshCw } from 'lucide-react'
+import { RefreshCw } from 'lucide-react'
+import { useBedFilter } from '../hooks/useBedFilter'
 import type { BedGridData, BedWithElapsedTime, DispositionDelayReason } from '../types/bed'
 import { getBedStatistics } from '../lib/utils'
 import { getValidTransitionsForBed } from '../actions/bed-grid-actions'
@@ -39,7 +41,6 @@ export function BedGrid({
   errorByBedId = {},
   isRefreshing = false,
 }: BedGridProps) {
-  const [showDelayedOnly, setShowDelayedOnly] = useState(false)
   const [menuState, setMenuState] = useState<{
     bedId: string
     position: { x: number; y: number }
@@ -48,15 +49,17 @@ export function BedGrid({
   const [overrideRequiredStages, setOverrideRequiredStages] = useState<string[]>([])
   const [isLoadingTransitions, setIsLoadingTransitions] = useState(false)
 
-  const displayedBeds = useMemo(
-    () => showDelayedOnly ? data.beds.filter(bed => bed.isDelayed) : data.beds,
-    [data.beds, showDelayedOnly]
-  )
-  const stats = useMemo(() => getBedStatistics(data.beds), [data.beds])
+  const {
+    showDelayedOnly,
+    sortOrder,
+    displayedBeds,
+    isFilterActive,
+    toggleDelayedFilter,
+    toggleSortOrder,
+    clearFilter,
+  } = useBedFilter(data.beds)
 
-  const toggleFilter = useCallback(() => {
-    setShowDelayedOnly(prev => !prev)
-  }, [])
+  const stats = useMemo(() => getBedStatistics(data.beds), [data.beds])
 
   const openMenuForBed = useCallback(async (bedId: string, position: { x: number; y: number }) => {
     setMenuState({ bedId, position })
@@ -100,22 +103,15 @@ export function BedGrid({
     <div className="space-y-6">
       {/* Header with filters and actions */}
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-        <div className="flex items-center gap-4">
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={toggleFilter}
-            className={showDelayedOnly ? 'bg-red-900/30 border-red-700' : ''}
-          >
-            <Filter className="h-4 w-4 mr-2" />
-            {showDelayedOnly ? 'Show All Beds' : 'Show Delayed Only'}
-            {stats.delayed > 0 && (
-              <span className="ml-2 px-2 py-0.5 text-xs bg-red-500 text-white rounded-full">
-                {stats.delayed}
-              </span>
-            )}
-          </Button>
-        </div>
+        <BedFilterBar
+          showDelayedOnly={showDelayedOnly}
+          sortOrder={sortOrder}
+          delayedCount={stats.delayed}
+          isFilterActive={isFilterActive}
+          onToggleFilter={toggleDelayedFilter}
+          onToggleSortOrder={toggleSortOrder}
+          onClear={clearFilter}
+        />
 
         <Button
           variant="ghost"
@@ -185,7 +181,8 @@ export function BedGrid({
 
       <div className="text-center text-xs text-zinc-500">
         Showing {displayedBeds.length} of {data.beds.length} beds
-        {showDelayedOnly && ' (delayed only)'}
+        {showDelayedOnly && ' · delayed only'}
+        {sortOrder === 'desc' && ' · sorted by delay'}
       </div>
     </div>
   )

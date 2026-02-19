@@ -21,7 +21,7 @@ vi.mock('../hooks/useElapsedTime', () => ({
 }))
 
 vi.mock('@/shared/lib/utils', () => ({
-  cn: (...args: any[]) => args.filter(Boolean).join(' '),
+  cn: (...args: unknown[]) => (args.filter(Boolean) as string[]).join(' '),
 }))
 
 describe('BedCard Elapsed Time Display - AC-4: Prominent Display', () => {
