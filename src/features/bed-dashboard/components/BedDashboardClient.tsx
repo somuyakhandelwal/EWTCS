@@ -15,6 +15,7 @@ import { DashboardSettings } from './DashboardSettings'
 import type { BedGridData, BedWithElapsedTime, DispositionDelayReason } from '../types/bed'
 import { useRealtimeBedUpdates } from '../hooks/useRealtimeBedUpdates'
 import { useBedStageUpdate } from '../hooks/useBedStageUpdate'
+import { useUndoManager } from '../hooks/useUndoManager'
 import { recordDispositionDelayReason } from '../actions/disposition-actions'
 
 interface BedDashboardClientProps {
@@ -22,13 +23,6 @@ interface BedDashboardClientProps {
 }
 
 export function BedDashboardClient({ initialData }: BedDashboardClientProps) {
-  // Undo state: which bed can be undone, timer, and previous stage info
-  const [undoState, setUndoState] = useState<{
-    bedId: string;
-    timer: number;
-  } | null>(null);
-  const undoTimerRef = useRef<NodeJS.Timeout | null>(null);
-
   const {
     data: realtimeData,
     connectionStatus,
@@ -61,50 +55,7 @@ export function BedDashboardClient({ initialData }: BedDashboardClientProps) {
     closeDischargeModal,
   } = useBedStageUpdate(realtimeData);
 
-  // Watch for stage update to enable Undo
-  useEffect(() => {
-    if (lastUpdatedBedId && lastUpdatedStageId) {
-      setUndoState({ bedId: lastUpdatedBedId, timer: 30 });
-      if (undoTimerRef.current) clearInterval(undoTimerRef.current);
-      undoTimerRef.current = setInterval(() => {
-        setUndoState(prev => {
-          if (!prev) return null;
-          if (prev.timer <= 1) {
-            clearInterval(undoTimerRef.current!);
-            return null;
-          }
-          return { ...prev, timer: prev.timer - 1 };
-        });
-      }, 1000);
-    }
-    // Cleanup timer if bed changes
-    return () => {
-      if (undoTimerRef.current) clearInterval(undoTimerRef.current);
-    };
-  }, [lastUpdatedBedId, lastUpdatedStageId]);
-
-  // Undo handler (to be implemented: call API, refresh, etc.)
-  const [undoError, setUndoError] = useState<string | null>(null);
-  const handleUndo = useCallback(async () => {
-    if (!undoState) return;
-    setUndoError(null);
-    try {
-      const res = await fetch('/api/bed-dashboard/undo', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ bedId: undoState.bedId }),
-      });
-      const data = await res.json();
-      if (!data.success) {
-        setUndoError(data.error || 'Undo failed');
-      }
-    } catch {
-      setUndoError('Undo failed');
-    }
-    setUndoState(null);
-    if (undoTimerRef.current) clearInterval(undoTimerRef.current);
-    await handleRefresh();
-  }, [undoState, handleRefresh]);
+  const { undoState, undoError, handleUndo } = useUndoManager(lastUpdatedBedId, lastUpdatedStageId, handleRefresh)
 
   // Search state: immediate input and debounced query used for filtering (US-1.2)
   const [searchInput, setSearchInput] = useState('')
