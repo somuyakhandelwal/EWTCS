@@ -32,6 +32,7 @@ export async function createUser(prevState: unknown, formData: FormData) {
             username: formData.get('username'),
             password: formData.get('password'),
             role: formData.get('role'),
+            wardId: (formData.get('wardId') as string) || null,
         })
 
         if (!result.success) {
@@ -41,10 +42,10 @@ export async function createUser(prevState: unknown, formData: FormData) {
             }
         }
 
-        const { username, password, role } = result.data
+        const { username, password, role, wardId } = result.data
 
         // Create user in database
-        const newUser = await createUserInDB(username, password, role)
+        const newUser = await createUserInDB(username, password, role, wardId)
 
         // Log action
         await logUserAction('CREATE', newUser.id, session.userId, {
@@ -83,6 +84,7 @@ export async function updateUser(prevState: unknown, formData: FormData) {
             username: formData.get('username') || undefined,
             password: formData.get('password') || undefined,
             role: formData.get('role') || undefined,
+            wardId: formData.has('wardId') ? ((formData.get('wardId') as string) || null) : undefined,
         })
 
         if (!result.success) {
@@ -92,10 +94,10 @@ export async function updateUser(prevState: unknown, formData: FormData) {
             }
         }
 
-        const { userId, username, password, role } = result.data
+        const { userId, username, password, role, wardId } = result.data
 
         // Update user in database
-        const changes = await updateUserInDB(userId, username, password, role)
+        const changes = await updateUserInDB(userId, username, password, role, wardId)
 
         // Log action
         await logUserAction('UPDATE', userId, session.userId, changes)

@@ -32,3 +32,11 @@ export async function getUserLogs(userId?: string) {
     // Using shared audit system - entity_type = 'user'
     return getAuditLogs('user', userId, 100)
 }
+
+/**
+ * Get all active wards (used to populate ward assignment dropdowns)
+ * No auth required — ward names are not sensitive data
+ */
+export async function getWards(): Promise<Array<{ id: string; name: string; code: string }>> {
+    return getAll('wards', 'is_active = true', [], 'name ASC')
+}

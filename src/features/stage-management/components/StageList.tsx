@@ -3,15 +3,7 @@ import { useState } from 'react';
 import type { Stage } from '../types/stage.types';
 import { deleteStage, reorderStages } from '../actions/stage-actions';
 import { StageFormModal } from './StageFormModal';
-
-const COLOR_BG: Record<string, string> = {
-  yellow: 'bg-yellow-100 border-yellow-400',
-  orange: 'bg-orange-100 border-orange-400',
-  blue:   'bg-blue-100 border-blue-400',
-  purple: 'bg-purple-100 border-purple-400',
-  green:  'bg-green-100 border-green-400',
-  grey:   'bg-gray-100 border-gray-400',
-};
+import { getStageColorClasses } from '@/shared/utils/stage-colors';
 
 export function StageList({ initialStages }: { initialStages: Stage[] }) {
   const [stages, setStages] = useState<Stage[]>(initialStages);
@@ -43,19 +35,21 @@ export function StageList({ initialStages }: { initialStages: Stage[] }) {
         + Add New Stage
       </button>
 
-      {stages.map((stage, i) => (
-        <div key={stage.id}
-          className={`flex items-center justify-between p-4 rounded-lg border-2 ${COLOR_BG[stage.color_code] ?? 'bg-gray-100 border-gray-400'}`}>
+      {stages.map((stage, i) => {
+        const colorClasses = getStageColorClasses(stage.color_code);
+        return (
+          <div key={stage.id}
+            className={`flex items-center justify-between p-4 rounded-lg border-2 ${colorClasses.bg} ${colorClasses.border}`}>
 
-          <div className='flex items-center gap-3'>
-            <span className='text-lg font-bold text-gray-700'>{i + 1}</span>
-            <span className='font-semibold text-gray-900 text-base'>{stage.name}</span>
-            {stage.is_default && (
-              <span className='text-xs bg-white px-2 py-0.5 rounded-full text-gray-600 border border-gray-400'>
-                Default
-              </span>
-            )}
-          </div>
+            <div className='flex items-center gap-3'>
+              <span className='text-lg font-bold text-zinc-200'>{i + 1}</span>
+              <span className={`font-semibold text-base ${colorClasses.text}`}>{stage.name}</span>
+              {stage.is_default && (
+                <span className='text-xs bg-zinc-900/60 px-2 py-0.5 rounded-full text-zinc-200 border border-zinc-700'>
+                  Default
+                </span>
+              )}
+            </div>
 
           <div className='flex gap-2'>
             <button
@@ -83,8 +77,9 @@ export function StageList({ initialStages }: { initialStages: Stage[] }) {
               </button>
             )}
           </div>
-        </div>
-      ))}
+          </div>
+        );
+      })}
 
       {(showAdd || editing) && (
         <StageFormModal

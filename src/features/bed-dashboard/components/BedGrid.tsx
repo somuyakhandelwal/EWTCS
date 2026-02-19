@@ -6,9 +6,7 @@ import { BedStatusLegend } from './BedStatusLegend'
 import { BedStageContextMenu } from './BedStageContextMenu'
 import { BottleneckPanel } from './BottleneckPanel'
 import { BedGridStats } from './BedGridStats'
-import { BedFilterBar } from './BedFilterBar'
-import { Button } from '@/shared/components/ui/button'
-import { RefreshCw } from 'lucide-react'
+import { BedGridHeader } from './BedGridHeader'
 import { useBedFilter } from '../hooks/useBedFilter'
 import type { BedGridData, BedWithElapsedTime, DispositionDelayReason } from '../types/bed'
 import { getBedStatistics } from '../lib/utils'
@@ -16,6 +14,7 @@ import { getValidTransitionsForBed } from '../actions/bed-grid-actions'
 
 interface BedGridProps {
   data: BedGridData
+  searchQuery?: string
   onRefresh?: () => void
   onBedClick?: (bed: BedWithElapsedTime) => void
   onStageSelect?: (bedId: string, stageId: string) => void
@@ -30,6 +29,7 @@ interface BedGridProps {
 
 export function BedGrid({
   data,
+  searchQuery = '',
   onRefresh,
   onBedClick,
   onStageSelect,
@@ -48,30 +48,43 @@ export function BedGrid({
   const [validNextStages, setValidNextStages] = useState<string[]>([])
   const [overrideRequiredStages, setOverrideRequiredStages] = useState<string[]>([])
   const [isLoadingTransitions, setIsLoadingTransitions] = useState(false)
+  const [menuError, setMenuError] = useState<string | null>(null)
 
   const {
     showDelayedOnly,
     sortOrder,
     displayedBeds,
-    isFilterActive,
     toggleDelayedFilter,
-    toggleSortOrder,
-    clearFilter,
   } = useBedFilter(data.beds)
 
   const stats = useMemo(() => getBedStatistics(data.beds), [data.beds])
 
-  const openMenuForBed = useCallback(async (bedId: string, position: { x: number; y: number }) => {
-    setMenuState({ bedId, position })
-    setIsLoadingTransitions(true)
-    try {
-      const result = await getValidTransitionsForBed(bedId)
-      if (result.success) {
-        setValidNextStages(result.allowed || [])
-        setOverrideRequiredStages(result.requiresOverride || [])
+  const openMenuForBed = useCallback(
+    async (bedId: string, position: { x: number; y: number }) => {
+      setMenuState({ bedId, position })
+      setMenuError(null)
+      setIsLoadingTransitions(true)
+      try {
+        const result = await getValidTransitionsForBed(bedId)
+        if (result.success && result.allowed) {
+          setValidNextStages(result.allowed)
+          setOverrideRequiredStages(result.requiresOverride || [])
+        } else {
+          setMenuError(result.error || 'Unable to load available stages')
+          setValidNextStages([])
+          setOverrideRequiredStages([])
+        }
+      } catch (error) {
+        console.error('Failed to fetch valid transitions:', error)
+        setMenuError('Connection error. Please try again.')
+        setValidNextStages([])
+        setOverrideRequiredStages([])
+      } finally {
+        setIsLoadingTransitions(false)
       }
-    } catch { /* fallback */ } finally { setIsLoadingTransitions(false) }
-  }, [])
+    },
+    []
+  )
 
   // Right-click (desktop)
   const handleOpenMenu = useCallback(async (event: MouseEvent<HTMLDivElement>, bed: BedWithElapsedTime) => {
@@ -90,6 +103,7 @@ export function BedGrid({
     setMenuState(null)
     setValidNextStages([])
     setOverrideRequiredStages([])
+    setMenuError(null)
   }, [])
 
   const activeBed = useMemo(() => {
@@ -101,28 +115,13 @@ export function BedGrid({
 
   return (
     <div className="space-y-6">
-      {/* Header with filters and actions */}
-      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-        <BedFilterBar
-          showDelayedOnly={showDelayedOnly}
-          sortOrder={sortOrder}
-          delayedCount={stats.delayed}
-          isFilterActive={isFilterActive}
-          onToggleFilter={toggleDelayedFilter}
-          onToggleSortOrder={toggleSortOrder}
-          onClear={clearFilter}
-        />
-
-        <Button
-          variant="ghost"
-          size="sm"
-          onClick={onRefresh}
-          disabled={isRefreshing}
-        >
-          <RefreshCw className={`h-4 w-4 mr-2 ${isRefreshing ? 'animate-spin' : ''}`} />
-          Refresh
-        </Button>
-      </div>
+      <BedGridHeader
+        showDelayedOnly={showDelayedOnly}
+        delayedCount={stats.delayed}
+        isRefreshing={isRefreshing}
+        onToggleFilter={toggleDelayedFilter}
+        onRefresh={onRefresh}
+      />
 
       {/* Statistics bar */}
       <BedGridStats
@@ -159,6 +158,7 @@ export function BedGrid({
               onReasonSelect={onReasonSelect}
               showUpdated={lastUpdatedBedId === bed.id && lastUpdatedStageId !== null}
               errorMessage={errorByBedId[bed.id] || null}
+              searchQuery={searchQuery}
             />
           ))}
         </div>
@@ -174,6 +174,7 @@ export function BedGrid({
           updatingStageId={updatingStageId}
           validNextStages={validNextStages}
           overrideRequiredStages={overrideRequiredStages}
+          error={menuError}
           onStageSelect={onStageSelect}
           onClose={handleCloseMenu}
         />

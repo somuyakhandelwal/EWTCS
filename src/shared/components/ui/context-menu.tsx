@@ -17,6 +17,7 @@ export interface ContextMenuProps {
   items: ContextMenuItem[]
   onClose: () => void
   header?: string
+  error?: string | null
 }
 
 // FIX for Issue #2 (Off-Screen Menu): Calculate clamped position within viewport
@@ -51,6 +52,7 @@ export function ContextMenu({
   items,
   onClose,
   header,
+  error,
 }: ContextMenuProps) {
   // FIX for Issue #2 (Off-Screen Menu): Estimate menu height and apply clamping
   const clampedPosition = useMemo(() => {
@@ -96,6 +98,28 @@ export function ContextMenu({
 
   if (!isOpen || !clampedPosition) {
     return null
+  }
+
+  // Show error message if transitions couldn't be loaded
+  if (error) {
+    return (
+      <div className="fixed inset-0 z-50" onMouseDown={onClose}>
+        <div
+          className="absolute min-w-48 rounded-md border border-red-900/50 bg-red-950/95 p-3 shadow-lg backdrop-blur"
+          style={{ top: clampedPosition.y, left: clampedPosition.x }}
+          onMouseDown={(event) => event.stopPropagation()}
+          role="alert"
+        >
+          <p className="text-sm text-red-300">{error}</p>
+          <button
+            onClick={onClose}
+            className="mt-2 w-full rounded px-2 py-1 text-xs text-red-200 hover:bg-red-900/30"
+          >
+            Dismiss
+          </button>
+        </div>
+      </div>
+    )
   }
 
   return (

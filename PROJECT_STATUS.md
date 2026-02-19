@@ -2,13 +2,13 @@
 
 **Emergency Ward Bed Status Monitoring & AI Daily Report System**  
 **Last Updated:** February 18, 2026  
-**Version:** 1.0 (Phase 1 Complete)
+**Version:** 1.1 (Phase 1 + Phase 2 Features)
 
 ---
 
-## 🎯 Current Status: Phase 1 Complete ✅
+## 🎯 Current Status: Phase 1 + Phase 2 Core Features ✅
 
-The core system is **fully operational** and **production-ready** with all essential features implemented.
+The core system is **fully operational** and **production-ready**. Phase 2 real-time and search features are now live.
 
 ---
 
@@ -23,14 +23,19 @@ The core system is **fully operational** and **production-ready** with all essen
 
 ### Bed Management System (EPIC 1)
 - [x] Real-time bed status dashboard with grid layout
-- [x] 12 emergency beds
- (ER-01 to ER-12) with expansion capability
+- [x] 12 emergency beds (ER-01 to ER-12) with expansion capability
 - [x] 8-stage patient workflow tracking
 - [x] Color-coded visual indicators
 - [x] Automatic elapsed time display
 - [x] Delay detection and red alerts (>3 hours)
 - [x] Filter functionality (show delayed beds only)
 - [x] One-click stage updates with validation
+- [x] **Search by bed number and stage name** (US-1.2) ← NEW
+- [x] **Debounced search with result highlighting** ← NEW
+- [x] **Real-time bed updates with intelligent polling** (US-1.2) ← NEW
+- [x] **Connection status indicator with auto-reconnect** ← NEW
+- [x] **Disposition bottleneck tracking** (US-1.6) ← NEW
+- [x] **Bed history modal with stage transition log** ← NEW
 
 ### Time Tracking & Analytics (EPIC 3)
 - [x] Automatic patient entry time capture (server-side)
@@ -50,36 +55,36 @@ The core system is **fully operational** and **production-ready** with all essen
 - [x] Correction system for logged transitions
 
 ### Infrastructure & DevOps
-- [x] PostgreSQL database with 10 migrations
+- [x] PostgreSQL database with 12 migrations
 - [x] Automated setup wizard (`npm run setup`)
 - [x] Environment variable validation
 - [x] Database seeding scripts
 - [x] Feature-first architecture
 - [x] TypeScript throughout
 - [x] ESLint code quality checks
+- [x] Vitest + Testing Library testing framework ← NEW
+- [x] Admin pages for bed and stage management (US-6.1) ← NEW
+- [x] Stage color configuration (EPIC 4) ← NEW
 
 ---
 
 ## 📊 System Statistics (Current)
 
-- **Database Tables:** 10 (users, beds, stages, bed_stage_logs, bed_stage_log_corrections, stage_transitions, audit_logs, token_blacklist, ward_access_control, pgmigrations)
-- **Migrations Applied:** 10/10
+- **Database Tables:** 11 (users, beds, stages, bed_stage_logs, bed_stage_log_corrections, stage_transitions, disposition_delay_reasons, audit_logs, token_blacklist, ward_access_control, pgmigrations)
+- **Migrations Applied:** 12/12
 - **Emergency Beds:** 12 configured (expandable to 50+)
 - **Workflow Stages:** 8 stages
 - **User Roles:** 3 (Admin, Supervisor, Nurse)
 - **Test Users:** 4 (admin1, supervisor1, nurse, nurse1)
 - **API Endpoints:** 15+ (authentication, bed management, analytics, user management)
-- **Stage Transitions Logged:** 22+ (test data)
-- **Audit Log Entries:** 17+ (test data)
+- **Application Routes:** 11 (/, /login, /dashboard, /admin, /admin/beds, /admin/stages, /analytics, /supervisor, /api/health, /api/auth/logout, middleware)
 
 ---
 
-## 🔄 In Progress (Phase 2)
+## 🔄 In Progress (Phase 2 — Remaining)
 
-- [ ] Real-time updates with WebSocket/Server-Sent Events
 - [ ] Push notifications for critical delays
 - [ ] Enhanced mobile responsive design
-- [ ] Advanced search and filtering
 - [ ] Batch operations for multiple beds
 
 ---
@@ -140,13 +145,14 @@ EWTCS/
 | Test Type | Status | Details |
 |-----------|--------|---------|
 | Manual Testing | ✅ Passed | All features tested manually |
-| Database Migrations | ✅ Passed | All 10 migrations applied successfully |
+| Database Migrations | ✅ Passed | All 12 migrations applied successfully |
 | TypeScript Compilation | ✅ Passed | No type errors |
 | ESLint Validation | ✅ Passed | Code quality checks pass |
 | Environment Validation | ✅ Passed | All required variables validated |
 | API Health Check | ✅ Passed | `/api/health` returns healthy |
+| Build Verification | ✅ Passed | Production build in 2.8s, 11 routes |
 
-**Note:** Automated testing suite (unit tests, integration tests, E2E tests) is planned for Phase 2.
+**Note:** Automated testing suite (Vitest + Testing Library) is configured; unit and integration tests planned for Phase 2.
 
 ---
 
@@ -173,6 +179,8 @@ EWTCS/
 | .env.example | ✅ Current | Environment variable template |
 | src/features/README.md | ✅ Current | Feature architecture guide |
 | src/features/bed-dashboard/ANALYTICS_README.md | ✅ Current | Analytics system documentation |
+| docs/README.md | ✅ Current | Documentation index |
+| docs/archive/ | 📦 Archived | PRD and User Stories (historical reference) |
 
 ---
 

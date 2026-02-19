@@ -8,6 +8,7 @@ export const createUserSchema = z.object({
     username: z.string().min(3, 'Username must be at least 3 characters').max(50),
     password: z.string().min(6, 'Password must be at least 6 characters'),
     role: z.enum(['nurse', 'supervisor', 'admin']),
+    wardId: z.string().uuid().nullable().optional(),
 })
 
 /**
@@ -18,6 +19,7 @@ export const updateUserSchema = z.object({
     username: z.string().min(3).max(50).optional(),
     password: z.string().min(6).optional(),
     role: z.enum(['nurse', 'supervisor', 'admin']).optional(),
+    wardId: z.string().uuid().nullable().optional(),
 })
 
 /**

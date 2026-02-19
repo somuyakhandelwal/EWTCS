@@ -1,14 +1,15 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
 
 describe('useMinuteTicker', () => {
-  let subscribeToMinuteTick: (cb: (ts: number) => void) => () => void
+  type SubscribeToMinuteTick = (callback: (timestamp: number) => void) => () => void
+  let subscribeToMinuteTick: SubscribeToMinuteTick
 
   beforeEach(async () => {
     vi.clearAllMocks()
     vi.resetModules()
     vi.useFakeTimers()
-    const tickerModule = await import('../hooks/useMinuteTicker')
-    subscribeToMinuteTick = tickerModule.subscribeToMinuteTick
+    const importedModule = await import('../hooks/useMinuteTicker')
+    subscribeToMinuteTick = importedModule.subscribeToMinuteTick
   })
 
   afterEach(() => {
@@ -303,9 +304,7 @@ describe('useMinuteTicker', () => {
       subscribeToMinuteTick(mockFn)
       mockFn.mockClear()
 
-      const call1Time = Date.now()
       vi.advanceTimersByTime(60_000)
-      const call2Time = Date.now()
       expect(mockFn).toHaveBeenCalledTimes(1)
 
       vi.advanceTimersByTime(60_000)

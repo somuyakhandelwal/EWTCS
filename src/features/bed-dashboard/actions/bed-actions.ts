@@ -4,7 +4,7 @@ import { getBedById } from '../lib/queries'
 import { logger } from '@/shared/config/logger'
 import { UpdateBedStageSchema, type UpdateBedStageInput } from '../schemas/bed-schemas'
 import { updateBedStageInDB } from '../lib/bed-mutations'
-import { getUserWard, getBedWard } from '../lib/bed-queries'
+import { checkWardAccess } from '../lib/bed-queries'
 import { requireRole } from '@/shared/lib/auth'
 import { logAudit } from '@/shared/lib/audit'
 import { validateTransition } from '../lib/stage-validation'
@@ -32,31 +32,11 @@ export async function updateBedStage(input: UpdateBedStageInput): Promise<{
       }
     }
 
-    // IDOR FIX: Verify user has access to this specific bed (ward-level access control)
-    const userWard = await getUserWard(session.userId)
-    const bedWard = await getBedWard(result.data.bedId)
-
-    // Allow access if:
-    // 1. Neither user nor bed has a ward assigned (ward system not configured)
-    // 2. Both have ward assignments and they match
-    // 3. User is an admin (admins can access all beds)
-    const hasWardAccess =
-      (!userWard && !bedWard) ||
-      (userWard && bedWard && userWard === bedWard) ||
-      session.role === 'admin'
-
-    if (!hasWardAccess) {
-      logger.warn('Unauthorized bed access attempt', {
-        userId: session.userId,
-        bedId: result.data.bedId,
-        userWard,
-        bedWard,
-        userRole: session.role,
-      })
-      return {
-        success: false,
-        error: 'You do not have permission to update this bed. Access is restricted to your assigned ward.',
-      }
+    // IDOR FIX: Ward-level access control (checkWardAccess in bed-queries.ts)
+    const wardError = await checkWardAccess(session.userId, result.data.bedId, session.role)
+    if (wardError) {
+      logger.warn('Ward access denied', { userId: session.userId, bedId: result.data.bedId })
+      return { success: false, error: wardError }
     }
 
     // NEW: Get current bed to validate transition
@@ -138,18 +118,31 @@ export async function updateBedStage(input: UpdateBedStageInput): Promise<{
       notes: result.data.notes,
     })
 
-    await logAudit({
-      actionType: 'UPDATE',
-      entityType: 'bed',
-      entityId: updateResult.bedId,
-      performedBy: session.userId,
-      changes: {
-        fromStageId: updateResult.fromStageId,
-        toStageId: updateResult.toStageId,
-        isOccupied: updateResult.isOccupied,
-        supervisorOverrideApplied: result.data.supervisorOverride,
-      },
-    })
+    // BUG FIX #7: Log audit AFTER update with error handling
+    // If audit logging fails, still consider update successful (graceful degradation)
+    // but log the audit failure for compliance team to investigate
+    try {
+      await logAudit({
+        actionType: 'UPDATE',
+        entityType: 'bed',
+        entityId: updateResult.bedId,
+        performedBy: session.userId,
+        changes: {
+          fromStageId: updateResult.fromStageId,
+          toStageId: updateResult.toStageId,
+          isOccupied: updateResult.isOccupied,
+          supervisorOverrideApplied: result.data.supervisorOverride,
+        },
+      })
+    } catch (auditError) {
+      // BUG FIX #7: Log audit failure for compliance investigation
+      logger.error('CRITICAL: Audit logging failed - potential compliance issue', auditError as Error, {
+        bedId: updateResult.bedId,
+        userId: session.userId,
+        stageTransition: `${updateResult.fromStageId} → ${updateResult.toStageId}`,
+      })
+      // Still return success since bed WAS updated - audit failure is secondary
+    }
 
     return {
       success: true,
