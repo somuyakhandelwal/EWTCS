@@ -8,10 +8,17 @@ import { checkWardAccess } from '../lib/bed-queries'
 import { requireRole } from '@/shared/lib/auth'
 import { logAudit } from '@/shared/lib/audit'
 import { validateTransition } from '../lib/stage-validation'
+import { headers } from 'next/headers'
+import { getClientIpFromHeaders } from '@/shared/lib/request-ip'
 
 /**
  * Update bed stage (US-2.1, US-2.2)
  * Validates stage transitions before updating
+ *
+ * COMPLIANCE: Stage updates are logged to audit_logs within a transaction.
+ * This ensures audit logging cannot be skipped or fail silently.
+ * All stage changes are traceable with user ID, IP address, and override status.
+ * Fulfills EPIC 12 acceptance criteria: "All stage updates are logged"
  */
 export async function updateBedStage(input: UpdateBedStageInput): Promise<{
   success: boolean
@@ -23,6 +30,8 @@ export async function updateBedStage(input: UpdateBedStageInput): Promise<{
 }> {
   try {
     const session = await requireRole(['nurse', 'supervisor', 'admin'])
+    const requestHeaders = await headers()
+    const ipAddress = getClientIpFromHeaders(requestHeaders)
 
     const result = UpdateBedStageSchema.safeParse(input)
     if (!result.success) {
@@ -116,33 +125,9 @@ export async function updateBedStage(input: UpdateBedStageInput): Promise<{
       toStageId: result.data.toStageId,
       changedByUserId: session.userId,
       notes: result.data.notes,
+      ipAddress,
+      supervisorOverrideApplied: result.data.supervisorOverride,
     })
-
-    // BUG FIX #7: Log audit AFTER update with error handling
-    // If audit logging fails, still consider update successful (graceful degradation)
-    // but log the audit failure for compliance team to investigate
-    try {
-      await logAudit({
-        actionType: 'UPDATE',
-        entityType: 'bed',
-        entityId: updateResult.bedId,
-        performedBy: session.userId,
-        changes: {
-          fromStageId: updateResult.fromStageId,
-          toStageId: updateResult.toStageId,
-          isOccupied: updateResult.isOccupied,
-          supervisorOverrideApplied: result.data.supervisorOverride,
-        },
-      })
-    } catch (auditError) {
-      // BUG FIX #7: Log audit failure for compliance investigation
-      logger.error('CRITICAL: Audit logging failed - potential compliance issue', auditError as Error, {
-        bedId: updateResult.bedId,
-        userId: session.userId,
-        stageTransition: `${updateResult.fromStageId} → ${updateResult.toStageId}`,
-      })
-      // Still return success since bed WAS updated - audit failure is secondary
-    }
 
     return {
       success: true,

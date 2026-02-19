@@ -3,11 +3,13 @@ import { cookies } from 'next/headers'
 import { deleteSession, verifySession } from '@/features/auth/lib/session'
 import { invalidateToken } from '@/features/auth/lib/auth-service'
 import { logAudit } from '@/shared/lib/audit'
+import { getClientIpFromHeaders } from '@/shared/lib/request-ip'
 
-export async function POST() {
+export async function POST(request: Request) {
     try {
         const cookieStore = await cookies()
         const token = cookieStore.get('session')?.value
+        const ipAddress = getClientIpFromHeaders(request.headers)
 
         if (token) {
             // Get user details for audit logs before invalidating
@@ -27,7 +29,8 @@ export async function POST() {
                     metadata: {
                         username: session.username,
                         role: session.role
-                    }
+                    },
+                    ipAddress,
                 })
             }
         }

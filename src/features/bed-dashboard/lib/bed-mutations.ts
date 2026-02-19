@@ -1,5 +1,12 @@
 // Bed Dashboard Mutations
 // Epic 2: One-Click Stage Update System
+// Epic 12: Audit Logs & Compliance
+//
+// COMPLIANCE NOTE: updateBedStageInDB performs atomic bed+audit logging.
+// Both the stage transition (bed_stage_logs) and audit entry (audit_logs)
+// are recorded within a single database transaction.
+// This ensures complete traceability and satisfies compliance requirement:
+// "Every user action is logged with user ID, action, timestamp, IP address"
 
 import pool from '@/shared/lib/db'
 import { logger } from '@/shared/config/logger'
@@ -22,6 +29,8 @@ export interface UpdateBedStageParams {
   toStageId: string
   changedByUserId: string
   notes?: string
+  ipAddress?: string | null
+  supervisorOverrideApplied?: boolean
 }
 
 export interface UpdateBedStageResult {
@@ -42,7 +51,14 @@ function isNonPatientStage(stageName: string): boolean {
 export async function updateBedStageInDB(
   params: UpdateBedStageParams
 ): Promise<UpdateBedStageResult> {
-  const { bedId, toStageId, changedByUserId, notes } = params
+  const {
+    bedId,
+    toStageId,
+    changedByUserId,
+    notes,
+    ipAddress = null,
+    supervisorOverrideApplied = false,
+  } = params
   const client = await pool.connect()
 
   try {
@@ -137,6 +153,36 @@ export async function updateBedStageInDB(
         changedByUserId,
         durationInPreviousStageMs,
         notes || null,
+      ]
+    )
+
+    await client.query(
+      `
+      INSERT INTO audit_logs (
+        action_type,
+        entity_type,
+        entity_id,
+        performed_by_user_id,
+        changes,
+        reason,
+        metadata,
+        ip_address
+      ) VALUES ($1, $2, $3, $4, $5::jsonb, $6, $7::jsonb, $8)
+      `,
+      [
+        'UPDATE',
+        'bed',
+        bedId,
+        changedByUserId,
+        JSON.stringify({
+          fromStageId: bed.currentStageId,
+          toStageId,
+          isOccupied: nextIsOccupied,
+          supervisorOverrideApplied,
+        }),
+        'Bed stage updated',
+        JSON.stringify({ source: 'bed-dashboard' }),
+        ipAddress,
       ]
     )
 

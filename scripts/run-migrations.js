@@ -1,5 +1,4 @@
 'use strict';
-
 const fs = require('fs');
 const path = require('path');
 const { spawnSync } = require('child_process');
@@ -111,6 +110,10 @@ const run = async () => {
     const args = [];
     const effectiveCommand = command === 'status' ? 'up' : command;
     args.push(effectiveCommand, '--migrations-dir', migrationsDir, '--verbose');
+
+    if (command === 'up' || command === 'down') {
+        args.push('--no-check-order');
+    }
 
     if (command === 'down') {
         const count = Number.isInteger(Number(arg)) ? Number(arg) : 1;

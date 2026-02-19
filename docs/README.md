@@ -16,6 +16,7 @@ Start here if you're new to the project:
 - **[DATABASE_SETUP.md](../DATABASE_SETUP.md)** - PostgreSQL installation, database creation, migrations
 - **[CONFIGURATION.md](../CONFIGURATION.md)** - Environment variables, deployment, production setup
 - **[.env.example](../.env.example)** - Environment variable template with detailed comments
+- **Audit Logging & Compliance** - See `CONFIGURATION.md` section "Audit Logging & Compliance" for immutable audit trail details
 
 ### Development
 - **[CONTRIBUTING.md](../CONTRIBUTING.md)** - How to contribute (coding standards, workflow, PR process)
@@ -125,4 +126,4 @@ Current state overview:
 
 ---
 
-**Last Updated:** February 18, 2026
+**Last Updated:** February 19, 2026

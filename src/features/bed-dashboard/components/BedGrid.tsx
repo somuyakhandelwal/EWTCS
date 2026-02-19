@@ -96,7 +96,6 @@ export function BedGrid({
     []
   )
 
-  // Right-click (desktop)
   const handleOpenMenu = useCallback(async (event: MouseEvent<HTMLDivElement>, bed: BedWithElapsedTime) => {
     if (!onStageSelect) return
     event.preventDefault()

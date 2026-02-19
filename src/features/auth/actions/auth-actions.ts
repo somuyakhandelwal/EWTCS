@@ -5,8 +5,12 @@ import { createSession, deleteSession, type KioskOptions } from '@/features/auth
 import pool from '@/shared/lib/db'
 import bcrypt from 'bcrypt'
 import { redirect } from 'next/navigation'
+import { logAudit } from '@/shared/lib/audit'
 import { headers } from 'next/headers'
 import { createKioskSession } from '@/features/auth/lib/kiosk'
+import { getClientIpFromHeaders } from '@/shared/lib/request-ip'
+
+const UNKNOWN_ACTOR_ID = '00000000-0000-0000-0000-000000000000'
 
 const loginSchema = z.object({
     username: z.string().min(1, 'Username is required'),
@@ -24,6 +28,8 @@ export async function login(prevState: unknown, formData: FormData) {
     }
 
     const { username, password } = result.data
+    const requestHeaders = await headers()
+    const ipAddress = getClientIpFromHeaders(requestHeaders)
 
     try {
 
@@ -31,6 +37,17 @@ export async function login(prevState: unknown, formData: FormData) {
         const user = rows[0]
 
         if (!user) {
+            await logAudit({
+                actionType: 'LOGIN_FAILED',
+                entityType: 'auth',
+                entityId: UNKNOWN_ACTOR_ID,
+                performedBy: UNKNOWN_ACTOR_ID,
+                reason: 'Login failed: user not found',
+                metadata: {
+                    username,
+                },
+                ipAddress,
+            })
 
             // Don't reveal user existence
             return { message: 'Invalid credentials' }
@@ -39,12 +56,39 @@ export async function login(prevState: unknown, formData: FormData) {
         // CRITICAL: Check if user account is active
         // US-5.7 Acceptance Criteria: "Deactivated users cannot log in"
         if (!user.is_active) {
+            await logAudit({
+                actionType: 'LOGIN_BLOCKED',
+                entityType: 'user',
+                entityId: user.id,
+                performedBy: user.id,
+                reason: 'Login blocked: account deactivated',
+                metadata: {
+                    username: user.username,
+                    role: user.role,
+                },
+                ipAddress,
+            })
+
             return { message: 'Account is deactivated. Contact administrator.' }
         }
 
         // Check for lockout
         if (user.lockout_until && new Date(user.lockout_until) > new Date()) {
             const remaining = Math.ceil((new Date(user.lockout_until).getTime() - Date.now()) / 60000)
+            await logAudit({
+                actionType: 'LOGIN_BLOCKED',
+                entityType: 'user',
+                entityId: user.id,
+                performedBy: user.id,
+                reason: 'Login blocked: account lockout active',
+                metadata: {
+                    username: user.username,
+                    role: user.role,
+                    lockoutUntil: user.lockout_until,
+                },
+                ipAddress,
+            })
+
             return { message: `Account locked. Try again in ${remaining} minutes.` }
         }
 
@@ -64,6 +108,23 @@ export async function login(prevState: unknown, formData: FormData) {
                 'UPDATE users SET failed_login_attempts = $1, lockout_until = $2, updated_at = NOW() WHERE id = $3',
                 [attempts, lockoutUntil, user.id]
             )
+
+            await logAudit({
+                actionType: 'LOGIN_FAILED',
+                entityType: 'user',
+                entityId: user.id,
+                performedBy: user.id,
+                reason: lockoutUntil
+                    ? 'Login failed: invalid password, account locked'
+                    : 'Login failed: invalid password',
+                metadata: {
+                    username: user.username,
+                    role: user.role,
+                    failedAttempts: attempts,
+                    lockoutUntil,
+                },
+                ipAddress,
+            })
 
             return { message: 'Invalid credentials' }
         }
@@ -86,6 +147,19 @@ export async function login(prevState: unknown, formData: FormData) {
             kioskOpts = { isKiosk: true, kioskIp: boundIp, kioskSessionId }
         }
         await createSession(user.id, user.username, user.role, kioskOpts)
+
+        await logAudit({
+            actionType: 'LOGIN',
+            entityType: 'user',
+            entityId: user.id,
+            performedBy: user.id,
+            reason: 'User authenticated successfully',
+            metadata: {
+                username: user.username,
+                role: user.role,
+            },
+            ipAddress,
+        })
 
         // Redirect based on role
         if (user.role === 'admin') {

@@ -342,7 +342,8 @@ Full environment variable reference: See [CONFIGURATION.md](CONFIGURATION.md)
 - [x] Authentication system with bcrypt password hashing
 - [x] Role-based access control (Admin, Supervisor, Nurse)
 - [x] Complete user management system with CRUD operations
-- [x] Audit logging for all user actions
+- [x] Atomic audit logging (user ID, action, timestamp, IP address)
+- [x] Immutable audit trail with database-level protection
 
 **Bed Management & Tracking:**
 - [x] Bed status dashboard with grid layout (20 beds)
@@ -481,9 +482,9 @@ This project uses a **feature-first architecture** designed for:
 ### Security & Performance
 - **Bcrypt password hashing** - Industry-standard secure authentication
 - **Role-based access control** - Fine-grained permissions (Admin/Supervisor/Nurse)
-- **Audit logging** - Complete trail of all user actions
+- **Atomic audit logging** - All user actions (login/logout, stage updates, config changes) logged with user ID, IP, and timestamp in transactional database write
 - **Optimized queries** - Database indexes for analytics performance
-- **Immutable logs** - Stage transitions cannot be deleted, only corrected
+- **Immutable audit trail** - Database triggers prevent updates/deletes on audit logs; only corrections allowed
 
 **Learn more:** [Features Guide](src/features/README.md) | [Shared Code Guide](src/shared/README.md)
 

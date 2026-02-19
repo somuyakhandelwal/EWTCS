@@ -18,7 +18,7 @@ The core system is **fully operational** and **production-ready**. Phase 2 real-
 - [x] Secure login/logout with bcrypt password hashing
 - [x] Role-based access control (Admin, Supervisor, Nurse)
 - [x] Session management with encrypted cookies
-- [x] Audit logging for all critical actions
+- [x] Audit logging for all critical actions (atomic transactions with user/action/timestamp/IP)
 - [x] User management system (create, update, activate/deactivate users)
 
 ### Bed Management System (EPIC 1)
