@@ -3,23 +3,52 @@
 
 import { memo, type MouseEvent } from 'react'
 import { Card, CardContent } from '@/shared/components/ui/card'
-import { Clock, AlertTriangle, Hourglass } from 'lucide-react'
+import { Clock, Hourglass } from 'lucide-react'
 import type { BedWithElapsedTime, DispositionDelayReason } from '../types/bed'
 import { DISPOSITION_DELAY_REASON_LABELS } from '../types/bed'
 import { formatElapsedTime, getStageColorClasses } from '../lib/utils'
 import { useElapsedTime } from '../hooks/useElapsedTime'
 import { cn } from '@/shared/lib/utils'
+import { BedStatusIndicators } from './BedStatusIndicators'
+import { BedHeader } from './BedHeader'
 
 const REASON_OPTIONS = Object.entries(DISPOSITION_DELAY_REASON_LABELS) as [
   DispositionDelayReason,
   string,
 ][]
 
+/**
+ * BedCard Component
+ * 
+ * Represents a single bed in the dashboard grid.
+ * Displays critical information including:
+ * - Bed number
+ * - Current stage and color coding
+ * - Occupancy status
+ * - Elapsed time since admission
+ * - Delays and Bottlenecks (visually highlighted)
+ * 
+ * Interactions:
+ * - Click: Selects bed (or opens details)
+ * - Right-click: Opens context menu for stage updates
+ * - Quick Actions: Inline dropdown for disposition bottlenecks
+ */
+
+/**
+ * Props for the BedCard component
+ * @property {BedWithElapsedTime} bed - The bed data model
+ * @property {Function} [onClick] - Primary click handler
+ * @property {Function} [onContextMenu] - Context menu handler
+ * @property {Function} [onReasonSelect] - Handler for bottleneck reason selection
+ * @property {boolean} [showUpdated] - Visual flag for recently updated beds
+ * @property {string | null} [errorMessage] - Error message to display inline
+ */
 interface BedCardProps {
   bed: BedWithElapsedTime
   onClick?: (bed: BedWithElapsedTime) => void
   onContextMenu?: (event: MouseEvent<HTMLDivElement>, bed: BedWithElapsedTime) => void
   onReasonSelect?: (bedId: string, reason: DispositionDelayReason) => void
+  onViewHistory?: () => void
   showUpdated?: boolean
   errorMessage?: string | null
 }
@@ -29,9 +58,17 @@ export const BedCard = memo(function BedCard({
   onClick,
   onContextMenu,
   onReasonSelect,
+  onViewHistory,
   showUpdated = false,
   errorMessage = null,
 }: BedCardProps) {
+  // ... existing code ...
+  // ... existing code ...
+  // ... existing code ...
+  // ... existing code ...
+  // ... existing code ...
+  // ... existing code ...
+  // ... existing code ...
   const stageName = bed.currentStage?.name || 'Empty'
   const stageColor = bed.currentStage?.colorCode || 'gray'
   const colorClasses = getStageColorClasses(stageColor)
@@ -50,38 +87,20 @@ export const BedCard = memo(function BedCard({
         isDelayed && 'ring-2 ring-red-500 animate-pulse',
         isBottleneck && 'ring-2 ring-amber-500 animate-pulse'
       )}
-      onClick={() => onClick?.(bed)}
+      onClick={() => onViewHistory ? onViewHistory() : onClick?.(bed)}
       onContextMenu={(event) => onContextMenu?.(event, bed)}
     >
-      {/* Delay indicator */}
-      {isDelayed && !isBottleneck && (
-        <div className="absolute top-2 right-2">
-          <AlertTriangle className="h-5 w-5 text-red-500" />
-        </div>
-      )}
-
-      {/* US-1.6: Disposition bottleneck indicator */}
-      {isBottleneck && (
-        <div className="absolute top-2 right-2">
-          <Hourglass className="h-5 w-5 text-amber-400" />
-        </div>
-      )}
+      <BedStatusIndicators isDelayed={isDelayed} isBottleneck={isBottleneck} />
 
       <CardContent className="p-4 space-y-3">
-        {/* Bed Number */}
-        <div className="flex items-center justify-between">
-          <h3 className={cn('text-2xl font-bold', colorClasses.text)}>
-            {bed.bedNumber}
-          </h3>
-          {isOccupied && !isDelayed && (
-            <div className="flex h-2 w-2">
-              <span className="animate-ping absolute inline-flex h-2 w-2 rounded-full bg-emerald-400 opacity-75"></span>
-              <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
-            </div>
-          )}
-        </div>
+        <BedHeader
+          bedNumber={bed.bedNumber}
+          isOccupied={isOccupied}
+          isDelayed={isDelayed}
+          colorClasses={colorClasses}
+        />
 
-        {/* Stage Name */}
+        {/* Stage Name & Details */}
         <div className="space-y-1">
           <p className="text-xs text-zinc-500 uppercase tracking-wider">Current Stage</p>
           <p className={cn('text-sm font-semibold', colorClasses.text)}>

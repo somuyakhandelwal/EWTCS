@@ -1,25 +1,34 @@
 "use client"
+import { useState } from "react"
+import { Clock, History, X } from "lucide-react"
+import { BedHistoryCorrectionModal } from "./BedHistoryCorrectionModal"
+import { BedHistoryTimelineItem } from "./BedHistoryTimelineItem"
+import type { BedHistoryLog } from "../lib/bed-queries"
 
-import { Clock, User, ArrowRight, History, X } from "lucide-react"
+// Use imported type instead of local interface
+// Use imported type instead of local interface for type safety across the application
 
-interface BedHistoryLog {
-    id: string
-    fromStageName: string | null
-    toStageName: string
-    changedByName: string
-    transitionTime: string
-    durationMs: number | null
-    notes: string | null
-}
-
+/**
+ * Props for the BedHistoryModal component.
+ * 
+ * @property {boolean} isOpen - Controls whether the modal is currently visible.
+ * @property {() => void} onClose - Callback function to handle closing the modal.
+ * @property {string | null} bedNumber - The identifier of the bed being viewed.
+ * @property {BedHistoryLog[]} history - Array of history log entries to display.
+ * @property {boolean} [isLoading] - Optional flag to indicate if history data is being fetched.
+ * @property {boolean} [canEdit] - Optional flag (default false) to show edit controls.
+ *                                 Should only be true for supervisors/admins.
+ * @property {() => void} [onHistoryUpdate] - Callback triggered when a correction is successfully made.
+ */
 interface BedHistoryModalProps {
     isOpen: boolean
     onClose: () => void
     bedNumber: string | null
     history: BedHistoryLog[]
     isLoading?: boolean
+    canEdit?: boolean // Added for supervisor access
+    onHistoryUpdate?: () => void
 }
-
 /**
  * Format milliseconds into a human-readable duration (e.g., "1h 23m")
  */
@@ -33,15 +42,49 @@ function formatDuration(ms: number): string {
     }
     return `${minutes}m`
 }
-
+/**
+ * Main BedHistoryModal Component.
+ * Displays the full timeline of stage transitions for a specific bed.
+ * Allows supervisors to initiate corrections on past entries.
+ * 
+ * @param {BedHistoryModalProps} props - Component props
+ * @returns {JSX.Element | null} The rendered modal or null if not open.
+ */
 export function BedHistoryModal({
     isOpen,
     onClose,
     bedNumber,
     history,
     isLoading = false,
+    canEdit = false,
+    onHistoryUpdate
 }: BedHistoryModalProps) {
+    // State to track which log entry is currently being corrected
+    // When non-null, the correction modal for that specific log entry is displayed
+    const [correctingLog, setCorrectingLog] = useState<BedHistoryLog | null>(null)
+
+    // If not open, do not render anything to avoid z-index issues or unnecessary processing
     if (!isOpen) return null
+
+    // Handlers
+
+    /**
+     * Opens the correction modal for a specific log entry.
+     * 
+     * @param {BedHistoryLog} log - The history log entry to correct.
+     */
+    const handleEdit = (log: BedHistoryLog) => {
+        setCorrectingLog(log)
+    }
+
+    /**
+     * Handles the successful completion of a correction.
+     * Closes the correction modal and triggers the refresh callback.
+     */
+    const handleCorrectionSuccess = () => {
+        setCorrectingLog(null)
+        onHistoryUpdate?.()
+    }
 
     return (
         <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4" onClick={onClose}>
@@ -86,65 +129,38 @@ export function BedHistoryModal({
 
                             <div className="space-y-8">
                                 {history.map((log) => (
-                                    <div key={log.id} className="relative pl-12">
-                                        {/* Timeline Dot */}
-                                        <div className="absolute left-0 top-1.5 w-[36px] flex justify-center">
-                                            <div className="w-2.5 h-2.5 rounded-full bg-blue-500 ring-4 ring-blue-500/10 z-10" />
-                                        </div>
-
-                                        <div className="bg-zinc-800/30 border border-zinc-800/50 rounded-xl p-4 hover:border-zinc-700 transition-colors">
-                                            <div className="flex flex-wrap items-center justify-between gap-4 mb-3">
-                                                <div className="flex items-center gap-2">
-                                                    <span className="text-zinc-500 text-xs line-through opacity-60">
-                                                        {log.fromStageName || "Admission"}
-                                                    </span>
-                                                    <ArrowRight className="h-3 w-3 text-zinc-600" />
-                                                    <span className="text-blue-400 font-bold text-sm bg-blue-500/5 px-2 py-1 rounded">
-                                                        {log.toStageName}
-                                                    </span>
-                                                </div>
-                                                <span className="text-zinc-500 text-xs font-mono">
-                                                    {new Date(log.transitionTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' })}
-                                                </span>
-                                            </div>
-
-                                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-xs">
-                                                <div className="flex items-center gap-2 text-zinc-400">
-                                                    <User className="h-3.5 w-3.5 text-zinc-500" />
-                                                    <span>Updated by <span className="text-zinc-300">{log.changedByName}</span></span>
-                                                </div>
-                                                {log.durationMs !== null && (
-                                                    <div className="flex items-center gap-2 text-zinc-400">
-                                                        <Clock className="h-3.5 w-3.5 text-zinc-500" />
-                                                       <span>Time spent in <span className="text-zinc-300">&quot;{log.fromStageName || 'Admission'}&quot;</span>: <span className="text-white font-medium">{formatDuration(log.durationMs)}</span></span>
-                                                        <span>Time spent in <span className="text-zinc-300">&quot;{log.fromStageName || 'Admission'}&quot;</span>: <span className="text-white font-medium">{formatDuration(log.durationMs)}</span></span>
-                                                    </div>
-                                                )}
-                                            </div>
-
-                                            {log.notes && (
-                                                <div className="mt-3 pt-3 border-t border-zinc-800/50">
-                                                    <p className="text-xs text-zinc-500 italic">&quot;{log.notes}&quot;</p>
-                                                </div>
-                                            )}
-                                        </div>
-                                    </div>
+                                    <BedHistoryTimelineItem
+                                        key={log.id}
+                                        log={log}
+                                        canEdit={canEdit}
+                                        onEdit={handleEdit}
+                                        formatDuration={formatDuration}
+                                    />
                                 ))}
                             </div>
                         </div>
                     )}
                 </div>
-
                 {/* Footer */}
                 <div className="p-4 bg-zinc-950/50 border-t border-zinc-800 text-center">
                     <button
                         onClick={onClose}
-                        className="w-full sm:w-auto px-8 py-2.5 bg-zinc-800 hover:bg-zinc-700 text-white rounded-lg transition-colors font-medium text-sm"
-                    >
+                        className="w-full sm:w-auto px-8 py-2.5 bg-zinc-800 hover:bg-zinc-700 text-white rounded-lg transition-colors font-medium text-sm">
                         Close Timeline
                     </button>
                 </div>
             </div>
+            {/* Correction Modal */}
+            <BedHistoryCorrectionModal
+                isOpen={!!correctingLog}
+                onClose={() => setCorrectingLog(null)}
+                onSuccess={handleCorrectionSuccess}
+                logId={correctingLog?.id ?? null}
+                initialDurationMs={correctingLog?.durationInPreviousStageMs ?? null}
+                initialNotes={correctingLog?.notes ?? null}
+                fromStageName={correctingLog?.fromStageName ?? null}
+                toStageName={correctingLog?.toStageName ?? null}
+            />
         </div>
     )
 }

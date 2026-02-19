@@ -6,18 +6,34 @@ import { BedStatusLegend } from './BedStatusLegend'
 import { BedStageContextMenu } from './BedStageContextMenu'
 import { BottleneckPanel } from './BottleneckPanel'
 import { BedGridStats } from './BedGridStats'
-import { Button } from '@/shared/components/ui/button'
-import { Filter, RefreshCw } from 'lucide-react'
+import { BedGridToolbar } from './BedGridToolbar'
 import type { BedGridData, BedWithElapsedTime, DispositionDelayReason } from '../types/bed'
 import { getBedStatistics } from '../lib/utils'
 import { getValidTransitionsForBed } from '../actions/bed-grid-actions'
 
+/**
+ * Props for the BedGrid component
+ * 
+ * @property {BedGridData} data - The core data object containing beds, stages, and stats
+ * @property {() => void} [onRefresh] - Callback to trigger a data refresh
+ * @property {(bed: BedWithElapsedTime) => void} [onBedClick] - Callback for bed click
+ * @property {(bedId: string, stageId: string) => void} [onStageSelect] - Callback for updating a bed stage
+ * @property {(bedId: string, reason: DispositionDelayReason) => void} [onReasonSelect] - Callback for handling delay reasons
+ * @property {(bedId: string, bedNumber: string) => void} [onViewHistory] - Callback to view bed history
+ * @property {string | null} [updatingBedId] - ID of bed currently being updated
+ * @property {string | null} [updatingStageId] - ID of stage currently being applied
+ * @property {string | null} [lastUpdatedBedId] - ID of last successfully updated bed (for highlighting)
+ * @property {string | null} [lastUpdatedStageId] - ID of last successfully updated stage
+ * @property {Record<string, string>} [errorByBedId] - Map of error messages by bed ID
+ * @property {boolean} [isRefreshing] - Loading state for refresh operation
+ */
 interface BedGridProps {
   data: BedGridData
   onRefresh?: () => void
   onBedClick?: (bed: BedWithElapsedTime) => void
   onStageSelect?: (bedId: string, stageId: string) => void
   onReasonSelect?: (bedId: string, reason: DispositionDelayReason) => void
+  onViewHistory?: (bedId: string, bedNumber: string) => void
   updatingBedId?: string | null
   updatingStageId?: string | null
   lastUpdatedBedId?: string | null
@@ -26,12 +42,22 @@ interface BedGridProps {
   isRefreshing?: boolean
 }
 
+/**
+ * Main Bed Grid Display Logic
+ * 
+ * Renders the grid of beds, handles filtering, context menus, and interactions.
+ * This component is central to the dashboard view.
+ * 
+ * @param {BedGridProps} props - Component props
+ * @returns {JSX.Element} The rendered bed grid
+ */
 export function BedGrid({
   data,
   onRefresh,
   onBedClick,
   onStageSelect,
   onReasonSelect,
+  onViewHistory,
   updatingBedId = null,
   updatingStageId = null,
   lastUpdatedBedId = null,
@@ -98,35 +124,13 @@ export function BedGrid({
 
   return (
     <div className="space-y-6">
-      {/* Header with filters and actions */}
-      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-        <div className="flex items-center gap-4">
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={toggleFilter}
-            className={showDelayedOnly ? 'bg-red-900/30 border-red-700' : ''}
-          >
-            <Filter className="h-4 w-4 mr-2" />
-            {showDelayedOnly ? 'Show All Beds' : 'Show Delayed Only'}
-            {stats.delayed > 0 && (
-              <span className="ml-2 px-2 py-0.5 text-xs bg-red-500 text-white rounded-full">
-                {stats.delayed}
-              </span>
-            )}
-          </Button>
-        </div>
-
-        <Button
-          variant="ghost"
-          size="sm"
-          onClick={onRefresh}
-          disabled={isRefreshing}
-        >
-          <RefreshCw className={`h-4 w-4 mr-2 ${isRefreshing ? 'animate-spin' : ''}`} />
-          Refresh
-        </Button>
-      </div>
+      <BedGridToolbar
+        showDelayedOnly={showDelayedOnly}
+        toggleFilter={toggleFilter}
+        delayedCount={stats.delayed}
+        isRefreshing={isRefreshing}
+        onRefresh={onRefresh}
+      />
 
       {/* Statistics bar */}
       <BedGridStats
@@ -180,6 +184,7 @@ export function BedGrid({
           overrideRequiredStages={overrideRequiredStages}
           onStageSelect={onStageSelect}
           onClose={handleCloseMenu}
+          onViewHistory={onViewHistory}
         />
       )}
 

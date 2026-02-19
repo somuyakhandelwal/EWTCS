@@ -1,0 +1,175 @@
+import pool from '@/shared/lib/db'
+import { logger } from '@/shared/config/logger'
+
+type BedRow = {
+    id: string
+    currentStageId: string | null
+    lastStageChange: Date | null
+    patientStartTime: Date | null
+    isOccupied: boolean
+}
+
+type StageRow = {
+    id: string
+    name: string
+}
+
+export interface UpdateBedStageParams {
+    bedId: string
+    toStageId: string
+    changedByUserId: string
+    notes?: string
+}
+
+export interface UpdateBedStageResult {
+    bedId: string
+    fromStageId: string | null
+    toStageId: string
+    durationInPreviousStageMs: number | null
+    isOccupied: boolean
+    patientStartTime: Date | null
+    lastStageChange: Date | null
+}
+
+function isNonPatientStage(stageName: string): boolean {
+    const normalized = stageName.trim().toLowerCase()
+    return normalized === 'empty' || normalized === 'cleaning'
+}
+
+/**
+ * Updates a bed's stage in the database with strict transactional integrity.
+ * 
+ * This function performs several critical operations atomically:
+ * 1. Locks the bed row to prevent race conditions (SELECT FOR UPDATE)
+ * 2. Validates the transition (valid bed, valid stage, change actually occurring)
+ * 3. Calculates duration spent in the previous stage
+ * 4. Updates the bed's current stage and status (occupied/unoccupied)
+ * 5. Handles patient_start_time logic (preserving it across patient stages)
+ * 6. Logs the transition to the historical ledger
+ * 
+ * @param {UpdateBedStageParams} params - The parameters for the update
+ * @returns {Promise<UpdateBedStageResult>} The result of the update including new bed state
+ * @throws {Error} If bed/stage not found, invalid transition, or database error
+ */
+export async function updateBedStageInDB(
+    params: UpdateBedStageParams
+): Promise<UpdateBedStageResult> {
+    const { bedId, toStageId, changedByUserId, notes } = params
+    const client = await pool.connect()
+
+    try {
+        await client.query('BEGIN')
+
+        const bedResult = await client.query<BedRow>(
+            `
+      SELECT 
+        id,
+        current_stage_id as "currentStageId",
+        last_stage_change as "lastStageChange",
+        patient_start_time as "patientStartTime",
+        is_occupied as "isOccupied"
+      FROM beds
+      WHERE id = $1 AND is_active = true
+      FOR UPDATE
+      `,
+            [bedId]
+        )
+
+        if (bedResult.rows.length === 0) {
+            throw new Error('Bed not found or inactive')
+        }
+
+        const bed = bedResult.rows[0]
+
+        if (bed.currentStageId === toStageId) {
+            throw new Error('Bed is already in the selected stage')
+        }
+
+        const stageResult = await client.query<StageRow>(
+            `
+      SELECT id, name
+      FROM stages
+      WHERE id = $1 AND is_active = true
+      `,
+            [toStageId]
+        )
+
+        if (stageResult.rows.length === 0) {
+            throw new Error('Stage not found or inactive')
+        }
+
+        const stage = stageResult.rows[0]
+
+        const now = Date.now()
+        const durationInPreviousStageMs = bed.lastStageChange
+            ? now - new Date(bed.lastStageChange).getTime()
+            : null
+
+        const shouldBeUnoccupied = isNonPatientStage(stage.name)
+        const nextIsOccupied = !shouldBeUnoccupied
+
+        // US-3.1: Use CASE to preserve patient_start_time permanently (never cleared)
+        // Only set when NULL and bed becomes occupied (non-empty/non-cleaning stage)
+        const updateResult = await client.query<{
+            patientStartTime: Date | null
+            isOccupied: boolean
+            lastStageChange: Date | null
+        }>(
+            `
+      UPDATE beds
+      SET current_stage_id = $1,
+      last_stage_change = NOW(),
+      patient_start_time = CASE
+        WHEN patient_start_time IS NULL AND NOT $2 THEN NOW()
+        ELSE patient_start_time
+      END,
+      is_occupied = $3,
+      updated_at = NOW()
+      WHERE id = $4
+      RETURNING patient_start_time as "patientStartTime", is_occupied as "isOccupied", last_stage_change as "lastStageChange"
+      `,
+            [toStageId, shouldBeUnoccupied, nextIsOccupied, bedId]
+        )
+
+        await client.query(
+            `
+      INSERT INTO bed_stage_logs (
+        bed_id,
+        from_stage_id,
+        to_stage_id,
+        changed_by_user_id,
+        duration_in_previous_stage_ms,
+        notes
+      ) VALUES ($1, $2, $3, $4, $5, $6)
+      `,
+            [
+                bedId,
+                bed.currentStageId,
+                toStageId,
+                changedByUserId,
+                durationInPreviousStageMs,
+                notes || null,
+            ]
+        )
+
+        await client.query('COMMIT')
+
+        const updated = updateResult.rows[0]
+
+        return {
+            bedId,
+            fromStageId: bed.currentStageId,
+            toStageId,
+            durationInPreviousStageMs,
+            isOccupied: updated?.isOccupied ?? nextIsOccupied,
+            patientStartTime: updated?.patientStartTime ?? bed.patientStartTime,
+            lastStageChange: updated?.lastStageChange ?? bed.lastStageChange,
+        }
+    } catch (error) {
+        await client.query('ROLLBACK')
+        logger.error('Failed to update bed stage', error as Error, { bedId, toStageId })
+        throw error
+    } finally {
+        client.release()
+    }
+}

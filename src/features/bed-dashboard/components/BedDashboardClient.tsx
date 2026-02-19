@@ -1,26 +1,42 @@
-// Bed Dashboard Client Wrapper
-// Epic 1: Nurse Desk Bed Dashboard
-// US-1.2: Real-time updates with intelligent polling
-
 'use client'
+
+/**
+ * BedDashboardClient.tsx
+ * 
+ * The main client-side entry point for the Bed Dashboard feature.
+ * This component orchestrates the real-time data flow, user interactions,
+ * and state management for the entire bed grid view.
+ * 
+ * Key Responsibilities:
+ * 1. Data Fetching: Initializes with server data and subscribes to real-time updates.
+ * 2. Stage Management: Handles transitions, including validation and optimistic updates.
+ * 3. Modal Coordination: Manages visibility for Confirmations, Overrides, Discharge, and History modals.
+ * 4. Error Handling: Displays connection status and operation errors.
+ * 
+ * Hooks Used:
+ * - useRealtimeBedUpdates: For live WebSocket/polling data.
+ * - useBedStageUpdate: For mutation logic and state (optimistic UI).
+ * - useBedHistory: For fetching and managing the history log state.
+ * 
+ * @module BedDashboard
+ */
 
 import { useCallback, useTransition } from 'react'
 import { BedGrid } from './BedGrid'
-import { ConnectionStatus } from './ConnectionStatus'
-import { SupervisorOverrideModal } from './SupervisorOverrideModal'
-import { ConfirmationModal } from './ConfirmationModal'
-import { DischargeModal } from './DischargeModal'
-import { DashboardSettings } from './DashboardSettings'
 import type { BedGridData, BedWithElapsedTime, DispositionDelayReason } from '../types/bed'
 import { useRealtimeBedUpdates } from '../hooks/useRealtimeBedUpdates'
 import { useBedStageUpdate } from '../hooks/useBedStageUpdate'
 import { recordDispositionDelayReason } from '../actions/disposition-actions'
+import { useBedHistory } from '../hooks/useBedHistory'
+import { DashboardHeader } from './DashboardHeader'
+import { DashboardModals } from './DashboardModals'
 
 interface BedDashboardClientProps {
   initialData: BedGridData
+  userRole?: string
 }
 
-export function BedDashboardClient({ initialData }: BedDashboardClientProps) {
+export function BedDashboardClient({ initialData, userRole }: BedDashboardClientProps) {
   const {
     data: realtimeData,
     connectionStatus,
@@ -53,7 +69,18 @@ export function BedDashboardClient({ initialData }: BedDashboardClientProps) {
     closeDischargeModal,
   } = useBedStageUpdate(realtimeData)
 
+  const {
+    isOpen: isHistoryOpen,
+    isLoading: isHistoryLoading,
+    history,
+    selectedBedNumber,
+    fetchHistory,
+    closeHistory,
+    refreshHistory
+  } = useBedHistory()
+
   const handleBedClick = useCallback((bed: BedWithElapsedTime) => {
+    // Placeholder for future detail view navigation
     void bed
   }, [])
 
@@ -67,15 +94,38 @@ export function BedDashboardClient({ initialData }: BedDashboardClientProps) {
     [handleRefresh]
   )
 
+  // Aggregate handlers for the modal subcomponent
+  const modalHandlers = {
+    handleOverrideApprove,
+    closeOverrideModal,
+    handleConfirmationConfirm,
+    closeConfirmationModal,
+    handleDischargeConfirm,
+    closeDischargeModal,
+    closeHistory,
+    refreshHistory,
+    isOverrideSubmitting,
+    isDischargeSubmitting,
+    updatingBedId,
+    userRole
+  }
+
+  // Aggregate history state
+  const historyState = {
+    isOpen: isHistoryOpen,
+    isLoading: isHistoryLoading,
+    history,
+    selectedBedNumber
+  }
+
   return (
     <div className="space-y-4">
-      <div className="flex justify-end items-center gap-2">
-        <DashboardSettings
-          enabled={settings.confirmCriticalStages}
-          onToggle={toggleConfirmation}
-        />
-        <ConnectionStatus status={connectionStatus} onReconnect={reconnect} />
-      </div>
+      <DashboardHeader
+        settings={settings}
+        toggleConfirmation={toggleConfirmation}
+        connectionStatus={connectionStatus}
+        reconnect={reconnect}
+      />
 
       <BedGrid
         data={data}
@@ -89,36 +139,15 @@ export function BedDashboardClient({ initialData }: BedDashboardClientProps) {
         lastUpdatedStageId={lastUpdatedStageId}
         errorByBedId={errorByBedId}
         isRefreshing={isLoading}
+        onViewHistory={fetchHistory}
       />
 
-      <SupervisorOverrideModal
-        isOpen={Boolean(overrideState)}
-        bedNumber={overrideState?.bedNumber ?? null}
-        fromStageName={overrideState?.fromStageName ?? null}
-        toStage={overrideState?.toStage ?? null}
-        reason={overrideState?.reason ?? null}
-        onApprove={handleOverrideApprove}
-        onCancel={closeOverrideModal}
-        isLoading={isOverrideSubmitting}
-      />
-
-      <ConfirmationModal
-        isOpen={Boolean(confirmationState)}
-        bedNumber={confirmationState?.bedNumber ?? null}
-        fromStageName={confirmationState?.fromStageName ?? null}
-        toStage={confirmationState?.toStage ?? null}
-        onConfirm={handleConfirmationConfirm}
-        onCancel={closeConfirmationModal}
-        isUpdating={confirmationState ? updatingBedId === confirmationState.bedId : false}
-      />
-
-      {/* US-2.3: Discharge confirmation modal */}
-      <DischargeModal
-        isOpen={Boolean(dischargeState)}
+      <DashboardModals
+        overrideState={overrideState}
+        confirmationState={confirmationState}
         dischargeState={dischargeState}
-        onConfirm={handleDischargeConfirm}
-        onCancel={closeDischargeModal}
-        isSubmitting={isDischargeSubmitting}
+        historyState={historyState}
+        handlers={modalHandlers}
       />
     </div>
   )

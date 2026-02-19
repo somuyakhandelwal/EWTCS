@@ -52,7 +52,7 @@ export default async function DashboardPage() {
                 </div>
 
                 {/* Bed Grid */}
-                <BedDashboardClient initialData={bedGridResult.data} />
+                <BedDashboardClient initialData={bedGridResult.data} userRole={session.role} />
             </div>
         </div>
     )
