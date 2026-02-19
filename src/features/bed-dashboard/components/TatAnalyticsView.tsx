@@ -10,7 +10,7 @@ import { Button } from '@/shared/components/ui/button'
 import { fetchTatSummary, fetchTatRecords } from '../actions/tat-actions'
 import { formatDuration } from '../lib/analytics-utils'
 import type { TatRecord, TatSummary } from '../types/bed'
-import { Clock, AlertCircle, Download } from 'lucide-react'
+import { AlertCircle, Download } from 'lucide-react'
 import { cn } from '@/shared/lib/utils'
 import { logger } from '@/shared/config/logger'
 

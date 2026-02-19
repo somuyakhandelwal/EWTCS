@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useMemo, useCallback, type MouseEvent } from 'react'
+import { useMemo } from 'react'
 import { BedCard } from './BedCard'
 import { BedStatusLegend } from './BedStatusLegend'
 import { BedStageContextMenu } from './BedStageContextMenu'
@@ -9,10 +9,10 @@ import { BedGridStats } from './BedGridStats'
 import { BedGridHeader } from './BedGridHeader'
 import { BedGridFooter } from './BedGridFooter'
 import { useBedFilter } from '../hooks/useBedFilter'
+import { useBedContextMenu } from '../hooks/useBedContextMenu'
 import type { BedGridData, BedWithElapsedTime, DispositionDelayReason, TatSummary } from '../types/bed'
 import { getBedStatistics } from '../lib/utils'
 import { isCleaningStage } from './CleaningActions'
-import { getValidTransitionsForBed } from '../actions/bed-grid-actions'
 
 interface BedGridProps {
   data: BedGridData
@@ -53,15 +53,17 @@ export function BedGrid({
   undoState,
   onUndo,
 }: BedGridProps) {
-  const [showDelayedOnly, setShowDelayedOnly] = useState(false)
-  const [menuState, setMenuState] = useState<{
-    bedId: string
-    position: { x: number; y: number }
-  } | null>(null)
-  const [validNextStages, setValidNextStages] = useState<string[]>([])
-  const [overrideRequiredStages, setOverrideRequiredStages] = useState<string[]>([])
-  const [isLoadingTransitions, setIsLoadingTransitions] = useState(false)
-  const [menuError, setMenuError] = useState<string | null>(null)
+  const {
+    menuState,
+    validNextStages,
+    overrideRequiredStages,
+    isLoadingTransitions,
+    menuError,
+    activeBed,
+    handleOpenMenu,
+    handleBedTap,
+    handleCloseMenu,
+  } = useBedContextMenu(data.beds, onStageSelect)
 
   const {
     showDelayedOnly,
@@ -85,58 +87,6 @@ export function BedGrid({
 
   const stats = useMemo(() => getBedStatistics(data.beds), [data.beds])
   const cleaningCount = useMemo(() => data.beds.filter(b => isCleaningStage(b.currentStage?.name)).length, [data.beds])
-
-  const openMenuForBed = useCallback(
-    async (bedId: string, position: { x: number; y: number }) => {
-      setMenuState({ bedId, position })
-      setMenuError(null)
-      setIsLoadingTransitions(true)
-      try {
-        const result = await getValidTransitionsForBed(bedId)
-        if (result.success && result.allowed) {
-          setValidNextStages(result.allowed)
-          setOverrideRequiredStages(result.requiresOverride || [])
-        } else {
-          setMenuError(result.error || 'Unable to load available stages')
-          setValidNextStages([])
-          setOverrideRequiredStages([])
-        }
-      } catch (error) {
-        console.error('Failed to fetch valid transitions:', error)
-        setMenuError('Connection error. Please try again.')
-        setValidNextStages([])
-        setOverrideRequiredStages([])
-      } finally {
-        setIsLoadingTransitions(false)
-      }
-    },
-    []
-  )
-
-  // Right-click (desktop)
-  const handleOpenMenu = useCallback(async (event: MouseEvent<HTMLDivElement>, bed: BedWithElapsedTime) => {
-    if (!onStageSelect) return
-    event.preventDefault()
-    await openMenuForBed(bed.id, { x: event.clientX, y: event.clientY })
-  }, [onStageSelect, openMenuForBed])
-
-  // Tap (mobile) — centre of viewport for bottom-sheet positioning
-  const handleBedTap = useCallback(async (bed: BedWithElapsedTime) => {
-    if (!onStageSelect) return
-    await openMenuForBed(bed.id, { x: window.innerWidth / 2 - 96, y: window.innerHeight / 2 })
-  }, [onStageSelect, openMenuForBed])
-
-  const handleCloseMenu = useCallback(() => {
-    setMenuState(null)
-    setValidNextStages([])
-    setOverrideRequiredStages([])
-    setMenuError(null)
-  }, [])
-
-  const activeBed = useMemo(() => {
-    if (!menuState) return null
-    return data.beds.find(bed => bed.id === menuState.bedId) ?? null
-  }, [data.beds, menuState])
 
   return (
     <div className="space-y-6">
