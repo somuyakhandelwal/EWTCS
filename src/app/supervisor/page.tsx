@@ -1,8 +1,9 @@
-import { ClipboardList } from "lucide-react"
+import { ClipboardList, BarChart2 } from "lucide-react"
 import { LogoutButton } from "@/features/auth/components/LogoutButton"
 import { KioskBanner } from "@/features/auth/components/KioskBanner"
 import { redirect } from "next/navigation"
 import { AlertTriangle } from "lucide-react"
+import Link from "next/link"
 
 import { verifyActiveSession } from "@/features/auth/lib/active-session"
 import { getBedGridData } from "@/features/bed-dashboard/actions/bed-grid-actions"
@@ -34,6 +35,13 @@ export default async function SupervisorDashboard() {
                         <div className="p-2 bg-amber-900/20 border border-amber-900/50 rounded-full">
                             <ClipboardList className="h-6 w-6 text-amber-500" />
                         </div>
+                        <Link
+                            href="/analytics"
+                            className="flex items-center gap-2 px-4 py-2 rounded-lg bg-zinc-800 hover:bg-zinc-700 border border-zinc-700 hover:border-zinc-500 text-zinc-200 hover:text-white text-sm font-medium transition-colors"
+                        >
+                            <BarChart2 className="h-4 w-4 text-blue-400" />
+                            Analytics
+                        </Link>
                         <LogoutButton />
                     </div>
                 </div>

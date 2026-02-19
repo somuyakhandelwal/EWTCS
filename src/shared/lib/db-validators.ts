@@ -8,12 +8,16 @@ export const ALLOWED_TABLES = new Set([
   'users',
   'beds',
   'stages',
-  'ward',
+  'wards',                        // migration 006 — was incorrectly 'ward'
   'audit_logs',
   'bed_stage_logs',
   'token_blacklist',
   'bed_stage_log_corrections',
   'stage_transitions',
+  'user_management_logs',         // migration 003
+  'disposition_delay_reasons',    // migration 011/012
+  'patient_admissions',           // migration 013
+  'kiosk_sessions',               // migration 014
 ])
 
 /**

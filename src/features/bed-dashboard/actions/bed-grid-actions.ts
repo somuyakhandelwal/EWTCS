@@ -18,8 +18,11 @@ export async function getBedGridData(): Promise<{
   error?: string
 }> {
   try {
+    // Auth guard: all roles can fetch the dashboard, but must be authenticated
+    await requireRole(['nurse', 'supervisor', 'admin'])
+
     logger.info('Fetching bed grid data')
-    
+
     const delayThresholdMs = config.alert.delayThresholdMs
 
     // Fetch beds and stages in parallel
@@ -99,11 +102,16 @@ export async function getValidTransitionsForBed(bedId: string): Promise<{
   try {
     const session = await requireRole(['nurse', 'supervisor', 'admin'])
 
-    // Verify user has access to this bed (ward-level access control)
+    // Verify user has access to this bed — mirrors the same logic in bed-actions.ts
     const userWard = await getUserWard(session.userId)
     const bedWard = await getBedWard(bedId)
 
-    if (userWard !== bedWard && session.role !== 'admin') {
+    const hasWardAccess =
+      session.role === 'admin' ||
+      (!userWard && !bedWard) ||
+      (userWard && bedWard && userWard === bedWard)
+
+    if (!hasWardAccess) {
       return {
         success: false,
         error: 'Access denied to this bed',

@@ -17,6 +17,7 @@ type SessionPayload = {
     username: string
     role: string
     expiresAt: Date
+    lastActivity?: number
     isKiosk?: boolean
     kioskIp?: string
     kioskSessionId?: string
