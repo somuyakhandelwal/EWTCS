@@ -67,12 +67,13 @@ export async function getBedAnalyticsSummary(): Promise<{
   totalPatientsProcessed: number
 }> {
   try {
+    // pg returns COUNT/BIGINT as strings — use a raw type then coerce
     const result = await query<{
-      totalBedsUsed: number
-      totalTransitions: number
-      averageTimePerPatientMs: number
-      averageTransitionsPerPatient: number
-      totalPatientsProcessed: number
+      totalBedsUsed: string
+      totalTransitions: string
+      averageTimePerPatientMs: string | null
+      averageTransitionsPerPatient: string | null
+      totalPatientsProcessed: string
     }>(
       `
       SELECT 
@@ -94,12 +95,22 @@ export async function getBedAnalyticsSummary(): Promise<{
       `
     )
 
-    return result.rows[0] || {
-      totalBedsUsed: 0,
-      totalTransitions: 0,
-      averageTimePerPatientMs: 0,
-      averageTransitionsPerPatient: 0,
-      totalPatientsProcessed: 0,
+    const raw = result.rows[0]
+    if (!raw) {
+      return {
+        totalBedsUsed: 0,
+        totalTransitions: 0,
+        averageTimePerPatientMs: 0,
+        averageTransitionsPerPatient: 0,
+        totalPatientsProcessed: 0,
+      }
+    }
+    return {
+      totalBedsUsed: parseInt(raw.totalBedsUsed, 10) || 0,
+      totalTransitions: parseInt(raw.totalTransitions, 10) || 0,
+      averageTimePerPatientMs: parseFloat(raw.averageTimePerPatientMs ?? '0') || 0,
+      averageTransitionsPerPatient: parseFloat(raw.averageTransitionsPerPatient ?? '0') || 0,
+      totalPatientsProcessed: parseInt(raw.totalPatientsProcessed, 10) || 0,
     }
   } catch (error) {
     logger.error('Failed to fetch bed analytics summary', error as Error)

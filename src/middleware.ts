@@ -43,6 +43,7 @@ export async function middleware(request: NextRequest) {
             return res
         }
     }
+
     // Protected routes
     if (pathname.startsWith('/admin')) {
         if (!session || session.role !== 'admin') {
@@ -62,6 +63,13 @@ export async function middleware(request: NextRequest) {
         }
     }
 
+    // Analytics: supervisor and admin only
+    if (pathname.startsWith('/analytics')) {
+        if (!session || (session.role !== 'supervisor' && session.role !== 'admin')) {
+            return NextResponse.redirect(new URL('/login', request.url))
+        }
+    }
+
     // Already logged in — redirect away from login
     if (pathname.startsWith('/login')) {
         if (session) {
@@ -75,5 +83,5 @@ export async function middleware(request: NextRequest) {
 }
 
 export const config = {
-    matcher: ['/dashboard/:path*', '/admin/:path*', '/supervisor/:path*', '/login'],
+    matcher: ['/dashboard/:path*', '/admin/:path*', '/supervisor/:path*', '/analytics/:path*', '/login'],
 }
