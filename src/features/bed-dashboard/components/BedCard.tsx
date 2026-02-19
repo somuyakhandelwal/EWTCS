@@ -22,6 +22,9 @@ interface BedCardProps {
   onReasonSelect?: (bedId: string, reason: DispositionDelayReason) => void
   showUpdated?: boolean
   errorMessage?: string | null
+  showUndo?: boolean
+  onUndo?: () => void
+  undoTimerSeconds?: number
 }
 
 export const BedCard = memo(function BedCard({
@@ -31,6 +34,9 @@ export const BedCard = memo(function BedCard({
   onReasonSelect,
   showUpdated = false,
   errorMessage = null,
+  showUndo = false,
+  onUndo,
+  undoTimerSeconds = 30,
 }: BedCardProps) {
   const stageName = bed.currentStage?.name || 'Empty'
   const stageColor = bed.currentStage?.colorCode || 'gray'
@@ -97,6 +103,18 @@ export const BedCard = memo(function BedCard({
           )}
           {errorMessage && (
             <p className="text-[10px] text-red-400">{errorMessage}</p>
+          )}
+          {/* Undo Button (inline) */}
+          {showUndo && onUndo && (
+            <div className="mt-2 flex items-center gap-2">
+              <button
+                className="px-3 py-1 bg-blue-600 hover:bg-blue-700 text-white text-xs rounded transition-colors font-semibold shadow"
+                onClick={e => { e.stopPropagation(); onUndo(); }}
+              >
+                Undo
+              </button>
+              <span className="text-xs text-zinc-400">({undoTimerSeconds}s)</span>
+            </div>
           )}
 
           {/* US-1.6: Disposition bottleneck badge */}

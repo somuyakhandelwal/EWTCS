@@ -24,6 +24,8 @@ interface BedGridProps {
   lastUpdatedStageId?: string | null
   errorByBedId?: Record<string, string>
   isRefreshing?: boolean
+  undoState?: { bedId: string; prevStageId: string; timer: number } | null
+  onUndo?: () => void
 }
 
 export function BedGrid({
@@ -38,6 +40,8 @@ export function BedGrid({
   lastUpdatedStageId = null,
   errorByBedId = {},
   isRefreshing = false,
+  undoState,
+  onUndo,
 }: BedGridProps) {
   const [showDelayedOnly, setShowDelayedOnly] = useState(false)
   const [menuState, setMenuState] = useState<{
@@ -48,10 +52,14 @@ export function BedGrid({
   const [overrideRequiredStages, setOverrideRequiredStages] = useState<string[]>([])
   const [isLoadingTransitions, setIsLoadingTransitions] = useState(false)
 
-  const displayedBeds = useMemo(
-    () => showDelayedOnly ? data.beds.filter(bed => bed.isDelayed) : data.beds,
-    [data.beds, showDelayedOnly]
-  )
+  // Memoize filtered beds and statistics for performance
+  const displayedBeds = useMemo(() => {
+    if (showDelayedOnly) {
+      return data.beds.filter(bed => bed.isDelayed)
+    }
+    return data.beds
+  }, [data.beds, showDelayedOnly])
+
   const stats = useMemo(() => getBedStatistics(data.beds), [data.beds])
 
   const toggleFilter = useCallback(() => {
@@ -64,10 +72,18 @@ export function BedGrid({
     try {
       const result = await getValidTransitionsForBed(bedId)
       if (result.success) {
-        setValidNextStages(result.allowed || [])
-        setOverrideRequiredStages(result.requiresOverride || [])
+        setValidNextStages(result.allowed ?? [])
+        setOverrideRequiredStages(result.requiresOverride ?? [])
+      } else {
+        setValidNextStages([])
+        setOverrideRequiredStages([])
       }
-    } catch { /* fallback */ } finally { setIsLoadingTransitions(false) }
+    } catch {
+      setValidNextStages([])
+      setOverrideRequiredStages([])
+    } finally {
+      setIsLoadingTransitions(false)
+    }
   }, [])
 
   // Right-click (desktop)
@@ -90,10 +106,8 @@ export function BedGrid({
   }, [])
 
   const activeBed = useMemo(() => {
-    if (!menuState) {
-      return null
-    }
-    return data.beds.find((bed) => bed.id === menuState.bedId) ?? null
+    if (!menuState) return null
+    return data.beds.find(bed => bed.id === menuState.bedId) ?? null
   }, [data.beds, menuState])
 
   return (
@@ -163,6 +177,9 @@ export function BedGrid({
               onReasonSelect={onReasonSelect}
               showUpdated={lastUpdatedBedId === bed.id && lastUpdatedStageId !== null}
               errorMessage={errorByBedId[bed.id] || null}
+              showUndo={undoState?.bedId === bed.id}
+              onUndo={onUndo}
+              undoTimerSeconds={undoState?.bedId === bed.id ? undoState.timer : 30}
             />
           ))}
         </div>

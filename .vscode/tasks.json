@@ -1,0 +1,29 @@
+{
+	"version": "2.0.0",
+	"tasks": [
+		{
+			"label": "Run Vitest tests",
+			"type": "shell",
+			"command": "npx vitest run",
+			"group": "test"
+		},
+		{
+			"label": "Run Vitest tests after optimization",
+			"type": "shell",
+			"command": "npx vitest run",
+			"group": "test"
+		},
+		{
+			"label": "Run Vitest tests (full suite) after optimization",
+			"type": "shell",
+			"command": "npx vitest run",
+			"group": "test"
+		},
+		{
+			"label": "Run Vitest tests for bed-dashboard",
+			"type": "shell",
+			"command": "npx vitest run src/features/bed-dashboard",
+			"group": "test"
+		}
+	]
+}
