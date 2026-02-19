@@ -49,7 +49,8 @@ export async function executeStageUpdate({
   isUpdateTimedOut,
   options,
 }: ExecuteStageUpdateArgs): Promise<boolean> {
-  if (updatingBedId) {
+  // BUG FIX #1: Prevent race condition - check if THIS bed is already updating
+  if (updatingBedId === bedId) {
     setTemporaryError(bedId, 'Update in progress, please wait.')
     return false
   }

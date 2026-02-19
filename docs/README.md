@@ -22,6 +22,8 @@ Start here if you're new to the project:
 - **[CODE_OF_CONDUCT.md](../CODE_OF_CONDUCT.md)** - Community guidelines and standards
 - **[Features Guide](../src/features/README.md)** - Feature-first architecture and how to build features
 - **[Shared Code Guide](../src/shared/README.md)** - Guidelines for shared utilities and components
+- **[Stage Color Map](../src/shared/utils/stage-colors.ts)** - Shared color classes used across the application
+- **[Accessibility Checklist](ACCESSIBILITY.md)** - WCAG 2.1 AA contrast checks and guidance
 
 ### Technical Documentation
 - **[Analytics System](../src/features/bed-dashboard/ANALYTICS_README.md)** - Stage analytics and reporting documentation

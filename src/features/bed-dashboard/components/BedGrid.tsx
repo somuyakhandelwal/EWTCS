@@ -14,6 +14,7 @@ import { getValidTransitionsForBed } from '../actions/bed-grid-actions'
 
 interface BedGridProps {
   data: BedGridData
+  searchQuery?: string
   onRefresh?: () => void
   onBedClick?: (bed: BedWithElapsedTime) => void
   onStageSelect?: (bedId: string, stageId: string) => void
@@ -28,6 +29,7 @@ interface BedGridProps {
 
 export function BedGrid({
   data,
+  searchQuery = '',
   onRefresh,
   onBedClick,
   onStageSelect,
@@ -47,17 +49,69 @@ export function BedGrid({
   const [validNextStages, setValidNextStages] = useState<string[]>([])
   const [overrideRequiredStages, setOverrideRequiredStages] = useState<string[]>([])
   const [isLoadingTransitions, setIsLoadingTransitions] = useState(false)
+  const [menuError, setMenuError] = useState<string | null>(null)
 
+<<<<<<< feature/issue-14-search-bed-by-number
+  // Memoize filtered beds to prevent unnecessary recalculation
+  const displayedBeds = useMemo(() => {
+    const base = showDelayedOnly ? data.beds.filter(b => b.isDelayed) : data.beds
+    if (!searchQuery.trim()) return base
+    const q = searchQuery.toLowerCase()
+    return base.filter(bed => {
+      if (bed.bedNumber.toLowerCase().includes(q)) return true
+      if (bed.currentStage?.name.toLowerCase().includes(q)) return true
+      return false
+    })
+  }, [data.beds, showDelayedOnly, searchQuery])
+
+  // Memoize statistics calculation
+=======
   const displayedBeds = useMemo(
     () => showDelayedOnly ? data.beds.filter(bed => bed.isDelayed) : data.beds,
     [data.beds, showDelayedOnly]
   )
+>>>>>>> main
   const stats = useMemo(() => getBedStatistics(data.beds), [data.beds])
 
   const toggleFilter = useCallback(() => {
     setShowDelayedOnly(prev => !prev)
   }, [])
 
+<<<<<<< feature/issue-14-search-bed-by-number
+  const handleOpenMenu = useCallback(
+    async (event: MouseEvent<HTMLDivElement>, bed: BedWithElapsedTime) => {
+      if (!onStageSelect) {
+        return
+      }
+      event.preventDefault()
+      setMenuState({
+        bedId: bed.id,
+        position: { x: event.clientX, y: event.clientY },
+      })
+      setMenuError(null)
+
+      // Fetch valid transitions for this bed
+      setIsLoadingTransitions(true)
+      try {
+        const result = await getValidTransitionsForBed(bed.id)
+        if (result.success && result.allowed) {
+          setValidNextStages(result.allowed)
+          setOverrideRequiredStages(result.requiresOverride || [])
+        } else {
+          // BUG FIX #2: Show error message when transitions can't be loaded
+          setMenuError(result.error || 'Unable to load available stages')
+          setValidNextStages([])
+          setOverrideRequiredStages([])
+        }
+      } catch (error) {
+        // BUG FIX #2: Catch and display error to user
+        console.error('Failed to fetch valid transitions:', error)
+        setMenuError('Connection error. Please try again.')
+        setValidNextStages([])
+        setOverrideRequiredStages([])
+      } finally {
+        setIsLoadingTransitions(false)
+=======
   const openMenuForBed = useCallback(async (bedId: string, position: { x: number; y: number }) => {
     setMenuState({ bedId, position })
     setIsLoadingTransitions(true)
@@ -66,6 +120,7 @@ export function BedGrid({
       if (result.success) {
         setValidNextStages(result.allowed || [])
         setOverrideRequiredStages(result.requiresOverride || [])
+>>>>>>> main
       }
     } catch { /* fallback */ } finally { setIsLoadingTransitions(false) }
   }, [])
@@ -87,6 +142,7 @@ export function BedGrid({
     setMenuState(null)
     setValidNextStages([])
     setOverrideRequiredStages([])
+    setMenuError(null)
   }, [])
 
   const activeBed = useMemo(() => {
@@ -163,6 +219,7 @@ export function BedGrid({
               onReasonSelect={onReasonSelect}
               showUpdated={lastUpdatedBedId === bed.id && lastUpdatedStageId !== null}
               errorMessage={errorByBedId[bed.id] || null}
+              searchQuery={searchQuery}
             />
           ))}
         </div>
@@ -178,6 +235,7 @@ export function BedGrid({
           updatingStageId={updatingStageId}
           validNextStages={validNextStages}
           overrideRequiredStages={overrideRequiredStages}
+          error={menuError}
           onStageSelect={onStageSelect}
           onClose={handleCloseMenu}
         />

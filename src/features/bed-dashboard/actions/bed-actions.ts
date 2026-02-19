@@ -36,6 +36,30 @@ export async function updateBedStage(input: UpdateBedStageInput): Promise<{
     const userWard = await getUserWard(session.userId)
     const bedWard = await getBedWard(result.data.bedId)
 
+    // BUG FIX #6: Explicit null checks with helpful error messages
+    if (!userWard && session.role !== 'admin') {
+      logger.warn('User without ward assignment attempted bed access', {
+        userId: session.userId,
+        userRole: session.role,
+      })
+      return {
+        success: false,
+        error: 'Your user account does not have a ward assignment. Contact your administrator.',
+      }
+    }
+
+    if (!bedWard && session.role !== 'admin') {
+      logger.warn('Attempt to access bed without ward assignment', {
+        userId: session.userId,
+        bedId: result.data.bedId,
+        userRole: session.role,
+      })
+      return {
+        success: false,
+        error: 'This bed does not belong to any ward. Contact your administrator.',
+      }
+    }
+
     // Allow access if:
     // 1. Neither user nor bed has a ward assigned (ward system not configured)
     // 2. Both have ward assignments and they match
@@ -138,18 +162,31 @@ export async function updateBedStage(input: UpdateBedStageInput): Promise<{
       notes: result.data.notes,
     })
 
-    await logAudit({
-      actionType: 'UPDATE',
-      entityType: 'bed',
-      entityId: updateResult.bedId,
-      performedBy: session.userId,
-      changes: {
-        fromStageId: updateResult.fromStageId,
-        toStageId: updateResult.toStageId,
-        isOccupied: updateResult.isOccupied,
-        supervisorOverrideApplied: result.data.supervisorOverride,
-      },
-    })
+    // BUG FIX #7: Log audit AFTER update with error handling
+    // If audit logging fails, still consider update successful (graceful degradation)
+    // but log the audit failure for compliance team to investigate
+    try {
+      await logAudit({
+        actionType: 'UPDATE',
+        entityType: 'bed',
+        entityId: updateResult.bedId,
+        performedBy: session.userId,
+        changes: {
+          fromStageId: updateResult.fromStageId,
+          toStageId: updateResult.toStageId,
+          isOccupied: updateResult.isOccupied,
+          supervisorOverrideApplied: result.data.supervisorOverride,
+        },
+      })
+    } catch (auditError) {
+      // BUG FIX #7: Log audit failure for compliance investigation
+      logger.error('CRITICAL: Audit logging failed - potential compliance issue', auditError as Error, {
+        bedId: updateResult.bedId,
+        userId: session.userId,
+        stageTransition: `${updateResult.fromStageId} → ${updateResult.toStageId}`,
+      })
+      // Still return success since bed WAS updated - audit failure is secondary
+    }
 
     return {
       success: true,

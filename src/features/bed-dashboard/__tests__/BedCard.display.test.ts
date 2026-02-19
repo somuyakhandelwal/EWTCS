@@ -1,5 +1,4 @@
 import { describe, it, expect, vi } from 'vitest'
-import { render, screen } from '@testing-library/react'
 
 // Mock the components and hooks
 vi.mock('../hooks/useElapsedTime', () => ({
@@ -21,7 +20,7 @@ vi.mock('../hooks/useElapsedTime', () => ({
 }))
 
 vi.mock('@/shared/lib/utils', () => ({
-  cn: (...args: any[]) => args.filter(Boolean).join(' '),
+  cn: (...args: Array<string | false | null | undefined>) => args.filter(Boolean).join(' '),
 }))
 
 describe('BedCard Elapsed Time Display - AC-4: Prominent Display', () => {

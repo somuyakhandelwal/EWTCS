@@ -1,11 +1,12 @@
 // Bed Dashboard Client Wrapper
 // Epic 1: Nurse Desk Bed Dashboard
-// US-1.2: Real-time updates with intelligent polling
+// US-1.2: Real-time updates with intelligent polling + Search functionality
 
 'use client'
 
-import { useCallback, useTransition } from 'react'
+import { useCallback, useState, useRef, useEffect, useTransition } from 'react'
 import { BedGrid } from './BedGrid'
+import { SearchInput } from './SearchInput'
 import { ConnectionStatus } from './ConnectionStatus'
 import { SupervisorOverrideModal } from './SupervisorOverrideModal'
 import { ConfirmationModal } from './ConfirmationModal'
@@ -53,6 +54,26 @@ export function BedDashboardClient({ initialData }: BedDashboardClientProps) {
     closeDischargeModal,
   } = useBedStageUpdate(realtimeData)
 
+  // Search state: immediate input and debounced query used for filtering (US-1.2)
+  const [searchInput, setSearchInput] = useState('')
+  const [searchQuery, setSearchQuery] = useState('')
+  const searchDebounceRef = useRef<NodeJS.Timeout | null>(null)
+
+  useEffect(() => {
+    if (searchDebounceRef.current) clearTimeout(searchDebounceRef.current)
+    searchDebounceRef.current = setTimeout(() => {
+      setSearchQuery(searchInput.trim())
+      searchDebounceRef.current = null
+    }, 200)
+
+    return () => {
+      if (searchDebounceRef.current) {
+        clearTimeout(searchDebounceRef.current)
+        searchDebounceRef.current = null
+      }
+    }
+  }, [searchInput])
+
   const handleBedClick = useCallback((bed: BedWithElapsedTime) => {
     void bed
   }, [])
@@ -69,6 +90,13 @@ export function BedDashboardClient({ initialData }: BedDashboardClientProps) {
 
   return (
     <div className="space-y-4">
+      {/* Search Input */}
+      <SearchInput
+        value={searchInput}
+        onChange={setSearchInput}
+        placeholder="Search by bed number (EW-01) or status (Triage)..."
+      />
+      {/* Connection Status Indicator */}
       <div className="flex justify-end items-center gap-2">
         <DashboardSettings
           enabled={settings.confirmCriticalStages}
@@ -89,6 +117,7 @@ export function BedDashboardClient({ initialData }: BedDashboardClientProps) {
         lastUpdatedStageId={lastUpdatedStageId}
         errorByBedId={errorByBedId}
         isRefreshing={isLoading}
+        searchQuery={searchQuery}
       />
 
       <SupervisorOverrideModal
