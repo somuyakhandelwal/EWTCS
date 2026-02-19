@@ -19,9 +19,13 @@ import { recordDispositionDelayReason } from '../actions/disposition-actions'
 
 interface BedDashboardClientProps {
   initialData: BedGridData
+  canRecordDispositionReasons?: boolean
 }
 
-export function BedDashboardClient({ initialData }: BedDashboardClientProps) {
+export function BedDashboardClient({
+  initialData,
+  canRecordDispositionReasons = true,
+}: BedDashboardClientProps) {
   // Undo state: which bed can be undone, timer, and previous stage info
   const [undoState, setUndoState] = useState<{
     bedId: string;
@@ -163,7 +167,7 @@ export function BedDashboardClient({ initialData }: BedDashboardClientProps) {
         onRefresh={handleRefresh}
         onBedClick={handleBedClick}
         onStageSelect={handleStageSelect}
-        onReasonSelect={handleReasonSelect}
+        onReasonSelect={canRecordDispositionReasons ? handleReasonSelect : undefined}
         updatingBedId={updatingBedId}
         updatingStageId={updatingStageId}
         lastUpdatedBedId={lastUpdatedBedId}

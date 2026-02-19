@@ -8,7 +8,7 @@ import type {
   StageCategories,
   UserRole,
 } from './stage-validation-types'
-import { getTransitionRule, getValidNextStages } from './stage-validation-rules'
+import { getTransitionRule, getValidNextStages, getStageNameById } from './stage-validation-rules'
 
 /**
  * Validate a stage transition with detailed error messaging
@@ -20,6 +20,27 @@ export async function validateTransition(
   userRole: UserRole
 ): Promise<TransitionValidationResult> {
   try {
+    // Housekeeping can only run cleaning workflow transitions.
+    if (userRole === 'housekeeping') {
+      const [fromStageName, toStageName] = await Promise.all([
+        getStageNameById(currentStageId),
+        getStageNameById(toStageId),
+      ])
+
+      const isStartCleaning = fromStageName === 'Discharge Process' && toStageName === 'Cleaning'
+      const isCleaningComplete = fromStageName === 'Cleaning' && toStageName === 'Empty'
+      const isAllowedCleaningFlow = isStartCleaning || isCleaningComplete
+
+      return {
+        isValid: isAllowedCleaningFlow,
+        requiresSupervisorOverride: false,
+        reason: isAllowedCleaningFlow
+          ? 'Cleaning workflow transition allowed'
+          : 'Housekeeping can only perform Start Cleaning and Cleaning Complete actions.',
+        validNextStages: [],
+      }
+    }
+
     // Get the transition rule for this specific transition
     const rule = await getTransitionRule(currentStageId, toStageId)
 
@@ -107,6 +128,21 @@ export async function categorizeStagesForTransition(
   userRole: UserRole
 ): Promise<StageCategories> {
   try {
+    if (userRole === 'housekeeping') {
+      const results = await Promise.all(
+        allStageIds.map(async (toStageId) => ({
+          toStageId,
+          result: await validateTransition(fromStageId, toStageId, userRole),
+        }))
+      )
+
+      return {
+        allowed: results.filter(r => r.result.isValid).map(r => r.toStageId),
+        requiresOverride: [],
+        invalid: results.filter(r => !r.result.isValid).map(r => r.toStageId),
+      }
+    }
+
     const allowed: string[] = []
     const requiresOverride: string[] = []
     const invalid: string[] = []

@@ -41,7 +41,8 @@ export const BedCard = memo(function BedCard({
   onUndo,
   undoTimerSeconds = 0,
 }: BedCardProps) {
-  const stageName = bed.currentStage?.name || 'Empty'
+  const rawStageName = bed.currentStage?.name || 'Empty'
+  const stageName = rawStageName === 'Cleaning' ? 'In Cleaning' : rawStageName
   const stageColor = bed.currentStage?.colorCode || 'gray'
   const colorClasses = bed.isDelayed ? getDelayColorClasses(true) : getStageColorClasses(stageColor)
   const elapsedTime = useElapsedTime(bed.patientStartTime)

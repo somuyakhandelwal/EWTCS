@@ -36,4 +36,4 @@ export interface StageCategories {
 /**
  * User role type for authorization
  */
-export type UserRole = 'nurse' | 'supervisor' | 'admin'
+export type UserRole = 'nurse' | 'supervisor' | 'admin' | 'housekeeping'

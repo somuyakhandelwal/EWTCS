@@ -19,7 +19,7 @@ export async function getBedGridData(): Promise<{
 }> {
   try {
     // Auth guard: all roles can fetch the dashboard, but must be authenticated
-    await requireRole(['nurse', 'supervisor', 'admin'])
+    await requireRole(['nurse', 'supervisor', 'admin', 'housekeeping'])
 
     logger.info('Fetching bed grid data')
 
@@ -100,7 +100,7 @@ export async function getValidTransitionsForBed(bedId: string): Promise<{
   error?: string
 }> {
   try {
-    const session = await requireRole(['nurse', 'supervisor', 'admin'])
+    const session = await requireRole(['nurse', 'supervisor', 'admin', 'housekeeping'])
 
     // Verify user has access to this bed — mirrors the same logic in bed-actions.ts
     const userWard = await getUserWard(session.userId)
@@ -135,7 +135,7 @@ export async function getValidTransitionsForBed(bedId: string): Promise<{
     const categorized = await categorizeStagesForTransition(
       bed.currentStageId,
       allStageIds,
-      session.role as 'nurse' | 'supervisor' | 'admin'
+      session.role as 'nurse' | 'supervisor' | 'admin' | 'housekeeping'
     )
 
     logger.info('Valid transitions fetched for bed', {
