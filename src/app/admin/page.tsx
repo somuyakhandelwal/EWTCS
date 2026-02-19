@@ -8,6 +8,7 @@ import { verifyActiveSession } from "@/features/auth/lib/active-session"
 import { getAllUsers, getUserLogs } from "@/features/user-management/actions/user-management-actions"
 import UserManagementTable from "@/features/user-management/components/UserManagementTable"
 import CreateUserDialog from "@/features/user-management/components/CreateUserDialog"
+import { KioskSessionsPanel } from "@/features/user-management/components/KioskSessionsPanel"
 
 export default async function AdminDashboard() {
     const session = await verifyActiveSession()
@@ -133,6 +134,9 @@ export default async function AdminDashboard() {
                         <UserManagementTable users={users} />
                     </CardContent>
                 </Card>
+
+                {/* Kiosk Sessions — US-5.3 */}
+                <KioskSessionsPanel />
 
                 {/* Recent Activity Log */}
                 <Card className="bg-zinc-900 border-zinc-800">

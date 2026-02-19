@@ -14,14 +14,35 @@ type SessionPayload = {
     username: string
     role: string
     expiresAt: Date
+    isKiosk?: boolean
+    kioskIp?: string
+    kioskSessionId?: string
 }
 
-export async function createSession(userId: string, username: string, role: string) {
-    const expiresAt = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000) // 7 days
-    const session = await new SignJWT({ userId, username, role })
+// Passed to createSession when the user enables kiosk mode at login
+export type KioskOptions = {
+    isKiosk: true
+    kioskIp: string
+    kioskSessionId: string
+}
+
+export async function createSession(
+    userId: string,
+    username: string,
+    role: string,
+    kiosk?: KioskOptions
+) {
+    const expiresAt = kiosk
+        ? new Date(Date.now() + 365 * 24 * 60 * 60 * 1000) // 1 year for kiosk
+        : new Date(Date.now() + 7 * 24 * 60 * 60 * 1000)   // 7 days standard
+    const jwtPayload = {
+        userId, username, role,
+        ...(kiosk && { isKiosk: true, kioskIp: kiosk.kioskIp, kioskSessionId: kiosk.kioskSessionId }),
+    }
+    const session = await new SignJWT(jwtPayload)
         .setProtectedHeader({ alg: 'HS256' })
         .setIssuedAt()
-        .setExpirationTime('7d')
+        .setExpirationTime(kiosk ? '1y' : '7d')
         .sign(encodedKey)
 
     const cookieStore = await cookies()
@@ -31,6 +52,7 @@ export async function createSession(userId: string, username: string, role: stri
         expires: expiresAt,
         sameSite: 'lax',
         path: '/',
+        ...(kiosk && { maxAge: 365 * 24 * 60 * 60 }),
     })
 }
 
