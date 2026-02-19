@@ -23,6 +23,9 @@ import { StageAnalyticsMetrics } from './StageAnalyticsMetrics'
 import { StageAnalyticsDurationAnalysis } from './StageAnalyticsDurationAnalysis'
 import { StageAnalyticsWaitingBeds } from './StageAnalyticsWaitingBeds'
 import { StageAnalyticsBedTimeline } from './StageAnalyticsBedTimeline'
+import { StageAnalyticsAttribution } from './StageAnalyticsAttribution'
+import { fetchDelayAttributionStats } from '../actions/delay-attribution-actions'
+import type { DelayAttributionStats } from '../lib/stage-analytics'
 
 interface StageAnalyticsViewProps {
   title?: string
@@ -53,16 +56,18 @@ export function StageAnalyticsView({ title = 'Stage Analytics', className }: Sta
   const [exporting, setExporting] = useState(false)
   const [selectedBedId, setSelectedBedId] = useState<string | null>(null)
   const [bedTimeline, setBedTimeline] = useState<BedStageTimeline | null>(null)
+  const [attributionStats, setAttributionStats] = useState<DelayAttributionStats[] | null>(null)
 
   const loadAnalytics = useCallback(async () => {
     setLoading(true)
     setError(null)
 
     try {
-      const [statsResult, waitingResult, summaryResult] = await Promise.all([
+      const [statsResult, waitingResult, summaryResult, attributionResult] = await Promise.all([
         fetchStageDurationStats(),
         fetchLongestWaitingBeds(10),
         fetchAnalyticsSummary(),
+        fetchDelayAttributionStats(),
       ])
 
       if (!statsResult.success) throw new Error(statsResult.error)
@@ -77,6 +82,8 @@ export function StageAnalyticsView({ title = 'Stage Analytics', className }: Sta
         }))
       )
       setSummary(summaryResult.data || null)
+      // Attribution may soft-fail — show null rather than hard-crashing the page
+      setAttributionStats(attributionResult.success ? (attributionResult.data ?? null) : null)
     } catch (err) {
       const message = err instanceof Error ? err.message : 'Failed to load analytics'
       setError(message)
@@ -184,6 +191,9 @@ export function StageAnalyticsView({ title = 'Stage Analytics', className }: Sta
       </div>
 
       {selectedBedId && bedTimeline && <StageAnalyticsBedTimeline timeline={bedTimeline} />}
+
+      {/* US-3.4: Delay root-cause attribution breakdown */}
+      <StageAnalyticsAttribution stats={attributionStats} />
     </div>
   )
 }
