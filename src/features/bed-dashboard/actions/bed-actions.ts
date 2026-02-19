@@ -36,8 +36,10 @@ export async function updateBedStage(input: UpdateBedStageInput): Promise<{
     const userWard = await getUserWard(session.userId)
     const bedWard = await getBedWard(result.data.bedId)
 
-    // BUG FIX #6: Explicit null checks with helpful error messages
-    if (!userWard && session.role !== 'admin') {
+    // Only raise the "no ward assignment" error when ward access control is actually active
+    // (i.e. the bed IS in a ward). If neither side has a ward the system is unconfigured and
+    // all non-admin users should be able to proceed — the hasWardAccess check below handles it.
+    if (!userWard && bedWard && session.role !== 'admin') {
       logger.warn('User without ward assignment attempted bed access', {
         userId: session.userId,
         userRole: session.role,
@@ -48,7 +50,7 @@ export async function updateBedStage(input: UpdateBedStageInput): Promise<{
       }
     }
 
-    if (!bedWard && session.role !== 'admin') {
+    if (userWard && !bedWard && session.role !== 'admin') {
       logger.warn('Attempt to access bed without ward assignment', {
         userId: session.userId,
         bedId: result.data.bedId,
