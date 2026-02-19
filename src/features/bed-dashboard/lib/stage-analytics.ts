@@ -64,4 +64,6 @@ export { getBedsSortedByCurrentWaitTime, getBedAnalyticsSummary } from './wait-t
 export { getDelaysByAttribution } from './delay-attribution-queries'
 export type { DelayAttributionRow } from './delay-attribution-queries'
 export { type DelayAttribution, ATTRIBUTION_LABELS, ATTRIBUTION_COLORS } from './delay-attribution-config'
+export { getTATSummary, getTATRecords } from './tat-queries'
+export type { TATSummary, TATRecord } from './tat-queries'
 
