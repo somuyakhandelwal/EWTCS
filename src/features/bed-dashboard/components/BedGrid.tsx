@@ -51,7 +51,6 @@ export function BedGrid({
   const [isLoadingTransitions, setIsLoadingTransitions] = useState(false)
   const [menuError, setMenuError] = useState<string | null>(null)
 
-<<<<<<< feature/issue-14-search-bed-by-number
   // Memoize filtered beds to prevent unnecessary recalculation
   const displayedBeds = useMemo(() => {
     const base = showDelayedOnly ? data.beds.filter(b => b.isDelayed) : data.beds
@@ -65,65 +64,38 @@ export function BedGrid({
   }, [data.beds, showDelayedOnly, searchQuery])
 
   // Memoize statistics calculation
-=======
-  const displayedBeds = useMemo(
-    () => showDelayedOnly ? data.beds.filter(bed => bed.isDelayed) : data.beds,
-    [data.beds, showDelayedOnly]
-  )
->>>>>>> main
   const stats = useMemo(() => getBedStatistics(data.beds), [data.beds])
 
   const toggleFilter = useCallback(() => {
     setShowDelayedOnly(prev => !prev)
   }, [])
 
-<<<<<<< feature/issue-14-search-bed-by-number
-  const handleOpenMenu = useCallback(
-    async (event: MouseEvent<HTMLDivElement>, bed: BedWithElapsedTime) => {
-      if (!onStageSelect) {
-        return
-      }
-      event.preventDefault()
-      setMenuState({
-        bedId: bed.id,
-        position: { x: event.clientX, y: event.clientY },
-      })
+  const openMenuForBed = useCallback(
+    async (bedId: string, position: { x: number; y: number }) => {
+      setMenuState({ bedId, position })
       setMenuError(null)
-
-      // Fetch valid transitions for this bed
       setIsLoadingTransitions(true)
       try {
-        const result = await getValidTransitionsForBed(bed.id)
+        const result = await getValidTransitionsForBed(bedId)
         if (result.success && result.allowed) {
           setValidNextStages(result.allowed)
           setOverrideRequiredStages(result.requiresOverride || [])
         } else {
-          // BUG FIX #2: Show error message when transitions can't be loaded
           setMenuError(result.error || 'Unable to load available stages')
           setValidNextStages([])
           setOverrideRequiredStages([])
         }
       } catch (error) {
-        // BUG FIX #2: Catch and display error to user
         console.error('Failed to fetch valid transitions:', error)
         setMenuError('Connection error. Please try again.')
         setValidNextStages([])
         setOverrideRequiredStages([])
       } finally {
         setIsLoadingTransitions(false)
-=======
-  const openMenuForBed = useCallback(async (bedId: string, position: { x: number; y: number }) => {
-    setMenuState({ bedId, position })
-    setIsLoadingTransitions(true)
-    try {
-      const result = await getValidTransitionsForBed(bedId)
-      if (result.success) {
-        setValidNextStages(result.allowed || [])
-        setOverrideRequiredStages(result.requiresOverride || [])
->>>>>>> main
       }
-    } catch { /* fallback */ } finally { setIsLoadingTransitions(false) }
-  }, [])
+    },
+    []
+  )
 
   // Right-click (desktop)
   const handleOpenMenu = useCallback(async (event: MouseEvent<HTMLDivElement>, bed: BedWithElapsedTime) => {
