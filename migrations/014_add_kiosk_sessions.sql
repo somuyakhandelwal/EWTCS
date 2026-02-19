@@ -14,3 +14,6 @@ CREATE TABLE IF NOT EXISTS kiosk_sessions (
 
 CREATE INDEX IF NOT EXISTS idx_kiosk_sessions_user    ON kiosk_sessions(user_id);
 CREATE INDEX IF NOT EXISTS idx_kiosk_sessions_active  ON kiosk_sessions(is_active) WHERE is_active = true;
+
+-- Down Migration
+DROP TABLE IF EXISTS kiosk_sessions;
