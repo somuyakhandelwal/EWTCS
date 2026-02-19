@@ -142,7 +142,6 @@ The setup script will:
    SESSION_SECRET=your-random-secret-min-32-characters-long
    NEXT_PUBLIC_APP_URL=http://localhost:3000
    NODE_ENV=development
-   RED_ALERT_THRESHOLD_MS=10800000
    ```
 
 5. **Run database migrations**
@@ -252,7 +251,7 @@ The system tracks patients through 8 workflow stages with color-coded indicators
 | **Decision Made** | 🟢 Green | Discharge decision made or admission arranged |
 | **Discharge Process** | 🟣 Purple | Patient being discharged or transferred |
 | **Cleaning** | 🟤 Pink | Bed being cleaned and prepared for next patient |
-| **⚠️ DELAYED** | 🔴 Red | Any stage >3 hours triggers automatic alert |
+| **⚠️ DELAYED** | 🔴 Red | Any stage exceeding its configured delay threshold triggers automatic alert (default: 3 hours, configurable per stage in Admin Settings) |
 
 **Stage Transitions:**
 - Forward progression through stages is allowed
@@ -290,6 +289,14 @@ Migration details and best practices: See [CONFIGURATION.md#migrations](CONFIGUR
 ---
 
 ## 🌐 Configuration
+
+### Delay Thresholds (Per-Stage)
+Delay thresholds are now configurable per workflow stage via the Admin UI. The default is 3 hours, but each stage can have its own threshold (in hours and minutes) to match hospital performance targets. Changes apply immediately.
+
+To configure:
+- Go to **Admin → Stages**
+- Edit any stage and set the desired delay threshold
+- The system will use this value for delay alerts and analytics
 
 ### Environment Variables (Quick Setup)
 ```env

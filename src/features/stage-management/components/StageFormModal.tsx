@@ -1,7 +1,7 @@
 'use client';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import type { Stage } from '../types/stage.types';
-import { createStage, updateStage } from '../actions/stage-actions';
+import { createStage, updateStage, getStageDelayThreshold, setStageDelayThreshold } from '../actions/stage-actions';
 import { getStageColorClasses, getSupportedStageColors } from '@/shared/utils/stage-colors';
 
 const COLORS = getSupportedStageColors();
@@ -15,21 +15,47 @@ export function StageFormModal({ stage, onClose, onSaved }:
   const [desc, setDesc] = useState(stage?.description ?? '');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
+  const [thresholdHours, setThresholdHours] = useState<number>(Math.floor((stage?.delay_threshold_minutes ?? 180) / 60));
+  const [thresholdMinutes, setThresholdMinutes] = useState<number>((stage?.delay_threshold_minutes ?? 180) % 60);
+
+  // Load threshold if editing
+  useEffect(() => {
+    if (stage?.id) {
+      getStageDelayThreshold(stage.id).then(mins => {
+        setThresholdHours(Math.floor(mins / 60));
+        setThresholdMinutes(mins % 60);
+      }).catch(() => { });
+    }
+  }, [stage?.id]);
 
   const handleSave = async () => {
     if (!name.trim()) return setError('Stage name is required');
     if (name.length > 50) return setError('Name must be max 50 characters');
+
+    const totalMinutes = (thresholdHours * 60) + thresholdMinutes;
+    if (totalMinutes < 1) return setError('Threshold must be at least 1 minute');
+    if (totalMinutes > 1440) return setError('Threshold cannot exceed 24 hours (1440 min)');
+
     setLoading(true); setError('');
     try {
+      let savedStage = stage;
       if (stage) {
         await updateStage({ id: stage.id, name, color_code: color, description: desc });
-        onSaved({ ...stage, name, color_code: color, description: desc });
+        savedStage = { ...stage, name, color_code: color, description: desc };
       } else {
         await createStage({ name, color_code: color, description: desc });
-        onSaved({ id: Date.now().toString(), name, color_code: color,
+        savedStage = {
+          id: Date.now().toString(), name, color_code: color,
           description: desc, display_order: 99, is_default: false,
-          is_active: true, created_at: '', updated_at: '' });
+          is_active: true, created_at: '', updated_at: ''
+        };
       }
+      // Save threshold
+      if (savedStage?.id) {
+        await setStageDelayThreshold(savedStage.id, totalMinutes);
+        savedStage.delay_threshold_minutes = totalMinutes;
+      }
+      onSaved(savedStage!);
     } catch (e: unknown) { setError(e instanceof Error ? e.message : 'Something went wrong'); }
     finally { setLoading(false); }
   };
@@ -68,9 +94,8 @@ export function StageFormModal({ stage, onClose, onSaved }:
                 title={c}
                 aria-label={`Select ${c} stage color`}
                 aria-pressed={color === c}
-                className={`w-9 h-9 rounded-full border-2 ${colorClasses.bg} ${colorClasses.border} ${
-                  color === c ? 'ring-2 ring-blue-600 ring-offset-2 ring-offset-white scale-110' : ''
-                } transition-all`}
+                className={`w-9 h-9 rounded-full border-2 ${colorClasses.bg} ${colorClasses.border} ${color === c ? 'ring-2 ring-blue-600 ring-offset-2 ring-offset-white scale-110' : ''
+                  } transition-all`}
               />
             );
           })}
@@ -86,6 +111,36 @@ export function StageFormModal({ stage, onClose, onSaved }:
           className='w-full border border-gray-300 rounded-lg px-3 py-2 mb-4 text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500'
           placeholder='Stage description...'
         />
+
+
+        {/* Delay Threshold */}
+        <label className='block text-sm font-semibold text-gray-700 mb-1'>
+          Delay Threshold
+        </label>
+        <div className='flex gap-3 mb-4'>
+          <div className='flex-1'>
+            <label className='block text-[10px] text-gray-400 uppercase font-bold mb-1'>Hours</label>
+            <input
+              type='number'
+              min={0}
+              max={24}
+              value={thresholdHours}
+              onChange={e => setThresholdHours(Math.max(0, Number(e.target.value)))}
+              className='w-full border border-gray-300 rounded-lg px-3 py-2 text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500'
+            />
+          </div>
+          <div className='flex-1'>
+            <label className='block text-[10px] text-gray-400 uppercase font-bold mb-1'>Minutes</label>
+            <input
+              type='number'
+              min={0}
+              max={59}
+              value={thresholdMinutes}
+              onChange={e => setThresholdMinutes(Math.max(0, Number(e.target.value)))}
+              className='w-full border border-gray-300 rounded-lg px-3 py-2 text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500'
+            />
+          </div>
+        </div>
 
         {/* Error */}
         {error && <p className='text-red-600 text-sm mb-3'>{error}</p>}

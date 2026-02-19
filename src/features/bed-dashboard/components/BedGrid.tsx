@@ -58,12 +58,23 @@ export function BedGrid({
   const {
     showDelayedOnly,
     sortOrder,
-    displayedBeds,
+    displayedBeds: baseDisplayedBeds,
     isFilterActive,
     toggleDelayedFilter,
     toggleSortOrder,
     clearFilter,
   } = useBedFilter(data.beds)
+
+  // Further filter by search query
+  const displayedBeds = useMemo(() => {
+    if (!searchQuery.trim()) return baseDisplayedBeds
+    const q = searchQuery.toLowerCase()
+    return baseDisplayedBeds.filter(bed => {
+      if (bed.bedNumber.toLowerCase().includes(q)) return true
+      if (bed.currentStage?.name.toLowerCase().includes(q)) return true
+      return false
+    })
+  }, [baseDisplayedBeds, searchQuery])
 
   const stats = useMemo(() => getBedStatistics(data.beds), [data.beds])
 
