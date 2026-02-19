@@ -9,7 +9,8 @@ import { exists, softDelete, reactivate } from '@/shared/lib/db-helpers'
 export async function createUserInDB(
     username: string,
     password: string,
-    role: string
+    role: string,
+    wardId?: string | null
 ) {
     // Check if username already exists using shared helper
     const userExists = await exists('users', 'username = $1', [username])
@@ -23,10 +24,10 @@ export async function createUserInDB(
 
     // Insert user
     const insertResult = await pool.query(
-        `INSERT INTO users (username, password_hash, role, is_active) 
-        VALUES ($1, $2, $3, TRUE) 
+        `INSERT INTO users (username, password_hash, role, is_active, ward_id)
+        VALUES ($1, $2, $3, TRUE, $4)
         RETURNING id, username, role`,
-        [username, passwordHash, role]
+        [username, passwordHash, role, wardId ?? null]
     )
 
     return insertResult.rows[0]
@@ -40,7 +41,8 @@ export async function updateUserInDB(
     userId: string,
     username?: string,
     password?: string,
-    role?: string
+    role?: string,
+    wardId?: string | null
 ) {
     const changes: Record<string, unknown> = {}
     const updates: string[] = []
@@ -65,6 +67,12 @@ export async function updateUserInDB(
         updates.push(`role = $${paramIndex++}`)
         values.push(role)
         changes.role = role
+    }
+
+    if (wardId !== undefined) {
+        updates.push(`ward_id = $${paramIndex++}`)
+        values.push(wardId)
+        changes.wardId = wardId
     }
 
     if (updates.length === 0) {

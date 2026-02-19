@@ -6,6 +6,7 @@ import Link from "next/link"
 
 import { verifyActiveSession } from "@/features/auth/lib/active-session"
 import { getAllUsers, getUserLogs } from "@/features/user-management/actions/user-management-actions"
+import { getWards } from "@/features/user-management/lib/queries"
 import UserManagementTable from "@/features/user-management/components/UserManagementTable"
 import CreateUserDialog from "@/features/user-management/components/CreateUserDialog"
 import { KioskSessionsPanel } from "@/features/user-management/components/KioskSessionsPanel"
@@ -18,6 +19,7 @@ export default async function AdminDashboard() {
     }
     const usersResult = await getAllUsers()
     const logsResult = await getUserLogs()
+    const wards = await getWards()
 
     const users = usersResult.success ? usersResult.users : []
     const recentLogs = logsResult.success ? logsResult.logs.slice(0, 5) : []
@@ -127,11 +129,11 @@ export default async function AdminDashboard() {
                                     Create, edit, and manage system users
                                 </p>
                             </div>
-                            <CreateUserDialog />
+                            <CreateUserDialog wards={wards} />
                         </div>
                     </CardHeader>
                     <CardContent>
-                        <UserManagementTable users={users} />
+                        <UserManagementTable users={users} wards={wards} />
                     </CardContent>
                 </Card>
 
