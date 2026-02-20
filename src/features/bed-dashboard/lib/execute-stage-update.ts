@@ -180,9 +180,6 @@ export async function executeStageUpdate({
   } catch (error) {
     const message = error instanceof Error ? error.message : 'Failed to update stage'
     setTemporaryError(bedId, message)
-    if (typeof window !== 'undefined' && isTransientError(error)) {
-      window.alert('Stage update failed after retries. Please try again.')
-    }
 
     setData((prev) => ({
       ...prev,

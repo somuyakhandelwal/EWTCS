@@ -15,6 +15,16 @@ import type {
 const DEFAULT_LIMIT = 200
 const MAX_LIMIT = 1000
 
+/**
+ * Returns a Date representing the end of the given YYYY-MM-DD day in UTC
+ * (23:59:59.999 UTC). Using setHours() would apply local-timezone offsets
+ * which silently shifts the boundary on non-UTC servers.
+ */
+function endOfDayUTC(dateStr: string): Date {
+  // dateStr is YYYY-MM-DD; appending T23:59:59.999Z pins the time to UTC.
+  return new Date(`${dateStr}T23:59:59.999Z`)
+}
+
 // ── Internal row types ────────────────────────────────────────────────────
 
 interface RawAdmissionRow {
@@ -89,11 +99,8 @@ export async function searchArchivedAdmissions(
   params: ArchiveSearchParams,
 ): Promise<ArchivedAdmission[]> {
   const limit = Math.min(params.limit ?? DEFAULT_LIMIT, MAX_LIMIT)
-  const fromDate = new Date(params.from)
-  const toDate = new Date(params.to)
-
-  // Extend toDate to end-of-day so inclusive date picker selection works
-  toDate.setHours(23, 59, 59, 999)
+  const fromDate = new Date(`${params.from}T00:00:00.000Z`)
+  const toDate = endOfDayUTC(params.to)
 
   try {
     const result = await query<RawAdmissionRow>(
@@ -129,9 +136,8 @@ export async function searchArchivedAuditLogs(
   params: ArchiveSearchParams,
 ): Promise<ArchivedAuditLog[]> {
   const limit = Math.min(params.limit ?? DEFAULT_LIMIT, MAX_LIMIT)
-  const fromDate = new Date(params.from)
-  const toDate = new Date(params.to)
-  toDate.setHours(23, 59, 59, 999)
+  const fromDate = new Date(`${params.from}T00:00:00.000Z`)
+  const toDate = endOfDayUTC(params.to)
 
   try {
     const result = await query<RawAuditLogRow>(

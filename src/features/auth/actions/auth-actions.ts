@@ -35,7 +35,12 @@ export async function login(prevState: unknown, formData: FormData) {
 
     try {
 
-        const { rows } = await pool.query('SELECT * FROM users WHERE username = $1', [username])
+        const { rows } = await pool.query(
+            `SELECT id, username, password_hash, role, is_active,
+                    failed_login_attempts, lockout_until, ward_id
+             FROM users WHERE username = $1`,
+            [username]
+        )
         const user = rows[0]
 
         if (!user) {
