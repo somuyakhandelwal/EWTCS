@@ -25,6 +25,8 @@ export async function getBedsWithElapsedTime(
         b.last_stage_change                   AS "lastStageChange",
         b.is_occupied                         AS "isOccupied",
         b.is_active                           AS "isActive",
+        b.is_temporary                        AS "isTemporary",
+        b.is_virtual                          AS "isVirtual",
         b.metadata,
         b.created_at                          AS "createdAt",
         b.updated_at                          AS "updatedAt",

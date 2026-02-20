@@ -17,6 +17,7 @@ import { RefreshCw, Zap, Trash2 } from 'lucide-react'
 import type { BedGridData } from '../types/bed'
 import { getBedGridData } from '../actions/bed-grid-actions'
 import { getBedStatistics } from '../lib/utils'
+import { VirtualBedsSection } from './VirtualBedsSection'
 
 interface SupervisorBedOverviewProps {
   initialData: BedGridData
@@ -25,6 +26,9 @@ interface SupervisorBedOverviewProps {
   onAddTempBed?: () => void
   onRemoveTempBed?: (bedId: string) => Promise<void>
   isRemovingId?: string | null
+  /** US-6.6: virtual bed controls */
+  onAddVirtualBed?: () => void
+  onRemoveVirtualBed?: (bedId: string) => Promise<void>
 }
 
 export function SupervisorBedOverview({
@@ -32,6 +36,8 @@ export function SupervisorBedOverview({
   onAddTempBed,
   onRemoveTempBed,
   isRemovingId,
+  onAddVirtualBed,
+  onRemoveVirtualBed,
 }: SupervisorBedOverviewProps) {
   const [data, setData] = useState<BedGridData>(initialData)
   const [isRefreshing, setIsRefreshing] = useState(false)
@@ -64,7 +70,13 @@ export function SupervisorBedOverview({
 
   // US-6.5: all temporary beds visible to supervisor
   const temporaryBeds = useMemo(
-    () => data.beds.filter(b => b.isTemporary),
+    () => data.beds.filter(b => b.isTemporary && !b.isVirtual),
+    [data.beds]
+  )
+
+  // US-6.6: all virtual beds visible to supervisor
+  const virtualBeds = useMemo(
+    () => data.beds.filter(b => b.isVirtual),
     [data.beds]
   )
 
@@ -133,6 +145,13 @@ export function SupervisorBedOverview({
           </div>
         )}
       </div>
+
+      {/* US-6.6: Virtual / Hallway Beds section */}
+      <VirtualBedsSection
+        virtualBeds={virtualBeds}
+        onAddVirtualBed={onAddVirtualBed}
+        onRemoveVirtualBed={onRemoveVirtualBed}
+      />
 
       {/* Bottleneck panel — supervisor can see + trigger refresh after update */}
       <BottleneckPanel beds={data.beds} onReasonRecorded={handleRefresh} />

@@ -19,6 +19,7 @@ export async function getAllBeds(): Promise<Bed[]> {
         b.is_occupied as "isOccupied",
         b.is_active as "isActive",
         b.is_temporary as "isTemporary",
+        b.is_virtual as "isVirtual",
         b.metadata,
         b.created_at as "createdAt",
         b.updated_at as "updatedAt",
@@ -57,6 +58,7 @@ export async function getBedById(bedId: string): Promise<Bed | null> {
         b.is_occupied as "isOccupied",
         b.is_active as "isActive",
         b.is_temporary as "isTemporary",
+        b.is_virtual as "isVirtual",
         b.metadata,
         b.created_at as "createdAt",
         b.updated_at as "updatedAt",
@@ -99,6 +101,7 @@ export async function getBedByNumber(bedNumber: string): Promise<Bed | null> {
         b.is_occupied as "isOccupied",
         b.is_active as "isActive",
         b.is_temporary as "isTemporary",
+        b.is_virtual as "isVirtual",
         b.metadata,
         b.created_at as "createdAt",
         b.updated_at as "updatedAt"

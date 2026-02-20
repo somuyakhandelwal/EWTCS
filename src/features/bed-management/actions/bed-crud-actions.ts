@@ -9,12 +9,7 @@ import {
     createBed as createBedMutation,
     updateBed as updateBedMutation,
 } from '../lib/mutations'
-
-export type ActionResult<T = unknown> = {
-    success: boolean
-    data?: T
-    error?: string
-}
+import type { ActionResult } from '../types/action-result'
 
 /**
  * Helper function to revalidate relevant pages after bed changes
