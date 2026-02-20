@@ -11,6 +11,7 @@ vi.mock('@/shared/actions/settings-actions', () => ({
 describe('GlobalThresholdForm autosave', () => {
   beforeEach(() => {
     vi.useFakeTimers()
+    localStorage.clear()
   })
 
   afterEach(() => {
@@ -78,5 +79,44 @@ describe('GlobalThresholdForm autosave', () => {
     expect(setGlobalThresholdAction).toHaveBeenCalledTimes(1)
     expect(alertSpy).not.toHaveBeenCalled()
     expect(screen.getByText('Validation error')).toBeInTheDocument()
+  })
+
+  it('prompts for recovery and restores unsaved threshold draft', () => {
+    const confirmSpy = vi.spyOn(window, 'confirm').mockReturnValue(true)
+    localStorage.setItem(
+      'ewtcs:global-threshold-draft',
+      JSON.stringify({
+        version: 1,
+        updatedAt: Date.now(),
+        data: { hours: 3, minutes: 20 },
+      })
+    )
+
+    render(<GlobalThresholdForm initialMinutes={60} />)
+
+    expect(confirmSpy).toHaveBeenCalledWith('Unsaved threshold changes were found. Restore them now?')
+    expect(screen.getByDisplayValue('3')).toBeInTheDocument()
+    expect(screen.getByDisplayValue('20')).toBeInTheDocument()
+    expect(screen.getByText('Recovered unsaved changes from previous session.')).toBeInTheDocument()
+  })
+
+  it('discards threshold draft when restore is rejected', () => {
+    const confirmSpy = vi.spyOn(window, 'confirm').mockReturnValue(false)
+    localStorage.setItem(
+      'ewtcs:global-threshold-draft',
+      JSON.stringify({
+        version: 1,
+        updatedAt: Date.now(),
+        data: { hours: 4, minutes: 45 },
+      })
+    )
+
+    render(<GlobalThresholdForm initialMinutes={60} />)
+
+    expect(confirmSpy).toHaveBeenCalledWith('Unsaved threshold changes were found. Restore them now?')
+    expect(screen.getByDisplayValue('1')).toBeInTheDocument()
+    expect(screen.getByDisplayValue('0')).toBeInTheDocument()
+    expect(screen.queryByText('Recovered unsaved changes from previous session.')).not.toBeInTheDocument()
+    expect(localStorage.getItem('ewtcs:global-threshold-draft')).toBeNull()
   })
 })

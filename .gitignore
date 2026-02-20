@@ -23,6 +23,10 @@
 # misc
 .DS_Store
 *.pem
+Thumbs.db
+
+# AI tool artifacts (Antigravity / Gemini)
+.gemini/
 
 # debug
 npm-debug.log*
@@ -45,3 +49,7 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# logs
+logs/
+*.log

@@ -7,7 +7,6 @@ import {
     deactivateUserSchema
 } from '@/features/user-management/schemas/user-schemas'
 import { requireAdminWrite } from '@/features/user-management/lib/auth'
-import { requireRole } from '@/shared/lib/auth'
 import { logUserAction } from '@/features/user-management/lib/audit'
 import { 
     getAllUsers as getAllUsersQuery, 
@@ -162,7 +161,6 @@ export async function activateUser(userId: string) {
 
 export async function getAllUsers() {
     try {
-        await requireRole(['admin', 'supervisor'])
         const users = await getAllUsersQuery()
         return { success: true, users }
     } catch (error) {
@@ -173,7 +171,6 @@ export async function getAllUsers() {
 
 export async function getUserLogs(userId?: string) {
     try {
-        await requireRole(['admin', 'supervisor'])
         const logs = await getUserLogsQuery(userId)
         return { success: true, logs }
     } catch (error) {

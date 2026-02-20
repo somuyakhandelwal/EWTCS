@@ -25,6 +25,7 @@ const stage = {
 describe('StageFormModal autosave', () => {
   beforeEach(() => {
     vi.useFakeTimers()
+    localStorage.clear()
   })
 
   afterEach(() => {
@@ -93,5 +94,55 @@ describe('StageFormModal autosave', () => {
     expect(updateStage).toHaveBeenCalledTimes(1)
     expect(alertSpy).not.toHaveBeenCalled()
     expect(screen.getByText('Validation error')).toBeInTheDocument()
+  })
+
+  it('prompts to restore and loads unsaved draft from localStorage', () => {
+    const confirmSpy = vi.spyOn(window, 'confirm').mockReturnValue(true)
+    localStorage.setItem(
+      'ewtcs:stage-form-draft:stage-1',
+      JSON.stringify({
+        version: 1,
+        updatedAt: Date.now(),
+        data: {
+          name: 'Recovered Stage',
+          color: 'green',
+          desc: 'Recovered description',
+          thresholdHours: 2,
+          thresholdMins: 15,
+        },
+      })
+    )
+
+    render(<StageFormModal stage={stage} onClose={() => undefined} onSaved={() => undefined} />)
+
+    expect(confirmSpy).toHaveBeenCalledWith('Unsaved stage form changes were found. Restore them now?')
+    expect(screen.getByDisplayValue('Recovered Stage')).toBeInTheDocument()
+    expect(screen.getByDisplayValue('Recovered description')).toBeInTheDocument()
+    expect(screen.getByText('Recovered unsaved changes from previous session.')).toBeInTheDocument()
+  })
+
+  it('discards draft when restore prompt is rejected', () => {
+    const confirmSpy = vi.spyOn(window, 'confirm').mockReturnValue(false)
+    localStorage.setItem(
+      'ewtcs:stage-form-draft:stage-1',
+      JSON.stringify({
+        version: 1,
+        updatedAt: Date.now(),
+        data: {
+          name: 'Rejected draft',
+          color: 'green',
+          desc: 'Rejected description',
+          thresholdHours: 2,
+          thresholdMins: 30,
+        },
+      })
+    )
+
+    render(<StageFormModal stage={stage} onClose={() => undefined} onSaved={() => undefined} />)
+
+    expect(confirmSpy).toHaveBeenCalledWith('Unsaved stage form changes were found. Restore them now?')
+    expect(screen.getByDisplayValue('Triage')).toBeInTheDocument()
+    expect(screen.queryByText('Recovered unsaved changes from previous session.')).not.toBeInTheDocument()
+    expect(localStorage.getItem('ewtcs:stage-form-draft:stage-1')).toBeNull()
   })
 })
