@@ -20,6 +20,23 @@ import { ArrowLeft } from 'lucide-react'
 import Link from 'next/link'
 import { logAudit } from '@/shared/lib/audit'
 import { LogoutButton } from '@/features/auth/components/LogoutButton'
+import { ExportReportButton } from '@/features/export/components/ExportReportButton'
+import type { PdfSection } from '@/features/export/types/export.types'
+
+// All sections available for the full-report PDF (US-11.1)
+const FULL_REPORT_SECTIONS: PdfSection[] = [
+  { exportId: 'export-stage-analytics',  title: 'Stage Analytics' },
+  { exportId: 'export-auditor-history',  title: 'Bed Stage Change History' },
+  { exportId: 'export-tat',             title: 'Full-Cycle Bed Turnaround' },
+  { exportId: 'export-los',             title: 'Average Length of Stay' },
+  { exportId: 'export-patients',        title: 'Total Patients Treated' },
+  { exportId: 'export-delayed',         title: 'Delayed Patients %' },
+  { exportId: 'export-beds',            title: 'Bed-Wise Performance' },
+  { exportId: 'export-stages',          title: 'Stage-Wise Delays' },
+  { exportId: 'export-shift-report',    title: 'Shift Performance Report' },
+  { exportId: 'export-shift-comparison',title: 'Shift Performance Comparison' },
+  { exportId: 'export-heatmap',         title: 'Staffing Heatmap' },
+]
 
 export default async function AnalyticsPage() {
   const session = await verifyActiveSession()
@@ -88,7 +105,7 @@ export default async function AnalyticsPage() {
               </Button>
             </Link>
           )}
-          <div>
+          <div className="flex-1">
             <h1 className="text-3xl font-bold tracking-tight text-white">
               Emergency Ward Analytics
             </h1>
@@ -99,23 +116,41 @@ export default async function AnalyticsPage() {
               </div>
             )}
           </div>
+          {/* EPIC 11 (US-11.1): Full-report export button */}
+          <ExportReportButton
+            scope="full"
+            pdfSections={FULL_REPORT_SECTIONS}
+            pdfTitle="Emergency Ward Analytics Report"
+            exportedBy={session.username}
+            label="Export Full Report"
+            size="sm"
+            variant="outline"
+          />
         </div>
 
-        {/* Analytics View */}
-        <StageAnalyticsView readOnly={isAuditMode} />
+        {/* Analytics View (US-3.x: Stage duration + bed timeline) */}
+        <div data-export-id="export-stage-analytics">
+          <StageAnalyticsView readOnly={isAuditMode} />
+        </div>
 
         {/* EPIC 12: Auditor read-only stage history */}
-        <AuditorHistoryView readOnly={isAuditMode} />
+        <div data-export-id="export-auditor-history">
+          <AuditorHistoryView readOnly={isAuditMode} />
+        </div>
 
         {/* Turnaround Time Analytics (US-2.4) */}
-        <TatAnalyticsView readOnly={isAuditMode} />
+        <div data-export-id="export-tat">
+          <TatAnalyticsView readOnly={isAuditMode} />
+        </div>
 
         {/* ── Management Report Dashboard ───────────────────────────────── */}
 
         {/* Average Length of Stay (EPIC 10 / US-10.x) */}
-        <LosView role={session.role} readOnly={isAuditMode} />
+        <div data-export-id="export-los">
+          <LosView role={session.role} readOnly={isAuditMode} />
+        </div>
 
-        {/* Total Patients Treated (US-10.1) */}
+        {/* Total Patients Treated (US-10.1) — data-export-id on component root */}
         <PatientCountView shifts={activeShifts} readOnly={isAuditMode} />
 
         {/* ── US-10.3: Percentage of Delayed Patients ──────────────────── */}
@@ -133,11 +168,15 @@ export default async function AnalyticsPage() {
 
         {/* Shift Performance Report (US-8.3) */}
         {activeShifts.length > 0 && (
-          <ShiftReportView shifts={activeShifts} readOnly={isAuditMode} />
+          <div data-export-id="export-shift-report">
+            <ShiftReportView shifts={activeShifts} readOnly={isAuditMode} />
+          </div>
         )}
 
         {/* Shift Performance Comparison (US-8.4) */}
-        <ShiftComparisonView readOnly={isAuditMode} />
+        <div data-export-id="export-shift-comparison">
+          <ShiftComparisonView readOnly={isAuditMode} />
+        </div>
 
         {/* ── Data Retention & Archival (EPIC 14 / US-14.1, US-14.2) ───── */}
         {isRetentionVisible && retentionConfig && (
@@ -149,7 +188,9 @@ export default async function AnalyticsPage() {
         )}
 
         {/* Staffing Heatmap — EPIC 10: patient volume by hour and day of week */}
-        <StaffingHeatmap />
+        <div data-export-id="export-heatmap">
+          <StaffingHeatmap />
+        </div>
       </div>
     </div>
   )
