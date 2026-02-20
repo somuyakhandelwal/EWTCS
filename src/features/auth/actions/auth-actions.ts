@@ -44,11 +44,7 @@ export async function login(prevState: unknown, formData: FormData) {
                     },
                     ipAddress,
                 })
-<<<<<<< HEAD
-            } catch {
-=======
             } catch (_auditErr) {
->>>>>>> f4558299ac9855ba78c0a03b3fa5a59ede4e4056
                 logger.warn('Could not write audit log for unknown-user login attempt', { username })
             }
 
@@ -169,7 +165,6 @@ export async function login(prevState: unknown, formData: FormData) {
             kioskOpts = { isKiosk: true, kioskIp: boundIp, kioskSessionId }
         }
         await createSession(user.id, user.username, user.role, kioskOpts)
-
         await logAudit({
             actionType: 'LOGIN',
             entityType: 'user',
@@ -182,7 +177,6 @@ export async function login(prevState: unknown, formData: FormData) {
             },
             ipAddress,
         })
-
         // Redirect based on role
         if (user.role === 'admin') {
             redirect('/admin')
