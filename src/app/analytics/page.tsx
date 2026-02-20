@@ -1,6 +1,7 @@
 import { StageAnalyticsView } from '@/features/bed-dashboard/components/StageAnalyticsView'
 import { AuditorHistoryView } from '@/features/bed-dashboard/components/AuditorHistoryView'
 import { TatAnalyticsView } from '@/features/bed-dashboard/components/TatAnalyticsView'
+import { LosView } from '@/features/bed-dashboard/components/LosView'
 import { PatientCountView } from '@/features/management-report/components/PatientCountView'
 import { ShiftReportView } from '@/features/shift-management/components/ShiftReportView'
 import { ShiftComparisonView } from '@/features/shift-management/components/ShiftComparisonView'
@@ -100,6 +101,9 @@ export default async function AnalyticsPage() {
         <TatAnalyticsView readOnly={isAuditMode} />
 
         {/* ── Management Report Dashboard ───────────────────────────────── */}
+
+        {/* Average Length of Stay (EPIC 10 / US-10.x) */}
+        <LosView role={session.role} readOnly={isAuditMode} />
 
         {/* Total Patients Treated (US-10.1) */}
         <PatientCountView shifts={activeShifts} readOnly={isAuditMode} />
