@@ -1,0 +1,83 @@
+// retention-config-queries.ts — read/write retention settings from system_settings
+// EPIC 14 — US-14.2
+
+import { query } from '@/shared/lib/db'
+import type { RetentionConfig } from './data-retention-types'
+
+const DEFAULTS: RetentionConfig = {
+  patientAdmissionsYears: 7,
+  auditLogsYears: 7,
+  bedStageLogYears: 2,
+  requiresApproval: true,
+}
+
+/**
+ * Read all four retention settings in a single query.
+ * Falls back to safe defaults when a key is missing.
+ */
+export async function getRetentionConfig(): Promise<RetentionConfig> {
+  const result = await query<{ key: string; value: string }>(
+    `SELECT key, value FROM system_settings
+     WHERE key IN (
+       'retention_patient_admissions_years',
+       'retention_audit_logs_years',
+       'retention_bed_stage_log_years',
+       'retention_requires_approval'
+     )`
+  )
+
+  const map = Object.fromEntries(result.rows.map((r) => [r.key, r.value]))
+
+  return {
+    patientAdmissionsYears:
+      parseInt(map['retention_patient_admissions_years'] ?? '', 10) ||
+      DEFAULTS.patientAdmissionsYears,
+    auditLogsYears:
+      parseInt(map['retention_audit_logs_years'] ?? '', 10) ||
+      DEFAULTS.auditLogsYears,
+    bedStageLogYears:
+      parseInt(map['retention_bed_stage_log_years'] ?? '', 10) ||
+      DEFAULTS.bedStageLogYears,
+    requiresApproval:
+      (map['retention_requires_approval'] ?? 'true') !== 'false',
+  }
+}
+
+/**
+ * Upsert all four retention settings atomically.
+ * Each key is updated individually via ON CONFLICT to preserve updated_at.
+ */
+export async function saveRetentionConfig(config: RetentionConfig): Promise<void> {
+  const upsertSql = `
+    INSERT INTO system_settings (key, value, description)
+    VALUES ($1, $2, $3)
+    ON CONFLICT (key) DO UPDATE
+      SET value = EXCLUDED.value, updated_at = NOW()`
+
+  const rows: Array<[string, string, string]> = [
+    [
+      'retention_patient_admissions_years',
+      String(config.patientAdmissionsYears),
+      'Years to retain patient_admissions rows before archiving (EPIC 14)',
+    ],
+    [
+      'retention_audit_logs_years',
+      String(config.auditLogsYears),
+      'Years to retain audit_logs rows before archiving (EPIC 14)',
+    ],
+    [
+      'retention_bed_stage_log_years',
+      String(config.bedStageLogYears),
+      'Years to retain bed_stage_log rows before archiving (EPIC 14)',
+    ],
+    [
+      'retention_requires_approval',
+      config.requiresApproval ? 'true' : 'false',
+      'When true, cron-triggered archival jobs pause for admin approval (EPIC 14)',
+    ],
+  ]
+
+  for (const [key, value, description] of rows) {
+    await query(upsertSql, [key, value, description])
+  }
+}

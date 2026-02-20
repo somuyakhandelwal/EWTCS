@@ -63,6 +63,19 @@ jobs:
       - run: npm run db:migrate
       - run: node scripts/validate-migrations.js
       - run: node scripts/validate-db-schema.js
+      - name: Seed realistic performance volume
+        env:
+          PERF_TARGET_BEDS: 120
+          PERF_LOGS_PER_BED: 200
+          PERF_MAX_DAYS_BACK: 14
+        run: npm run perf:seed
+      - name: Performance regression gate (p95 SLA)
+        env:
+          PERF_MIN_BEDS: 100
+          PERF_MIN_LOGS: 20000
+          PERF_WARMUP_RUNS: 5
+          PERF_MEASURE_RUNS: 30
+        run: npm run perf:check
       - name: Test database rollback
         run: |
           npm run db:rollback

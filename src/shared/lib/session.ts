@@ -37,8 +37,8 @@ export async function createSession(
     kiosk?: KioskOptions
 ) {
     const expiresAt = kiosk
-        ? new Date(Date.now() + 365 * 24 * 60 * 60 * 1000) // 1 year for kiosk
-        : new Date(Date.now() + 7 * 24 * 60 * 60 * 1000)   // 7 days standard
+        ? new Date(Date.now() + 365 * 24 * 60 * 60 * 1000)  // 1 year for kiosk
+        : new Date(Date.now() + SESSION_MAX_AGE_MS)           // matches cookie maxAge
     const jwtPayload = {
         userId, username, role,
         ...(kiosk && { isKiosk: true, kioskIp: kiosk.kioskIp, kioskSessionId: kiosk.kioskSessionId }),
@@ -46,7 +46,7 @@ export async function createSession(
     const session = await new SignJWT(jwtPayload)
         .setProtectedHeader({ alg: 'HS256' })
         .setIssuedAt()
-        .setExpirationTime(kiosk ? '1y' : '7d')
+        .setExpirationTime(kiosk ? '1y' : `${Math.floor(SESSION_MAX_AGE_MS / 1000)}s`)
         .sign(encodedKey)
 
     const cookieStore = await cookies()

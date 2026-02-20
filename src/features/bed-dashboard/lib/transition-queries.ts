@@ -29,13 +29,14 @@ export async function getStageTransitions(
         ts.name as "toStageName",
         bsl.transition_time as "transitionTime",
         bsl.duration_in_previous_stage_ms as "durationInPreviousStageMs",
+        -- EPIC 13 perf: replaced correlated subquery (N+1) with LEAD() window function.
+        -- LEAD() reads the next row per bed in one pass; the subquery issued one DB
+        -- round-trip per result row.
         EXTRACT(EPOCH FROM (
           COALESCE(
-            (SELECT MIN(bsl2.transition_time) 
-             FROM bed_stage_logs bsl2 
-             WHERE bsl2.bed_id = bsl.bed_id 
-             AND bsl2.transition_time > bsl.transition_time
-             LIMIT 1),
+            LEAD(bsl.transition_time) OVER (
+              PARTITION BY bsl.bed_id ORDER BY bsl.transition_time ASC
+            ),
             CURRENT_TIMESTAMP
           ) - bsl.transition_time
         )) * 1000 as "durationInCurrentStageMs",

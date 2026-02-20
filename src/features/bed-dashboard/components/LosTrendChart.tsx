@@ -1,6 +1,5 @@
 // LosTrendChart — Daily average LoS trend chart with optional target line
 // EPIC 10: Management Report Dashboard
-// US-10.x: Average Time Patients Spend in Emergency Ward
 //
 // Pure CSS/SVG — no external chart library required.
 // The target line is rendered as a horizontal rule at the configured value.
@@ -12,6 +11,12 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/sha
 import { formatElapsedTime } from '../lib/utils'
 import { cn } from '@/shared/lib/utils'
 import type { LosTrendPoint } from '../lib/los-queries'
+import {
+  CHART_HEIGHT,
+  CHART_PADDING,
+  computeChartData,
+  formatDateLabel,
+} from '../lib/los-chart-compute'
 
 interface LosTrendChartProps {
   trend: LosTrendPoint[]
@@ -19,67 +24,15 @@ interface LosTrendChartProps {
   className?: string
 }
 
-const CHART_HEIGHT = 200 // px — SVG viewport height (data area only)
-const CHART_PADDING = { top: 12, right: 16, bottom: 32, left: 64 }
-
-/**
- * Format an ISO date string (YYYY-MM-DD) to a short display label (e.g., "Feb 18")
- */
-function formatDateLabel(isoDate: string): string {
-  try {
-    const d = new Date(isoDate + 'T00:00:00')
-    return d.toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })
-  } catch {
-    return isoDate
-  }
-}
-
 export const LosTrendChart = memo(function LosTrendChart({
   trend,
   targetLosMs,
   className,
 }: LosTrendChartProps) {
-  const computed = useMemo(() => {
-    if (trend.length === 0) return null
-
-    const values = trend.map((p) => p.averageLosMs)
-    const allValues = targetLosMs !== null ? [...values, targetLosMs] : values
-
-    const maxMs = Math.max(...allValues) * 1.1   // 10% headroom above max
-    const minMs = Math.max(0, Math.min(...allValues) * 0.9)
-    const rangeMs = maxMs - minMs || 1
-
-    const totalWidth = 600 // SVG internal coordinate width
-
-    const dataWidth = totalWidth - CHART_PADDING.left - CHART_PADDING.right
-    const dataHeight = CHART_HEIGHT - CHART_PADDING.top - CHART_PADDING.bottom
-
-    /**
-     * Convert ms value → Y coordinate (SVG top-left origin, so invert)
-     */
-    const toY = (ms: number) =>
-      CHART_PADDING.top + dataHeight - ((ms - minMs) / rangeMs) * dataHeight
-
-    /**
-     * Convert point index → X coordinate
-     */
-    const toX = (i: number) =>
-      CHART_PADDING.left +
-      (trend.length === 1 ? dataWidth / 2 : (i / (trend.length - 1)) * dataWidth)
-
-    // Build SVG polyline points string
-    const linePoints = trend
-      .map((p, i) => `${toX(i)},${toY(p.averageLosMs)}`)
-      .join(' ')
-
-    // Y-axis tick values (4 ticks evenly spaced)
-    const ticks = [0, 0.33, 0.67, 1].map((f) => ({
-      ms: minMs + f * rangeMs,
-      y: CHART_PADDING.top + dataHeight - f * dataHeight,
-    }))
-
-    return { toX, toY, linePoints, ticks, maxMs, minMs, dataHeight, dataWidth, totalWidth }
-  }, [trend, targetLosMs])
+  const computed = useMemo(
+    () => computeChartData(trend, targetLosMs),
+    [trend, targetLosMs],
+  )
 
   if (trend.length === 0) {
     return (
