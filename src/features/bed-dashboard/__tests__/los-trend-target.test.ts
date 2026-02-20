@@ -1,11 +1,7 @@
-// Tests for EPIC 10 / US-10.x — Average Length of Stay
+// Tests for EPIC 10 / US-10.x — AC-4, AC-5
 //
-// AC coverage:
-//   AC-1: Average time calculated from admission to discharge (total_duration_ms)
-//   AC-2: Average displayed in hours and minutes (formatElapsedTime)
-//   AC-3: Average can be filtered by date range and shift
-//   AC-4: Trend line shows how average changes over time (fetchLosTrend)
-//   AC-5: Target line can be configured and displayed (saveLosTarget / fetchLosTarget)
+// AC-4: Trend line shows how average changes over time (fetchLosTrend)
+// AC-5: Target line can be configured and displayed (saveLosTarget / fetchLosTarget)
 
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 
@@ -40,19 +36,18 @@ import {
   fetchLosTarget,
   saveLosTarget,
 } from '../actions/los-actions'
-import { formatElapsedTime } from '../lib/utils'
 
 // ── Fixtures ───────────────────────────────────────────────────────────────
 
 const MOCK_SUMMARY = {
   totalPatients: 25,
-  averageLosMs: 4 * 60 * 60 * 1000,   // 4 hours
+  averageLosMs: 4 * 60 * 60 * 1000,
   medianLosMs: 3.5 * 60 * 60 * 1000,
   minLosMs: 1 * 60 * 60 * 1000,
   maxLosMs: 8 * 60 * 60 * 1000,
   p75LosMs: 5 * 60 * 60 * 1000,
   p90LosMs: 7 * 60 * 60 * 1000,
-  targetLosMs: 5 * 60 * 60 * 1000,    // 5-hour target
+  targetLosMs: 5 * 60 * 60 * 1000,
 }
 
 const MOCK_TREND = [
@@ -70,121 +65,6 @@ function mockSupervisorSession() {
 function mockAuditorSession() {
   vi.mocked(requireRole).mockResolvedValue({ userId: 'aud-1', role: 'auditor' } as never)
 }
-
-// ── AC-1 & AC-2: Average LoS calculated and formatted ─────────────────────
-
-describe('AC-1 & AC-2 — average LoS from admission→discharge, formatted in h/m', () => {
-  beforeEach(() => vi.clearAllMocks())
-
-  it('formatElapsedTime renders hours and minutes correctly', () => {
-    expect(formatElapsedTime(4 * 3600000)).toBe('4h')          // exact hours → no trailing 0m
-    expect(formatElapsedTime(90 * 60000)).toBe('1h 30m')       // 1.5 hours
-    expect(formatElapsedTime(45 * 60000)).toBe('45m')          // < 1 hour
-    expect(formatElapsedTime(0)).toBe('< 1m')                  // < 1 minute
-    expect(formatElapsedTime(30000)).toBe('< 1m')              // 30 seconds
-    expect(formatElapsedTime(5 * 3600000 + 15 * 60000)).toBe('5h 15m') // mixed
-  })
-
-  it('fetchLosSummary returns averageLosMs derived from total_duration_ms', async () => {
-    mockAdminSession()
-    vi.mocked(getLosSummary).mockResolvedValue(MOCK_SUMMARY)
-
-    const result = await fetchLosSummary()
-
-    expect(result.success).toBe(true)
-    expect(result.data?.averageLosMs).toBe(4 * 3600000)
-    expect(result.data?.totalPatients).toBe(25)
-  })
-
-  it('fetchLosSummary is accessible by supervisor', async () => {
-    mockSupervisorSession()
-    vi.mocked(getLosSummary).mockResolvedValue(MOCK_SUMMARY)
-
-    const result = await fetchLosSummary()
-    expect(result.success).toBe(true)
-  })
-
-  it('fetchLosSummary is accessible by auditor (read-only)', async () => {
-    mockAuditorSession()
-    vi.mocked(getLosSummary).mockResolvedValue(MOCK_SUMMARY)
-
-    const result = await fetchLosSummary()
-    expect(result.success).toBe(true)
-  })
-
-  it('fetchLosSummary returns error when role check throws', async () => {
-    vi.mocked(requireRole).mockRejectedValue(new Error('Forbidden'))
-
-    const result = await fetchLosSummary()
-    expect(result.success).toBe(false)
-    expect(result.error).toBe('Forbidden')
-  })
-
-  it('fetchLosSummary calls requireRole with admin, supervisor, auditor', async () => {
-    mockAdminSession()
-    vi.mocked(getLosSummary).mockResolvedValue(MOCK_SUMMARY)
-
-    await fetchLosSummary()
-    expect(requireRole).toHaveBeenCalledWith(['admin', 'supervisor', 'auditor'])
-  })
-})
-
-// ── AC-3: Filtered by date range and shift ─────────────────────────────────
-
-describe('AC-3 — filterable by date range and shift', () => {
-  beforeEach(() => vi.clearAllMocks())
-
-  it('passes date range filters through to getLosSummary', async () => {
-    mockAdminSession()
-    vi.mocked(getLosSummary).mockResolvedValue(MOCK_SUMMARY)
-
-    const start = new Date('2026-02-01')
-    const end = new Date('2026-02-20')
-    await fetchLosSummary({ startDate: start, endDate: end })
-
-    expect(getLosSummary).toHaveBeenCalledWith({ startDate: start, endDate: end })
-  })
-
-  it('passes shift filters through to getLosSummary', async () => {
-    mockAdminSession()
-    vi.mocked(getLosSummary).mockResolvedValue(MOCK_SUMMARY)
-
-    const filters = {
-      shiftStartTime: '08:00:00',
-      shiftEndTime: '16:00:00',
-      shiftCrossesMidnight: false,
-    }
-    await fetchLosSummary(filters)
-    expect(getLosSummary).toHaveBeenCalledWith(filters)
-  })
-
-  it('passes midnight-crossing night shift filter', async () => {
-    mockAdminSession()
-    vi.mocked(getLosSummary).mockResolvedValue(MOCK_SUMMARY)
-
-    const filters = {
-      shiftStartTime: '22:00:00',
-      shiftEndTime: '08:00:00',
-      shiftCrossesMidnight: true,
-    }
-    await fetchLosSummary(filters)
-    expect(getLosSummary).toHaveBeenCalledWith(filters)
-  })
-
-  it('passes date+shift combined filter to getLosTrend', async () => {
-    mockSupervisorSession()
-    vi.mocked(getLosTrend).mockResolvedValue(MOCK_TREND)
-
-    const filters = {
-      startDate: new Date('2026-02-01'),
-      shiftStartTime: '08:00:00',
-      shiftEndTime: '16:00:00',
-      shiftCrossesMidnight: false,
-    }
-    await fetchLosTrend(filters)
-    expect(getLosTrend).toHaveBeenCalledWith(filters)
-  })
-})
 
 // ── AC-4: Trend line shows how average changes over time ───────────────────
 
@@ -251,8 +131,7 @@ describe('AC-5 — configurable target line', () => {
 
   it('fetchLosTarget returns targetMinutes when configured', async () => {
     mockAdminSession()
-    // 5 hours = 300 minutes = 18_000_000 ms
-    vi.mocked(getLosTargetMs).mockResolvedValue(18_000_000)
+    vi.mocked(getLosTargetMs).mockResolvedValue(18_000_000)  // 5 hours = 300 min
 
     const result = await fetchLosTarget()
 
@@ -304,7 +183,6 @@ describe('AC-5 — configurable target line', () => {
 
     const result = await saveLosTarget(null)
     expect(result.success).toBe(true)
-    // null path calls DELETE, not INSERT
     expect(query).toHaveBeenCalledWith(
       expect.stringContaining('DELETE FROM system_settings')
     )
