@@ -4,6 +4,7 @@ import { deleteSession, verifySession } from '@/shared/lib/session'
 import { invalidateToken } from '@/shared/lib/auth-service'
 import { logAudit } from '@/shared/lib/audit'
 import { getClientIpFromHeaders } from '@/shared/lib/request-ip'
+import { logger } from '@/shared/config/logger'
 
 export async function POST(request: Request) {
     try {
@@ -40,7 +41,7 @@ export async function POST(request: Request) {
 
         return NextResponse.json({ success: true })
     } catch (error) {
-        console.error('Logout failed:', error)
+        logger.error('Logout failed', error instanceof Error ? error : undefined)
         // Always return success to ensure client cleans up
         return NextResponse.json({ success: true })
     }

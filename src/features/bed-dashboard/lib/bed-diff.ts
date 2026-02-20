@@ -15,7 +15,9 @@ export function hasBedChanged(oldBed: BedWithElapsedTime, newBed: BedWithElapsed
   if (oldBed.bedNumber !== newBed.bedNumber) return true
   if (oldBed.isOccupied !== newBed.isOccupied) return true
   if (oldBed.isDelayed !== newBed.isDelayed) return true
-  
+  if (oldBed.isTemporary !== newBed.isTemporary) return true  // US-6.5: surge bed create/remove
+  if (oldBed.isActive !== newBed.isActive) return true        // US-6.5: deactivation propagates
+
   // Check stage changes
   if (oldBed.currentStage?.id !== newBed.currentStage?.id) return true
   if (oldBed.currentStage?.name !== newBed.currentStage?.name) return true

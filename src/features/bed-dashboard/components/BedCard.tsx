@@ -1,9 +1,10 @@
 // Bed Card Component
 // Epic 1: Nurse Desk Bed Dashboard
+// Epic 6: US-6.5 — temporary (surge) beds shown with orange badge + border
 
 import { memo, type MouseEvent } from 'react'
 import { Card, CardContent } from '@/shared/components/ui/card'
-import { Clock, AlertTriangle, Hourglass } from 'lucide-react'
+import { Clock, AlertTriangle, Hourglass, Zap } from 'lucide-react'
 import type { BedWithElapsedTime, DispositionDelayReason } from '../types/bed'
 import { getStageColorClasses, getDelayColorClasses } from '../lib/utils'
 import { useElapsedTime } from '../hooks/useElapsedTime'
@@ -49,6 +50,7 @@ export const BedCard = memo(function BedCard({
   const isDelayed = bed.isDelayed
   const isBottleneck = bed.isDispositionBottleneck
   const isCleaning = isCleaningStage(bed.currentStage?.name)
+  const isTemporary = bed.isTemporary
 
   return (
     <Card
@@ -57,12 +59,20 @@ export const BedCard = memo(function BedCard({
         colorClasses.bg,
         colorClasses.border,
         'border-2',
+        isTemporary && 'ring-2 ring-orange-500 border-orange-700',
         isDelayed && 'ring-2 ring-red-500 motion-safe:animate-pulse',
         isBottleneck && !isDelayed && 'ring-2 ring-amber-500 motion-safe:animate-pulse'
       )}
       onClick={() => onClick?.(bed)}
       onContextMenu={(event) => onContextMenu?.(event, bed)}
     >
+      {/* US-6.5: Temporary / surge bed badge */}
+      {isTemporary && (
+        <div className="absolute top-0 left-0 flex items-center gap-0.5 rounded-br bg-orange-700/90 px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-wide text-orange-100">
+          <Zap className="h-2.5 w-2.5" />
+          Surge
+        </div>
+      )}
       {/* Delay indicator */}
       {isDelayed && !isBottleneck && (
         <div className="absolute top-2 right-2">

@@ -51,3 +51,20 @@ export const toggleBedStatusSchema = z.object({
 export type CreateBedInput = z.infer<typeof createBedSchema>
 export type UpdateBedInput = z.infer<typeof updateBedSchema>
 export type ToggleBedStatusInput = z.infer<typeof toggleBedStatusSchema>
+
+// US-6.5: Schema for creating a temporary (surge) bed
+export const createTemporaryBedSchema = z.object({
+    bedNumber: z
+        .string()
+        .min(2, 'Bed number must be at least 2 characters')
+        .max(50, 'Bed number must not exceed 50 characters')
+        .regex(/^[A-Z0-9-]+$/i, 'Bed number can only contain letters, numbers, and hyphens')
+        .trim(),
+    location: z
+        .string()
+        .max(255, 'Location must not exceed 255 characters')
+        .trim()
+        .optional(),
+})
+
+export type CreateTemporaryBedInput = z.infer<typeof createTemporaryBedSchema>

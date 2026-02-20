@@ -7,7 +7,7 @@ import Link from "next/link"
 
 import { verifyActiveSession } from "@/shared/lib/active-session"
 import { getBedGridData } from "@/features/bed-dashboard/actions/bed-grid-actions"
-import { SupervisorBedOverview } from "@/features/bed-dashboard/components/SupervisorBedOverview"
+import { SupervisorClientShell } from "./SupervisorClientShell"
 
 export default async function SupervisorDashboard() {
     const session = await verifyActiveSession()
@@ -47,7 +47,7 @@ export default async function SupervisorDashboard() {
                 </div>
 
                 {bedGridResult.success && bedGridResult.data ? (
-                    <SupervisorBedOverview initialData={bedGridResult.data} />
+                    <SupervisorClientShell initialData={bedGridResult.data} />
                 ) : (
                     <div className="rounded-lg border border-red-800 bg-red-900/20 p-8 text-center">
                         <AlertTriangle className="h-12 w-12 text-red-500 mx-auto mb-4" />

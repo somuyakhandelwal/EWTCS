@@ -9,6 +9,7 @@ import { logAudit } from '@/shared/lib/audit'
 import { headers } from 'next/headers'
 import { createKioskSession } from '@/features/auth/lib/kiosk'
 import { getClientIpFromHeaders } from '@/shared/lib/request-ip'
+import { logger } from '@/shared/config/logger'
 
 const UNKNOWN_ACTOR_ID = '00000000-0000-0000-0000-000000000000'
 
@@ -176,7 +177,7 @@ export async function login(prevState: unknown, formData: FormData) {
         if (error && typeof error === 'object' && 'digest' in error && typeof error.digest === 'string' && error.digest.startsWith('NEXT_REDIRECT')) {
             throw error
         }
-        console.error('Login error:', error)
+        logger.error('Login error', error instanceof Error ? error : undefined)
         return { message: 'Internal server error' }
     }
 }

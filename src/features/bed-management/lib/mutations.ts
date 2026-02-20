@@ -97,7 +97,9 @@ export async function updateBed(
 export async function deactivateBed(bedId: string): Promise<boolean> {
     const sql = `
         UPDATE beds
-        SET is_active = false, updated_at = CURRENT_TIMESTAMP
+        SET is_active = false,
+            is_temporary = false,
+            updated_at = CURRENT_TIMESTAMP
         WHERE id = $1 AND is_occupied = false
     `
 

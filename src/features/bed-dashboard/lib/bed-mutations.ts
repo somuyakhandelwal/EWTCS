@@ -7,6 +7,7 @@
 // are recorded within a single database transaction.
 // This ensures complete traceability and satisfies compliance requirement:
 // "Every user action is logged with user ID, action, timestamp, IP address"
+// US-8.2: Auto-tag each stage transition with the active shift
 
 import pool from '@/shared/lib/db'
 import { logger } from '@/shared/config/logger'
@@ -31,6 +32,10 @@ export interface UpdateBedStageParams {
   notes?: string
   ipAddress?: string | null
   supervisorOverrideApplied?: boolean
+  /** US-8.2: Supervisor manually overrides the auto-resolved shift for this log entry */
+  shiftOverrideId?: string | null
+  /** User ID of the supervisor performing the override */
+  shiftOverrideByUserId?: string | null
 }
 
 export interface UpdateBedStageResult {
@@ -59,6 +64,8 @@ export async function updateBedStageInDB(
     notes,
     ipAddress = null,
     supervisorOverrideApplied = false,
+    shiftOverrideId,
+    shiftOverrideByUserId,
   } = params
   const client = await pool.connect()
 
@@ -136,6 +143,9 @@ export async function updateBedStageInDB(
       [toStageId, shouldBeUnoccupied, nextIsOccupied, bedId]
     )
 
+    // US-8.2: Auto-tag shift_id using an inline subquery that correctly handles
+    // midnight-crossing shifts (e.g. Night: 22:00–06:00 where start_time > end_time).
+    // If a supervisor-provided shiftOverrideId is passed, that takes precedence.
     await client.query(
       `
       INSERT INTO bed_stage_logs (
@@ -144,8 +154,33 @@ export async function updateBedStageInDB(
         to_stage_id,
         changed_by_user_id,
         duration_in_previous_stage_ms,
-        notes
-      ) VALUES ($1, $2, $3, $4, $5, $6)
+        notes,
+        shift_id,
+        shift_override_by_user_id
+      ) VALUES (
+        $1, $2, $3, $4, $5, $6,
+        COALESCE(
+          $7::uuid,
+          (
+            SELECT s.id
+            FROM   shifts s
+            WHERE  s.is_active = TRUE
+              AND (
+                -- Normal shift: start_time <= end_time
+                (s.start_time <= s.end_time
+                   AND NOW()::time >= s.start_time
+                   AND NOW()::time <  s.end_time)
+                OR
+                -- Midnight-crossing shift: start_time > end_time
+                (s.start_time > s.end_time
+                   AND (NOW()::time >= s.start_time OR NOW()::time < s.end_time))
+              )
+            ORDER BY s.is_default DESC, s.created_at ASC
+            LIMIT 1
+          )
+        ),
+        $8::uuid
+      )
       `,
       [
         bedId,
@@ -154,6 +189,8 @@ export async function updateBedStageInDB(
         changedByUserId,
         durationInPreviousStageMs,
         notes || null,
+        shiftOverrideId ?? null,
+        shiftOverrideByUserId ?? null,
       ]
     )
 

@@ -50,6 +50,9 @@ function parseTATSummary(raw: RawTATSummary): TATSummary {
 /**
  * Fetch all completed TAT cycles (Cleaning → Empty transitions).
  * Only rows with a measured duration are included.
+ *
+ * @param startDate - Optional lower bound on transition_time
+ * @param endDate   - Optional upper bound on transition_time
  */
 export async function getTATRecords(
   startDate?: Date,
@@ -100,6 +103,9 @@ export async function getTATRecords(
 
 /**
  * Fetch aggregate TAT statistics across all completed cycles.
+ *
+ * @param startDate - Optional lower bound on transition_time
+ * @param endDate   - Optional upper bound on transition_time
  */
 export async function getTATSummary(
   startDate?: Date,

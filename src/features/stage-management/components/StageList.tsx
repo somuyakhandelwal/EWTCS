@@ -49,6 +49,13 @@ export function StageList({ initialStages }: { initialStages: Stage[] }) {
                   Default
                 </span>
               )}
+              {stage.threshold_minutes && (
+                <span className='text-xs bg-amber-900/40 px-2 py-0.5 rounded-full text-amber-200 border border-amber-700'>
+                  ⏱ {stage.threshold_minutes >= 60
+                    ? `${Math.floor(stage.threshold_minutes / 60)}h ${stage.threshold_minutes % 60 > 0 ? `${stage.threshold_minutes % 60}m` : ''}`
+                    : `${stage.threshold_minutes}m`}
+                </span>
+              )}
             </div>
 
           <div className='flex gap-2'>

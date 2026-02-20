@@ -22,6 +22,7 @@ export type ActionResult<T = unknown> = {
 function revalidateBedPages() {
     revalidatePath('/admin/beds')
     revalidatePath('/dashboard')
+    revalidatePath('/supervisor')
 }
 
 /**

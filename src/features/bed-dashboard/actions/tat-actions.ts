@@ -30,6 +30,10 @@ export interface FetchTATRecordsResult {
   error?: string
 }
 
+/**
+ * Fetch aggregate TAT statistics — accessible by supervisor and admin.
+ * Supervisors use this to monitor how fast beds are turned around.
+ */
 export async function fetchTATSummary(options?: {
   startDate?: Date
   endDate?: Date
@@ -37,6 +41,7 @@ export async function fetchTATSummary(options?: {
   try {
     await requireRole(['supervisor', 'admin', 'auditor'])
     const summary = await getTATSummary(options?.startDate, options?.endDate)
+
     logger.info('TAT summary fetched', { totalCycles: summary.totalCycles })
     return { success: true, data: summary }
   } catch (error) {
@@ -47,6 +52,10 @@ export async function fetchTATSummary(options?: {
   }
 }
 
+/**
+ * Fetch individual TAT records for per-bed analysis — supervisor/admin only.
+ * Returns most-recent cycles first, up to `limit` rows.
+ */
 export async function fetchTATRecords(options?: {
   startDate?: Date
   endDate?: Date
@@ -56,6 +65,7 @@ export async function fetchTATRecords(options?: {
     await requireRole(['supervisor', 'admin', 'auditor'])
     const records = await getTATRecords(options?.startDate, options?.endDate)
     const limited = options?.limit ? records.slice(0, options.limit) : records
+
     logger.info('TAT records fetched', { count: limited.length })
     return { success: true, data: limited }
   } catch (error) {
