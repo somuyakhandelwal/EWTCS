@@ -4,10 +4,14 @@ import { query, default as pool } from '@/shared/lib/db';
 import { revalidatePath } from 'next/cache';
 import type { Stage, CreateStageInput, UpdateStageInput } from '../types/stage.types';
 
-// Fetch all active stages ordered by display order
+// Fetch all active stages ordered by display order, including per-stage threshold (US-6.3)
 export async function getStages(): Promise<Stage[]> {
   const result = await query(
-    'SELECT * FROM stages WHERE is_active = TRUE ORDER BY display_order ASC'
+    `SELECT s.*, sdt.threshold_minutes
+     FROM stages s
+     LEFT JOIN stage_delay_thresholds sdt ON sdt.stage_id = s.id
+     WHERE s.is_active = TRUE
+     ORDER BY s.display_order ASC`
   );
   return result.rows as Stage[];
 }
@@ -43,7 +47,22 @@ export async function updateStage(input: UpdateStageInput) {
      WHERE id = $4`,
     [input.name?.trim(), input.color_code, input.description, input.id]
   );
+
+  // US-6.3: upsert or clear per-stage delay threshold
+  if (input.threshold_minutes && input.threshold_minutes > 0) {
+    await query(
+      `INSERT INTO stage_delay_thresholds (stage_id, threshold_minutes, updated_at)
+       VALUES ($1, $2, NOW())
+       ON CONFLICT (stage_id) DO UPDATE
+         SET threshold_minutes = EXCLUDED.threshold_minutes, updated_at = NOW()`,
+      [input.id, input.threshold_minutes]
+    );
+  } else if (input.threshold_minutes === null) {
+    await query('DELETE FROM stage_delay_thresholds WHERE stage_id = $1', [input.id]);
+  }
+
   revalidatePath('/admin/stages');
+  revalidatePath('/dashboard');
 }
 
 // Delete a stage (only non-default stages can be deleted)

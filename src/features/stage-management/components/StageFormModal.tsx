@@ -13,22 +13,37 @@ export function StageFormModal({ stage, onClose, onSaved }:
   const [name, setName] = useState(stage?.name ?? '');
   const [color, setColor] = useState(normalizeStageColor(stage?.color_code) ?? 'blue');
   const [desc, setDesc] = useState(stage?.description ?? '');
+  const stageThresholdMins = stage?.threshold_minutes ?? null;
+  const [thresholdHours, setThresholdHours] = useState(
+    stageThresholdMins ? Math.floor(stageThresholdMins / 60) : ''
+  );
+  const [thresholdMins, setThresholdMins] = useState(
+    stageThresholdMins ? stageThresholdMins % 60 : ''
+  );
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
 
   const handleSave = async () => {
     if (!name.trim()) return setError('Stage name is required');
     if (name.length > 50) return setError('Name must be max 50 characters');
+    const thH = Number(thresholdHours);
+    const thM = Number(thresholdMins);
+    const hasThreshold = thresholdHours !== '' || thresholdMins !== '';
+    const totalThresholdMins = hasThreshold ? thH * 60 + thM : null;
+    if (hasThreshold && (totalThresholdMins ?? 0) < 30)
+      return setError('Stage threshold must be at least 30 minutes');
     setLoading(true); setError('');
     try {
       if (stage) {
-        await updateStage({ id: stage.id, name, color_code: color, description: desc });
-        onSaved({ ...stage, name, color_code: color, description: desc });
+        await updateStage({ id: stage.id, name, color_code: color, description: desc,
+          threshold_minutes: totalThresholdMins });
+        onSaved({ ...stage, name, color_code: color, description: desc,
+          threshold_minutes: totalThresholdMins });
       } else {
         await createStage({ name, color_code: color, description: desc });
         onSaved({ id: Date.now().toString(), name, color_code: color,
           description: desc, display_order: 99, is_default: false,
-          is_active: true, created_at: '', updated_at: '' });
+          is_active: true, threshold_minutes: null, created_at: '', updated_at: '' });
       }
     } catch (e: unknown) { setError(e instanceof Error ? e.message : 'Something went wrong'); }
     finally { setLoading(false); }
@@ -86,6 +101,34 @@ export function StageFormModal({ stage, onClose, onSaved }:
           className='w-full border border-gray-300 rounded-lg px-3 py-2 mb-4 text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500'
           placeholder='Stage description...'
         />
+
+        {/* Delay Threshold Override (US-6.3) */}
+        {stage && (
+          <>
+            <label className='block text-sm font-semibold text-gray-700 mb-1'>
+              Delay Threshold Override
+              <span className='text-gray-400 font-normal ml-1'>(Optional — leave blank to use global)</span>
+            </label>
+            <div className='flex gap-2 mb-4'>
+              <input
+                type='number' min={0} max={24} placeholder='hrs'
+                value={thresholdHours}
+                onChange={e => setThresholdHours(e.target.value === '' ? '' : Math.max(0, Math.min(24, Number(e.target.value))))}
+                className='w-20 border border-gray-300 rounded-lg px-3 py-2 text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500'
+              />
+              <input
+                type='number' min={0} max={59} placeholder='min'
+                value={thresholdMins}
+                onChange={e => setThresholdMins(e.target.value === '' ? '' : Math.max(0, Math.min(59, Number(e.target.value))))}
+                className='w-20 border border-gray-300 rounded-lg px-3 py-2 text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500'
+              />
+              {(thresholdHours !== '' || thresholdMins !== '') && (
+                <button type='button' onClick={() => { setThresholdHours(''); setThresholdMins(''); }}
+                  className='text-xs text-red-500 hover:underline px-2'>Clear</button>
+              )}
+            </div>
+          </>
+        )}
 
         {/* Error */}
         {error && <p className='text-red-600 text-sm mb-3'>{error}</p>}
