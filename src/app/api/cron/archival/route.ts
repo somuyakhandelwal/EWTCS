@@ -13,12 +13,7 @@ import { logger } from '@/shared/config/logger'
 import { query } from '@/shared/lib/db'
 import { archiveTables } from '@/features/data-retention/lib/archival-runner'
 import { getRetentionConfig } from '@/features/data-retention/lib/retention-config-queries'
-
-function cutoffFromYears(years: number): Date {
-  const d = new Date()
-  d.setFullYear(d.getFullYear() - years)
-  return d
-}
+import { buildCutoffs } from '@/features/data-retention/lib/archival-run-helpers'
 
 export async function GET(request: NextRequest): Promise<NextResponse> {
   // ── Auth ──────────────────────────────────────────────────────────────
@@ -35,12 +30,10 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
 
   // ── Config ────────────────────────────────────────────────────────────
   const config = await getRetentionConfig()
-  const cutoffDate = cutoffFromYears(
-    Math.min(
-      config.patientAdmissionsYears,
-      config.auditLogsYears,
-      config.bedStageLogYears,
-    ),
+  const cutoffs = buildCutoffs(config)
+  // Earliest cutoff stored in the run record (for display only)
+  const earliestCutoff = new Date(
+    Math.min(cutoffs.patientAdmissions.getTime(), cutoffs.auditLogs.getTime()),
   )
 
   // ── Approval gate ─────────────────────────────────────────────────────
@@ -49,10 +42,10 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
       `INSERT INTO archival_runs (triggered_by, status, cutoff_date)
        VALUES ('cron', 'pending_approval', $1)
        RETURNING id`,
-      [cutoffDate],
+      [earliestCutoff],
     )
     const runId = result.rows[0].id
-    logger.info('Archival cron created pending_approval run', { runId, cutoffDate })
+    logger.info('Archival cron created pending_approval run', { runId, cutoffs })
     return NextResponse.json({ status: 'pending_approval', runId })
   }
 
@@ -61,11 +54,11 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
     `INSERT INTO archival_runs (triggered_by, status, cutoff_date)
      VALUES ('cron', 'running', $1)
      RETURNING id`,
-    [cutoffDate],
+    [earliestCutoff],
   )
   const runId = runResult.rows[0].id
 
-  const tableResults = await archiveTables(cutoffDate)
+  const tableResults = await archiveTables(cutoffs)
   const rowsArchived: Record<string, number> = {}
   const errors: string[] = []
 

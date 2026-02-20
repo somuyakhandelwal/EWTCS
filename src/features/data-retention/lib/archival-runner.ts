@@ -17,6 +17,8 @@ interface TableSpec {
   archive: string
   /** Column used to compare against the cutoff date */
   dateColumn: string
+  /** Key into the RetentionConfig — used to look up the per-table cutoff. */
+  configKey: 'patientAdmissions' | 'auditLogs'
 }
 
 const ARCHIVAL_TABLES: TableSpec[] = [
@@ -24,11 +26,13 @@ const ARCHIVAL_TABLES: TableSpec[] = [
     source: 'patient_admissions',
     archive: 'patient_admissions_archive',
     dateColumn: 'created_at',
+    configKey: 'patientAdmissions',
   },
   {
     source: 'audit_logs',
     archive: 'audit_logs_archive',
     dateColumn: 'created_at',
+    configKey: 'auditLogs',
   },
 ]
 
@@ -56,7 +60,7 @@ async function archiveBatch(
         SELECT s.*, NOW() AS archived_at
         FROM ${spec.source} s
         JOIN batch b ON b.id = s.id
-      RETURNING s.id
+      RETURNING id
     )
     DELETE FROM ${spec.source}
     WHERE id IN (SELECT id FROM moved)
@@ -74,19 +78,26 @@ export interface ArchiveTableResult {
   error?: string
 }
 
+/** Per-table cutoff dates — each table uses its own configured retention period. */
+export interface ArchivalCutoffs {
+  patientAdmissions: Date
+  auditLogs: Date
+}
+
 /**
- * Archive all rows older than cutoffDate for all registered tables.
+ * Archive all rows older than the per-table cutoff dates.
  * Processes each table independently — a failure on one does not block others.
  *
- * @param cutoffDate - Rows with created_at < this date are moved to archive
+ * @param cutoffs - Per-table cutoff Date objects derived from the retention config
  * @returns Per-table results including row counts and any error messages
  */
 export async function archiveTables(
-  cutoffDate: Date,
+  cutoffs: ArchivalCutoffs,
 ): Promise<ArchiveTableResult[]> {
   const results: ArchiveTableResult[] = []
 
   for (const spec of ARCHIVAL_TABLES) {
+    const cutoffDate = cutoffs[spec.configKey]
     const client = await pool.connect()
     let totalMoved = 0
 

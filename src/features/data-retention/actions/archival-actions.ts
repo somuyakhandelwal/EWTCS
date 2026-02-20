@@ -18,7 +18,7 @@ import {
   finaliseRunRecord,
   failRunRecord,
   collectResults,
-  computeCutoffDate,
+  buildCutoffs,
 } from '../lib/archival-run-helpers'
 import type { ArchivalRun } from '../lib/data-retention-types'
 
@@ -46,17 +46,13 @@ export async function triggerArchival(): Promise<TriggerArchivalResult> {
     const session = await requireRole('admin')
 
     const config = await getRetentionConfig()
-    const cutoffDate = computeCutoffDate([
-      config.patientAdmissionsYears,
-      config.auditLogsYears,
-      config.bedStageLogYears,
-    ])
+    const cutoffs = buildCutoffs(config)
 
-    const runId = await createRunRecord(session.userId, cutoffDate)
+    const runId = await createRunRecord(session.userId, cutoffs)
 
-    logger.info('Manual archival run started', { runId, cutoffDate, adminId: session.userId })
+    logger.info('Manual archival run started', { runId, cutoffs, adminId: session.userId })
 
-    const tableResults = await archiveTables(cutoffDate)
+    const tableResults = await archiveTables(cutoffs)
     const { rowsArchived, errors } = collectResults(tableResults)
 
     if (errors.length > 0) {
@@ -72,7 +68,7 @@ export async function triggerArchival(): Promise<TriggerArchivalResult> {
       entityType: 'archival_run',
       entityId: runId,
       performedBy: session.userId,
-      changes: { rowsArchived, cutoffDate },
+      changes: { rowsArchived, cutoffs },
     })
 
     logger.info('Manual archival run completed', { runId, rowsArchived })
@@ -104,7 +100,14 @@ export async function approveArchival(runId: string): Promise<TriggerArchivalRes
       [runId, session.userId],
     )
 
-    const tableResults = await archiveTables(run.cutoffDate)
+    // Re-read current config to get per-table cutoffs.
+    // The stored cutoff_date in the run record is the earliest of those cutoffs — used
+    // only for display. We derive per-table dates from the live config so each table
+    // respects its own retention period.
+    const config = await getRetentionConfig()
+    const cutoffs = buildCutoffs(config)
+
+    const tableResults = await archiveTables(cutoffs)
     const { rowsArchived, errors } = collectResults(tableResults)
 
     if (errors.length > 0) {
@@ -120,7 +123,7 @@ export async function approveArchival(runId: string): Promise<TriggerArchivalRes
       entityType: 'archival_run',
       entityId: runId,
       performedBy: session.userId,
-      changes: { rowsArchived, cutoffDate: run.cutoffDate },
+      changes: { rowsArchived, cutoffs, storedCutoffDate: run.cutoffDate },
     })
 
     logger.info('Archival run approved and completed', { runId, rowsArchived })

@@ -2,18 +2,23 @@
 // EPIC 14 — US-14.1 (internal, not exported from the feature)
 
 import { query } from '@/shared/lib/db'
-import type { ArchiveTableResult } from './archival-runner'
+import type { ArchiveTableResult, ArchivalCutoffs } from './archival-runner'
+import type { RetentionConfig } from './data-retention-types'
 
 /** Insert a new archival_runs row with status='running' and return its id. */
 export async function createRunRecord(
   triggeredBy: string,
-  cutoffDate: Date,
+  cutoffs: ArchivalCutoffs,
 ): Promise<string> {
+  // Store the earliest cutoff in the log row for display purposes
+  const earliestCutoff = new Date(
+    Math.min(cutoffs.patientAdmissions.getTime(), cutoffs.auditLogs.getTime()),
+  )
   const result = await query<{ id: string }>(
     `INSERT INTO archival_runs (triggered_by, status, cutoff_date)
      VALUES ($1, 'running', $2)
      RETURNING id`,
-    [triggeredBy, cutoffDate],
+    [triggeredBy, earliestCutoff],
   )
   return result.rows[0].id
 }
@@ -55,10 +60,20 @@ export function collectResults(tableResults: ArchiveTableResult[]): {
   return { rowsArchived, errors }
 }
 
-/** Compute the oldest cutoff date from a list of retention periods in years. */
-export function computeCutoffDate(retentionYears: number[]): Date {
-  const minYears = Math.min(...retentionYears)
+/** Subtract years from today and return the resulting Date. */
+function yearsAgo(years: number): Date {
   const d = new Date()
-  d.setFullYear(d.getFullYear() - minYears)
+  d.setFullYear(d.getFullYear() - years)
   return d
+}
+
+/**
+ * Build per-table cutoff dates from the retention config.
+ * Each table uses its own configured retention period — not a shared minimum.
+ */
+export function buildCutoffs(config: RetentionConfig): ArchivalCutoffs {
+  return {
+    patientAdmissions: yearsAgo(config.patientAdmissionsYears),
+    auditLogs: yearsAgo(config.auditLogsYears),
+  }
 }
