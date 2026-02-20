@@ -21,7 +21,7 @@
     "init": "node scripts/init-system.js",
     "db:seed": "node scripts/seed-db.js",
     "db:reset": "node scripts/reset-db.js",
-    "seed:config": "npx ts-node scripts/seed.ts",
+    "seed:config": "tsx scripts/seed.ts",
     "seed:beds": "node scripts/seed-beds.mjs",
     "seed:simulate": "node scripts/simulate-occupied-beds.mjs",
     "validate:env": "node scripts/validate-env-example.js",

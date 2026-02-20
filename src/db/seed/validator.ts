@@ -1,4 +1,3 @@
-const hexColorPattern = /^#[0-9A-Fa-f]{6}$/;
 const uppercaseWordPattern = /^[A-Z]{2,5}$/;
 const bedPrefixPattern = /^[A-Z]+$/;
 
@@ -13,7 +12,7 @@ export interface SeedConfig {
     end: number;
   };
   stages: Array<{
-    id: number;
+    id: string;
     name: string;
     description?: string;
     color: string;
@@ -67,8 +66,8 @@ export class SeedValidator {
           errors.push(`stages[${index}]: must be an object`);
           return;
         }
-        if (!this.isPositiveInteger(stage.id)) {
-          errors.push(`stages[${index}].id: must be a positive integer`);
+        if (!this.isNonEmptyString(stage.id)) {
+          errors.push(`stages[${index}].id: must be a non-empty string`);
         }
         if (!this.isNonEmptyString(stage.name)) {
           errors.push(`stages[${index}].name: must be a non-empty string`);
@@ -80,8 +79,8 @@ export class SeedValidator {
         ) {
           errors.push(`stages[${index}].description: must be a string`);
         }
-        if (!this.isMatchingString(stage.color, hexColorPattern)) {
-          errors.push(`stages[${index}].color: must be a hex color`);
+        if (!this.isNonEmptyString(stage.color)) {
+          errors.push(`stages[${index}].color: must be a non-empty string`);
         }
         if (!this.isPositiveInteger(stage.sequence)) {
           errors.push(`stages[${index}].sequence: must be a positive integer`);
@@ -105,7 +104,7 @@ export class SeedValidator {
     }
 
     const stageNames = new Set<string>();
-    const stageIds = new Set<number>();
+    const stageIds = new Set<string>();
 
     for (const stage of config.stages) {
       if (stageNames.has(stage.name)) {
