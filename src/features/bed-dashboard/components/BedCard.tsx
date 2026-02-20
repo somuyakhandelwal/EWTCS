@@ -18,8 +18,6 @@ interface BedCardProps {
   onClick?: (bed: BedWithElapsedTime) => void
   onContextMenu?: (event: MouseEvent<HTMLDivElement>, bed: BedWithElapsedTime) => void
   onReasonSelect?: (bedId: string, reason: DispositionDelayReason) => void
-  onMarkClean?: (bedId: string) => void
-  isMarkCleanUpdating?: boolean
   showUpdated?: boolean
   errorMessage?: string | null
   searchQuery?: string
@@ -33,8 +31,6 @@ export const BedCard = memo(function BedCard({
   onClick,
   onContextMenu,
   onReasonSelect,
-  onMarkClean,
-  isMarkCleanUpdating = false,
   showUpdated = false,
   errorMessage = null,
   searchQuery = '',
@@ -158,14 +154,9 @@ export const BedCard = memo(function BedCard({
           </div>
         )}
 
-        {/* US-2.4: Cleaning actions */}
-        {isCleaning && onMarkClean && (
-          <CleaningActions
-            bedId={bed.id}
-            lastStageChange={bed.lastStageChange}
-            onMarkClean={onMarkClean}
-            isUpdating={isMarkCleanUpdating}
-          />
+        {/* US-2.4: Cleaning duration timer */}
+        {isCleaning && (
+          <CleaningActions lastStageChange={bed.lastStageChange} />
         )}
 
         {/* Empty bed status */}

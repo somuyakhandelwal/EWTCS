@@ -4,7 +4,7 @@
 
 -- Up Migration
 
--- shifts table must exist (created in migration 015)
+-- shifts table must exist (created in migration 018)
 
 -- Add shift_id to bed_stage_logs (nullable for backwards-compatibility with pre-migration rows)
 ALTER TABLE bed_stage_logs

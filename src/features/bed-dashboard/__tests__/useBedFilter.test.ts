@@ -28,6 +28,7 @@ function makeBed(
     dispositionElapsedMs: null,
     dispositionDelayReason: null,
     dispositionDelayLogId: null,
+    isTemporary: false,
   }
 }
 

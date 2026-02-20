@@ -5,7 +5,7 @@ import { useFormStatus } from 'react-dom'
 import { Button } from '@/shared/components/ui/button'
 import { Input } from '@/shared/components/ui/input'
 import { Label } from '@/shared/components/ui/label'
-import { X, AlertCircle, CheckCircle2 } from 'lucide-react'
+import { X, AlertCircle, CheckCircle2, KeyRound } from 'lucide-react'
 import { updateUser } from '@/features/user-management/actions/user-management-actions'
 
 interface User {
@@ -104,28 +104,13 @@ export default function EditUserDialog({ user, isOpen, onClose, wards = [] }: Ed
                         )}
                     </div>
 
-                    <div className="space-y-2">
-                        <Label htmlFor="password" className="text-zinc-200">
-                            New Password <span className="text-zinc-500 font-normal">(Optional)</span>
-                        </Label>
-                        <Input
-                            id="password"
-                            name="password"
-                            type="password"
-                            placeholder="ΓÇóΓÇóΓÇóΓÇóΓÇóΓÇóΓÇóΓÇó"
-                            className="bg-black/50 border-zinc-700 text-white placeholder:text-zinc-600"
-                            autoComplete="new-password"
-                        />
-                        {state?.errors?.password && (
-                            <p className="text-sm text-red-500 flex items-center gap-1">
-                                <AlertCircle className="h-3 w-3" />
-                                {state.errors.password}
-                            </p>
-                        )}
-                        <p className="text-xs text-zinc-500 flex items-center gap-1">
-                            <AlertCircle className="h-3 w-3" />
-                            Leave empty to keep the current password unchanged
-                        </p>
+                    {/* Password is managed exclusively via Reset Password — not here.
+                        This prevents two competing, inconsistent flows. US-5.5 */}
+                    <div className="flex items-center gap-2 rounded-md border border-zinc-800 bg-zinc-900/60 px-3 py-2.5 text-xs text-zinc-500">
+                        <KeyRound className="h-3.5 w-3.5 shrink-0 text-amber-500/70" />
+                        To change a user&apos;s password, use the{' '}
+                        <span className="font-medium text-amber-400/80">Reset Password</span>{' '}
+                        button on the user list.
                     </div>
 
                     <div className="space-y-2">

@@ -10,6 +10,7 @@ import { headers } from 'next/headers'
 import { createKioskSession } from '@/features/auth/lib/kiosk'
 import { getClientIpFromHeaders } from '@/shared/lib/request-ip'
 import { logger } from '@/shared/config/logger'
+import { getPasswordResetStatus } from '@/features/auth/lib/password-reset-db'
 
 const UNKNOWN_ACTOR_ID = '00000000-0000-0000-0000-000000000000'
 
@@ -136,7 +137,27 @@ export async function login(prevState: unknown, formData: FormData) {
             [user.id]
         )
 
-        // US-5.3: Kiosk mode — long-lived session bound to the login IP
+        // US-5.5: Check if user must change their password before accessing the app
+        const { mustChangePassword, tempPasswordSetAt } = await getPasswordResetStatus(user.id)
+
+        if (mustChangePassword) {
+            const TEMP_PASSWORD_EXPIRY_MS = 24 * 60 * 60 * 1000 // 24 hours
+            const isExpired =
+                tempPasswordSetAt !== null &&
+                Date.now() - new Date(tempPasswordSetAt).getTime() > TEMP_PASSWORD_EXPIRY_MS
+
+            if (isExpired) {
+                return {
+                    message:
+                        'Temporary password has expired. Contact your administrator to reset your password.',
+                }
+            }
+
+            // Create a normal session (no flag in JWT) and redirect to the
+            // change-password page. The page itself verifies the DB flag.
+            await createSession(user.id, user.username, user.role)
+            redirect('/change-password')
+        }
         const isKiosk = formData.get('kioskMode') === 'on'
         let kioskOpts: KioskOptions | undefined
         if (isKiosk) {

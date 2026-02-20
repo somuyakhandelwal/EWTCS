@@ -44,6 +44,13 @@ export async function middleware(request: NextRequest) {
         }
     }
 
+    // US-5.5: /change-password requires an active session
+    if (pathname.startsWith('/change-password')) {
+        if (!session) {
+            return NextResponse.redirect(new URL('/login', request.url))
+        }
+    }
+
     // Protected routes
     if (pathname.startsWith('/admin')) {
         if (!session || session.role !== 'admin') {
@@ -84,5 +91,12 @@ export async function middleware(request: NextRequest) {
 }
 
 export const config = {
-    matcher: ['/dashboard/:path*', '/admin/:path*', '/supervisor/:path*', '/analytics/:path*', '/login'],
+    matcher: [
+        '/dashboard/:path*',
+        '/admin/:path*',
+        '/supervisor/:path*',
+        '/analytics/:path*',
+        '/login',
+        '/change-password',
+    ],
 }

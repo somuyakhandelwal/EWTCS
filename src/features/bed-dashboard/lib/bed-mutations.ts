@@ -11,19 +11,16 @@
 
 import pool from '@/shared/lib/db'
 import { logger } from '@/shared/config/logger'
-
-type BedRow = {
-  id: string
-  currentStageId: string | null
-  lastStageChange: Date | null
-  patientStartTime: Date | null
-  isOccupied: boolean
-}
-
-type StageRow = {
-  id: string
-  name: string
-}
+import {
+  BedRow,
+  INSERT_AUDIT_LOG_SQL,
+  INSERT_BED_STAGE_LOG_SQL,
+  isNonPatientStage,
+  SELECT_BED_FOR_UPDATE_SQL,
+  SELECT_STAGE_BY_ID_SQL,
+  StageRow,
+  UPDATE_BED_STAGE_SQL,
+} from './bed-mutations.constants'
 
 export interface UpdateBedStageParams {
   bedId: string
@@ -48,12 +45,6 @@ export interface UpdateBedStageResult {
   lastStageChange: Date | null
 }
 
-function isNonPatientStage(stageName: string): boolean {
-  const normalized = stageName.trim().toLowerCase()
-  // Cleaning retains patient context for TAT tracking (US-2.4)
-  return normalized === 'empty'
-}
-
 export async function updateBedStageInDB(
   params: UpdateBedStageParams
 ): Promise<UpdateBedStageResult> {
@@ -72,20 +63,7 @@ export async function updateBedStageInDB(
   try {
     await client.query('BEGIN')
 
-    const bedResult = await client.query<BedRow>(
-      `
-      SELECT 
-        id,
-        current_stage_id as "currentStageId",
-        last_stage_change as "lastStageChange",
-        patient_start_time as "patientStartTime",
-        is_occupied as "isOccupied"
-      FROM beds
-      WHERE id = $1 AND is_active = true
-      FOR UPDATE
-      `,
-      [bedId]
-    )
+    const bedResult = await client.query<BedRow>(SELECT_BED_FOR_UPDATE_SQL, [bedId])
 
     if (bedResult.rows.length === 0) {
       throw new Error('Bed not found or inactive')
@@ -97,14 +75,7 @@ export async function updateBedStageInDB(
       throw new Error('Bed is already in the selected stage')
     }
 
-    const stageResult = await client.query<StageRow>(
-      `
-      SELECT id, name
-      FROM stages
-      WHERE id = $1 AND is_active = true
-      `,
-      [toStageId]
-    )
+    const stageResult = await client.query<StageRow>(SELECT_STAGE_BY_ID_SQL, [toStageId])
 
     if (stageResult.rows.length === 0) {
       throw new Error('Stage not found or inactive')
@@ -126,103 +97,37 @@ export async function updateBedStageInDB(
       patientStartTime: Date | null
       isOccupied: boolean
       lastStageChange: Date | null
-    }>(
-      `
-      UPDATE beds
-      SET current_stage_id = $1,
-          last_stage_change = NOW(),
-          patient_start_time = CASE
-            WHEN patient_start_time IS NULL AND NOT $2 THEN NOW()
-            ELSE patient_start_time
-          END,
-          is_occupied = $3,
-          updated_at = NOW()
-      WHERE id = $4
-      RETURNING patient_start_time as "patientStartTime", is_occupied as "isOccupied", last_stage_change as "lastStageChange"
-      `,
-      [toStageId, shouldBeUnoccupied, nextIsOccupied, bedId]
-    )
+    }>(UPDATE_BED_STAGE_SQL, [toStageId, shouldBeUnoccupied, nextIsOccupied, bedId])
 
     // US-8.2: Auto-tag shift_id using an inline subquery that correctly handles
     // midnight-crossing shifts (e.g. Night: 22:00–06:00 where start_time > end_time).
     // If a supervisor-provided shiftOverrideId is passed, that takes precedence.
-    await client.query(
-      `
-      INSERT INTO bed_stage_logs (
-        bed_id,
-        from_stage_id,
-        to_stage_id,
-        changed_by_user_id,
-        duration_in_previous_stage_ms,
-        notes,
-        shift_id,
-        shift_override_by_user_id
-      ) VALUES (
-        $1, $2, $3, $4, $5, $6,
-        COALESCE(
-          $7::uuid,
-          (
-            SELECT s.id
-            FROM   shifts s
-            WHERE  s.is_active = TRUE
-              AND (
-                -- Normal shift: start_time <= end_time
-                (s.start_time <= s.end_time
-                   AND NOW()::time >= s.start_time
-                   AND NOW()::time <  s.end_time)
-                OR
-                -- Midnight-crossing shift: start_time > end_time
-                (s.start_time > s.end_time
-                   AND (NOW()::time >= s.start_time OR NOW()::time < s.end_time))
-              )
-            ORDER BY s.is_default DESC, s.created_at ASC
-            LIMIT 1
-          )
-        ),
-        $8::uuid
-      )
-      `,
-      [
-        bedId,
-        bed.currentStageId,
-        toStageId,
-        changedByUserId,
-        durationInPreviousStageMs,
-        notes || null,
-        shiftOverrideId ?? null,
-        shiftOverrideByUserId ?? null,
-      ]
-    )
+    await client.query(INSERT_BED_STAGE_LOG_SQL, [
+      bedId,
+      bed.currentStageId,
+      toStageId,
+      changedByUserId,
+      durationInPreviousStageMs,
+      notes || null,
+      shiftOverrideId ?? null,
+      shiftOverrideByUserId ?? null,
+    ])
 
-    await client.query(
-      `
-      INSERT INTO audit_logs (
-        action_type,
-        entity_type,
-        entity_id,
-        performed_by_user_id,
-        changes,
-        reason,
-        metadata,
-        ip_address
-      ) VALUES ($1, $2, $3, $4, $5::jsonb, $6, $7::jsonb, $8)
-      `,
-      [
-        'UPDATE',
-        'bed',
-        bedId,
-        changedByUserId,
-        JSON.stringify({
-          fromStageId: bed.currentStageId,
-          toStageId,
-          isOccupied: nextIsOccupied,
-          supervisorOverrideApplied,
-        }),
-        'Bed stage updated',
-        JSON.stringify({ source: 'bed-dashboard' }),
-        ipAddress,
-      ]
-    )
+    await client.query(INSERT_AUDIT_LOG_SQL, [
+      'UPDATE',
+      'bed',
+      bedId,
+      changedByUserId,
+      JSON.stringify({
+        fromStageId: bed.currentStageId,
+        toStageId,
+        isOccupied: nextIsOccupied,
+        supervisorOverrideApplied,
+      }),
+      'Bed stage updated',
+      JSON.stringify({ source: 'bed-dashboard' }),
+      ipAddress,
+    ])
 
     await client.query('COMMIT')
 

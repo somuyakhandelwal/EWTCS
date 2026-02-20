@@ -13,8 +13,11 @@ import type {
   AuditorHistoryRecord,
   AuditorHistorySortBy,
 } from '../lib/auditor-history-queries'
-
-const PAGE_SIZE = 25
+import {
+  AUDITOR_HISTORY_PAGE_SIZE,
+  buildAuditorHistoryPayload,
+  DEFAULT_AUDITOR_HISTORY_FILTERS,
+} from './auditor-history-view.utils'
 
 export function AuditorHistoryView({ readOnly = false }: { readOnly?: boolean }) {
   const [rows, setRows] = useState<AuditorHistoryRecord[]>([])
@@ -26,28 +29,15 @@ export function AuditorHistoryView({ readOnly = false }: { readOnly?: boolean })
   const [sortBy, setSortBy] = useState<AuditorHistorySortBy>('transitionTime')
   const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('desc')
   const [filters, setFilters] = useState({
-    bedNumber: '',
-    stageName: '',
-    changedByUserId: '',
-    changedByUsername: '',
-    startDate: '',
-    endDate: '',
+    ...DEFAULT_AUDITOR_HISTORY_FILTERS,
   })
 
-  const totalPages = Math.max(1, Math.ceil(totalCount / PAGE_SIZE))
+  const totalPages = Math.max(1, Math.ceil(totalCount / AUDITOR_HISTORY_PAGE_SIZE))
 
-  const buildPayload = useCallback(() => ({
-    bedNumber: filters.bedNumber || undefined,
-    stageName: filters.stageName || undefined,
-    changedByUserId: filters.changedByUserId || undefined,
-    changedByUsername: filters.changedByUsername || undefined,
-    startDate: filters.startDate ? new Date(filters.startDate) : undefined,
-    endDate: filters.endDate ? new Date(filters.endDate) : undefined,
-    sortBy,
-    sortOrder,
-    limit: PAGE_SIZE,
-    offset: (page - 1) * PAGE_SIZE,
-  }), [filters, page, sortBy, sortOrder])
+  const buildPayload = useCallback(
+    () => buildAuditorHistoryPayload({ filters, page, sortBy, sortOrder }),
+    [filters, page, sortBy, sortOrder]
+  )
 
   const loadHistory = useCallback(async () => {
     setLoading(true)
@@ -148,7 +138,7 @@ export function AuditorHistoryView({ readOnly = false }: { readOnly?: boolean })
             variant="outline"
             disabled={readOnly}
             onClick={() => {
-              setFilters({ bedNumber: '', stageName: '', changedByUserId: '', changedByUsername: '', startDate: '', endDate: '' })
+              setFilters({ ...DEFAULT_AUDITOR_HISTORY_FILTERS })
               setPage(1)
             }}
           >

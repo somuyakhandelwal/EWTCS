@@ -3,31 +3,8 @@
 import { query, default as pool } from '@/shared/lib/db';
 import { revalidatePath } from 'next/cache';
 import type { Stage, CreateStageInput, UpdateStageInput } from '../types/stage.types';
-import { requireAdminWrite } from '@/shared/lib/auth';
 import { logAudit } from '@/shared/lib/audit';
-import { headers } from 'next/headers';
-import { getClientIpFromHeaders } from '@/shared/lib/request-ip';
-
-async function getAuditContext() {
-  const session = await requireAdminWrite({
-    actionType: 'UPDATE',
-    entityType: 'stage',
-    entityId: 'configuration',
-  });
-  const requestHeaders = await headers();
-  const ipAddress = getClientIpFromHeaders(requestHeaders);
-
-  return {
-    userId: session.userId,
-    username: session.username,
-    role: session.role,
-    ipAddress,
-  };
-}
-
-function getAuditMetadata(actor: { username: string; role: string }) {
-  return { category: 'configuration', username: actor.username, role: actor.role };
-}
+import { getStageAuditContext, getStageAuditMetadata } from './stage-audit-context';
 
 // Fetch all active stages ordered by display order, including per-stage threshold (US-6.3)
 export async function getStages(): Promise<Stage[]> {
@@ -43,7 +20,7 @@ export async function getStages(): Promise<Stage[]> {
 
 // Create a new stage
 export async function createStage(input: CreateStageInput) {
-  const actor = await getAuditContext();
+  const actor = await getStageAuditContext();
 
   if (!input.name || input.name.trim().length === 0)
     throw new Error('Stage name is required');
@@ -68,7 +45,7 @@ export async function createStage(input: CreateStageInput) {
     changes: {
       after: createdStage,
     },
-    metadata: getAuditMetadata(actor),
+    metadata: getStageAuditMetadata(actor),
     ipAddress: actor.ipAddress,
   });
 
@@ -77,7 +54,7 @@ export async function createStage(input: CreateStageInput) {
 
 // Update an existing stage
 export async function updateStage(input: UpdateStageInput) {
-  const actor = await getAuditContext();
+  const actor = await getStageAuditContext();
 
   if (input.name && input.name.length > 50)
     throw new Error('Stage name must be max 50 characters');
@@ -131,7 +108,7 @@ export async function updateStage(input: UpdateStageInput) {
           input.threshold_minutes === null ? null : (input.threshold_minutes ?? beforeStage.threshold_minutes ?? null),
       },
     },
-    metadata: getAuditMetadata(actor),
+    metadata: getStageAuditMetadata(actor),
     ipAddress: actor.ipAddress,
   });
 
@@ -141,7 +118,7 @@ export async function updateStage(input: UpdateStageInput) {
 
 // Delete a stage (only non-default stages can be deleted)
 export async function deleteStage(id: string) {
-  const actor = await getAuditContext();
+  const actor = await getStageAuditContext();
 
   const beforeResult = await query(
     'SELECT id, name, color_code, description, display_order, is_active, is_default FROM stages WHERE id = $1',
@@ -170,7 +147,7 @@ export async function deleteStage(id: string) {
       before: beforeStage,
       after: result.rows[0],
     },
-    metadata: getAuditMetadata(actor),
+    metadata: getStageAuditMetadata(actor),
     ipAddress: actor.ipAddress,
   });
 
@@ -179,7 +156,7 @@ export async function deleteStage(id: string) {
 
 // Reorder stages
 export async function reorderStages(orderedIds: string[]) {
-  const actor = await getAuditContext();
+  const actor = await getStageAuditContext();
 
   const beforeOrderResult = await query(
     'SELECT id, display_order FROM stages WHERE is_active = TRUE ORDER BY display_order ASC'
@@ -211,7 +188,7 @@ export async function reorderStages(orderedIds: string[]) {
       before: beforeOrderResult.rows,
       after: orderedIds.map((id, index) => ({ id, display_order: index + 1 })),
     },
-    metadata: getAuditMetadata(actor),
+    metadata: getStageAuditMetadata(actor),
     ipAddress: actor.ipAddress,
   });
 

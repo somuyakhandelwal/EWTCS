@@ -424,7 +424,7 @@ We welcome contributions! This project can make a real difference in healthcare.
 
 - ✅ TypeScript required for all new code
 - ✅ Feature-first structure (see [src/features/README.md](src/features/README.md))
-- ✅ Maximum 200 lines per file
+- ✅ Maximum 200 lines per file (except `package-lock.json`)
 - ✅ Functional components with hooks
 - ✅ Tailwind CSS via shadcn/ui
 - ✅ Path aliases: `@/features/*`, `@/shared/*`, `@/app/*`

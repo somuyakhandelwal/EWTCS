@@ -4,12 +4,12 @@
 //
 // Two TAT APIs coexist:
 //  1. Upstream analytics (fetchTATSummary/fetchTATRecords) — used by StageAnalyticsView
-//  2. US-2.4 cleaning TAT (markBedClean/fetchTatSummary/fetchTatRecords) — used by BedDashboardClient
+//  2. US-2.4 cleaning TAT (fetchTatSummary/fetchTatRecords) — used by BedDashboardClient
 
 import { requireRole, requireWriteRole } from '@/shared/lib/auth'
 import { logAudit } from '@/shared/lib/audit'
-import { logger } from '@/shared/config/logger'
 import { query } from '@/shared/lib/db'
+import { logger } from '@/shared/config/logger'
 import { updateBedStageInDB } from '../lib/bed-mutations'
 import { getTATSummary, getTATRecords } from '../lib/tat-queries'
 import { getTatSummary, getCompletedTatRecords } from '../lib/tat-cleaning-queries'
