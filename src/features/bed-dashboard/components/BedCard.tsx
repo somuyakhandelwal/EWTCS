@@ -70,6 +70,11 @@ export const BedCard = memo(function BedCard({
       onClick={handleClick}
       onContextMenu={(e) => onContextMenu?.(e, bed)}
     >
+      {/* US-Epic 4: Large Background Icon for Colorblindness / Accessibility */}
+      <div className="absolute -bottom-6 -right-6 pointer-events-none opacity-[0.07] contrast-more:opacity-20 z-0">
+        <StageIcon color={stageColor} className={cn("w-40 h-40", colorClasses.text)} />
+      </div>
+
       {isDelayed && !isBottleneck && (
         <div className="absolute top-2 right-2">
           <AlertTriangle className="h-5 w-5 text-red-500" />
@@ -86,7 +91,7 @@ export const BedCard = memo(function BedCard({
         </div>
       )}
 
-      <CardContent className="p-4 space-y-3">
+      <CardContent className="p-4 space-y-3 relative z-10">
         <div className="flex items-center justify-between">
           <h3 className={cn('text-2xl font-bold', colorClasses.text)}>
             {highlightMatch(bed.bedNumber, searchQuery)}

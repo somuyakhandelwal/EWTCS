@@ -39,16 +39,16 @@ export function getDelayColorClasses(isDelayed: boolean): {
 } {
   if (isDelayed) {
     return {
-      bg: 'bg-red-900/50',
-      text: 'text-red-300',
-      border: 'border-red-700',
+      bg: 'bg-red-900/50 contrast-more:bg-red-900',
+      text: 'text-red-300 contrast-more:text-white contrast-more:font-bold',
+      border: 'border-red-700 contrast-more:border-white contrast-more:border-2',
     }
   }
 
   return {
-    bg: 'bg-zinc-800',
-    text: 'text-zinc-300',
-    border: 'border-zinc-700',
+    bg: 'bg-zinc-800 contrast-more:bg-zinc-900',
+    text: 'text-zinc-300 contrast-more:text-white',
+    border: 'border-zinc-700 contrast-more:border-zinc-300',
   }
 }
 

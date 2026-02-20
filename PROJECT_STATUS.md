@@ -34,6 +34,8 @@ The core system is **fully operational** and **production-ready**. Phase 2 real-
 - [x] 12 emergency beds (ER-01 to ER-12) with expansion capability
 - [x] 8-stage patient workflow tracking
 - [x] Color-coded visual indicators
+- [x] **Accessibility patterns and icons for colorblind users** (EPIC 4) ← NEW
+- [x] **High contrast mode support built-in** (EPIC 4) ← NEW
 - [x] Automatic elapsed time display
 - [x] Delay detection and red alerts (>3 hours)
 - [x] Filter functionality (show delayed beds only)
