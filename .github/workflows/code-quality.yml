@@ -1,8 +1,7 @@
 name: Code Quality Checks
 
 on:
-  pull_request:
-    types: [opened, synchronize, reopened]
+  workflow_call:
 
 jobs:
   file-size-check:
@@ -46,9 +45,9 @@ jobs:
           should_exclude() {
             local file=$1
             for pattern in "${EXCLUDE_PATTERNS[@]}"; do
-              if [[ $file == $pattern ]]; then
-                return 0
-              fi
+              case "$file" in
+                $pattern) return 0 ;;
+              esac
             done
             return 1
           }
