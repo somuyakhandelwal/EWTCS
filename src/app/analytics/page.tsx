@@ -1,6 +1,10 @@
 import { StageAnalyticsView } from '@/features/bed-dashboard/components/StageAnalyticsView'
 import { AuditorHistoryView } from '@/features/bed-dashboard/components/AuditorHistoryView'
 import { TatAnalyticsView } from '@/features/bed-dashboard/components/TatAnalyticsView'
+import { PatientCountView } from '@/features/management-report/components/PatientCountView'
+import { ShiftReportView } from '@/features/shift-management/components/ShiftReportView'
+import { ShiftComparisonView } from '@/features/shift-management/components/ShiftComparisonView'
+import { getShifts } from '@/features/shift-management/lib/shift-queries'
 import { verifyActiveSession } from '@/shared/lib/active-session'
 import { redirect } from 'next/navigation'
 import { Button } from '@/shared/components/ui/button'
@@ -46,6 +50,15 @@ export default async function AnalyticsPage() {
       ? '/admin'
       : '/analytics'
 
+  // Fetch active shifts server-side so they can be passed to client components
+  // that need a shift selector (US-10.1, US-8.3).
+  let activeShifts: Awaited<ReturnType<typeof getShifts>> = []
+  try {
+    activeShifts = await getShifts()
+  } catch {
+    // Non-blocking: components will render with an empty shift list gracefully
+  }
+
   return (
     <div className="min-h-screen bg-black text-foreground p-8">
       <div className="max-w-7xl mx-auto space-y-8">
@@ -85,6 +98,19 @@ export default async function AnalyticsPage() {
 
         {/* Turnaround Time Analytics (US-2.4) */}
         <TatAnalyticsView readOnly={isAuditMode} />
+
+        {/* ── Management Report Dashboard ───────────────────────────────── */}
+
+        {/* Total Patients Treated (US-10.1) */}
+        <PatientCountView shifts={activeShifts} readOnly={isAuditMode} />
+
+        {/* Shift Performance Report (US-8.3) */}
+        {activeShifts.length > 0 && (
+          <ShiftReportView shifts={activeShifts} readOnly={isAuditMode} />
+        )}
+
+        {/* Shift Performance Comparison (US-8.4) */}
+        <ShiftComparisonView readOnly={isAuditMode} />
       </div>
     </div>
   )
