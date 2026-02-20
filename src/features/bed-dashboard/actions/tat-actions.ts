@@ -6,7 +6,7 @@
 //  1. Upstream analytics (fetchTATSummary/fetchTATRecords) — used by StageAnalyticsView
 //  2. US-2.4 cleaning TAT (markBedClean/fetchTatSummary/fetchTatRecords) — used by BedDashboardClient
 
-import { requireRole } from '@/shared/lib/auth'
+import { requireRole, requireWriteRole } from '@/shared/lib/auth'
 import { logAudit } from '@/shared/lib/audit'
 import { logger } from '@/shared/config/logger'
 import { query } from '@/shared/lib/db'
@@ -35,7 +35,7 @@ export async function fetchTATSummary(options?: {
   endDate?: Date
 }): Promise<FetchTATSummaryResult> {
   try {
-    await requireRole(['supervisor', 'admin'])
+    await requireRole(['supervisor', 'admin', 'auditor'])
     const summary = await getTATSummary(options?.startDate, options?.endDate)
     logger.info('TAT summary fetched', { totalCycles: summary.totalCycles })
     return { success: true, data: summary }
@@ -53,7 +53,7 @@ export async function fetchTATRecords(options?: {
   limit?: number
 }): Promise<FetchTATRecordsResult> {
   try {
-    await requireRole(['supervisor', 'admin'])
+    await requireRole(['supervisor', 'admin', 'auditor'])
     const records = await getTATRecords(options?.startDate, options?.endDate)
     const limited = options?.limit ? records.slice(0, options.limit) : records
     logger.info('TAT records fetched', { count: limited.length })
@@ -74,7 +74,11 @@ export async function markBedClean(bedId: string): Promise<{
   error?: string
 }> {
   try {
-    const session = await requireRole(['nurse', 'supervisor', 'admin'])
+    const session = await requireWriteRole(['nurse', 'supervisor', 'admin'], {
+      actionType: 'UPDATE',
+      entityType: 'bed',
+      entityId: bedId,
+    })
     const stageResult = await query<{ id: string }>(
       `SELECT id FROM stages WHERE LOWER(name) = 'empty' AND is_active = true LIMIT 1`
     )
@@ -134,7 +138,7 @@ export async function fetchTatSummary(hoursBack: number = 24): Promise<{
   error?: string
 }> {
   try {
-    await requireRole(['nurse', 'supervisor', 'admin'])
+    await requireRole(['nurse', 'supervisor', 'admin', 'auditor'])
     const summary = await getTatSummary(hoursBack)
     return { success: true, data: summary }
   } catch (error) {
@@ -151,7 +155,7 @@ export async function fetchTatRecords(hoursBack: number = 24): Promise<{
   error?: string
 }> {
   try {
-    await requireRole(['supervisor', 'admin'])
+    await requireRole(['supervisor', 'admin', 'auditor'])
     const records = await getCompletedTatRecords(hoursBack)
     return { success: true, data: records }
   } catch (error) {

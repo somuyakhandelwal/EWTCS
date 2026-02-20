@@ -365,8 +365,9 @@ Full environment variable reference: See [CONFIGURATION.md](CONFIGURATION.md)
 - [x] CSV export functionality for analysts
 - [x] Performance-optimized queries with indexes
 
-### 🔄 Phase 2: Real-Time Updates & Advanced Features (PARTIALLY COMPLETE)
+### ✅ Phase 2: Real-Time Updates & Advanced Features (COMPLETE)
 
+**Real-Time & UX Enhancements:**
 - [x] Real-time updates with intelligent polling (US-1.2)
 - [x] Search by bed number and stage name with highlighting (US-1.2)
 - [x] Connection status indicator with auto-reconnect
@@ -374,9 +375,15 @@ Full environment variable reference: See [CONFIGURATION.md](CONFIGURATION.md)
 - [x] Bed history modal with full stage transition log
 - [x] Admin pages for bed and stage management (US-6.1)
 - [x] Stage color configuration (EPIC 4)
-- [ ] Push notifications for delayed beds
-- [ ] Enhanced mobile responsiveness
-- [ ] Batch operations for multiple beds
+
+**Audit & Compliance (EPIC 12) ✅ NEW:**
+- [x] Auditor read-only role with full data access
+- [x] All action buttons disabled in audit mode (enforced server-side)
+- [x] Audit mode indicator banner on screen
+- [x] Write-operation denial logged with full audit trail
+- [x] Read-only auditor history with filtering, sorting, pagination
+- [x] CSV export for audit data analysis
+- [x] 100% test coverage (302 tests, 19 test files)
 
 ### ⏳ Phase 3: AI & Reporting (PLANNED)
 

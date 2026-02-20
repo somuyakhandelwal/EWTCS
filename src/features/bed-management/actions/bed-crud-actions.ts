@@ -1,7 +1,7 @@
 'use server'
 
 import { revalidatePath } from 'next/cache'
-import { requireAdmin } from '@/shared/lib/auth'
+import { requireAdminWrite } from '@/shared/lib/auth'
 import { logAudit } from '@/shared/lib/audit'
 import { createBedSchema, updateBedSchema } from '../schemas/bed-management-schemas'
 import { getBedById, bedNumberExists, getEmptyStageId } from '../lib/queries'
@@ -31,7 +31,11 @@ function revalidateBedPages() {
  */
 export async function createBed(formData: FormData): Promise<ActionResult> {
     try {
-        const session = await requireAdmin()
+        const session = await requireAdminWrite({
+            actionType: 'CREATE',
+            entityType: 'bed',
+            entityId: 'new',
+        })
 
         // Parse and validate input
         const input = {
@@ -96,7 +100,11 @@ export async function createBed(formData: FormData): Promise<ActionResult> {
  */
 export async function updateBed(formData: FormData): Promise<ActionResult> {
     try {
-        const session = await requireAdmin()
+        const session = await requireAdminWrite({
+            actionType: 'UPDATE',
+            entityType: 'bed',
+            entityId: formData.get('bedId') as string || 'unknown',
+        })
 
         // Parse and validate input
         const input = {

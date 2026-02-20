@@ -3,7 +3,7 @@
 
 import { getBedById } from '../lib/queries'
 import { logger } from '@/shared/config/logger'
-import { requireRole } from '@/shared/lib/auth'
+import { requireWriteRole } from '@/shared/lib/auth'
 import { logAudit } from '@/shared/lib/audit'
 import { updateBedStageInDB } from '../lib/bed-mutations'
 import { query } from '@/shared/lib/db'
@@ -24,7 +24,11 @@ interface LatestTransition {
  */
 export async function undoLastBedStageUpdate({ bedId }: { bedId: string }) {
   try {
-    const session = await requireRole(['nurse', 'supervisor', 'admin'])
+    const session = await requireWriteRole(['nurse', 'supervisor', 'admin'], {
+      actionType: 'UNDO',
+      entityType: 'bed',
+      entityId: bedId,
+    })
     const bed = await getBedById(bedId)
     if (!bed) {
       return { success: false, error: 'Bed not found' }

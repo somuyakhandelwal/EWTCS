@@ -6,7 +6,7 @@ import {
     updateUserSchema, 
     deactivateUserSchema
 } from '@/features/user-management/schemas/user-schemas'
-import { requireAdmin } from '@/features/user-management/lib/auth'
+import { requireAdminWrite } from '@/features/user-management/lib/auth'
 import { logUserAction } from '@/features/user-management/lib/audit'
 import { 
     getAllUsers as getAllUsersQuery, 
@@ -25,7 +25,11 @@ import {
  */
 export async function createUser(prevState: unknown, formData: FormData) {
     try {
-        const session = await requireAdmin()
+        const session = await requireAdminWrite({
+            actionType: 'CREATE',
+            entityType: 'user',
+            entityId: 'new',
+        })
 
         // Validate input
         const result = createUserSchema.safeParse({
@@ -76,7 +80,11 @@ export async function createUser(prevState: unknown, formData: FormData) {
  */
 export async function updateUser(prevState: unknown, formData: FormData) {
     try {
-        const session = await requireAdmin()
+        const session = await requireAdminWrite({
+            actionType: 'UPDATE',
+            entityType: 'user',
+            entityId: formData.get('userId') as string || 'unknown',
+        })
 
         // Validate input
         const result = updateUserSchema.safeParse({
@@ -125,7 +133,11 @@ export async function updateUser(prevState: unknown, formData: FormData) {
  */
 export async function deactivateUser(userId: string, reason?: string) {
     try {
-        const session = await requireAdmin()
+        const session = await requireAdminWrite({
+            actionType: 'DEACTIVATE',
+            entityType: 'user',
+            entityId: userId,
+        })
         const result = deactivateUserSchema.safeParse({ userId, reason })
         if (!result.success) {
             return { success: false, message: 'Invalid user ID' }
@@ -147,7 +159,11 @@ export async function deactivateUser(userId: string, reason?: string) {
  */
 export async function activateUser(userId: string) {
     try {
-        const session = await requireAdmin()
+        const session = await requireAdminWrite({
+            actionType: 'ACTIVATE',
+            entityType: 'user',
+            entityId: userId,
+        })
         await activateUserInDB(userId)
         await logUserAction('ACTIVATE', userId, session.userId)
         logger.info('User activated', { userId })

@@ -3,13 +3,17 @@
 import { query, default as pool } from '@/shared/lib/db';
 import { revalidatePath } from 'next/cache';
 import type { Stage, CreateStageInput, UpdateStageInput } from '../types/stage.types';
-import { requireAdmin } from '@/shared/lib/auth';
+import { requireAdminWrite } from '@/shared/lib/auth';
 import { logAudit } from '@/shared/lib/audit';
 import { headers } from 'next/headers';
 import { getClientIpFromHeaders } from '@/shared/lib/request-ip';
 
 async function getAuditContext() {
-  const session = await requireAdmin();
+  const session = await requireAdminWrite({
+    actionType: 'UPDATE',
+    entityType: 'stage',
+    entityId: 'configuration',
+  });
   const requestHeaders = await headers();
   const ipAddress = getClientIpFromHeaders(requestHeaders);
 

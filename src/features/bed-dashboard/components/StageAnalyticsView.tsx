@@ -24,9 +24,10 @@ import { useAnalyticsData } from '../hooks/useAnalyticsData'
 interface StageAnalyticsViewProps {
   title?: string
   className?: string
+  readOnly?: boolean
 }
 
-export function StageAnalyticsView({ title = 'Stage Analytics', className }: StageAnalyticsViewProps) {
+export function StageAnalyticsView({ title = 'Stage Analytics', className, readOnly = false }: StageAnalyticsViewProps) {
   const {
     stageDurationStats,
     longestWaitingBeds,
@@ -87,7 +88,7 @@ export function StageAnalyticsView({ title = 'Stage Analytics', className }: Sta
             Error Loading Analytics
           </div>
           <p className="text-sm text-red-600 mb-4">{error}</p>
-          <Button variant="outline" onClick={reload} className="mt-2">
+          <Button variant="outline" onClick={reload} className="mt-2" disabled={readOnly}>
             Retry
           </Button>
         </div>
@@ -101,6 +102,7 @@ export function StageAnalyticsView({ title = 'Stage Analytics', className }: Sta
         title={title}
         onExportCSV={handleExportCSV}
         exporting={exporting}
+        readOnly={readOnly}
       />
 
       {exportError && (
@@ -118,6 +120,7 @@ export function StageAnalyticsView({ title = 'Stage Analytics', className }: Sta
             beds={longestWaitingBeds}
             selectedBedId={selectedBedId}
             onSelectBed={setSelectedBedId}
+            readOnly={readOnly}
           />
         </div>
       </div>

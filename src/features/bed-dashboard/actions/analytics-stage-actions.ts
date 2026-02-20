@@ -15,7 +15,7 @@ import {
 
 /**
  * Fetch stage transitions with optional filters.
- * Only supervisors and admins can access analytics.
+ * Supervisors, admins, and auditors can access analytics.
  */
 export async function fetchStageTransitions(options: {
   startDate?: Date
@@ -28,7 +28,7 @@ export async function fetchStageTransitions(options: {
   error?: string
 }> {
   try {
-    const session = await requireRole(['supervisor', 'admin'])
+    const session = await requireRole(['supervisor', 'admin', 'auditor'])
 
     const transitions = await getStageTransitions(
       options.startDate,
@@ -69,7 +69,7 @@ export async function fetchStageDurationStats(options?: {
   error?: string
 }> {
   try {
-    const session = await requireRole(['supervisor', 'admin'])
+    const session = await requireRole(['supervisor', 'admin', 'auditor'])
 
     const stats = await getStageDurationStats(options?.startDate, options?.endDate)
 

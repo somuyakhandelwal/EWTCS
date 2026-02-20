@@ -5,7 +5,7 @@ import { logger } from '@/shared/config/logger'
 import { UpdateBedStageSchema, type UpdateBedStageInput } from '../schemas/bed-schemas'
 import { updateBedStageInDB } from '../lib/bed-mutations'
 import { checkWardAccess } from '../lib/bed-queries'
-import { requireRole } from '@/shared/lib/auth'
+import { requireWriteRole } from '@/shared/lib/auth'
 import { logAudit } from '@/shared/lib/audit'
 import { validateTransition } from '../lib/stage-validation'
 import { headers } from 'next/headers'
@@ -29,7 +29,11 @@ export async function updateBedStage(input: UpdateBedStageInput): Promise<{
   errors?: Record<string, string[]>
 }> {
   try {
-    const session = await requireRole(['nurse', 'supervisor', 'admin'])
+    const session = await requireWriteRole(['nurse', 'supervisor', 'admin'], {
+      actionType: 'UPDATE',
+      entityType: 'bed',
+      entityId: input.bedId,
+    })
     const requestHeaders = await headers()
     const ipAddress = getClientIpFromHeaders(requestHeaders)
 

@@ -16,9 +16,10 @@ import { logger } from '@/shared/config/logger'
 
 interface TatAnalyticsViewProps {
   className?: string
+  readOnly?: boolean
 }
 
-export function TatAnalyticsView({ className }: TatAnalyticsViewProps) {
+export function TatAnalyticsView({ className, readOnly = false }: TatAnalyticsViewProps) {
   const [summary, setSummary] = useState<TatSummary | null>(null)
   const [records, setRecords] = useState<TatRecord[]>([])
   const [loading, setLoading] = useState(true)
@@ -83,7 +84,7 @@ export function TatAnalyticsView({ className }: TatAnalyticsViewProps) {
         </CardHeader>
         <CardContent>
           <p className="text-sm text-red-600">{error}</p>
-          <Button variant="outline" onClick={loadData} className="mt-4">Retry</Button>
+          <Button variant="outline" onClick={loadData} className="mt-4" disabled={readOnly}>Retry</Button>
         </CardContent>
       </Card>
     )
@@ -101,11 +102,11 @@ export function TatAnalyticsView({ className }: TatAnalyticsViewProps) {
         <div className="flex items-center gap-2">
           {[24, 48, 168].map(h => (
             <Button key={h} size="sm" variant={hoursBack === h ? 'default' : 'outline'}
-              onClick={() => setHoursBack(h)}>
+              onClick={() => setHoursBack(h)} disabled={readOnly}>
               {h === 168 ? '7d' : `${h}h`}
             </Button>
           ))}
-          <Button onClick={handleExportCSV} disabled={records.length === 0}
+          <Button onClick={handleExportCSV} disabled={records.length === 0 || readOnly}
             variant="outline" size="sm">
             <Download className="h-4 w-4 mr-2" /> Export CSV
           </Button>
