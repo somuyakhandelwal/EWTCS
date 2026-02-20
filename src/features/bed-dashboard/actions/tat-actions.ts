@@ -4,13 +4,10 @@
 //
 // Two TAT APIs coexist:
 //  1. Upstream analytics (fetchTATSummary/fetchTATRecords) — used by StageAnalyticsView
-//  2. US-2.4 cleaning TAT (markBedClean/fetchTatSummary/fetchTatRecords) — used by BedDashboardClient
+//  2. US-2.4 cleaning TAT (fetchTatSummary/fetchTatRecords) — used by BedDashboardClient
 
 import { requireRole } from '@/shared/lib/auth'
-import { logAudit } from '@/shared/lib/audit'
 import { logger } from '@/shared/config/logger'
-import { query } from '@/shared/lib/db'
-import { updateBedStageInDB } from '../lib/bed-mutations'
 import { getTATSummary, getTATRecords } from '../lib/tat-queries'
 import { getTatSummary, getCompletedTatRecords } from '../lib/tat-cleaning-queries'
 import type { TATSummary, TATRecord } from '../lib/tat-queries'
@@ -79,47 +76,6 @@ export async function fetchTATRecords(options?: {
 }
 
 // ──── US-2.4: Cleaning TAT (BedDashboardClient / TatAnalyticsView) ────
-
-/** Mark a bed as clean (Cleaning → Empty transition) */
-export async function markBedClean(bedId: string): Promise<{
-  success: boolean
-  error?: string
-}> {
-  try {
-    const session = await requireRole(['nurse', 'supervisor', 'admin'])
-    const stageResult = await query<{ id: string }>(
-      `SELECT id FROM stages WHERE LOWER(name) = 'empty' AND is_active = true LIMIT 1`
-    )
-
-    if (stageResult.rows.length === 0) {
-      return { success: false, error: 'Empty stage not found in system' }
-    }
-
-    const emptyStageId = stageResult.rows[0].id
-    const result = await updateBedStageInDB({
-      bedId,
-      toStageId: emptyStageId,
-      changedByUserId: session.userId,
-      notes: 'Bed marked clean — ready for next patient',
-    })
-
-    await logAudit({
-      actionType: 'UPDATE',
-      entityType: 'bed',
-      entityId: bedId,
-      performedBy: session.userId,
-      changes: { action: 'mark_clean', fromStageId: result.fromStageId, toStageId: result.toStageId },
-      reason: 'Bed cleaning completed',
-    })
-
-    logger.info('Bed marked clean', { bedId, changedBy: session.userId })
-    return { success: true }
-  } catch (error) {
-    const message = error instanceof Error ? error.message : 'Failed to mark bed as clean'
-    logger.error('Failed to mark bed clean', error as Error, { bedId })
-    return { success: false, error: message }
-  }
-}
 
 /** Fetch TAT summary stats for the dashboard (hoursBack window) */
 export async function fetchTatSummary(hoursBack: number = 24): Promise<{

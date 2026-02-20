@@ -21,8 +21,6 @@ interface BedGridProps {
   onBedClick?: (bed: BedWithElapsedTime) => void
   onStageSelect?: (bedId: string, stageId: string) => void
   onReasonSelect?: (bedId: string, reason: DispositionDelayReason) => void
-  onMarkClean?: (bedId: string) => void
-  markCleanBedId?: string | null
   tatSummary?: TatSummary | null
   updatingBedId?: string | null
   updatingStageId?: string | null
@@ -41,8 +39,6 @@ export function BedGrid({
   onBedClick,
   onStageSelect,
   onReasonSelect,
-  onMarkClean,
-  markCleanBedId = null,
   tatSummary = null,
   updatingBedId = null,
   updatingStageId = null,
@@ -138,8 +134,6 @@ export function BedGrid({
               onClick={onStageSelect ? handleBedTap : onBedClick}
               onContextMenu={handleOpenMenu}
               onReasonSelect={onReasonSelect}
-              onMarkClean={onMarkClean}
-              isMarkCleanUpdating={markCleanBedId === bed.id}
               showUpdated={lastUpdatedBedId === bed.id && lastUpdatedStageId !== null}
               errorMessage={errorByBedId[bed.id] || null}
               searchQuery={searchQuery}

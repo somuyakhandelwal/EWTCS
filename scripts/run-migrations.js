@@ -130,23 +130,38 @@ const run = async () => {
         args.push('--single-transaction');
     }
 
-    // Self-heal: fix migration tracker entries mis-ordered by the 007/009 renumbering in PRs #161/#162.
-    // IDs 7 and 9 had their names swapped relative to their run_on/id sequence, causing node-pg-migrate
-    // checkOrder to fail for any developer who ran migrations before the renaming PRs were merged.
-    // Using id-based WHERE clauses is idempotent: rows already correct are unaffected; fresh installs
-    // have no pgmigrations table yet and the catch handles that safely.
+    // Self-heal: correct any mis-named pgmigrations rows so node-pg-migrate's order-check passes.
+    // All updates are idempotent — rows already at the correct name are unaffected.
+    // Fresh installs have no pgmigrations table yet; the catch handles that safely.
     if (command === 'up') {
         const { Client } = require('pg');
         const healClient = new Client({ connectionString: databaseUrl });
         try {
             await healClient.connect();
-            // id=7 must carry the 007-prefixed name so it sorts before id=9's 009-prefixed name
+            // 007/009 swap introduced by PRs #161/#162
             await healClient.query(
                 "UPDATE pgmigrations SET name = '007_create_bed_stage_log_corrections' WHERE id = 7 AND name <> '007_create_bed_stage_log_corrections'"
             );
             await healClient.query(
                 "UPDATE pgmigrations SET name = '009_token_blacklist' WHERE id = 9 AND name <> '009_token_blacklist'"
             );
+            // 015-021 renumbering: teammates created duplicate 015 files; during conflict resolution
+            // migrations were temporarily numbered 019-025 before settling on the final 015-021 sequence.
+            // Heal any DB that went through the intermediate state.
+            const renames = [
+                ['019_add_password_reset',           '015_add_password_reset'],
+                ['020_add_tat_to_admissions',         '016_add_tat_to_admissions'],
+                ['021_add_temporary_beds',            '017_add_temporary_beds'],
+                ['022_create_shifts',                '018_create_shifts'],
+                ['023_add_shift_id_to_logs',         '019_add_shift_id_to_logs'],
+                ['024_create_system_settings',       '020_create_system_settings'],
+                ['025_create_stage_delay_thresholds','021_create_stage_delay_thresholds'],
+            ];
+            for (const [oldName, newName] of renames) {
+                await healClient.query(
+                    `UPDATE pgmigrations SET name = '${newName}' WHERE name = '${oldName}'`
+                );
+            }
         } catch {
             // pgmigrations may not exist yet on a fresh install — safe to ignore
         } finally {

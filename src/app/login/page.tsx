@@ -7,6 +7,7 @@ import { Button } from '@/shared/components/ui/button'
 import { Input } from '@/shared/components/ui/input'
 import { Label } from '@/shared/components/ui/label'
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/shared/components/ui/card'
+import ForgotPasswordInfo from '@/features/auth/components/ForgotPasswordInfo'
 
 function SubmitButton() {
     const { pending } = useFormStatus()
@@ -90,6 +91,9 @@ export default function LoginPage() {
                                 </p>
                             </div>
                         </div>
+
+                        {/* US-5.5: Forgot password info */}
+                        <ForgotPasswordInfo />
                     </CardContent>
                     <CardFooter>
                         <SubmitButton />

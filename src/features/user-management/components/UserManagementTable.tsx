@@ -3,9 +3,10 @@
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { Button } from '@/shared/components/ui/button'
-import { Pencil, Ban, CheckCircle } from 'lucide-react'
+import { Pencil, Ban, CheckCircle, KeyRound } from 'lucide-react'
 import { deactivateUser, activateUser } from '@/features/user-management/actions/user-management-actions'
 import EditUserDialog from './EditUserDialog'
+import ResetPasswordDialog from './ResetPasswordDialog'
 
 interface User {
     id: string
@@ -27,6 +28,7 @@ export default function UserManagementTable({ users, wards = [] }: UserManagemen
     const router = useRouter()
     const [selectedUser, setSelectedUser] = useState<User | null>(null)
     const [isEditing, setIsEditing] = useState(false)
+    const [isResetting, setIsResetting] = useState(false)
     const [actionLoading, setActionLoading] = useState<string | null>(null)
     const [error, setError] = useState<string | null>(null)
 
@@ -58,6 +60,17 @@ export default function UserManagementTable({ users, wards = [] }: UserManagemen
     const handleEdit = (user: User) => {
         setSelectedUser(user)
         setIsEditing(true)
+    }
+
+    // US-5.5: Open the reset-password dialog for a specific user
+    const handleReset = (user: User) => {
+        setSelectedUser(user)
+        setIsResetting(true)
+    }
+
+    const handleCloseReset = () => {
+        setIsResetting(false)
+        setSelectedUser(null)
     }
 
     const handleCloseEdit = () => {
@@ -149,6 +162,16 @@ export default function UserManagementTable({ users, wards = [] }: UserManagemen
                                             <Pencil className="h-3 w-3 mr-1" />
                                             Edit
                                         </Button>
+                                        {/* US-5.5: Admin reset password button */}
+                                        <Button
+                                            variant="outline"
+                                            size="sm"
+                                            onClick={() => handleReset(user)}
+                                            className="text-amber-400 border-amber-900/50 hover:bg-amber-900/20"
+                                        >
+                                            <KeyRound className="h-3 w-3 mr-1" />
+                                            Reset Password
+                                        </Button>
                                         <Button
                                             variant="outline"
                                             size="sm"
@@ -187,6 +210,15 @@ export default function UserManagementTable({ users, wards = [] }: UserManagemen
                     isOpen={isEditing}
                     onClose={handleCloseEdit}
                     wards={wards}
+                />
+            )}
+
+            {/* US-5.5: Reset password dialog */}
+            {isResetting && selectedUser && (
+                <ResetPasswordDialog
+                    user={selectedUser}
+                    isOpen={isResetting}
+                    onClose={handleCloseReset}
                 />
             )}
         </>

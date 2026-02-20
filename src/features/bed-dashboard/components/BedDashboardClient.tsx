@@ -17,7 +17,7 @@ import { useRealtimeBedUpdates } from '../hooks/useRealtimeBedUpdates'
 import { useBedStageUpdate } from '../hooks/useBedStageUpdate'
 import { useUndoManager } from '../hooks/useUndoManager'
 import { recordDispositionDelayReason } from '../actions/disposition-actions'
-import { markBedClean, fetchTatSummary } from '../actions/tat-actions'
+import { fetchTatSummary } from '../actions/tat-actions'
 import type { TatSummary } from '../types/bed'
 
 interface BedDashboardClientProps {
@@ -83,31 +83,14 @@ export function BedDashboardClient({ initialData }: BedDashboardClientProps) {
     void bed
   }, [])
 
-  // US-2.4: TAT summary + mark-clean state
+  // US-2.4: TAT summary for the stats bar
   const [tatSummary, setTatSummary] = useState<TatSummary | null>(null)
-  const [markCleanBedId, setMarkCleanBedId] = useState<string | null>(null)
 
   useEffect(() => {
     fetchTatSummary(24)
       .then(r => { if (r.success && r.data) setTatSummary(r.data) })
       .catch(() => { /* TAT is non-critical */ })
   }, [])
-
-  const handleMarkClean = useCallback(async (bedId: string) => {
-    if (markCleanBedId) return
-    setMarkCleanBedId(bedId)
-    try {
-      const result = await markBedClean(bedId)
-      if (!result.success) {
-          console.error('Mark clean failed:', result.error)
-      }
-      handleRefresh()
-    } catch {
-      // non-critical
-    } finally {
-      setMarkCleanBedId(null)
-    }
-  }, [markCleanBedId, handleRefresh])
 
   const [, startTransition] = useTransition()
 
@@ -142,8 +125,6 @@ export function BedDashboardClient({ initialData }: BedDashboardClientProps) {
         onBedClick={handleBedClick}
         onStageSelect={handleStageSelect}
         onReasonSelect={handleReasonSelect}
-        onMarkClean={handleMarkClean}
-        markCleanBedId={markCleanBedId}
         tatSummary={tatSummary}
         updatingBedId={updatingBedId}
         updatingStageId={updatingStageId}
