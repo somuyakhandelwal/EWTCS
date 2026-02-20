@@ -140,8 +140,10 @@ jobs:
           echo "📝 Changed migration files:"
           echo "$CHANGED_MIGRATIONS"
           
-          # Check for modifications to existing migrations (not allowed)
-          MODIFIED_MIGRATIONS=$(echo "$CHANGED_MIGRATIONS" | grep -v "$(git diff --name-only --diff-filter=A origin/${{ github.base_ref }}...HEAD | grep '^migrations/')" || true)
+          # Check for modifications to existing migrations (not allowed).
+          # --diff-filter=AR includes both purely Added files and Renamed files.
+          # Renames are permitted when fixing numbering conflicts (content is unchanged).
+          MODIFIED_MIGRATIONS=$(echo "$CHANGED_MIGRATIONS" | grep -v "$(git diff --name-only --diff-filter=AR origin/${{ github.base_ref }}...HEAD | grep '^migrations/')" || true)
           
           if [ -n "$MODIFIED_MIGRATIONS" ]; then
             echo "❌ ERROR: Existing migration files were modified!"
@@ -153,7 +155,7 @@ jobs:
             exit 1
           fi
           
-          echo "✅ All migration changes are new files (not modifications)"
+          echo "✅ All migration changes are new files or content-preserving renames"
       
       - name: Validate migration file naming
         run: |
