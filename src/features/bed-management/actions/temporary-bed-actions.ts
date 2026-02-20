@@ -17,12 +17,7 @@ import {
     createTemporaryBedInDB,
     removeTemporaryBedFromDB,
 } from '../lib/temporary-bed-mutations'
-
-export type ActionResult<T = unknown> = {
-    success: boolean
-    data?: T
-    error?: string
-}
+import type { ActionResult } from '../types/action-result'
 
 /** Revalidate all pages that render bed data */
 function revalidateBedPages() {

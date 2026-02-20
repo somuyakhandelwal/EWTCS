@@ -40,6 +40,7 @@ export async function fetchTATSummary(options?: {
 }): Promise<FetchTATSummaryResult> {
   try {
     await requireRole(['supervisor', 'admin', 'auditor'])
+
     const summary = await getTATSummary(options?.startDate, options?.endDate)
 
     logger.info('TAT summary fetched', { totalCycles: summary.totalCycles })
@@ -63,6 +64,7 @@ export async function fetchTATRecords(options?: {
 }): Promise<FetchTATRecordsResult> {
   try {
     await requireRole(['supervisor', 'admin', 'auditor'])
+
     const records = await getTATRecords(options?.startDate, options?.endDate)
     const limited = options?.limit ? records.slice(0, options.limit) : records
 

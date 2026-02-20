@@ -19,6 +19,8 @@ function makeBed(
     lastStageChange: null,
     isOccupied: true,
     isActive: true,
+    isTemporary: false,
+    isVirtual: false,
     metadata: {},
     createdAt: new Date(),
     updatedAt: new Date(),
@@ -28,7 +30,6 @@ function makeBed(
     dispositionElapsedMs: null,
     dispositionDelayReason: null,
     dispositionDelayLogId: null,
-    isTemporary: false,
   }
 }
 

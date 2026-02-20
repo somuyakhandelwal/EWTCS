@@ -5,6 +5,8 @@
 'use client'
 
 import { useCallback, useState, useRef, useEffect, useTransition } from 'react'
+import { MapPin } from 'lucide-react'
+import { logger } from '@/shared/config/logger'
 import { BedGrid } from './BedGrid'
 import { SearchInput } from './SearchInput'
 import { ConnectionStatus } from './ConnectionStatus'
@@ -12,6 +14,7 @@ import { SupervisorOverrideModal } from './SupervisorOverrideModal'
 import { ConfirmationModal } from './ConfirmationModal'
 import { DischargeModal } from './DischargeModal'
 import { DashboardSettings } from './DashboardSettings'
+import { AddVirtualBedModal } from './AddVirtualBedModal'
 import type { BedGridData, BedWithElapsedTime, DispositionDelayReason } from '../types/bed'
 import { useRealtimeBedUpdates } from '../hooks/useRealtimeBedUpdates'
 import { useBedStageUpdate } from '../hooks/useBedStageUpdate'
@@ -86,6 +89,9 @@ export function BedDashboardClient({ initialData }: BedDashboardClientProps) {
   // US-2.4: TAT summary for the stats bar
   const [tatSummary, setTatSummary] = useState<TatSummary | null>(null)
 
+  // US-6.6: virtual bed modal (nurse can add hallway/stretcher patients)
+  const [virtualBedModalOpen, setVirtualBedModalOpen] = useState(false)
+
   useEffect(() => {
     fetchTatSummary(24)
       .then(r => { if (r.success && r.data) setTatSummary(r.data) })
@@ -112,6 +118,15 @@ export function BedDashboardClient({ initialData }: BedDashboardClientProps) {
       />
       {/* Connection Status Indicator */}
       <div className="flex justify-end items-center gap-2">
+        <button
+          type="button"
+          onClick={() => setVirtualBedModalOpen(true)}
+          className="flex items-center gap-1.5 rounded-md bg-purple-800/50 border border-purple-700/50 px-3 py-1.5 text-xs font-semibold text-purple-200 hover:bg-purple-700/60 transition-colors"
+          title="Add virtual (hallway/stretcher) bed"
+        >
+          <MapPin className="h-3.5 w-3.5" />
+          Add Virtual Bed
+        </button>
         <DashboardSettings
           enabled={settings.confirmCriticalStages}
           onToggle={toggleConfirmation}
@@ -168,6 +183,16 @@ export function BedDashboardClient({ initialData }: BedDashboardClientProps) {
         onConfirm={handleDischargeConfirm}
         onCancel={closeDischargeModal}
         isSubmitting={isDischargeSubmitting}
+      />
+
+      {/* US-6.6: Add virtual (hallway/stretcher) bed modal */}
+      <AddVirtualBedModal
+        open={virtualBedModalOpen}
+        onClose={() => setVirtualBedModalOpen(false)}
+        onCreated={() => {
+          setVirtualBedModalOpen(false)
+          handleRefresh()
+        }}
       />
     </div>
   )

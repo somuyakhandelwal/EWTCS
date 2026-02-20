@@ -1,7 +1,11 @@
-// Bed Card Component — Epic 1 + US-4.3 Blinking Animation
+// Bed Card Component
+// Epic 1: Nurse Desk Bed Dashboard
+// Epic 6: US-6.5 — temporary (surge) beds shown with orange badge + border
+//          US-6.6 — virtual (hallway/stretcher) beds shown with purple badge + border
+// US-4.3: Blinking animation with acknowledge support
 import { memo, useState, useEffect, useCallback, type MouseEvent } from 'react'
 import { Card, CardContent } from '@/shared/components/ui/card'
-import { Clock, AlertTriangle, Hourglass } from 'lucide-react'
+import { Clock, AlertTriangle, Hourglass, Zap, MapPin } from 'lucide-react'
 import type { BedWithElapsedTime, DispositionDelayReason } from '../types/bed'
 import { getStageColorClasses, getDelayColorClasses } from '../lib/utils'
 import { useElapsedTime } from '../hooks/useElapsedTime'
@@ -40,6 +44,8 @@ export const BedCard = memo(function BedCard({
   const elapsedTime = useElapsedTime(bed.patientStartTime)
   const { isOccupied, isDelayed, isDispositionBottleneck: isBottleneck } = bed
   const isCleaning = isCleaningStage(bed.currentStage?.name)
+  const isTemporary = bed.isTemporary
+  const isVirtual = bed.isVirtual
 
   // US-4.3: Acknowledge — pauses animation for 30s, resumes if still delayed
   const [acknowledged, setAcknowledged] = useState(false)
@@ -61,7 +67,11 @@ export const BedCard = memo(function BedCard({
     <Card
       className={cn(
         'relative overflow-hidden transition-all cursor-pointer sm:hover:scale-105 sm:hover:shadow-lg active:scale-[0.97]',
-        colorClasses.bg, colorClasses.border, 'border-2',
+        colorClasses.bg,
+        colorClasses.border,
+        'border-2',
+        isVirtual && 'ring-2 ring-purple-500 border-purple-700',
+        isTemporary && !isVirtual && 'ring-2 ring-orange-500 border-orange-700',
         isDelayed && 'ring-2 ring-red-500',
         isDelayed && showPulse && 'motion-safe:animate-pulse',
         isBottleneck && !isDelayed && 'ring-2 ring-amber-500',
@@ -75,6 +85,20 @@ export const BedCard = memo(function BedCard({
         <StageIcon color={stageColor} className={cn("w-40 h-40", colorClasses.text)} />
       </div>
 
+      {/* US-6.6: Virtual / hallway bed badge — shown instead of Surge when isVirtual */}
+      {isVirtual && (
+        <div className="absolute top-0 left-0 flex items-center gap-0.5 rounded-br bg-purple-700/90 px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-wide text-purple-100">
+          <MapPin className="h-2.5 w-2.5" />
+          Virtual
+        </div>
+      )}
+      {/* US-6.5: Temporary / surge bed badge — only shown when not virtual */}
+      {isTemporary && !isVirtual && (
+        <div className="absolute top-0 left-0 flex items-center gap-0.5 rounded-br bg-orange-700/90 px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-wide text-orange-100">
+          <Zap className="h-2.5 w-2.5" />
+          Surge
+        </div>
+      )}
       {isDelayed && !isBottleneck && (
         <div className="absolute top-2 right-2">
           <AlertTriangle className="h-5 w-5 text-red-500" />

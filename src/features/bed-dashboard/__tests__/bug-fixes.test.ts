@@ -35,6 +35,7 @@ function makeBed(overrides: Partial<BedWithElapsedTime> = {}): BedWithElapsedTim
     isOccupied: false,
     isActive: true,
     isTemporary: false,
+    isVirtual: false,
     metadata: {},
     createdAt: new Date(),
     updatedAt: new Date(),

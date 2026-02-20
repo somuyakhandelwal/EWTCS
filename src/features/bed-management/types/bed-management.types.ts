@@ -10,6 +10,7 @@ export interface BedManagementData {
     isOccupied: boolean
     isActive: boolean
     isTemporary: boolean   // US-6.5: true for surge beds created by supervisor
+    isVirtual: boolean     // US-6.6: true for nurse-created hallway/stretcher patients
     location?: string
     metadata?: Record<string, unknown>
     patientStartTime: Date | null
