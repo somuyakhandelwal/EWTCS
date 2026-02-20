@@ -3,6 +3,9 @@ import { AuditorHistoryView } from '@/features/bed-dashboard/components/AuditorH
 import { TatAnalyticsView } from '@/features/bed-dashboard/components/TatAnalyticsView'
 import { LosView } from '@/features/bed-dashboard/components/LosView'
 import { PatientCountView } from '@/features/management-report/components/PatientCountView'
+import { DelayedPatientPercentageView } from '@/features/management-report/components/DelayedPatientPercentageView'
+import { BedPerformanceView } from '@/features/management-report/components/BedPerformanceView'
+import { StageDelayView } from '@/features/management-report/components/StageDelayView'
 import { ShiftReportView } from '@/features/shift-management/components/ShiftReportView'
 import { ShiftComparisonView } from '@/features/shift-management/components/ShiftComparisonView'
 import { getShifts } from '@/features/shift-management/lib/shift-queries'
@@ -107,6 +110,19 @@ export default async function AnalyticsPage() {
 
         {/* Total Patients Treated (US-10.1) */}
         <PatientCountView shifts={activeShifts} readOnly={isAuditMode} />
+
+        {/* ── US-10.3: Percentage of Delayed Patients ──────────────────── */}
+        <DelayedPatientPercentageView
+          shifts={activeShifts}
+          readOnly={isAuditMode}
+          role={session.role}
+        />
+
+        {/* ── US-10.4: Bed-Wise Performance ────────────────────────────── */}
+        <BedPerformanceView shifts={activeShifts} readOnly={isAuditMode} />
+
+        {/* ── US-10.5: Stage-Wise Delays ───────────────────────────────── */}
+        <StageDelayView readOnly={isAuditMode} />
 
         {/* Shift Performance Report (US-8.3) */}
         {activeShifts.length > 0 && (
