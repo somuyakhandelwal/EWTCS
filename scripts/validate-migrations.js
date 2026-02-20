@@ -112,7 +112,7 @@ const validateMigrations = async () => {
       process.exit(1);
     }
 
-    // Verify migration order
+    // Verify migration order (informational only)
     const expectedOrder = [...appliedMigrations].sort();
     const actualOrder = appliedMigrations;
 
@@ -125,9 +125,10 @@ const validateMigrations = async () => {
     }
 
     if (orderMismatch) {
-      console.error('\n⚠️  WARNING: Migrations may have been applied out of order');
-      console.error('Expected order:', expectedOrder);
-      console.error('Actual order:', actualOrder);
+      console.log('\nℹ️  NOTE: Migration apply timestamps differ from filename order.');
+      console.log('This is informational when pending migrations = 0.');
+      console.log('Expected order:', expectedOrder);
+      console.log('Applied order:', actualOrder);
     }
 
     console.log('\n✅ All migrations validated successfully');

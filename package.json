@@ -4,7 +4,7 @@
   "private": true,
   "scripts": {
     "dev": "next dev",
-    "build": "next build",
+    "build": "node -e \"try{require('fs').rmSync('.next',{recursive:true,force:true})}catch(e){}\" && next build",
     "start": "node scripts/run-migrations.js up && next start",
     "lint": "next lint",
     "test": "vitest run",
@@ -13,6 +13,8 @@
     "test:bugs": "tsx scripts/run-bug-tests.ts",
     "setup": "node scripts/quick-start-setup.mjs",
     "db:migrate": "node scripts/run-migrations.js up",
+    "db:reconcile": "node scripts/reconcile-migration-history.js",
+    "audit:verify": "node scripts/verify-audit-immutability.js",
     "db:rollback": "node scripts/run-migrations.js down 1",
     "db:status": "node scripts/run-migrations.js status",
     "db:create": "node scripts/run-migrations.js create",

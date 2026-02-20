@@ -4,12 +4,12 @@
 //
 // Two TAT APIs coexist:
 //  1. Upstream analytics (fetchTATSummary/fetchTATRecords) — used by StageAnalyticsView
-//  2. US-2.4 cleaning TAT (markBedClean/fetchTatSummary/fetchTatRecords) — used by BedDashboardClient
+//  2. US-2.4 cleaning TAT (fetchTatSummary/fetchTatRecords) — used by BedDashboardClient
 
-import { requireRole } from '@/shared/lib/auth'
+import { requireRole, requireWriteRole } from '@/shared/lib/auth'
 import { logAudit } from '@/shared/lib/audit'
-import { logger } from '@/shared/config/logger'
 import { query } from '@/shared/lib/db'
+import { logger } from '@/shared/config/logger'
 import { updateBedStageInDB } from '../lib/bed-mutations'
 import { getTATSummary, getTATRecords } from '../lib/tat-queries'
 import { getTatSummary, getCompletedTatRecords } from '../lib/tat-cleaning-queries'
@@ -39,7 +39,7 @@ export async function fetchTATSummary(options?: {
   endDate?: Date
 }): Promise<FetchTATSummaryResult> {
   try {
-    await requireRole(['supervisor', 'admin'])
+    await requireRole(['supervisor', 'admin', 'auditor'])
 
     const summary = await getTATSummary(options?.startDate, options?.endDate)
 
@@ -63,7 +63,7 @@ export async function fetchTATRecords(options?: {
   limit?: number
 }): Promise<FetchTATRecordsResult> {
   try {
-    await requireRole(['supervisor', 'admin'])
+    await requireRole(['supervisor', 'admin', 'auditor'])
 
     const records = await getTATRecords(options?.startDate, options?.endDate)
     const limited = options?.limit ? records.slice(0, options.limit) : records
@@ -86,7 +86,11 @@ export async function markBedClean(bedId: string): Promise<{
   error?: string
 }> {
   try {
-    const session = await requireRole(['nurse', 'supervisor', 'admin'])
+    const session = await requireWriteRole(['nurse', 'supervisor', 'admin'], {
+      actionType: 'UPDATE',
+      entityType: 'bed',
+      entityId: bedId,
+    })
     const stageResult = await query<{ id: string }>(
       `SELECT id FROM stages WHERE LOWER(name) = 'empty' AND is_active = true LIMIT 1`
     )
@@ -96,12 +100,30 @@ export async function markBedClean(bedId: string): Promise<{
     }
 
     const emptyStageId = stageResult.rows[0].id
-    const result = await updateBedStageInDB({
-      bedId,
-      toStageId: emptyStageId,
-      changedByUserId: session.userId,
-      notes: 'Bed marked clean — ready for next patient',
-    })
+    const result = await (async () => {
+      try {
+        return await updateBedStageInDB({
+          bedId,
+          toStageId: emptyStageId,
+          changedByUserId: session.userId,
+          notes: 'Bed marked clean — ready for next patient',
+        })
+      } catch (error) {
+        const message = error instanceof Error ? error.message : ''
+        if (message === 'Bed is already in the selected stage') {
+          logger.info('Bed already clean; mark clean treated as no-op', {
+            bedId,
+            changedBy: session.userId,
+          })
+          return null
+        }
+        throw error
+      }
+    })()
+
+    if (!result) {
+      return { success: true }
+    }
 
     await logAudit({
       actionType: 'UPDATE',
@@ -128,7 +150,7 @@ export async function fetchTatSummary(hoursBack: number = 24): Promise<{
   error?: string
 }> {
   try {
-    await requireRole(['nurse', 'supervisor', 'admin'])
+    await requireRole(['nurse', 'supervisor', 'admin', 'auditor'])
     const summary = await getTatSummary(hoursBack)
     return { success: true, data: summary }
   } catch (error) {
@@ -145,7 +167,7 @@ export async function fetchTatRecords(hoursBack: number = 24): Promise<{
   error?: string
 }> {
   try {
-    await requireRole(['supervisor', 'admin'])
+    await requireRole(['supervisor', 'admin', 'auditor'])
     const records = await getCompletedTatRecords(hoursBack)
     return { success: true, data: records }
   } catch (error) {

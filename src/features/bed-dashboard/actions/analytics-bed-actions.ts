@@ -22,7 +22,7 @@ export async function fetchBedStageTimeline(bedId: string): Promise<{
   error?: string
 }> {
   try {
-    const session = await requireRole(['supervisor', 'admin'])
+    const session = await requireRole(['supervisor', 'admin', 'auditor'])
 
     const timeline = await getBedStageTimeline(bedId)
 
@@ -60,7 +60,7 @@ export async function fetchLongestWaitingBeds(limit = 10): Promise<{
   error?: string
 }> {
   try {
-    const session = await requireRole(['nurse', 'supervisor', 'admin'])
+    const session = await requireRole(['nurse', 'supervisor', 'admin', 'auditor'])
 
     const beds = await getBedsSortedByCurrentWaitTime(limit)
 
@@ -93,7 +93,7 @@ export async function fetchAnalyticsSummary(): Promise<{
   error?: string
 }> {
   try {
-    const session = await requireRole(['supervisor', 'admin'])
+    const session = await requireRole(['supervisor', 'admin', 'auditor'])
 
     const summary = await getBedAnalyticsSummary()
 

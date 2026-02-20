@@ -16,6 +16,7 @@ Start here if you're new to the project:
 - **[DATABASE_SETUP.md](../DATABASE_SETUP.md)** - PostgreSQL installation, database creation, migrations
 - **[CONFIGURATION.md](../CONFIGURATION.md)** - Environment variables, deployment, production setup
 - **[.env.example](../.env.example)** - Environment variable template with detailed comments
+- **Audit Logging & Compliance** - See `CONFIGURATION.md` section "Audit Logging & Compliance" for immutable audit trail details
 
 ### Development
 - **[CONTRIBUTING.md](../CONTRIBUTING.md)** - How to contribute (coding standards, workflow, PR process)
@@ -27,6 +28,8 @@ Start here if you're new to the project:
 
 ### Technical Documentation
 - **[Analytics System](../src/features/bed-dashboard/ANALYTICS_README.md)** - Stage analytics and reporting documentation
+- **Auditor Bed History (EPIC 12)** - Read-only stage transition history with filtering, sorting, pagination, and CSV export in [AuditorHistoryView](../src/features/bed-dashboard/components/AuditorHistoryView.tsx)
+- **Auditor Read-Only Enforcement (EPIC 12)** - Centralized write guard for auditor role in [auth.ts](../src/shared/lib/auth.ts) (`requireWriteRole` / `requireAdminWrite`) with deny logging, analytics audit-mode banner, and full read-only analytics exploration controls
 - **[PROJECT_STATUS.md](../PROJECT_STATUS.md)** - Current project status, completed features, roadmap
 
 ## 📁 Archived Documentation
@@ -125,4 +128,4 @@ Current state overview:
 
 ---
 
-**Last Updated:** February 18, 2026
+**Last Updated:** February 19, 2026

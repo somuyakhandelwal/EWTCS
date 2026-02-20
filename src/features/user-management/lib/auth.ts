@@ -5,4 +5,10 @@
  * This file now delegates to shared utilities in @/shared/lib/auth
  * for consistency across all features.
  */
-export { requireAdmin, requireRole, requireSupervisorOrAdmin, getCurrentSession } from '@/shared/lib/auth'
+export {
+	requireAdmin,
+	requireAdminWrite,
+	requireRole,
+	requireSupervisorOrAdmin,
+	getCurrentSession,
+} from '@/shared/lib/auth'

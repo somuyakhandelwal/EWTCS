@@ -1,12 +1,12 @@
 'use server'
 
 import { getAllStages, getBedsWithElapsedTime, getBedById } from '../lib/queries'
-import { config } from '@/shared/config/env'
 import { logger } from '@/shared/config/logger'
 import type { BedGridData } from '../types/bed'
 import { getUserWard, getBedWard } from '../lib/bed-queries'
 import { requireRole } from '@/shared/lib/auth'
 import { categorizeStagesForTransition } from '../lib/stage-validation'
+import { getGlobalThresholdMs } from '@/shared/lib/threshold'
 
 /**
  * Get all beds with current status and elapsed time
@@ -23,7 +23,7 @@ export async function getBedGridData(): Promise<{
 
     logger.info('Fetching bed grid data')
 
-    const delayThresholdMs = config.alert.delayThresholdMs
+    const delayThresholdMs = await getGlobalThresholdMs()
 
     // Fetch beds and stages in parallel
     const [beds, stages] = await Promise.all([
@@ -69,7 +69,7 @@ export async function getDelayedBeds(): Promise<{
   error?: string
 }> {
   try {
-    const delayThresholdMs = config.alert.delayThresholdMs
+    const delayThresholdMs = await getGlobalThresholdMs()
     const allBeds = await getBedsWithElapsedTime(delayThresholdMs)
     const delayedBeds = allBeds.filter(bed => bed.isDelayed)
 

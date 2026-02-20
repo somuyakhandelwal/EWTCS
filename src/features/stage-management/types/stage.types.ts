@@ -6,6 +6,7 @@ export interface Stage {
   description?: string;
   is_default: boolean;
   is_active: boolean;
+  threshold_minutes?: number | null; // US-6.3: per-stage override (null = use global)
   created_at: string;
   updated_at: string;
 }
@@ -21,4 +22,5 @@ export interface UpdateStageInput {
   name?: string;
   color_code?: string;
   description?: string;
+  threshold_minutes?: number | null; // US-6.3
 }
