@@ -14,11 +14,12 @@ interface StageDelayBarChartProps {
   rows: StageDelayRow[]
 }
 
+const PADDING_TOP = 22   // room for duration label above tallest bar
 const CHART_H = 160
-const BAR_GAP = 8
-const LABEL_AREA_H = 38
-const SVG_H = CHART_H + LABEL_AREA_H
-const MIN_BAR_W = 24
+const BAR_GAP = 10
+const LABEL_AREA_H = 44
+const SVG_H = PADDING_TOP + CHART_H + LABEL_AREA_H
+const BAR_W = 36         // fixed width — prevents "bold" bars with few stages
 
 function getBarColor(row: StageDelayRow): string {
   if (row.isBottleneck) return '#ef4444' // red
@@ -43,8 +44,8 @@ export const StageDelayBarChart = memo(function StageDelayBarChart({
 
   const maxMs = Math.max(...displayRows.map((r) => r.avgDurationMs), 1)
   const barCount = displayRows.length
-  const totalW = Math.max(300, barCount * (MIN_BAR_W + BAR_GAP) + BAR_GAP)
-  const barW = Math.max(MIN_BAR_W, (totalW - BAR_GAP * (barCount + 1)) / barCount)
+  const totalW = Math.max(300, barCount * (BAR_W + BAR_GAP) + BAR_GAP)
+  const barW = BAR_W
 
   return (
     <svg
@@ -57,7 +58,7 @@ export const StageDelayBarChart = memo(function StageDelayBarChart({
       {displayRows.map((row, i) => {
         const x = BAR_GAP + i * (barW + BAR_GAP)
         const barH = Math.max(4, (row.avgDurationMs / maxMs) * CHART_H)
-        const y = CHART_H - barH
+        const y = PADDING_TOP + (CHART_H - barH)
         const color = getBarColor(row)
 
         // Truncate long stage names
@@ -71,7 +72,7 @@ export const StageDelayBarChart = memo(function StageDelayBarChart({
             {/* Background track */}
             <rect
               x={x}
-              y={0}
+              y={PADDING_TOP}
               width={barW}
               height={CHART_H}
               rx={3}
@@ -92,7 +93,7 @@ export const StageDelayBarChart = memo(function StageDelayBarChart({
             {/* Duration label above bar */}
             <text
               x={x + barW / 2}
-              y={y - 3}
+              y={Math.max(12, y - 4)}
               textAnchor="middle"
               style={{
                 fontSize: 9,
@@ -107,7 +108,7 @@ export const StageDelayBarChart = memo(function StageDelayBarChart({
             {/* Stage name label below bar */}
             <text
               x={x + barW / 2}
-              y={CHART_H + 14}
+              y={PADDING_TOP + CHART_H + 16}
               textAnchor="middle"
               style={{
                 fontSize: 9,
@@ -121,7 +122,7 @@ export const StageDelayBarChart = memo(function StageDelayBarChart({
 
             {/* Bottleneck indicator dot */}
             {row.isBottleneck && (
-              <circle cx={x + barW / 2} cy={CHART_H + 28} r={3} fill={color} />
+              <circle cx={x + barW / 2} cy={PADDING_TOP + CHART_H + 32} r={3} fill={color} />
             )}
           </g>
         )
