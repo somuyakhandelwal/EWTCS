@@ -57,6 +57,12 @@ export async function middleware(request: NextRequest) {
         }
     }
 
+    if (pathname.startsWith('/analytics')) {
+        if (!session || (session.role !== 'supervisor' && session.role !== 'admin')) {
+            return NextResponse.redirect(new URL('/login', request.url))
+        }
+    }
+
     if (pathname.startsWith('/dashboard')) {
         if (!session || session.role !== 'nurse') {
             return NextResponse.redirect(new URL('/login', request.url))

@@ -1,5 +1,5 @@
 import 'server-only'
-import { verifyActiveSession } from '@/features/auth/lib/active-session'
+import { verifyActiveSession } from '@/shared/lib/active-session'
 
 /**
  * Generic role-based access control utilities

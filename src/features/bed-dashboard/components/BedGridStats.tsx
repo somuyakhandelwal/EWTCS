@@ -2,6 +2,7 @@
 // Epic 1: Nurse Desk Bed Dashboard
 
 import { memo } from 'react'
+import { formatElapsedTime } from '../lib/utils'
 
 interface BedGridStatsProps {
   total: number
@@ -9,6 +10,8 @@ interface BedGridStatsProps {
   available: number
   delayed: number
   bottleneckCount: number
+  cleaningCount?: number
+  avgTatMs?: number | null
 }
 
 export const BedGridStats = memo(function BedGridStats({
@@ -17,9 +20,11 @@ export const BedGridStats = memo(function BedGridStats({
   available,
   delayed,
   bottleneckCount,
+  cleaningCount = 0,
+  avgTatMs = null,
 }: BedGridStatsProps) {
   return (
-    <div className="grid grid-cols-2 sm:grid-cols-5 gap-4 p-4 bg-zinc-900/50 rounded-lg border border-zinc-800">
+    <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-7 gap-4 p-4 bg-zinc-900/50 rounded-lg border border-zinc-800">
       <div>
         <p className="text-xs text-zinc-500 uppercase">Total Beds</p>
         <p className="text-xl sm:text-2xl font-bold text-white">{total}</p>
@@ -43,6 +48,22 @@ export const BedGridStats = memo(function BedGridStats({
           {bottleneckCount}
         </p>
       </div>
+      {/* US-2.4: Cleaning count */}
+      <div>
+        <p className="text-xs text-zinc-500 uppercase">Cleaning</p>
+        <p className={`text-2xl font-bold ${cleaningCount > 0 ? 'text-pink-400' : 'text-zinc-500'}`}>
+          {cleaningCount}
+        </p>
+      </div>
+      {/* US-2.4: Average turnaround time */}
+      {avgTatMs !== null && avgTatMs > 0 && (
+        <div>
+          <p className="text-xs text-zinc-500 uppercase">Avg TAT (24h)</p>
+          <p className="text-2xl font-bold text-amber-400">
+            {formatElapsedTime(avgTatMs)}
+          </p>
+        </div>
+      )}
     </div>
   )
 })

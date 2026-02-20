@@ -15,7 +15,10 @@ import { DashboardSettings } from './DashboardSettings'
 import type { BedGridData, BedWithElapsedTime, DispositionDelayReason } from '../types/bed'
 import { useRealtimeBedUpdates } from '../hooks/useRealtimeBedUpdates'
 import { useBedStageUpdate } from '../hooks/useBedStageUpdate'
+import { useUndoManager } from '../hooks/useUndoManager'
 import { recordDispositionDelayReason } from '../actions/disposition-actions'
+import { markBedClean, fetchTatSummary } from '../actions/tat-actions'
+import type { TatSummary } from '../types/bed'
 
 interface BedDashboardClientProps {
   initialData: BedGridData
@@ -52,7 +55,9 @@ export function BedDashboardClient({ initialData }: BedDashboardClientProps) {
     isDischargeSubmitting,
     handleDischargeConfirm,
     closeDischargeModal,
-  } = useBedStageUpdate(realtimeData)
+  } = useBedStageUpdate(realtimeData);
+
+  const { undoState, undoError, handleUndo } = useUndoManager(lastUpdatedBedId, lastUpdatedStageId, handleRefresh)
 
   // Search state: immediate input and debounced query used for filtering (US-1.2)
   const [searchInput, setSearchInput] = useState('')
@@ -77,6 +82,32 @@ export function BedDashboardClient({ initialData }: BedDashboardClientProps) {
   const handleBedClick = useCallback((bed: BedWithElapsedTime) => {
     void bed
   }, [])
+
+  // US-2.4: TAT summary + mark-clean state
+  const [tatSummary, setTatSummary] = useState<TatSummary | null>(null)
+  const [markCleanBedId, setMarkCleanBedId] = useState<string | null>(null)
+
+  useEffect(() => {
+    fetchTatSummary(24)
+      .then(r => { if (r.success && r.data) setTatSummary(r.data) })
+      .catch(() => { /* TAT is non-critical */ })
+  }, [])
+
+  const handleMarkClean = useCallback(async (bedId: string) => {
+    if (markCleanBedId) return
+    setMarkCleanBedId(bedId)
+    try {
+      const result = await markBedClean(bedId)
+      if (!result.success) {
+          console.error('Mark clean failed:', result.error)
+      }
+      handleRefresh()
+    } catch {
+      // non-critical
+    } finally {
+      setMarkCleanBedId(null)
+    }
+  }, [markCleanBedId, handleRefresh])
 
   const [, startTransition] = useTransition()
 
@@ -111,6 +142,9 @@ export function BedDashboardClient({ initialData }: BedDashboardClientProps) {
         onBedClick={handleBedClick}
         onStageSelect={handleStageSelect}
         onReasonSelect={handleReasonSelect}
+        onMarkClean={handleMarkClean}
+        markCleanBedId={markCleanBedId}
+        tatSummary={tatSummary}
         updatingBedId={updatingBedId}
         updatingStageId={updatingStageId}
         lastUpdatedBedId={lastUpdatedBedId}
@@ -118,7 +152,12 @@ export function BedDashboardClient({ initialData }: BedDashboardClientProps) {
         errorByBedId={errorByBedId}
         isRefreshing={isLoading}
         searchQuery={searchQuery}
+        undoState={undoState}
+        onUndo={handleUndo}
       />
+      {undoError && (
+        <div className="text-center text-xs text-red-500 font-semibold mt-2">{undoError}</div>
+      )}
 
       <SupervisorOverrideModal
         isOpen={Boolean(overrideState)}

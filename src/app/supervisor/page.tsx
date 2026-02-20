@@ -5,7 +5,7 @@ import { redirect } from "next/navigation"
 import { AlertTriangle } from "lucide-react"
 import Link from "next/link"
 
-import { verifyActiveSession } from "@/features/auth/lib/active-session"
+import { verifyActiveSession } from "@/shared/lib/active-session"
 import { getBedGridData } from "@/features/bed-dashboard/actions/bed-grid-actions"
 import { SupervisorBedOverview } from "@/features/bed-dashboard/components/SupervisorBedOverview"
 
