@@ -71,6 +71,7 @@ Historical requirements and design documents (for reference only):
 | Contribute code | [CONTRIBUTING.md](../CONTRIBUTING.md) |
 | Build a new feature | [Features Guide](../src/features/README.md) |
 | Use analytics | [Analytics Documentation](../src/features/bed-dashboard/ANALYTICS_README.md) |
+| Sign off a report | [signoff-actions.ts](../src/features/management-report/actions/signoff-actions.ts) |
 | Check project status | [PROJECT_STATUS.md](../PROJECT_STATUS.md) |
 | Report a bug | [GitHub Issues](https://github.com/somuyakhandelwal/EWTCS/issues) |
 
