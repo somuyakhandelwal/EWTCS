@@ -16,3 +16,6 @@ VALUES (
   'Global delay threshold in minutes. Beds exceeding this time are flagged as delayed.'
 )
 ON CONFLICT (key) DO NOTHING;
+
+-- Down Migration
+-- DROP TABLE IF EXISTS system_settings;

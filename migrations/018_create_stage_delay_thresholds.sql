@@ -9,3 +9,6 @@ CREATE TABLE IF NOT EXISTS stage_delay_thresholds (
 
 CREATE INDEX IF NOT EXISTS idx_stage_delay_thresholds_stage_id
   ON stage_delay_thresholds(stage_id);
+
+-- Down Migration
+-- DROP TABLE IF EXISTS stage_delay_thresholds;
