@@ -6,7 +6,6 @@
 
 import { useCallback, useState, useRef, useEffect, useTransition } from 'react'
 import { MapPin } from 'lucide-react'
-import { logger } from '@/shared/config/logger'
 import { BedGrid } from './BedGrid'
 import { SearchInput } from './SearchInput'
 import { ConnectionStatus } from './ConnectionStatus'

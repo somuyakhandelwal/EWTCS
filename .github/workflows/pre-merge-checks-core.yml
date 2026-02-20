@@ -147,3 +147,35 @@ jobs:
       - run: npm run build
       - run: |
           if [ ! -d ".next" ]; then echo "❌ Build output directory (.next) not found"; exit 1; fi
+
+  recovery-reliability-validation:
+    runs-on: ubuntu-latest
+    name: Validate Recovery & Reliability Tests
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+      - run: npm ci
+      - name: Run recovery and network-failure simulation tests
+        run: |
+          npm test -- \
+            src/shared/lib/recovery-draft.test.ts \
+            src/shared/hooks/useRecoveryDraftForm.test.tsx \
+            src/features/stage-management/components/StageFormModal.test.tsx \
+            src/features/stage-management/components/GlobalThresholdForm.test.tsx \
+            src/features/bed-management/components/EditBedDialog.test.tsx \
+            src/features/bed-dashboard/__tests__/execute-stage-update.reliability.test.ts
+
+  automated-tests-validation:
+    runs-on: ubuntu-latest
+    name: Validate Full Automated Test Suite
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+      - run: npm ci
+      - run: npm test
