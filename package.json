@@ -28,7 +28,10 @@
     "validate:db": "node scripts/validate-db-connection.js",
     "validate:migrations": "node scripts/validate-migrations.js",
     "validate:schema": "node scripts/validate-db-schema.js",
-    "validate:all": "npm run validate:env && npm run validate:db && npm run validate:migrations && npm run validate:schema && npm run build"
+    "validate:all": "npm run validate:env && npm run validate:db && npm run validate:migrations && npm run validate:schema && npm run build",
+    "perf:seed": "node scripts/seed-realistic-performance-volume.js",
+    "perf:check": "node scripts/run-performance-gate.js",
+    "perf:validate": "npm run perf:seed && npm run perf:check"
   },
   "dependencies": {
     "@radix-ui/react-context-menu": "^2.2.16",

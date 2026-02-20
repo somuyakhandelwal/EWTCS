@@ -1,17 +1,19 @@
 import 'server-only'
 // US-6.3: Threshold resolution — single source of truth for delay thresholds
-// Reads from system_settings (global) and stage_delay_thresholds (per-stage override)
+// Reads from system_settings (global) and stage_delay_thresholds (per-stage override).
+// EPIC 13: Global threshold is cached so the Dashboard doesn't pay a DB round-trip
+// on every page load. Cache is invalidated when an admin writes a new value.
 
 import { query } from '@/shared/lib/db'
 import { logger } from '@/shared/config/logger'
+import { withCache, SETTINGS_CACHE_TAG, SETTINGS_CACHE_TTL_S } from './query-cache'
 
 const DEFAULT_THRESHOLD_MINUTES = 180 // 3 hours fallback if DB unavailable
 
 /**
- * Returns the global delay threshold in minutes from system_settings.
- * Falls back to 180 minutes (3 hours) if not configured.
+ * Internal fetch — not exported. Call `getGlobalThresholdMinutes` instead.
  */
-export async function getGlobalThresholdMinutes(): Promise<number> {
+async function fetchGlobalThresholdMinutes(): Promise<number> {
   try {
     const result = await query<{ value: string }>(
       `SELECT value FROM system_settings WHERE key = 'delay_threshold_minutes'`,
@@ -21,10 +23,22 @@ export async function getGlobalThresholdMinutes(): Promise<number> {
       return parseInt(result.rows[0].value, 10)
     }
   } catch (err) {
-    logger.error('getGlobalThresholdMinutes failed, using default', err as Error)
+    logger.error('fetchGlobalThresholdMinutes failed, using default', err as Error)
   }
   return DEFAULT_THRESHOLD_MINUTES
 }
+
+/**
+ * Returns the global delay threshold in minutes.
+ * Result is cached for 120 s to avoid a DB hit on every dashboard load.
+ * Invalidated by `setGlobalThresholdAction` via `revalidateTag`.
+ */
+export const getGlobalThresholdMinutes = withCache(
+  fetchGlobalThresholdMinutes,
+  'global-threshold-minutes',
+  SETTINGS_CACHE_TTL_S,
+  [SETTINGS_CACHE_TAG],
+)
 
 /**
  * Returns the global delay threshold in milliseconds.

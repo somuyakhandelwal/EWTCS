@@ -7,6 +7,7 @@ import { getUserWard, getBedWard } from '../lib/bed-queries'
 import { requireRole } from '@/shared/lib/auth'
 import { categorizeStagesForTransition } from '../lib/stage-validation'
 import { getGlobalThresholdMs } from '@/shared/lib/threshold'
+import { perfStart, perfEnd, logPerf, PERF_SLA } from '@/shared/lib/perf-monitor'
 
 /**
  * Get all beds with current status and elapsed time
@@ -20,6 +21,9 @@ export async function getBedGridData(): Promise<{
   try {
     // Auth guard: all roles can fetch the dashboard, but must be authenticated
     await requireRole(['nurse', 'supervisor', 'admin'])
+
+    // EPIC 13: track end-to-end latency for Dashboard SLA monitoring (<2 s).
+    const perfMark = perfStart()
 
     logger.info('Fetching bed grid data')
 
@@ -46,6 +50,9 @@ export async function getBedGridData(): Promise<{
       delayedBeds: beds.filter(b => b.isDelayed).length,
       bottleneckBeds: bottleneckCount,
     })
+
+    // EPIC 13: log latency sample — WARN is emitted if > 2 s SLA.
+    logPerf('dashboard.getBedGridData', perfEnd(perfMark), PERF_SLA.DASHBOARD_MS)
 
     return {
       success: true,
