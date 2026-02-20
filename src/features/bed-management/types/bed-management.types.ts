@@ -9,6 +9,7 @@ export interface BedManagementData {
     currentStageName: string | null
     isOccupied: boolean
     isActive: boolean
+    isTemporary: boolean   // US-6.5: true for surge beds created by supervisor
     location?: string
     metadata?: Record<string, unknown>
     patientStartTime: Date | null
