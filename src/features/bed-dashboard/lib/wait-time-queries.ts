@@ -1,9 +1,11 @@
 // Bed Wait Time Queries
 // Purpose: Analyze waiting times and analytic summaries
 // Epic: EPIC 3 - Time Tracking & Stage Logging
+// EPIC 13: getBedAnalyticsSummary wrapped with 60 s cache (expensive aggregate).
 
 import { query } from '@/shared/lib/db'
 import { logger } from '@/shared/config/logger'
+import { withCache, ANALYTICS_CACHE_TAG, ANALYTICS_CACHE_TTL_S } from '@/shared/lib/query-cache'
 
 /**
  * Get beds with longest wait times in current stage
@@ -28,20 +30,24 @@ export async function getBedsSortedByCurrentWaitTime(limit: number = 10): Promis
       waitTimeMs: number
       transitionTime: Date
     }>(
+      // EPIC 13 perf: replaced two correlated subqueries (2×N round-trips) with a
+      // single LATERAL join — one aggregation per bed using the new composite index.
       `
-      SELECT 
-        b.bed_number as "bedNumber",
-        b.id as "bedId",
-        s.name as "currentStageName",
-        b.current_stage_id as "currentStageId",
-        EXTRACT(EPOCH FROM (CURRENT_TIMESTAMP - 
-          (SELECT MAX(transition_time) 
-           FROM bed_stage_logs 
-           WHERE bed_id = b.id)
-        )) * 1000 as "waitTimeMs",
-        (SELECT MAX(transition_time) FROM bed_stage_logs WHERE bed_id = b.id) as "transitionTime"
+      SELECT
+        b.bed_number                                                           AS "bedNumber",
+        b.id                                                                   AS "bedId",
+        s.name                                                                 AS "currentStageName",
+        b.current_stage_id                                                     AS "currentStageId",
+        EXTRACT(EPOCH FROM (CURRENT_TIMESTAMP - last_log.last_transition)) * 1000
+                                                                               AS "waitTimeMs",
+        last_log.last_transition                                               AS "transitionTime"
       FROM beds b
-      LEFT JOIN stages s ON b.current_stage_id = s.id
+      LEFT JOIN stages s         ON b.current_stage_id = s.id
+      LEFT JOIN LATERAL (
+        SELECT MAX(transition_time) AS last_transition
+        FROM   bed_stage_logs
+        WHERE  bed_id = b.id
+      ) last_log ON true
       WHERE b.is_active = true AND b.is_occupied = true
       ORDER BY "waitTimeMs" DESC
       LIMIT $1
@@ -57,9 +63,10 @@ export async function getBedsSortedByCurrentWaitTime(limit: number = 10): Promis
 }
 
 /**
- * Get summary statistics for all beds
+ * Internal implementation. Call the exported `getBedAnalyticsSummary` instead
+ * to benefit from the 60 s result cache.
  */
-export async function getBedAnalyticsSummary(): Promise<{
+async function getBedAnalyticsSummaryImpl(): Promise<{
   totalBedsUsed: number
   totalTransitions: number
   averageTimePerPatientMs: number
@@ -75,22 +82,29 @@ export async function getBedAnalyticsSummary(): Promise<{
       averageTransitionsPerPatient: string | null
       totalPatientsProcessed: string
     }>(
+      // EPIC 13 perf: replaced 2×N correlated subqueries with a single CTE that
+      // aggregates bed_stage_logs once, then joins — O(N) instead of O(N²).
       `
-      SELECT 
-        COUNT(DISTINCT b.id) as "totalBedsUsed",
-        COUNT(DISTINCT bsl.id) as "totalTransitions",
+      WITH bed_stats AS (
+        SELECT
+          bed_id,
+          MAX(transition_time) AS last_transition_time,
+          COUNT(*)             AS transition_count
+        FROM bed_stage_logs
+        GROUP BY bed_id
+      )
+      SELECT
+        COUNT(DISTINCT b.id)::bigint                                                               AS "totalBedsUsed",
+        COALESCE(SUM(bs.transition_count), 0)::bigint                                              AS "totalTransitions",
         COALESCE(AVG(
-          EXTRACT(EPOCH FROM 
-            (SELECT MAX(transition_time) FROM bed_stage_logs bsl2 WHERE bsl2.bed_id = b.id) 
-            - COALESCE(b.patient_start_time, CURRENT_TIMESTAMP)
-          ) * 1000
-        ), 0) as "averageTimePerPatientMs",
-        COALESCE(AVG(
-          (SELECT COUNT(*) FROM bed_stage_logs bsl2 WHERE bsl2.bed_id = b.id)::float
-        ), 0) as "averageTransitionsPerPatient",
-        COUNT(DISTINCT CASE WHEN b.patient_start_time IS NOT NULL THEN b.id END) as "totalPatientsProcessed"
+          EXTRACT(EPOCH FROM (
+            bs.last_transition_time - COALESCE(b.patient_start_time, CURRENT_TIMESTAMP)
+          )) * 1000
+        ), 0)                                                                                     AS "averageTimePerPatientMs",
+        COALESCE(AVG(bs.transition_count::float), 0)                                               AS "averageTransitionsPerPatient",
+        COUNT(DISTINCT CASE WHEN b.patient_start_time IS NOT NULL THEN b.id END)::bigint           AS "totalPatientsProcessed"
       FROM beds b
-      LEFT JOIN bed_stage_logs bsl ON b.id = bsl.bed_id
+      LEFT JOIN bed_stats bs ON b.id = bs.bed_id
       WHERE b.is_active = true
       `
     )
@@ -117,3 +131,15 @@ export async function getBedAnalyticsSummary(): Promise<{
     throw new Error('Failed to fetch bed analytics summary from database')
   }
 }
+
+/**
+ * Get summary statistics for all beds.
+ * EPIC 13: Cached for 60 s — the CTE aggregate across all logs is expensive.
+ * Invalidated via `revalidateTag('analytics')` when bed logs are mutated.
+ */
+export const getBedAnalyticsSummary = withCache(
+  getBedAnalyticsSummaryImpl,
+  'bed-analytics-summary',
+  ANALYTICS_CACHE_TTL_S,
+  [ANALYTICS_CACHE_TAG],
+)
