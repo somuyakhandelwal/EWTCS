@@ -44,7 +44,11 @@ export async function login(prevState: unknown, formData: FormData) {
                     },
                     ipAddress,
                 })
+<<<<<<< HEAD
             } catch {
+=======
+            } catch (_auditErr) {
+>>>>>>> f4558299ac9855ba78c0a03b3fa5a59ede4e4056
                 logger.warn('Could not write audit log for unknown-user login attempt', { username })
             }
 

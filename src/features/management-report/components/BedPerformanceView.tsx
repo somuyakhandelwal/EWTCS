@@ -21,6 +21,7 @@ import { BedPerformanceTable } from './BedPerformanceTable'
 import { BedPerformanceChart } from './BedPerformanceChart'
 import { BedPerformanceToolbar } from './BedPerformanceToolbar'
 import type { Shift } from '@/features/shift-management/types/shift.types'
+import { ExportReportButton } from '@/features/export/components/ExportReportButton'
 
 interface BedPerformanceViewProps {
   shifts: Shift[]
@@ -58,7 +59,7 @@ export function BedPerformanceView({
   )
 
   return (
-    <div className={cn('space-y-4', className)}>
+    <div className={cn('space-y-4', className)} data-export-id="export-beds">
       {/* Header + toolbar */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
         <div>
@@ -78,16 +79,26 @@ export function BedPerformanceView({
           </p>
         </div>
 
-        <BedPerformanceToolbar
-          preset={preset}
-          setPreset={setPreset}
-          shifts={shifts}
-          selectedShiftId={selectedShiftId}
-          setSelectedShiftId={setSelectedShiftId}
-          loading={loading}
-          readOnly={readOnly}
-          onReload={reload}
-        />
+        <div className="flex flex-wrap items-center gap-2">
+          <BedPerformanceToolbar
+            preset={preset}
+            setPreset={setPreset}
+            shifts={shifts}
+            selectedShiftId={selectedShiftId}
+            setSelectedShiftId={setSelectedShiftId}
+            loading={loading}
+            readOnly={readOnly}
+            onReload={reload}
+          />
+          <ExportReportButton
+            scope="beds"
+            pdfSections={[{ exportId: 'export-beds', title: 'Bed-Wise Performance' }]}
+            pdfTitle="Bed-Wise Performance Report"
+            shiftId={selectedShiftId}
+            label="Export"
+            disabled={readOnly}
+          />
+        </div>
       </div>
 
       {/* Error */}

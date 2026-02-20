@@ -20,6 +20,7 @@ import { formatDuration } from '@/features/bed-dashboard/lib/duration-formatters
 import { useStageDelayData, PRESETS } from '../hooks/useStageDelayData'
 import { StageDelayBarChart } from './StageDelayBarChart'
 import { StageDelayTable } from './StageDelayTable'
+import { ExportReportButton } from '@/features/export/components/ExportReportButton'
 
 interface StageDelayViewProps {
   readOnly?: boolean
@@ -40,7 +41,7 @@ export function StageDelayView({ readOnly = false, className }: StageDelayViewPr
   )
 
   return (
-    <div className={cn('space-y-4', className)}>
+    <div className={cn('space-y-4', className)} data-export-id="export-stages">
       {/* Header + toolbar */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
         <div>
@@ -73,6 +74,13 @@ export function StageDelayView({ readOnly = false, className }: StageDelayViewPr
           >
             <RefreshCw className={cn('h-4 w-4', loading && 'animate-spin')} />
           </Button>
+          <ExportReportButton
+            scope="stages"
+            pdfSections={[{ exportId: 'export-stages', title: 'Stage-Wise Delays' }]}
+            pdfTitle="Stage-Wise Delays Report"
+            label="Export"
+            disabled={readOnly}
+          />
         </div>
       </div>
 

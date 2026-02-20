@@ -16,6 +16,7 @@ import { SignOffBadge } from './SignOffBadge'
 import { ReportSignOffButton } from './ReportSignOffButton'
 import type { Shift } from '@/shared/types/shift.types'
 import type { ReportSignOff } from '../types/report.types'
+import { ExportReportButton } from '@/features/export/components/ExportReportButton'
 
 interface PatientCountViewProps {
   /** Active shifts passed from the server component */
@@ -50,7 +51,7 @@ export function PatientCountView({
   const periodLabel = `Patients Treated — ${selectedPreset.label} · ${shiftLabel}`
 
   return (
-    <div className={cn('space-y-4', className)}>
+    <div className={cn('space-y-4', className)} data-export-id="export-patients">
       {/* Section header + toolbar */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
         <div>
@@ -100,6 +101,15 @@ export function PatientCountView({
           >
             <RefreshCw className={cn('h-4 w-4', loading && 'animate-spin')} />
           </Button>
+
+          <ExportReportButton
+            scope="patients"
+            pdfSections={[{ exportId: 'export-patients', title: 'Total Patients Treated' }]}
+            pdfTitle="Patient Count Report"
+            shiftId={selectedShiftId}
+            label="Export"
+            disabled={readOnly}
+          />
 
           {/* Sign-off button — only visible for supervisor/admin */}
           <ReportSignOffButton

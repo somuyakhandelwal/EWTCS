@@ -25,6 +25,7 @@ import { DelayedPatientTrendCard } from './DelayedPatientTrendCard'
 import { DelayedPatientTargetConfig } from './DelayedPatientTargetConfig'
 import type { Shift } from '@/features/shift-management/types/shift.types'
 import { formatShiftTime } from '@/features/shift-management/lib/shift-format'
+import { ExportReportButton } from '@/features/export/components/ExportReportButton'
 
 interface DelayedPatientPercentageViewProps {
   shifts: Shift[]
@@ -55,7 +56,7 @@ export function DelayedPatientPercentageView({
       : shifts.find((s) => s.id === selectedShiftId)?.name ?? 'Unknown'
 
   return (
-    <div className={cn('space-y-4', className)}>
+    <div className={cn('space-y-4', className)} data-export-id="export-delayed">
       {/* Section header + toolbar */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
         <div>
@@ -109,6 +110,14 @@ export function DelayedPatientPercentageView({
           >
             <RefreshCw className={cn('h-4 w-4', loading && 'animate-spin')} />
           </Button>
+          <ExportReportButton
+            scope="delayed"
+            pdfSections={[{ exportId: 'export-delayed', title: 'Delayed Patients %' }]}
+            pdfTitle="Delayed Patients Report"
+            shiftId={selectedShiftId}
+            label="Export"
+            disabled={readOnly}
+          />
         </div>
       </div>
 
