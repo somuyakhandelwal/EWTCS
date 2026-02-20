@@ -18,8 +18,6 @@ interface BedCardProps {
   onClick?: (bed: BedWithElapsedTime) => void
   onContextMenu?: (event: MouseEvent<HTMLDivElement>, bed: BedWithElapsedTime) => void
   onReasonSelect?: (bedId: string, reason: DispositionDelayReason) => void
-  onMarkClean?: (bedId: string) => void
-  isMarkCleanUpdating?: boolean
   showUpdated?: boolean
   errorMessage?: string | null
   searchQuery?: string
@@ -31,8 +29,8 @@ interface BedCardProps {
 }
 
 export const BedCard = memo(function BedCard({
-  bed, onClick, onContextMenu, onReasonSelect, onMarkClean,
-  isMarkCleanUpdating = false, showUpdated = false, errorMessage = null,
+  bed, onClick, onContextMenu, onReasonSelect,
+  showUpdated = false, errorMessage = null,
   searchQuery = '', showUndo = false, onUndo, undoTimerSeconds = 0,
   animationEnabled = true,
 }: BedCardProps) {

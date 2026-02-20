@@ -40,7 +40,6 @@ export function SupervisorBedOverview({
   // US-6.5: when the shell re-fetches and passes new initialData, sync local state
   useEffect(() => {
     startTransition(() => setData(initialData))
-  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [initialData])
 
   const stats = useMemo(() => getBedStatistics(data.beds), [data.beds])
