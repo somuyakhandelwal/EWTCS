@@ -88,7 +88,7 @@ describe('executeStageUpdate reliability', () => {
         patientStartTime: new Date().toISOString(),
         lastStageChange: new Date().toISOString(),
         isOccupied: true,
-      } as Awaited<ReturnType<typeof updateBedStage>>['data'],
+      } as unknown as Awaited<ReturnType<typeof updateBedStage>>['data'],
     })
 
     const { args } = buildArgs()

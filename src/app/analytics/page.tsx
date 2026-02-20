@@ -9,12 +9,14 @@ import { DataRetentionView } from '@/features/data-retention/components/DataRete
 import { getShifts } from '@/features/shift-management/lib/shift-queries'
 import { getRetentionConfig } from '@/features/data-retention/lib/retention-config-queries'
 import { getRecentArchivalRuns } from '@/features/data-retention/lib/archival-queries'
+import { StaffingHeatmap } from '@/features/bed-dashboard/components/StaffingHeatmap'
 import { verifyActiveSession } from '@/shared/lib/active-session'
 import { redirect } from 'next/navigation'
 import { Button } from '@/shared/components/ui/button'
 import { ArrowLeft } from 'lucide-react'
 import Link from 'next/link'
 import { logAudit } from '@/shared/lib/audit'
+import { LogoutButton } from '@/features/auth/components/LogoutButton'
 
 export default async function AnalyticsPage() {
   const session = await verifyActiveSession()
@@ -74,10 +76,7 @@ export default async function AnalyticsPage() {
         {/* Header */}
         <div className="flex items-center gap-4">
           {isAuditMode ? (
-            <Button variant="ghost" size="sm" className="gap-2" disabled>
-              <ArrowLeft className="h-4 w-4" />
-              Back
-            </Button>
+            <LogoutButton />
           ) : (
             <Link href={backHref}>
               <Button variant="ghost" size="sm" className="gap-2">
@@ -132,6 +131,9 @@ export default async function AnalyticsPage() {
             readOnly={isAuditMode}
           />
         )}
+
+        {/* Staffing Heatmap — EPIC 10: patient volume by hour and day of week */}
+        <StaffingHeatmap />
       </div>
     </div>
   )

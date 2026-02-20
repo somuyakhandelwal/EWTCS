@@ -8,11 +8,11 @@
 import { Card, CardContent } from '@/shared/components/ui/card'
 import { Button } from '@/shared/components/ui/button'
 import { AlertCircle, RefreshCw, Users } from 'lucide-react'
-import { formatShiftTime } from '@/features/shift-management/lib/shift-format'
+import { formatShiftTime } from '@/shared/lib/shift-format'
 import { cn } from '@/shared/lib/utils'
 import { usePatientCountData, PRESETS } from '../hooks/usePatientCountData'
 import { PatientCountCards } from './PatientCountCards'
-import type { Shift } from '@/features/shift-management/types/shift.types'
+import type { Shift } from '@/shared/types/shift.types'
 
 interface PatientCountViewProps {
   /** Active shifts passed from the server component */
@@ -86,7 +86,7 @@ export function PatientCountView({
             size="sm"
             variant="ghost"
             onClick={reload}
-            disabled={loading || readOnly}
+            disabled={loading}
             title="Refresh now"
           >
             <RefreshCw className={cn('h-4 w-4', loading && 'animate-spin')} />

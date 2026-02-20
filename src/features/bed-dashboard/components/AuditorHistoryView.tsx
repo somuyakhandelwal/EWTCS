@@ -62,7 +62,6 @@ export function AuditorHistoryView({ readOnly = false }: { readOnly?: boolean })
   }, [loadHistory])
 
   const onSort = (column: AuditorHistorySortBy) => {
-    if (readOnly) return
     setPage(1)
     if (sortBy === column) {
       setSortOrder((prev) => (prev === 'asc' ? 'desc' : 'asc'))
@@ -115,7 +114,7 @@ export function AuditorHistoryView({ readOnly = false }: { readOnly?: boolean })
             <CardTitle>Bed Stage Change History</CardTitle>
             <CardDescription>Read-only audit timeline with filters, sorting, and export.</CardDescription>
           </div>
-          <Button size="sm" variant="outline" disabled={exporting || readOnly} onClick={onExport}>
+          <Button size="sm" variant="outline" disabled={exporting} onClick={onExport}>
             <Download className="h-4 w-4 mr-2" />
             {exporting ? 'Exporting...' : 'Export CSV'}
           </Button>
@@ -132,11 +131,10 @@ export function AuditorHistoryView({ readOnly = false }: { readOnly?: boolean })
         </div>
 
         <div className="flex gap-2">
-          <Button size="sm" onClick={() => { setPage(1); void loadHistory() }} disabled={readOnly}>Apply Filters</Button>
+          <Button size="sm" onClick={() => { setPage(1); void loadHistory() }}>Apply Filters</Button>
           <Button
             size="sm"
             variant="outline"
-            disabled={readOnly}
             onClick={() => {
               setFilters({ ...DEFAULT_AUDITOR_HISTORY_FILTERS })
               setPage(1)
@@ -152,12 +150,12 @@ export function AuditorHistoryView({ readOnly = false }: { readOnly?: boolean })
           <table className="w-full text-sm">
             <thead className="bg-zinc-900">
               <tr className="text-left text-zinc-300">
-                <th className="p-2"><button onClick={() => onSort('transitionTime')} disabled={readOnly}>Timestamp{sortMarker('transitionTime')}</button></th>
-                <th className="p-2"><button onClick={() => onSort('bedNumber')} disabled={readOnly}>Bed{sortMarker('bedNumber')}</button></th>
+                <th className="p-2"><button onClick={() => onSort('transitionTime')}>Timestamp{sortMarker('transitionTime')}</button></th>
+                <th className="p-2"><button onClick={() => onSort('bedNumber')}>Bed{sortMarker('bedNumber')}</button></th>
                 <th className="p-2">From</th>
-                <th className="p-2"><button onClick={() => onSort('toStageName')} disabled={readOnly}>To{sortMarker('toStageName')}</button></th>
+                <th className="p-2"><button onClick={() => onSort('toStageName')}>To{sortMarker('toStageName')}</button></th>
                 <th className="p-2">User ID</th>
-                <th className="p-2"><button onClick={() => onSort('changedByUsername')} disabled={readOnly}>Username{sortMarker('changedByUsername')}</button></th>
+                <th className="p-2"><button onClick={() => onSort('changedByUsername')}>Username{sortMarker('changedByUsername')}</button></th>
               </tr>
             </thead>
             <tbody>
@@ -181,9 +179,9 @@ export function AuditorHistoryView({ readOnly = false }: { readOnly?: boolean })
         <div className="flex items-center justify-between">
           <p className="text-xs text-zinc-500">Read-only records. Total: {totalCount}</p>
           <div className="flex items-center gap-2">
-            <Button size="sm" variant="outline" onClick={() => setPage((p) => Math.max(1, p - 1))} disabled={page === 1 || readOnly}>Previous</Button>
+            <Button size="sm" variant="outline" onClick={() => setPage((p) => Math.max(1, p - 1))} disabled={page === 1}>Previous</Button>
             <span className="text-xs text-zinc-500">Page {page} / {totalPages}</span>
-            <Button size="sm" variant="outline" onClick={() => setPage((p) => Math.min(totalPages, p + 1))} disabled={page >= totalPages || readOnly}>Next</Button>
+            <Button size="sm" variant="outline" onClick={() => setPage((p) => Math.min(totalPages, p + 1))} disabled={page >= totalPages}>Next</Button>
           </div>
         </div>
       </CardContent>
