@@ -13,6 +13,7 @@ import { CleaningActions, isCleaningStage } from './CleaningActions'
 import { BedBottleneckInfo } from './BedBottleneckInfo'
 import { cn } from '@/shared/lib/utils'
 import { highlightMatch } from '../lib/highlight-match'
+import { StageIcon } from './StageIcon'
 
 const ACKNOWLEDGE_PAUSE_MS = 30_000
 
@@ -126,7 +127,10 @@ export const BedCard = memo(function BedCard({
 
         <div className="space-y-1">
           <p className="text-xs text-zinc-500 uppercase tracking-wider">Current Stage</p>
-          <p className={cn('text-sm font-semibold', colorClasses.text)}>{highlightMatch(stageName, searchQuery)}</p>
+          <div className="flex items-center gap-1.5">
+            <StageIcon colorCode={stageColor} className={cn('h-4 w-4', colorClasses.text)} />
+            <p className={cn('text-sm font-semibold', colorClasses.text)}>{highlightMatch(stageName, searchQuery)}</p>
+          </div>
           {onContextMenu && <p className="text-[10px] text-zinc-500">Tap or right-click to update stage</p>}
           {showUpdated && <p className="text-[10px] text-emerald-400">Updated</p>}
           {errorMessage && <p className="text-[10px] text-red-400">{errorMessage}</p>}
@@ -160,10 +164,10 @@ export const BedCard = memo(function BedCard({
         )}
 
         {isCleaning && (
-  <CleaningActions
-    lastStageChange={bed.lastStageChange}
-  />
-)}
+          <CleaningActions
+            lastStageChange={bed.lastStageChange}
+          />
+        )}
 
         {!isOccupied && !isCleaning && (
           <div className="pt-2 border-t border-zinc-700/50">
