@@ -9,6 +9,8 @@ import {
 } from '../lib/auditor-history-queries'
 import { generateAuditorHistoryCSV } from '../lib/csv-generators'
 
+const EXPORT_BATCH_SIZE = 500
+
 export async function fetchAuditorBedHistory(
   options: FetchAuditorHistoryOptions
 ): Promise<{
@@ -46,20 +48,38 @@ export async function exportAuditorBedHistoryCSV(
 }> {
   try {
     const session = await requireRole(['supervisor', 'admin', 'auditor'])
-    const result = await fetchAuditorHistory({
-      ...options,
-      limit: 5000,
-      offset: 0,
-    })
+    const rows: AuditorHistoryRecord[] = []
+    let offset = 0
+    let totalCount = 0
+
+    while (true) {
+      const result = await fetchAuditorHistory({
+        ...options,
+        limit: EXPORT_BATCH_SIZE,
+        offset,
+      })
+
+      if (offset === 0) {
+        totalCount = result.totalCount
+      }
+
+      rows.push(...result.rows)
+
+      if (rows.length >= totalCount || result.rows.length === 0) {
+        break
+      }
+
+      offset += EXPORT_BATCH_SIZE
+    }
 
     logger.info('Exported auditor bed history CSV', {
       userId: session.userId,
-      count: result.rows.length,
+      count: rows.length,
     })
 
     return {
       success: true,
-      data: generateAuditorHistoryCSV(result.rows),
+      data: generateAuditorHistoryCSV(rows),
     }
   } catch (error) {
     const message = error instanceof Error ? error.message : 'Failed to export auditor history'

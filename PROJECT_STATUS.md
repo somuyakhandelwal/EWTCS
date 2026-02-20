@@ -1,7 +1,7 @@
 # EWTCS Project Status
 
 **Emergency Ward Bed Status Monitoring & AI Daily Report System**  
-**Last Updated:** February 18, 2026  
+**Last Updated:** February 20, 2026  
 **Version:** 1.1 (Phase 1 + Phase 2 Features)
 
 ---
@@ -16,7 +16,7 @@ The core system is **fully operational** and **production-ready**. Phase 2 real-
 
 ### Authentication & Security (EPIC 5)
 - [x] Secure login/logout with bcrypt password hashing
-- [x] Role-based access control (Admin, Supervisor, Nurse)
+- [x] Role-based access control (Admin, Supervisor, Nurse, Auditor)
 - [x] Session management with encrypted cookies
 - [x] Audit logging for all critical actions (atomic transactions with user/action/timestamp/IP)
 - [x] User management system (create, update, activate/deactivate users)
@@ -46,6 +46,7 @@ The core system is **fully operational** and **production-ready**. Phase 2 real-
 - [x] Bed timeline visualization
 - [x] CSV export for data analysts
 - [x] Performance-optimized queries with database indexes
+- [x] Auditor read-only bed stage history with filters, sortable columns, and complete CSV export
 
 ### Stage Transition System (EPIC 2)
 - [x] One-click stage updates
@@ -74,7 +75,7 @@ The core system is **fully operational** and **production-ready**. Phase 2 real-
 - **Migrations Applied:** 12/12
 - **Emergency Beds:** 12 configured (expandable to 50+)
 - **Workflow Stages:** 8 stages
-- **User Roles:** 3 (Admin, Supervisor, Nurse)
+- **User Roles:** 4 (Admin, Supervisor, Nurse, Auditor)
 - **Test Users:** 4 (admin1, supervisor1, nurse, nurse1)
 - **API Endpoints:** 15+ (authentication, bed management, analytics, user management)
 - **Application Routes:** 11 (/, /login, /dashboard, /admin, /admin/beds, /admin/stages, /analytics, /supervisor, /api/health, /api/auth/logout, middleware)

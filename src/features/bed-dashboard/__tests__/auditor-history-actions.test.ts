@@ -66,36 +66,60 @@ describe('auditor-history-actions', () => {
     expect(result.error).toBe('db error')
   })
 
-  it('exportAuditorBedHistoryCSV forces export limit and offset', async () => {
+  it('exportAuditorBedHistoryCSV fetches all pages for complete export', async () => {
     vi.mocked(requireRole).mockResolvedValue({ userId: 'u-1', role: 'admin' } as never)
-    vi.mocked(fetchAuditorHistory).mockResolvedValue({
-      rows: [
-        {
-          id: 'log-1',
-          bedId: 'bed-1',
-          bedNumber: 'ER-01',
-          fromStageName: 'Triage',
-          toStageName: 'Doctor Assessment',
-          changedByUserId: 'u-1',
-          changedByUsername: 'admin1',
-          transitionTime: new Date('2026-02-19T08:00:00.000Z'),
-          durationInPreviousStageMs: 1000,
-          notes: 'ok',
-        },
-      ],
-      totalCount: 1,
-    })
+    vi.mocked(fetchAuditorHistory)
+      .mockResolvedValueOnce({
+        rows: [
+          {
+            id: 'log-1',
+            bedId: 'bed-1',
+            bedNumber: 'ER-01',
+            fromStageName: 'Triage',
+            toStageName: 'Doctor Assessment',
+            changedByUserId: 'u-1',
+            changedByUsername: 'admin1',
+            transitionTime: new Date('2026-02-19T08:00:00.000Z'),
+            durationInPreviousStageMs: 1000,
+            notes: 'ok',
+          },
+        ],
+        totalCount: 2,
+      })
+      .mockResolvedValueOnce({
+        rows: [
+          {
+            id: 'log-2',
+            bedId: 'bed-2',
+            bedNumber: 'ER-02',
+            fromStageName: 'Registration',
+            toStageName: 'Doctor Assessment',
+            changedByUserId: 'u-2',
+            changedByUsername: 'admin2',
+            transitionTime: new Date('2026-02-19T09:00:00.000Z'),
+            durationInPreviousStageMs: 2000,
+            notes: null,
+          },
+        ],
+        totalCount: 2,
+      })
 
     const result = await exportAuditorBedHistoryCSV({ bedNumber: 'ER-01' })
 
-    expect(fetchAuditorHistory).toHaveBeenCalledWith({
+    expect(fetchAuditorHistory).toHaveBeenNthCalledWith(1, {
       bedNumber: 'ER-01',
-      limit: 5000,
+      limit: 500,
       offset: 0,
+    })
+    expect(fetchAuditorHistory).toHaveBeenNthCalledWith(2, {
+      bedNumber: 'ER-01',
+      limit: 500,
+      offset: 500,
     })
     expect(result.success).toBe(true)
     expect(result.data).toContain('Changed By User ID')
     expect(result.data).toContain('ER-01')
+    expect(result.data).toContain('ER-02')
   })
 
   it('exportAuditorBedHistoryCSV returns failure when unauthorized', async () => {

@@ -84,12 +84,30 @@ export async function markBedClean(bedId: string): Promise<{
     }
 
     const emptyStageId = stageResult.rows[0].id
-    const result = await updateBedStageInDB({
-      bedId,
-      toStageId: emptyStageId,
-      changedByUserId: session.userId,
-      notes: 'Bed marked clean — ready for next patient',
-    })
+    const result = await (async () => {
+      try {
+        return await updateBedStageInDB({
+          bedId,
+          toStageId: emptyStageId,
+          changedByUserId: session.userId,
+          notes: 'Bed marked clean — ready for next patient',
+        })
+      } catch (error) {
+        const message = error instanceof Error ? error.message : ''
+        if (message === 'Bed is already in the selected stage') {
+          logger.info('Bed already clean; mark clean treated as no-op', {
+            bedId,
+            changedBy: session.userId,
+          })
+          return null
+        }
+        throw error
+      }
+    })()
+
+    if (!result) {
+      return { success: true }
+    }
 
     await logAudit({
       actionType: 'UPDATE',

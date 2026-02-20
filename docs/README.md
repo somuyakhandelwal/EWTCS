@@ -28,6 +28,7 @@ Start here if you're new to the project:
 
 ### Technical Documentation
 - **[Analytics System](../src/features/bed-dashboard/ANALYTICS_README.md)** - Stage analytics and reporting documentation
+- **Auditor Bed History (EPIC 12)** - Read-only stage transition history with filtering, sorting, and CSV export in [AuditorHistoryView](../src/features/bed-dashboard/components/AuditorHistoryView.tsx)
 - **[PROJECT_STATUS.md](../PROJECT_STATUS.md)** - Current project status, completed features, roadmap
 
 ## 📁 Archived Documentation
