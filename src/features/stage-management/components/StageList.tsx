@@ -1,9 +1,9 @@
-'use client';
-import { useState } from 'react';
-import type { Stage } from '../types/stage.types';
-import { deleteStage, reorderStages } from '../actions/stage-actions';
-import { StageFormModal } from './StageFormModal';
-import { getStageColorClasses } from '@/shared/utils/stage-colors';
+"use client";
+import { useState } from "react";
+import type { Stage } from "../types/stage.types";
+import { deleteStage, reorderStages } from "../actions/stage-actions";
+import { StageFormModal } from "./StageFormModal";
+import { getStageColorClasses } from "@/shared/utils/stage-colors";
 
 export function StageList({ initialStages }: { initialStages: Stage[] }) {
   const [stages, setStages] = useState<Stage[]>(initialStages);
@@ -11,79 +11,99 @@ export function StageList({ initialStages }: { initialStages: Stage[] }) {
   const [showAdd, setShowAdd] = useState(false);
 
   const handleDelete = async (id: string) => {
-    if (!confirm('Is stage ko delete karna chahte ho?')) return;
+    if (!confirm("Is stage ko delete karna chahte ho?")) return;
     try {
       await deleteStage(id);
-      setStages(stages.filter(s => s.id !== id));
-    } catch (e: unknown) { alert(e instanceof Error ? e.message : 'Something went wrong'); }
+      setStages(stages.filter((s) => s.id !== id));
+    } catch (e: unknown) {
+      alert(e instanceof Error ? e.message : "Something went wrong");
+    }
   };
 
-  const move = async (index: number, dir: 'up' | 'down') => {
+  const move = async (index: number, dir: "up" | "down") => {
     const next = [...stages];
-    const swap = dir === 'up' ? index - 1 : index + 1;
+    const swap = dir === "up" ? index - 1 : index + 1;
     if (swap < 0 || swap >= next.length) return;
     [next[index], next[swap]] = [next[swap], next[index]];
     setStages(next);
-    await reorderStages(next.map(s => s.id));
+    await reorderStages(next.map((s) => s.id));
   };
 
   return (
-    <div className='space-y-3'>
+    <div className="space-y-3">
       <button
         onClick={() => setShowAdd(true)}
-        className='px-4 py-2 bg-blue-600 text-white font-semibold rounded-lg hover:bg-blue-700'>
+        className="px-4 py-2 bg-blue-600 text-white font-semibold rounded-lg hover:bg-blue-700"
+      >
         + Add New Stage
       </button>
 
       {stages.map((stage, i) => {
         const colorClasses = getStageColorClasses(stage.color_code);
         return (
-          <div key={stage.id}
-            className={`flex items-center justify-between p-4 rounded-lg border-2 ${colorClasses.bg} ${colorClasses.border}`}>
-
-            <div className='flex items-center gap-3'>
-              <span className='text-lg font-bold text-zinc-200'>{i + 1}</span>
-              <span className={`font-semibold text-base ${colorClasses.text}`}>{stage.name}</span>
+          <div
+            key={stage.id}
+            className={`flex items-center justify-between p-4 rounded-lg border-2 ${colorClasses.bg} ${colorClasses.border}`}
+          >
+            <div className="flex items-center gap-3">
+              <span className="text-lg font-bold text-zinc-200">{i + 1}</span>
+              <div className="flex items-center gap-2">
+                {colorClasses.icon && (
+                  <colorClasses.icon
+                    className={`w-5 h-5 ${colorClasses.text}`}
+                  />
+                )}
+                <span
+                  className={`font-semibold text-base ${colorClasses.text}`}
+                >
+                  {stage.name}
+                </span>
+              </div>
               {stage.is_default && (
-                <span className='text-xs bg-zinc-900/60 px-2 py-0.5 rounded-full text-zinc-200 border border-zinc-700'>
+                <span className="text-xs bg-zinc-900/60 px-2 py-0.5 rounded-full text-zinc-200 border border-zinc-700">
                   Default
                 </span>
               )}
               {stage.threshold_minutes && (
-                <span className='text-xs bg-amber-900/40 px-2 py-0.5 rounded-full text-amber-200 border border-amber-700'>
-                  ⏱ {stage.threshold_minutes >= 60
-                    ? `${Math.floor(stage.threshold_minutes / 60)}h ${stage.threshold_minutes % 60 > 0 ? `${stage.threshold_minutes % 60}m` : ''}`
+                <span className="text-xs bg-amber-900/40 px-2 py-0.5 rounded-full text-amber-200 border border-amber-700">
+                  ⏱{" "}
+                  {stage.threshold_minutes >= 60
+                    ? `${Math.floor(stage.threshold_minutes / 60)}h ${stage.threshold_minutes % 60 > 0 ? `${stage.threshold_minutes % 60}m` : ""}`
                     : `${stage.threshold_minutes}m`}
                 </span>
               )}
             </div>
 
-          <div className='flex gap-2'>
-            <button
-              onClick={() => move(i, 'up')}
-              disabled={i === 0}
-              className='px-3 py-1 bg-white border border-gray-400 rounded text-gray-700 font-bold disabled:opacity-30 hover:bg-gray-100'>
-              ↑
-            </button>
-            <button
-              onClick={() => move(i, 'down')}
-              disabled={i === stages.length - 1}
-              className='px-3 py-1 bg-white border border-gray-400 rounded text-gray-700 font-bold disabled:opacity-30 hover:bg-gray-100'>
-              ↓
-            </button>
-            <button
-              onClick={() => setEditing(stage)}
-              className='px-3 py-1 bg-white border border-gray-400 rounded text-gray-800 font-medium text-sm hover:bg-gray-100'>
-              Edit
-            </button>
-            {!stage.is_default && (
+            <div className="flex gap-2">
               <button
-                onClick={() => handleDelete(stage.id)}
-                className='px-3 py-1 bg-red-500 border border-red-600 rounded text-white font-medium text-sm hover:bg-red-600'>
-                Delete
+                onClick={() => move(i, "up")}
+                disabled={i === 0}
+                className="px-3 py-1 bg-white border border-gray-400 rounded text-gray-700 font-bold disabled:opacity-30 hover:bg-gray-100"
+              >
+                ↑
               </button>
-            )}
-          </div>
+              <button
+                onClick={() => move(i, "down")}
+                disabled={i === stages.length - 1}
+                className="px-3 py-1 bg-white border border-gray-400 rounded text-gray-700 font-bold disabled:opacity-30 hover:bg-gray-100"
+              >
+                ↓
+              </button>
+              <button
+                onClick={() => setEditing(stage)}
+                className="px-3 py-1 bg-white border border-gray-400 rounded text-gray-800 font-medium text-sm hover:bg-gray-100"
+              >
+                Edit
+              </button>
+              {!stage.is_default && (
+                <button
+                  onClick={() => handleDelete(stage.id)}
+                  className="px-3 py-1 bg-red-500 border border-red-600 rounded text-white font-medium text-sm hover:bg-red-600"
+                >
+                  Delete
+                </button>
+              )}
+            </div>
           </div>
         );
       })}
@@ -91,11 +111,15 @@ export function StageList({ initialStages }: { initialStages: Stage[] }) {
       {(showAdd || editing) && (
         <StageFormModal
           stage={editing ?? undefined}
-          onClose={() => { setShowAdd(false); setEditing(null); }}
+          onClose={() => {
+            setShowAdd(false);
+            setEditing(null);
+          }}
           onSaved={(s) => {
-            if (editing) setStages(stages.map(x => x.id === s.id ? s : x));
+            if (editing) setStages(stages.map((x) => (x.id === s.id ? s : x)));
             else setStages([...stages, s]);
-            setShowAdd(false); setEditing(null);
+            setShowAdd(false);
+            setEditing(null);
           }}
         />
       )}

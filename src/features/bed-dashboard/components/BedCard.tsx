@@ -3,80 +3,100 @@
 // Epic 6: US-6.5 — temporary (surge) beds shown with orange badge + border
 //          US-6.6 — virtual (hallway/stretcher) beds shown with purple badge + border
 // US-4.3: Blinking animation with acknowledge support
-import { memo, useState, useEffect, useCallback, type MouseEvent } from 'react'
-import { Card, CardContent } from '@/shared/components/ui/card'
-import { Clock, AlertTriangle, Hourglass, Zap, MapPin } from 'lucide-react'
-import type { BedWithElapsedTime, DispositionDelayReason } from '../types/bed'
-import { getStageColorClasses, getDelayColorClasses } from '../lib/utils'
-import { useElapsedTime } from '../hooks/useElapsedTime'
-import { CleaningActions, isCleaningStage } from './CleaningActions'
-import { BedBottleneckInfo } from './BedBottleneckInfo'
-import { cn } from '@/shared/lib/utils'
-import { highlightMatch } from '../lib/highlight-match'
+import { memo, useState, useEffect, useCallback, type MouseEvent } from "react";
+import { Card, CardContent } from "@/shared/components/ui/card";
+import { Clock, AlertTriangle, Hourglass, Zap, MapPin } from "lucide-react";
+import type { BedWithElapsedTime, DispositionDelayReason } from "../types/bed";
+import { getStageColorClasses, getDelayColorClasses } from "../lib/utils";
+import { useElapsedTime } from "../hooks/useElapsedTime";
+import { CleaningActions, isCleaningStage } from "./CleaningActions";
+import { BedBottleneckInfo } from "./BedBottleneckInfo";
+import { cn } from "@/shared/lib/utils";
+import { highlightMatch } from "../lib/highlight-match";
 
-const ACKNOWLEDGE_PAUSE_MS = 30_000
+const ACKNOWLEDGE_PAUSE_MS = 30_000;
 
 interface BedCardProps {
-  bed: BedWithElapsedTime
-  onClick?: (bed: BedWithElapsedTime) => void
-  onContextMenu?: (event: MouseEvent<HTMLDivElement>, bed: BedWithElapsedTime) => void
-  onReasonSelect?: (bedId: string, reason: DispositionDelayReason) => void
-  onMarkClean?: (bedId: string) => void
-  isMarkCleanUpdating?: boolean
-  showUpdated?: boolean
-  errorMessage?: string | null
-  searchQuery?: string
-  showUndo?: boolean
-  onUndo?: () => void
-  undoTimerSeconds?: number
+  bed: BedWithElapsedTime;
+  onClick?: (bed: BedWithElapsedTime) => void;
+  onContextMenu?: (
+    event: MouseEvent<HTMLDivElement>,
+    bed: BedWithElapsedTime,
+  ) => void;
+  onReasonSelect?: (bedId: string, reason: DispositionDelayReason) => void;
+  onMarkClean?: (bedId: string) => void;
+  isMarkCleanUpdating?: boolean;
+  showUpdated?: boolean;
+  errorMessage?: string | null;
+  searchQuery?: string;
+  showUndo?: boolean;
+  onUndo?: () => void;
+  undoTimerSeconds?: number;
   /** US-4.3: Disable animation globally (accessibility setting) */
-  animationEnabled?: boolean
+  animationEnabled?: boolean;
 }
 
 export const BedCard = memo(function BedCard({
-  bed, onClick, onContextMenu, onReasonSelect, onMarkClean,
-  isMarkCleanUpdating = false, showUpdated = false, errorMessage = null,
-  searchQuery = '', showUndo = false, onUndo, undoTimerSeconds = 0,
+  bed,
+  onClick,
+  onContextMenu,
+  onReasonSelect,
+  onMarkClean,
+  isMarkCleanUpdating = false,
+  showUpdated = false,
+  errorMessage = null,
+  searchQuery = "",
+  showUndo = false,
+  onUndo,
+  undoTimerSeconds = 0,
   animationEnabled = true,
 }: BedCardProps) {
-  const stageName = bed.currentStage?.name || 'Empty'
-  const stageColor = bed.currentStage?.colorCode || 'gray'
-  const colorClasses = bed.isDelayed ? getDelayColorClasses(true) : getStageColorClasses(stageColor)
-  const elapsedTime = useElapsedTime(bed.patientStartTime)
-  const { isOccupied, isDelayed, isDispositionBottleneck: isBottleneck } = bed
-  const isCleaning = isCleaningStage(bed.currentStage?.name)
-  const isTemporary = bed.isTemporary
-  const isVirtual = bed.isVirtual
+  const stageName = bed.currentStage?.name || "Empty";
+  const stageColor = bed.currentStage?.colorCode || "gray";
+  const stageColorClasses = getStageColorClasses(stageColor);
+  const delayColorClasses = getDelayColorClasses(true);
+  const colorClasses = bed.isDelayed
+    ? { ...stageColorClasses, ...delayColorClasses }
+    : stageColorClasses;
+  const elapsedTime = useElapsedTime(bed.patientStartTime);
+  const { isOccupied, isDelayed, isDispositionBottleneck: isBottleneck } = bed;
+  const isCleaning = isCleaningStage(bed.currentStage?.name);
+  const isTemporary = bed.isTemporary;
+  const isVirtual = bed.isVirtual;
 
   // US-4.3: Acknowledge — pauses animation for 30s, resumes if still delayed
-  const [acknowledged, setAcknowledged] = useState(false)
-  useEffect(() => { if (!isDelayed) setAcknowledged(false) }, [isDelayed])
+  const [acknowledged, setAcknowledged] = useState(false);
   useEffect(() => {
-    if (!acknowledged) return
-    const t = setTimeout(() => { if (isDelayed) setAcknowledged(false) }, ACKNOWLEDGE_PAUSE_MS)
-    return () => clearTimeout(t)
-  }, [acknowledged, isDelayed])
+    if (!isDelayed) setAcknowledged(false);
+  }, [isDelayed]);
+  useEffect(() => {
+    if (!acknowledged) return;
+    const t = setTimeout(() => {
+      if (isDelayed) setAcknowledged(false);
+    }, ACKNOWLEDGE_PAUSE_MS);
+    return () => clearTimeout(t);
+  }, [acknowledged, isDelayed]);
 
   const handleClick = useCallback(() => {
-    if (isDelayed && !acknowledged) setAcknowledged(true)
-    onClick?.(bed)
-  }, [isDelayed, acknowledged, onClick, bed])
+    if (isDelayed && !acknowledged) setAcknowledged(true);
+    onClick?.(bed);
+  }, [isDelayed, acknowledged, onClick, bed]);
 
-  const showPulse = animationEnabled && !acknowledged
+  const showPulse = animationEnabled && !acknowledged;
 
   return (
     <Card
       className={cn(
-        'relative overflow-hidden transition-all cursor-pointer sm:hover:scale-105 sm:hover:shadow-lg active:scale-[0.97]',
+        "relative overflow-hidden transition-all cursor-pointer sm:hover:scale-105 sm:hover:shadow-lg active:scale-[0.97]",
         colorClasses.bg,
         colorClasses.border,
-        'border-2',
-        isVirtual && 'ring-2 ring-purple-500 border-purple-700',
-        isTemporary && !isVirtual && 'ring-2 ring-orange-500 border-orange-700',
-        isDelayed && 'ring-2 ring-red-500',
-        isDelayed && showPulse && 'motion-safe:animate-pulse',
-        isBottleneck && !isDelayed && 'ring-2 ring-amber-500',
-        isBottleneck && !isDelayed && showPulse && 'motion-safe:animate-pulse',
+        "border-2",
+        isVirtual && "ring-2 ring-purple-500 border-purple-700",
+        isTemporary && !isVirtual && "ring-2 ring-orange-500 border-orange-700",
+        isDelayed && "ring-2 ring-red-500",
+        isDelayed && showPulse && "motion-safe:animate-pulse",
+        isBottleneck && !isDelayed && "ring-2 ring-amber-500",
+        isBottleneck && !isDelayed && showPulse && "motion-safe:animate-pulse",
       )}
       onClick={handleClick}
       onContextMenu={(e) => onContextMenu?.(e, bed)}
@@ -102,7 +122,9 @@ export const BedCard = memo(function BedCard({
       )}
       {isDelayed && acknowledged && (
         <div className="absolute top-2 left-2">
-          <span className="text-[9px] bg-zinc-700 text-zinc-300 px-1.5 py-0.5 rounded">Acknowledged</span>
+          <span className="text-[9px] bg-zinc-700 text-zinc-300 px-1.5 py-0.5 rounded">
+            Acknowledged
+          </span>
         </div>
       )}
       {isBottleneck && (
@@ -113,7 +135,7 @@ export const BedCard = memo(function BedCard({
 
       <CardContent className="p-4 space-y-3">
         <div className="flex items-center justify-between">
-          <h3 className={cn('text-2xl font-bold', colorClasses.text)}>
+          <h3 className={cn("text-2xl font-bold", colorClasses.text)}>
             {highlightMatch(bed.bedNumber, searchQuery)}
           </h3>
           {isOccupied && !isDelayed && (
@@ -125,18 +147,42 @@ export const BedCard = memo(function BedCard({
         </div>
 
         <div className="space-y-1">
-          <p className="text-xs text-zinc-500 uppercase tracking-wider">Current Stage</p>
-          <p className={cn('text-sm font-semibold', colorClasses.text)}>{highlightMatch(stageName, searchQuery)}</p>
-          {onContextMenu && <p className="text-[10px] text-zinc-500">Tap or right-click to update stage</p>}
-          {showUpdated && <p className="text-[10px] text-emerald-400">Updated</p>}
-          {errorMessage && <p className="text-[10px] text-red-400">{errorMessage}</p>}
+          <p className="text-xs text-zinc-500 uppercase tracking-wider">
+            Current Stage
+          </p>
+          <div className="flex items-center gap-1.5">
+            {colorClasses.icon && (
+              <colorClasses.icon className={cn("w-4 h-4", colorClasses.text)} />
+            )}
+            <p className={cn("text-sm font-semibold", colorClasses.text)}>
+              {highlightMatch(stageName, searchQuery)}
+            </p>
+          </div>
+          {onContextMenu && (
+            <p className="text-[10px] text-zinc-500">
+              Tap or right-click to update stage
+            </p>
+          )}
+          {showUpdated && (
+            <p className="text-[10px] text-emerald-400">Updated</p>
+          )}
+          {errorMessage && (
+            <p className="text-[10px] text-red-400">{errorMessage}</p>
+          )}
           {showUndo && onUndo && (
             <div className="mt-2 flex items-center gap-2">
               <button
                 className="px-3 py-1 bg-blue-600 hover:bg-blue-700 text-white text-xs rounded transition-colors font-semibold shadow"
-                onClick={e => { e.stopPropagation(); onUndo(); }}
-              >Undo</button>
-              <span className="text-xs text-zinc-400">({undoTimerSeconds}s)</span>
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onUndo();
+                }}
+              >
+                Undo
+              </button>
+              <span className="text-xs text-zinc-400">
+                ({undoTimerSeconds}s)
+              </span>
             </div>
           )}
           {isBottleneck && (
@@ -154,16 +200,21 @@ export const BedCard = memo(function BedCard({
             <Clock className="h-4 w-4 text-zinc-500" />
             <div className="flex-1">
               <p className="text-xs text-zinc-500">Elapsed Time</p>
-              <p className={cn('text-lg font-bold', isDelayed ? 'text-red-400' : 'text-zinc-300')}>{elapsedTime}</p>
+              <p
+                className={cn(
+                  "text-lg font-bold",
+                  isDelayed ? "text-red-400" : "text-zinc-300",
+                )}
+              >
+                {elapsedTime}
+              </p>
             </div>
           </div>
         )}
 
         {isCleaning && (
-  <CleaningActions
-    lastStageChange={bed.lastStageChange}
-  />
-)}
+          <CleaningActions lastStageChange={bed.lastStageChange} />
+        )}
 
         {!isOccupied && !isCleaning && (
           <div className="pt-2 border-t border-zinc-700/50">
@@ -173,5 +224,5 @@ export const BedCard = memo(function BedCard({
         )}
       </CardContent>
     </Card>
-  )
-})
+  );
+});
