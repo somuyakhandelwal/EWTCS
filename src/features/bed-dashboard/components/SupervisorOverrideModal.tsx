@@ -3,6 +3,7 @@
 import { useState, useCallback } from "react"
 import type { Stage } from "../types/bed"
 import { getStageColorClasses } from '@/shared/utils/stage-colors'
+import { StageIcon } from '@/shared/components/StageIcon'
 
 interface SupervisorOverrideModalProps {
   isOpen: boolean
@@ -76,9 +77,10 @@ export function SupervisorOverrideModal({
             <span className="text-gray-600">From:</span>
             <span className="font-medium text-gray-900">{fromStageName || "Empty"}</span>
           </div>
-          <div className="flex justify-between">
+          <div className="flex justify-between items-center">
             <span className="text-gray-600">To:</span>
-            <span className={`font-medium ${colorClasses.text}`}>
+            <span className={`font-medium flex items-center gap-1.5 ${colorClasses.text}`}>
+              <StageIcon color={toStage?.colorCode} className="h-4 w-4 shrink-0" />
               {toStage?.name}
             </span>
           </div>

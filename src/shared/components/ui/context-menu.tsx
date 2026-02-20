@@ -9,6 +9,7 @@ export interface ContextMenuItem {
   disabled?: boolean
   onSelect: () => void
   className?: string
+  icon?: React.ReactNode
 }
 
 export interface ContextMenuProps {
@@ -171,7 +172,8 @@ export function ContextMenu({
               }}
               role="menuitem"
             >
-              {item.label}
+              {item.icon && <span className="flex-shrink-0">{item.icon}</span>}
+              <span className="truncate">{item.label}</span>
             </button>
           ))}
         </div>

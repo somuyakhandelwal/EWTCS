@@ -2,7 +2,8 @@ import { memo, useState } from 'react'
 import type { Stage } from '../types/bed'
 import { getStageColorClasses } from '@/shared/utils/stage-colors'
 import { cn } from '@/shared/lib/utils'
-import { ChevronDown, ChevronRight } from 'lucide-react'
+import { ChevronDown, ChevronRight, AlertTriangle, Hourglass } from 'lucide-react'
+import { StageIcon } from '@/shared/components/StageIcon'
 
 interface BedStatusLegendProps {
   stages: Stage[]
@@ -43,11 +44,13 @@ export const BedStatusLegend = memo(function BedStatusLegend({ stages, delayThre
                 >
                   <div
                     className={cn(
-                      'w-4 h-4 rounded border-2',
+                      'flex items-center justify-center w-5 h-5 shrink-0 rounded border-2',
                       colorClasses.bg,
                       colorClasses.border
                     )}
-                  />
+                  >
+                    <StageIcon color={stage.colorCode} className={cn("h-3 w-3", colorClasses.text)} />
+                  </div>
                   <span className="text-xs text-zinc-400 group-hover:text-zinc-300 transition-colors">
                     {stage.name}
                   </span>
@@ -55,18 +58,22 @@ export const BedStatusLegend = memo(function BedStatusLegend({ stages, delayThre
               )
             })}
           </div>
-          
+
           {/* Delay indicator */}
           <div className="mt-3 pt-3 border-t border-zinc-800 flex flex-wrap gap-4">
             <div className="flex items-center gap-2">
-              <div className="w-4 h-4 rounded border-2 border-red-700 bg-red-900/50 motion-safe:animate-pulse" />
+              <div className="flex items-center justify-center w-5 h-5 shrink-0 rounded border-2 border-red-700 bg-red-900/50 motion-safe:animate-pulse">
+                <AlertTriangle className="h-3 w-3 text-red-300" />
+              </div>
               <span className="text-xs text-zinc-400">
                 Delayed (&gt;{thresholdLabel})
               </span>
             </div>
             {/* US-1.6: Disposition bottleneck key */}
             <div className="flex items-center gap-2">
-              <div className="w-4 h-4 rounded border-2 border-amber-700 bg-amber-900/40 motion-safe:animate-pulse" />
+              <div className="flex items-center justify-center w-5 h-5 shrink-0 rounded border-2 border-amber-700 bg-amber-900/40 motion-safe:animate-pulse">
+                <Hourglass className="h-3 w-3 text-amber-300" />
+              </div>
               <span className="text-xs text-zinc-400">
                 Disposition Hold (&gt;30 min in Decision Made)
               </span>

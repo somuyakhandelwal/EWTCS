@@ -4,6 +4,7 @@ import { useMemo } from "react"
 import type { BedWithElapsedTime, Stage } from "../types/bed"
 import { getStageColorClasses } from '@/shared/utils/stage-colors'
 import { ContextMenu, type ContextMenuItem } from "@/shared/components/ui/context-menu"
+import { StageIcon } from '@/shared/components/StageIcon'
 
 interface BedStageContextMenuProps {
   bed: BedWithElapsedTime | null
@@ -55,6 +56,7 @@ export function BedStageContextMenu({
         disabled: isUpdating || isCurrentStage || updatingStageId === stage.id || isDisabled,
         onSelect: () => onStageSelect(bed.id, stage.id),
         className: colorClasses.text,
+        icon: <StageIcon color={stage.colorCode} className="h-4 w-4" />,
         title: isDisabled ? 'This transition is not allowed' : requiresOverride ? 'Requires supervisor approval' : undefined,
       }
     })

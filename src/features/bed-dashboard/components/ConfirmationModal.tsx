@@ -6,6 +6,7 @@ import { Loader2, AlertTriangle, X } from 'lucide-react'
 import type { Stage } from '../types/bed'
 import { cn } from '@/shared/lib/utils'
 import { getStageColorClasses } from '@/shared/utils/stage-colors'
+import { StageIcon } from '@/shared/components/StageIcon'
 
 interface ConfirmationModalProps {
     isOpen: boolean
@@ -82,13 +83,14 @@ export const ConfirmationModal = memo(function ConfirmationModal({
                             <span className="text-gray-500 dark:text-gray-400">To Stage:</span>
                             <span
                                 className={cn(
-                                    'font-bold px-2 py-0.5 rounded text-xs uppercase tracking-wider border',
+                                    'font-bold px-2 py-0.5 rounded text-xs uppercase tracking-wider border inline-flex items-center gap-1.5',
                                     colorClasses.bg,
                                     colorClasses.text,
                                     colorClasses.border
                                 )}
                             >
-                                {toStage?.name}
+                                <StageIcon color={toStage?.colorCode} className="h-3.5 w-3.5 shrink-0" />
+                                <span>{toStage?.name}</span>
                             </span>
                         </div>
                     </div>

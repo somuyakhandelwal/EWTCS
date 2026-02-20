@@ -7,6 +7,7 @@ import { cn } from '@/shared/lib/utils'
 import { Loader2 } from 'lucide-react'
 import type { BedWithElapsedTime, Stage } from '../types/bed'
 import { getStageColorClasses } from '@/shared/utils/stage-colors'
+import { StageIcon } from '@/shared/components/StageIcon'
 
 interface BedStageButtonsProps {
   bed: BedWithElapsedTime
@@ -74,7 +75,11 @@ export const BedStageButtons = memo(function BedStageButtons({
                     : undefined
               }
             >
-              {isStageUpdating && <Loader2 className="h-4 w-4 animate-spin" />}
+              {isStageUpdating ? (
+                <Loader2 className="h-3.5 w-3.5 shrink-0 mr-1.5 animate-spin" />
+              ) : (
+                <StageIcon color={stage.colorCode} className={cn("h-3.5 w-3.5 shrink-0 mr-1.5", colorClasses.text)} />
+              )}
               <span className="truncate">{label}</span>
             </Button>
           )

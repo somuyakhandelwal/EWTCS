@@ -12,6 +12,7 @@ import { CleaningActions, isCleaningStage } from './CleaningActions'
 import { BedBottleneckInfo } from './BedBottleneckInfo'
 import { cn } from '@/shared/lib/utils'
 import { highlightMatch } from '../lib/highlight-match'
+import { StageIcon } from '@/shared/components/StageIcon'
 
 interface BedCardProps {
   bed: BedWithElapsedTime
@@ -100,9 +101,12 @@ export const BedCard = memo(function BedCard({
         {/* Stage Name */}
         <div className="space-y-1">
           <p className="text-xs text-zinc-500 uppercase tracking-wider">Current Stage</p>
-          <p className={cn('text-sm font-semibold', colorClasses.text)}>
-            {highlightMatch(stageName, searchQuery)}
-          </p>
+          <div className="flex items-center gap-2">
+            <StageIcon color={stageColor} className={cn("h-4 w-4 shrink-0", colorClasses.text)} />
+            <p className={cn('text-sm font-semibold', colorClasses.text)}>
+              {highlightMatch(stageName, searchQuery)}
+            </p>
+          </div>
           {onContextMenu && (
             <p className="text-[10px] text-zinc-500">
               Tap or right-click to update stage
