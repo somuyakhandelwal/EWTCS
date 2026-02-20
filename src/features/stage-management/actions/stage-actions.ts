@@ -45,7 +45,7 @@ export async function createStage(input: CreateStageInput) {
     changes: {
       after: createdStage,
     },
-    metadata: getStageAuditMetadata(actor),
+    metadata: await getStageAuditMetadata(actor),
     ipAddress: actor.ipAddress,
   });
 
@@ -108,7 +108,7 @@ export async function updateStage(input: UpdateStageInput) {
           input.threshold_minutes === null ? null : (input.threshold_minutes ?? beforeStage.threshold_minutes ?? null),
       },
     },
-    metadata: getStageAuditMetadata(actor),
+    metadata: await getStageAuditMetadata(actor),
     ipAddress: actor.ipAddress,
   });
 
@@ -147,7 +147,7 @@ export async function deleteStage(id: string) {
       before: beforeStage,
       after: result.rows[0],
     },
-    metadata: getStageAuditMetadata(actor),
+    metadata: await getStageAuditMetadata(actor),
     ipAddress: actor.ipAddress,
   });
 
@@ -188,7 +188,7 @@ export async function reorderStages(orderedIds: string[]) {
       before: beforeOrderResult.rows,
       after: orderedIds.map((id, index) => ({ id, display_order: index + 1 })),
     },
-    metadata: getStageAuditMetadata(actor),
+    metadata: await getStageAuditMetadata(actor),
     ipAddress: actor.ipAddress,
   });
 

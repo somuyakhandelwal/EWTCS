@@ -1,0 +1,122 @@
+name: Pre-Merge Checks Core
+
+on:
+  workflow_call:
+
+jobs:
+  environment-validation:
+    runs-on: ubuntu-latest
+    name: Validate Environment Configuration
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+      - run: npm ci
+      - run: node scripts/validate-env-example.js
+      - name: Check required environment variables
+        run: |
+          REQUIRED_VARS=("DATABASE_URL" "SESSION_SECRET" "NEXT_PUBLIC_APP_URL" "NODE_ENV")
+          MISSING_VARS=()
+          for var in "${REQUIRED_VARS[@]}"; do
+            if ! grep -q "^${var}=" .env.example; then MISSING_VARS+=("$var"); fi
+          done
+          if [ ${#MISSING_VARS[@]} -gt 0 ]; then
+            echo "❌ Missing required variables in .env.example:"; printf '%s\n' "${MISSING_VARS[@]}"; exit 1
+          fi
+          echo "✅ All required environment variables present in .env.example"
+
+  database-setup-validation:
+    runs-on: ubuntu-latest
+    name: Validate Database Setup
+    services:
+      postgres:
+        image: postgres:15
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: testpassword
+          POSTGRES_DB: ewtcs_test
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+        ports: [5432:5432]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+      - run: npm ci
+      - name: Create test environment file
+        run: |
+          cat > .env.local << EOF
+          DATABASE_URL=postgresql://postgres:testpassword@localhost:5432/ewtcs_test
+          SESSION_SECRET=test-secret-key-minimum-32-characters-long-for-testing
+          NEXT_PUBLIC_APP_URL=http://localhost:3000
+          NODE_ENV=development
+          RED_ALERT_THRESHOLD_MS=10800000
+          EOF
+      - run: node scripts/validate-db-connection.js
+      - run: npm run db:migrate
+      - run: node scripts/validate-migrations.js
+      - run: node scripts/validate-db-schema.js
+      - name: Test database rollback
+        run: |
+          npm run db:rollback
+          npm run db:migrate
+
+  migration-validation:
+    runs-on: ubuntu-latest
+    name: Validate Migration Files
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Check for new or modified migrations
+        run: |
+          CHANGED_MIGRATIONS=$(git diff --name-only origin/${{ github.base_ref }}...HEAD | grep '^migrations/' || true)
+          if [ -z "$CHANGED_MIGRATIONS" ]; then echo "ℹ️  No migration files changed in this PR"; exit 0; fi
+          MODIFIED_MIGRATIONS=$(echo "$CHANGED_MIGRATIONS" | grep -v "$(git diff --name-only --diff-filter=A origin/${{ github.base_ref }}...HEAD | grep '^migrations/')" || true)
+          if [ -n "$MODIFIED_MIGRATIONS" ]; then
+            echo "❌ ERROR: Existing migration files were modified!"; echo "$MODIFIED_MIGRATIONS"; exit 1
+          fi
+      - name: Validate migration file naming
+        run: |
+          shopt -s nullglob
+          for file in migrations/*.sql migrations/*.js migrations/*.ts; do
+            if [ -f "$file" ] && ! [[ "$(basename "$file")" =~ ^[0-9] ]]; then
+              echo "❌ Invalid migration filename: $(basename "$file")"; exit 1
+            fi
+          done
+      - name: Check for migration conflicts
+        run: |
+          MIGRATION_FILES=$(ls migrations/*.sql migrations/*.js migrations/*.ts 2>/dev/null | xargs -n1 basename | sort)
+          PREFIXES=$(echo "$MIGRATION_FILES" | sed 's/_.*$//' | sort)
+          DUPLICATES=$(echo "$PREFIXES" | uniq -d)
+          if [ -n "$DUPLICATES" ]; then echo "❌ Duplicate migration numbers found:"; echo "$DUPLICATES"; exit 1; fi
+
+  build-validation:
+    runs-on: ubuntu-latest
+    name: Validate Build Process
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+      - run: npm ci
+      - name: Create minimal .env.local for build
+        run: |
+          cat > .env.local << EOF
+          DATABASE_URL=postgresql://postgres:password@localhost:5432/ewtcs
+          SESSION_SECRET=build-test-secret-key-minimum-32-characters-long
+          NEXT_PUBLIC_APP_URL=http://localhost:3000
+          NODE_ENV=production
+          EOF
+      - run: npx tsc --noEmit
+      - run: npm run build
+      - run: |
+          if [ ! -d ".next" ]; then echo "❌ Build output directory (.next) not found"; exit 1; fi
