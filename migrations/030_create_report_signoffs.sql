@@ -1,4 +1,4 @@
--- Migration 022: Create report_signoffs table
+-- Migration 030: Create report_signoffs table
 -- Epic 12: Audit Logs & Compliance
 -- US: Supervisor Sign-Off on Daily Reports
 --
@@ -53,3 +53,6 @@ COMMENT ON COLUMN report_signoffs.superseded_by IS
   'ID of the sign-off that replaced this record (NULL if still active).';
 
 COMMIT;
+
+-- Down Migration
+DROP TABLE IF EXISTS report_signoffs;
