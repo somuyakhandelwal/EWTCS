@@ -49,3 +49,38 @@ export interface ShiftComparisonReport {
   /** shiftId of the worst-performing shift */
   worstShiftId: string | null
 }
+
+// ---------------------------------------------------------------------------
+// Sign-Off Types (EPIC 12: Audit & Compliance)
+// ---------------------------------------------------------------------------
+
+/** Status of a single sign-off record (approved = active, superseded = replaced). */
+export type SignOffStatus = 'approved' | 'superseded'
+
+/**
+ * A supervisor sign-off record for a daily report.
+ * Maps 1:1 to a row in the `report_signoffs` table.
+ * Sign-offs are immutable — the `superseded_by` field links to newer records.
+ */
+export interface ReportSignOff {
+  id: string
+  /** ISO date string YYYY-MM-DD of the report being signed off */
+  reportDate: string
+  /** Report category, e.g. 'daily' */
+  reportType: string
+  status: SignOffStatus
+  signedOffBy: string
+  signedOffByUsername: string | null
+  signedOffAt: Date
+  notes: string | null
+  /** ID of the sign-off that superseded this record (null if still active) */
+  supersededBy: string | null
+  createdAt: Date
+}
+
+/** Standard result envelope for sign-off server actions. */
+export interface SignOffResult {
+  success: boolean
+  data?: ReportSignOff
+  error?: string
+}

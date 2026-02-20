@@ -1,8 +1,8 @@
 # EWTCS Project Status
 
 **Emergency Ward Bed Status Monitoring & AI Daily Report System**  
-**Last Updated:** February 20, 2026 (EPIC 12 Completed)  
-**Version:** 1.2 (Phase 1 + Phase 2 + Audit Compliance Complete)
+**Last Updated:** February 20, 2026 (US-12 Report Sign-Off Complete)  
+**Version:** 1.3 (Phase 1 + Phase 2 + Audit Compliance + Report Sign-Off Complete)
 
 ---
 
@@ -21,13 +21,22 @@ The core system is **fully operational** and **production-ready**. Phase 2 real-
 - [x] Audit logging for all critical actions (atomic transactions with user/action/timestamp/IP)
 - [x] User management system (create, update, activate/deactivate users)
 
-### Audit Logs & Compliance (EPIC 12) ✅ NEW
+### Audit Logs & Compliance (EPIC 12) ✅
 - [x] Auditor read-only role with full data access
 - [x] All action buttons disabled in audit mode
 - [x] Audit mode clearly indicated on screen
 - [x] Audit mode access logged (AUDIT_MODE_ACCESS)
 - [x] Write operation denial logged with audit trail
 - [x] Read-only stage history with filtering, sorting, pagination, and CSV export
+
+### Report Sign-Off (US-12) ✅ NEW
+- [x] Supervisor/admin sign-off on daily report with one click
+- [x] Inline confirmation panel with optional notes
+- [x] Sign-off permanently logged in `report_signoffs` table and audit trail
+- [x] Previous sign-offs superseded (immutable history — cannot be deleted)
+- [x] Approved status badge shown after sign-off (supervisor name + timestamp)
+- [x] Auditors can view sign-off status (read-only)
+- [x] Nurses see no sign-off button (RBAC enforced at server action level)
 
 ### Bed Management System (EPIC 1)
 - [x] Real-time bed status dashboard with grid layout
@@ -64,14 +73,14 @@ The core system is **fully operational** and **production-ready**. Phase 2 real-
 - [x] Correction system for logged transitions
 
 ### Infrastructure & DevOps
-- [x] PostgreSQL database with 12 migrations
+- [x] PostgreSQL database with 22 migrations
 - [x] Automated setup wizard (`npm run setup`)
 - [x] Environment variable validation
 - [x] Database seeding scripts
 - [x] Feature-first architecture
 - [x] TypeScript throughout
 - [x] ESLint code quality checks
-- [x] Vitest + Testing Library testing framework ← NEW
+- [x] Vitest v3 + Testing Library testing framework (365 tests, 23 suites)
 - [x] Admin pages for bed and stage management (US-6.1) ← NEW
 - [x] Stage color configuration (EPIC 4) ← NEW
 
@@ -79,14 +88,14 @@ The core system is **fully operational** and **production-ready**. Phase 2 real-
 
 ## 📊 System Statistics (Current)
 
-- **Database Tables:** 11 (users, beds, stages, bed_stage_logs, bed_stage_log_corrections, stage_transitions, disposition_delay_reasons, audit_logs, token_blacklist, ward_access_control, pgmigrations)
-- **Migrations Applied:** 15/15
+- **Database Tables:** 12 (users, beds, stages, bed_stage_logs, bed_stage_log_corrections, stage_transitions, disposition_delay_reasons, audit_logs, token_blacklist, ward_access_control, report_signoffs, pgmigrations)
+- **Migrations Applied:** 22/22
 - **Emergency Beds:** 12 configured (expandable to 50+)
 - **Workflow Stages:** 8 stages
 - **User Roles:** 4 (Admin, Supervisor, Nurse, Auditor)
 - **Test Users:** 4 (admin1, supervisor1, nurse, nurse1)
-- **Test Coverage:** 302 tests across 19 test files (100% passing)
-- **API Endpoints:** 15+ (authentication, bed management, analytics, user management, auditor)
+- **Test Coverage:** 365 tests across 23 test files (100% passing)
+- **API Endpoints:** 15+ (authentication, bed management, analytics, user management, auditor, sign-off)
 - **Application Routes:** 11 (/, /login, /dashboard, /admin, /admin/beds, /admin/stages, /analytics, /supervisor, /api/health, /api/auth/logout, middleware)
 
 ---
@@ -158,14 +167,12 @@ EWTCS/
 | Test Type | Status | Details |
 |-----------|--------|---------|
 | Manual Testing | ✅ Passed | All features tested manually |
-| Database Migrations | ✅ Passed | All 12 migrations applied successfully |
+| Database Migrations | ✅ Passed | All 22 migrations applied successfully |
+| Automated Tests | ✅ Passed | 365 tests across 23 suites (Vitest v3.2.4) |
 | TypeScript Compilation | ✅ Passed | No type errors |
 | ESLint Validation | ✅ Passed | Code quality checks pass |
 | Environment Validation | ✅ Passed | All required variables validated |
 | API Health Check | ✅ Passed | `/api/health` returns healthy |
-| Build Verification | ✅ Passed | Production build in 2.8s, 11 routes |
-
-**Note:** Automated testing suite (Vitest + Testing Library) is configured; unit and integration tests planned for Phase 2.
 
 ---
 

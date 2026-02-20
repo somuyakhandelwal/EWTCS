@@ -5,6 +5,7 @@ import { PatientCountView } from '@/features/management-report/components/Patien
 import { ShiftReportView } from '@/features/shift-management/components/ShiftReportView'
 import { ShiftComparisonView } from '@/features/shift-management/components/ShiftComparisonView'
 import { getShifts } from '@/features/shift-management/lib/shift-queries'
+import { getReportSignOff } from '@/features/management-report/actions/signoff-actions'
 import { verifyActiveSession } from '@/shared/lib/active-session'
 import { redirect } from 'next/navigation'
 import { Button } from '@/shared/components/ui/button'
@@ -59,6 +60,11 @@ export default async function AnalyticsPage() {
     // Non-blocking: components will render with an empty shift list gracefully
   }
 
+  // Fetch today's sign-off status for the PatientCountView (EPIC 12)
+  const today = new Date().toISOString().slice(0, 10)
+  const signOffResult = await getReportSignOff({ reportDate: today }).catch(() => null)
+  const todaySignOff = signOffResult?.data ?? null
+
   return (
     <div className="min-h-screen bg-black text-foreground p-8">
       <div className="max-w-7xl mx-auto space-y-8">
@@ -101,8 +107,13 @@ export default async function AnalyticsPage() {
 
         {/* ── Management Report Dashboard ───────────────────────────────── */}
 
-        {/* Total Patients Treated (US-10.1) */}
-        <PatientCountView shifts={activeShifts} readOnly={isAuditMode} />
+        {/* Total Patients Treated (US-10.1) + Sign-Off (EPIC 12) */}
+        <PatientCountView
+          shifts={activeShifts}
+          readOnly={isAuditMode}
+          reportDate={today}
+          initialSignOff={todaySignOff}
+        />
 
         {/* Shift Performance Report (US-8.3) */}
         {activeShifts.length > 0 && (
