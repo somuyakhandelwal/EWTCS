@@ -12,6 +12,7 @@ interface StageAnalyticsHeaderProps {
   description?: string
   onExportCSV?: () => Promise<void>
   exporting?: boolean
+  readOnly?: boolean
   className?: string
 }
 
@@ -20,6 +21,7 @@ export function StageAnalyticsHeader({
   description = 'Analyze patient flow through emergency ward stages',
   onExportCSV,
   exporting = false,
+  readOnly = false,
   className,
 }: StageAnalyticsHeaderProps) {
   return (
@@ -29,7 +31,7 @@ export function StageAnalyticsHeader({
         <p className="text-sm text-zinc-600 mt-1">{description}</p>
       </div>
       {onExportCSV && (
-        <Button onClick={onExportCSV} disabled={exporting} variant="outline" size="sm">
+        <Button onClick={onExportCSV} disabled={exporting || readOnly} variant="outline" size="sm">
           <Download className="h-4 w-4 mr-2" />
           {exporting ? 'Exporting...' : 'Export CSV'}
         </Button>

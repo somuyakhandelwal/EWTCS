@@ -11,7 +11,7 @@ import type { DelayAttributionStats } from '../lib/stage-analytics'
 
 /**
  * Fetch delay totals grouped by attribution category (Emergency Staff / Hospital Capacity).
- * Only supervisors and admins may access this data.
+ * Supervisors, admins, and auditors may access this data.
  *
  * @param options.thresholdMs - minimum ms to count as a delay (default 1 h)
  * @param options.startDate   - optional date range lower bound
@@ -27,7 +27,7 @@ export async function fetchDelayAttributionStats(options?: {
   error?: string
 }> {
   try {
-    const session = await requireRole(['supervisor', 'admin'])
+    const session = await requireRole(['supervisor', 'admin', 'auditor'])
 
     const rows = await getDelaysByAttribution(
       options?.thresholdMs,

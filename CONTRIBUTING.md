@@ -126,7 +126,7 @@ For detailed architecture information, see:
 
 ### File Size Limit
 
-- **Maximum 200 lines per file**
+- **Maximum 200 lines per file** (lock files excluded: `package-lock.json`, `yarn.lock`, `pnpm-lock.yaml`)
 - If a file grows beyond 200 lines, split it into smaller modules
 - Use clear file names that indicate purpose
 
@@ -248,7 +248,7 @@ If you discover a security vulnerability:
 
 1. **Functionality**: Does it work as intended?
 2. **Code quality**: Follows coding standards?
-3. **File size**: No file exceeds 200 lines?
+3. **File size**: No file exceeds 200 lines (except lock files: `package-lock.json`, `yarn.lock`, `pnpm-lock.yaml`)?
 4. **Tests**: Are there tests (if applicable)?
 5. **Documentation**: Is it documented?
 6. **No breaking changes**: Doesn't break existing features?
@@ -313,14 +313,14 @@ Understanding labels helps you find the right issues:
 - ❌ Don't work on unassigned issues
 - ❌ Don't submit PRs without linked issues
 - ❌ Don't ignore review feedback
-- ❌ Don't submit files over 200 lines
+- ❌ Don't submit files over 200 lines (except lock files: `package-lock.json`, `yarn.lock`, `pnpm-lock.yaml`)
 - ❌ Don't include unrelated changes in your PR
 - ❌ Don't copy code without attribution
 
 ## ✅ Checklist Before Submitting PR
 
 - [ ] Code follows style guidelines
-- [ ] No file exceeds 200 lines
+- [ ] No file exceeds 200 lines (except lock files: `package-lock.json`, `yarn.lock`, `pnpm-lock.yaml`)
 - [ ] Self-reviewed my code
 - [ ] Commented complex logic
 - [ ] Updated documentation

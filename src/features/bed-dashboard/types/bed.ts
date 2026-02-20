@@ -132,3 +132,22 @@ export interface TatSummary {
   totalCompleted: number
   averageCleaningMs: number | null
 }
+
+// Full-Cycle TAT types (US-3.4: Discharge → Next Admission)
+
+export interface FullCycleTatRecord {
+  bedId: string
+  bedNumber: string
+  previousDischargedAt: Date
+  admittedAt: Date
+  tatMs: number
+}
+
+export interface FullCycleTatSummary {
+  totalCycles: number
+  averageTatMs: number
+  medianTatMs: number | null
+  minTatMs: number | null
+  maxTatMs: number | null
+  p90TatMs: number | null
+}

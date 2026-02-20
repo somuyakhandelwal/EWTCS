@@ -22,6 +22,7 @@ interface StageAnalyticsWaitingBedsProps {
   beds: WaitingBed[] | null
   selectedBedId: string | null
   onSelectBed: (bedId: string) => void
+  readOnly?: boolean
 }
 
 export function StageAnalyticsWaitingBeds({

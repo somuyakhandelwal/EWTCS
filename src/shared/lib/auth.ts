@@ -1,5 +1,6 @@
 import 'server-only'
 import { verifyActiveSession } from '@/shared/lib/active-session'
+import { logAudit, type AuditAction } from '@/shared/lib/audit'
 
 /**
  * Generic role-based access control utilities
@@ -35,12 +36,65 @@ export async function requireRole(allowedRoles: string | string[]) {
     return session
 }
 
+type WriteGuardContext = {
+    actionType?: AuditAction
+    entityType?: string
+    entityId?: string
+}
+
+export function isReadOnlyRole(role: string) {
+    return role === 'auditor'
+}
+
+export async function requireWriteRole(
+    allowedRoles: string | string[],
+    context?: WriteGuardContext
+) {
+    const session = await verifyActiveSession()
+
+    if (!session) {
+        throw new Error('Unauthorized: Authentication required')
+    }
+
+    if (isReadOnlyRole(session.role)) {
+        try {
+            await logAudit({
+                actionType: context?.actionType || 'WRITE_DENIED_READ_ONLY',
+                entityType: context?.entityType || 'authorization',
+                entityId: context?.entityId || 'write-protected-resource',
+                performedBy: session.userId,
+                reason: 'Write operation denied in read-only audit mode',
+                metadata: {
+                    role: session.role,
+                    mode: 'read-only',
+                    allowedRoles: Array.isArray(allowedRoles) ? allowedRoles : [allowedRoles],
+                },
+            })
+        } catch {
+            // Deny must still proceed even if audit logging fails
+        }
+
+        throw new Error('Read-only mode: auditors cannot perform write actions')
+    }
+
+    const roles = Array.isArray(allowedRoles) ? allowedRoles : [allowedRoles]
+    if (!roles.includes(session.role)) {
+        throw new Error(`Unauthorized: Required role(s): ${roles.join(', ')}`)
+    }
+
+    return session
+}
+
 /**
  * Verify user has admin role
  * Convenience wrapper for requireRole('admin')
  */
 export async function requireAdmin() {
     return requireRole('admin')
+}
+
+export async function requireAdminWrite(context?: WriteGuardContext) {
+    return requireWriteRole('admin', context)
 }
 
 /**

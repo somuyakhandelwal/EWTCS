@@ -76,6 +76,8 @@ Version-controlled database schema changes managed by `node-pg-migrate`.
 ### Commands
 ```bash
 npm run db:migrate   # Apply pending migrations (uses single transaction)
+npm run db:reconcile # Reconcile legacy migration history naming/order drift
+npm run audit:verify # Verify audit_logs are immutable (UPDATE/DELETE blocked)
 npm run db:rollback  # Revert last migration
 npm run db:status    # Show applied and pending migrations
 npm run db:create    # Create new migration file (timestamped)
@@ -131,6 +133,26 @@ Response (200 if healthy, 503 if degraded/unhealthy):
 
 Use health endpoint for deployment readiness checks and monitoring.
 
+## Audit Logging & Compliance
+
+The system uses an immutable `audit_logs` table for compliance-critical events.
+
+### What is logged
+- Login and logout actions
+- Stage configuration changes (create, update, deactivate, reorder)
+- User and bed actions already instrumented through shared audit utilities
+
+### Required audit fields
+- `performed_by_user_id` (user ID)
+- `action_type` (action name)
+- `created_at` (timestamp)
+- `ip_address` (client IP captured from request headers)
+
+### Immutability guarantees
+- Audit logs are append-only
+- Database trigger blocks `UPDATE` and `DELETE` on `audit_logs`
+- Corrections should be recorded as new audit events, not in-place edits
+
 ## Security Best Practices
 
 - Never commit credentials to git; use `.env.local` (in `.gitignore`)
@@ -149,4 +171,4 @@ Use health endpoint for deployment readiness checks and monitoring.
 | `ENCRYPTION_KEY is required` | Set ENCRYPTION_KEY when using DATABASE_URL_ENCRYPTED |
 | `Database connectivity test failed` | Verify Postgres is running on host:port and DATABASE_URL is valid |
 
-Last Updated: 2026-02-15
+Last Updated: 2026-02-19

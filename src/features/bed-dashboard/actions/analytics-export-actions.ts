@@ -39,7 +39,7 @@ function transitionToRow(t: StageTransitionRecord): string[] {
 
 /**
  * Export stage transitions as CSV for external analysis.
- * Supervisors and admins only.
+ * Supervisors, admins, and auditors only.
  */
 export async function exportStageTransitionsAsCSV(options?: {
   startDate?: Date
@@ -52,7 +52,7 @@ export async function exportStageTransitionsAsCSV(options?: {
   error?: string
 }> {
   try {
-    const session = await requireRole(['supervisor', 'admin'])
+    const session = await requireRole(['supervisor', 'admin', 'auditor'])
 
     const transitions = await getStageTransitions(
       options?.startDate,

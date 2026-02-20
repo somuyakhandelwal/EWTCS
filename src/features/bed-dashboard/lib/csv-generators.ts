@@ -45,3 +45,45 @@ export function generateTransitionCSV(
   const csvRows = [headers, ...rows].map((row) => row.map((cell) => `"${cell}"`).join(','))
   return csvRows.join('\n')
 }
+
+export function generateAuditorHistoryCSV(
+  rows: Array<{
+    id: string
+    bedNumber: string
+    fromStageName: string | null
+    toStageName: string
+    transitionTime: Date | string
+    changedByUserId: string
+    changedByUsername: string
+    durationInPreviousStageMs: number | null
+    notes: string | null
+  }>
+): string {
+  const headers = [
+    'ID',
+    'Bed Number',
+    'From Stage',
+    'To Stage',
+    'Transition Time',
+    'Changed By User ID',
+    'Changed By Username',
+    'Duration in Previous Stage (ms)',
+    'Notes',
+  ]
+
+  const csvRows = rows.map((row) => [
+    row.id,
+    row.bedNumber,
+    row.fromStageName ?? 'N/A',
+    row.toStageName,
+    row.transitionTime instanceof Date ? row.transitionTime.toISOString() : row.transitionTime,
+    row.changedByUserId,
+    row.changedByUsername,
+    row.durationInPreviousStageMs?.toString() ?? 'N/A',
+    row.notes ?? '',
+  ])
+
+  return [headers, ...csvRows]
+    .map((line) => line.map((cell) => `"${cell}"`).join(','))
+    .join('\n')
+}

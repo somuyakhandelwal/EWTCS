@@ -115,6 +115,7 @@ export default function CreateUserDialog({ wards = [] }: { wards?: Ward[] }) {
                             <option value="nurse">Nurse</option>
                             <option value="supervisor">Supervisor</option>
                             <option value="admin">Admin</option>
+                            <option value="auditor">Auditor</option>
                         </select>
                         {state?.errors?.role && (
                             <p className="text-sm text-red-500">{state.errors.role}</p>

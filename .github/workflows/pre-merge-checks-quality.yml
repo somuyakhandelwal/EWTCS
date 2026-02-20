@@ -1,0 +1,85 @@
+name: Pre-Merge Checks Quality
+
+on:
+  workflow_call:
+
+jobs:
+  dependency-validation:
+    runs-on: ubuntu-latest
+    name: Validate Dependencies
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+      - name: Validate package lock sync
+        run: |
+          npm ci
+          if git diff --exit-code package-lock.json; then
+            echo "✅ package-lock.json is in sync with package.json"
+          else
+            echo "❌ package-lock.json is out of sync with package.json"; exit 1
+          fi
+      - name: Check production dependency vulnerabilities
+        run: |
+          npm audit --audit-level=high --omit=dev || {
+            echo "⚠️  High or critical vulnerabilities found in production dependencies"; exit 1
+          }
+
+  documentation-validation:
+    runs-on: ubuntu-latest
+    name: Validate Documentation
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Check if DB changes require docs updates
+        run: |
+          DB_CHANGES=$(git diff --name-only origin/${{ github.base_ref }}...HEAD | grep -E '^(migrations/|src/db/)' || true)
+          if [ -n "$DB_CHANGES" ]; then
+            DOC_CHANGES=$(git diff --name-only origin/${{ github.base_ref }}...HEAD | grep -E '^(DATABASE_SETUP.md|README.md|CONFIGURATION.md)' || true)
+            if [ -z "$DOC_CHANGES" ]; then
+              echo "⚠️  WARNING: Database files changed but no documentation updates found"
+            else
+              echo "✅ Documentation files also updated"
+            fi
+          else
+            echo "ℹ️  No database changes detected"
+          fi
+      - name: Validate README has setup instructions
+        run: |
+          if ! grep -q "## Setup" README.md && ! grep -q "## Getting Started" README.md; then
+            echo "⚠️  README.md should contain setup instructions"
+          else
+            echo "✅ README.md contains setup instructions"
+          fi
+
+  pr-checklist-validation:
+    runs-on: ubuntu-latest
+    name: Validate PR Checklist
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/github-script@v7
+        with:
+          script: |
+            const pr = context.payload.pull_request;
+            const body = pr.body || '';
+            const requiredChecks = [
+              'No file exceeds 200 lines (except lock files: package-lock.json, yarn.lock, pnpm-lock.yaml)',
+              'Code is properly formatted',
+              'Tested locally and works as expected',
+              'Database migrations tested',
+              'Environment variables documented'
+            ];
+            const missingChecks = [];
+            for (const check of requiredChecks) {
+              if (!body.includes(check)) missingChecks.push(check);
+            }
+            if (missingChecks.length > 0) {
+              core.warning('PR description is missing some checklist items. Please ensure all items are addressed.');
+              console.log('Missing checklist items:');
+              missingChecks.forEach(item => console.log(`- ${item}`));
+            } else {
+              console.log('✅ All required checklist items present in PR description');
+            }

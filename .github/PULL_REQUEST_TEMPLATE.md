@@ -17,7 +17,7 @@ Closes #
 <!-- Ensure all items are checked before requesting review -->
 
 ### Code Quality
-- [ ] No file exceeds 200 lines
+- [ ] No file exceeds 200 lines (except lock files: package-lock.json, yarn.lock, pnpm-lock.yaml)
 - [ ] Code is properly formatted
 - [ ] TypeScript types are properly defined
 - [ ] No ESLint errors or warnings
