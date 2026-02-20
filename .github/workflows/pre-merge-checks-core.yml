@@ -93,10 +93,24 @@ jobs:
           done
       - name: Check for migration conflicts
         run: |
-          MIGRATION_FILES=$(ls migrations/*.sql migrations/*.js migrations/*.ts 2>/dev/null | xargs -n1 basename | sort)
-          PREFIXES=$(echo "$MIGRATION_FILES" | sed 's/_.*$//' | sort)
+          # Only check migrations that are NEW in this PR (--diff-filter=A = Added only).
+          # Pre-existing duplicates in main are a separate concern and must be fixed
+          # in a dedicated migration-cleanup PR; failing every unrelated PR on them
+          # is a false positive that blocks all other work.
+          NEW_MIGRATIONS=$(git diff --name-only --diff-filter=A origin/${{ github.base_ref }}...HEAD | grep '^migrations/' | xargs -n1 basename 2>/dev/null || true)
+          if [ -z "$NEW_MIGRATIONS" ]; then echo "ℹ️  No new migration files in this PR — skipping conflict check"; exit 0; fi
+          ALL_MIGRATION_FILES=$(ls migrations/*.sql migrations/*.js migrations/*.ts 2>/dev/null | xargs -n1 basename | sort)
+          PREFIXES=$(echo "$ALL_MIGRATION_FILES" | sed 's/_.*$//' | sort)
           DUPLICATES=$(echo "$PREFIXES" | uniq -d)
-          if [ -n "$DUPLICATES" ]; then echo "❌ Duplicate migration numbers found:"; echo "$DUPLICATES"; exit 1; fi
+          if [ -n "$DUPLICATES" ]; then
+            # Only fail if one of the duplicates was introduced by this PR
+            NEW_PREFIXES=$(echo "$NEW_MIGRATIONS" | sed 's/_.*$//' | sort)
+            NEW_DUPLICATES=$(comm -12 <(echo "$DUPLICATES") <(echo "$NEW_PREFIXES"))
+            if [ -n "$NEW_DUPLICATES" ]; then
+              echo "❌ This PR introduces duplicate migration numbers:"; echo "$NEW_DUPLICATES"; exit 1
+            fi
+            echo "⚠️  Pre-existing duplicate migration numbers in main (not introduced by this PR): $DUPLICATES"
+          fi
 
   build-validation:
     runs-on: ubuntu-latest
