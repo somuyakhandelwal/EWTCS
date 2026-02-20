@@ -11,6 +11,8 @@ import { Button } from '@/shared/components/ui/button'
 import { cn } from '@/shared/lib/utils'
 import { RetentionConfigForm } from './RetentionConfigForm'
 import { ArchivalRunsTable } from './ArchivalRunsTable'
+import { ArchiveSearchView } from './ArchiveSearchView'
+import { StorageStatsView } from './StorageStatsView'
 import { triggerArchival, fetchArchivalRuns } from '../actions/archival-actions'
 import type { ArchivalRun, RetentionConfig } from '../lib/data-retention-types'
 
@@ -110,6 +112,12 @@ export function DataRetentionView({
           <ArchivalRunsTable runs={runs} onApproved={handleRefresh} />
         </CardContent>
       </Card>
+
+      {/* ── Storage monitoring (US-14.4) ── */}
+      <StorageStatsView />
+
+      {/* ── Archive search (US-14.3) — admin + auditor ── */}
+      <ArchiveSearchView />
     </div>
   )
 }
