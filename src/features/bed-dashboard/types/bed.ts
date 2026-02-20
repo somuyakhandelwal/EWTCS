@@ -76,8 +76,7 @@ export interface BedStageLog {
 export interface BedGridData {
   beds: BedWithElapsedTime[]
   stages: Stage[]
-  delayThresholds: Record<string, number>; // stageId -> threshold in ms
-  delayThresholdMs: number; // Global default threshold in ms
+  delayThresholdMs: number
   bottleneckCount: number  // US-1.6: count of active disposition bottlenecks
 }
 
@@ -109,4 +108,25 @@ export interface DischargeState {
   /** Total elapsed ms for the current patient — displayed in the modal */
   elapsedTimeMs: number | null
   patientStartTime: Date | null
+}
+
+// Turnaround Time (TAT) tracking types (US-2.4)
+
+export interface TatRecord {
+  bedId: string
+  bedNumber: string
+  dischargeStartTime: Date
+  cleaningStartTime: Date | null
+  cleaningEndTime: Date | null
+  tatMs: number
+  cleaningDurationMs: number | null
+}
+
+export interface TatSummary {
+  averageTatMs: number
+  medianTatMs: number | null
+  maxTatMs: number | null
+  minTatMs: number | null
+  totalCompleted: number
+  averageCleaningMs: number | null
 }

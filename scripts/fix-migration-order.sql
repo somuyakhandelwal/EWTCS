@@ -22,9 +22,9 @@ BEGIN
     INSERT INTO pgmigrations (id, name, run_on)
     VALUES 
         (6, '006_add_ward_access_control', base_timestamp),
-        (7, '007_create_bed_stage_log_corrections', base_timestamp),
+        (7, '007_token_blacklist', base_timestamp),
         (8, '008_add_bed_stage_log_immutability', base_timestamp),
-        (9, '009_token_blacklist', base_timestamp);
+        (9, '009_create_bed_stage_log_corrections', base_timestamp);
 END $$;
 
 -- Verify the changes

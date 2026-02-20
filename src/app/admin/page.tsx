@@ -1,8 +1,9 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/shared/components/ui/card"
-import { Shield, Users, Settings, Activity, Bed } from "lucide-react"
+import { Shield, Users, Settings, Activity, Bed, BarChart3 } from "lucide-react"
 import { LogoutButton } from "@/features/auth/components/LogoutButton"
 import { redirect } from "next/navigation"
 import Link from "next/link"
+import { AdminRecentActivity } from './AdminRecentActivity'
 
 import { verifyActiveSession } from "@/shared/lib/active-session"
 import { getAllUsers, getUserLogs } from "@/features/user-management/actions/user-management-actions"
@@ -91,9 +92,7 @@ export default async function AdminDashboard() {
                 <Card className="bg-zinc-900 border-zinc-800">
                     <CardHeader>
                         <CardTitle className="text-xl text-white">Quick Actions</CardTitle>
-                        <p className="text-sm text-zinc-400 mt-1">
-                            Manage system resources
-                        </p>
+                        <p className="text-sm text-zinc-400 mt-1">Manage system resources</p>
                     </CardHeader>
                     <CardContent>
                         <div className="grid gap-4 md:grid-cols-2">
@@ -111,6 +110,24 @@ export default async function AdminDashboard() {
                                         </h3>
                                         <p className="text-sm text-zinc-500 mt-1">
                                             Add, edit, and manage hospital beds
+                                        </p>
+                                    </div>
+                                </div>
+                            </Link>
+                            <Link
+                                href="/analytics"
+                                className="p-4 rounded-lg bg-black/30 border border-zinc-800 hover:border-zinc-700 hover:bg-black/50 transition-all group"
+                            >
+                                <div className="flex items-start gap-3">
+                                    <div className="p-2 bg-emerald-900/20 border border-emerald-900/50 rounded-lg group-hover:bg-emerald-900/30 transition-colors">
+                                        <BarChart3 className="h-5 w-5 text-emerald-500" />
+                                    </div>
+                                    <div>
+                                        <h3 className="font-semibold text-white group-hover:text-emerald-400 transition-colors">
+                                            Ward Analytics
+                                        </h3>
+                                        <p className="text-sm text-zinc-500 mt-1">
+                                            Stage flow and turnaround time analytics
                                         </p>
                                     </div>
                                 </div>
@@ -141,49 +158,7 @@ export default async function AdminDashboard() {
                 <KioskSessionsPanel />
 
                 {/* Recent Activity Log */}
-                <Card className="bg-zinc-900 border-zinc-800">
-                    <CardHeader>
-                        <CardTitle className="text-xl text-white">Recent Activity</CardTitle>
-                        <p className="text-sm text-zinc-400 mt-1">
-                            Latest user management actions
-                        </p>
-                    </CardHeader>
-                    <CardContent>
-                        {recentLogs.length > 0 ? (
-                            <div className="space-y-2">
-                                {recentLogs.map((log) => (
-                                    <div
-                                        key={log.id}
-                                        className="flex items-center justify-between p-3 rounded-lg bg-black/30 border border-zinc-800"
-                                    >
-                                        <div className="flex items-center gap-3">
-                                            <div className={`h-2 w-2 rounded-full ${log.action_type === 'CREATE' ? 'bg-green-500' :
-                                                log.action_type === 'UPDATE' ? 'bg-blue-500' :
-                                                    log.action_type === 'DEACTIVATE' ? 'bg-red-500' :
-                                                        'bg-yellow-500'
-                                                }`} />
-                                            <div>
-                                                <p className="text-sm text-white">
-                                                    <span className="font-medium">{log.performed_by_username || 'System'}</span>
-                                                    {' '}{log.action_type.toLowerCase()}d{' '}
-                                                    <span className="font-medium">{log.target_username || 'entity'}</span>
-                                                </p>
-                                                <p className="text-xs text-zinc-500">
-                                                    {new Date(log.created_at).toLocaleString('en-US', { year: 'numeric', month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })}
-                                                </p>
-                                            </div>
-                                        </div>
-                                        <span className="text-xs text-zinc-500 uppercase">
-                                            {log.action_type}
-                                        </span>
-                                    </div>
-                                ))}
-                            </div>
-                        ) : (
-                            <p className="text-zinc-500 text-center py-8">No recent activity</p>
-                        )}
-                    </CardContent>
-                </Card>
+                <AdminRecentActivity recentLogs={recentLogs} />
             </div>
         </div>
     )

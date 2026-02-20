@@ -8,7 +8,6 @@ export interface Stage {
   is_active: boolean;
   created_at: string;
   updated_at: string;
-  delay_threshold_minutes?: number; // Optional: for UI convenience
 }
 
 export interface CreateStageInput {
@@ -22,5 +21,4 @@ export interface UpdateStageInput {
   name?: string;
   color_code?: string;
   description?: string;
-  delay_threshold_minutes?: number; // Optional: for update
 }

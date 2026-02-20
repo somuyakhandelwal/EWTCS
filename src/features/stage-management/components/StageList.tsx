@@ -27,14 +27,6 @@ export function StageList({ initialStages }: { initialStages: Stage[] }) {
     await reorderStages(next.map(s => s.id));
   };
 
-  const formatThreshold = (minutes: number) => {
-    const h = Math.floor(minutes / 60);
-    const m = minutes % 60;
-    if (h === 0) return `${m}m`;
-    if (m === 0) return `${h}h`;
-    return `${h}h ${m}m`;
-  };
-
   return (
     <div className='space-y-3'>
       <button
@@ -52,9 +44,6 @@ export function StageList({ initialStages }: { initialStages: Stage[] }) {
             <div className='flex items-center gap-3'>
               <span className='text-lg font-bold text-zinc-200'>{i + 1}</span>
               <span className={`font-semibold text-base ${colorClasses.text}`}>{stage.name}</span>
-              <span className='ml-2 text-xs text-zinc-200 bg-blue-900/60 px-2 py-0.5 rounded-full border border-blue-700'>
-                Delay: {formatThreshold(stage.delay_threshold_minutes ?? 180)}
-              </span>
               {stage.is_default && (
                 <span className='text-xs bg-zinc-900/60 px-2 py-0.5 rounded-full text-zinc-200 border border-zinc-700'>
                   Default
@@ -62,32 +51,32 @@ export function StageList({ initialStages }: { initialStages: Stage[] }) {
               )}
             </div>
 
-            <div className='flex gap-2'>
+          <div className='flex gap-2'>
+            <button
+              onClick={() => move(i, 'up')}
+              disabled={i === 0}
+              className='px-3 py-1 bg-white border border-gray-400 rounded text-gray-700 font-bold disabled:opacity-30 hover:bg-gray-100'>
+              ↑
+            </button>
+            <button
+              onClick={() => move(i, 'down')}
+              disabled={i === stages.length - 1}
+              className='px-3 py-1 bg-white border border-gray-400 rounded text-gray-700 font-bold disabled:opacity-30 hover:bg-gray-100'>
+              ↓
+            </button>
+            <button
+              onClick={() => setEditing(stage)}
+              className='px-3 py-1 bg-white border border-gray-400 rounded text-gray-800 font-medium text-sm hover:bg-gray-100'>
+              Edit
+            </button>
+            {!stage.is_default && (
               <button
-                onClick={() => move(i, 'up')}
-                disabled={i === 0}
-                className='px-3 py-1 bg-white border border-gray-400 rounded text-gray-700 font-bold disabled:opacity-30 hover:bg-gray-100'>
-                ↑
+                onClick={() => handleDelete(stage.id)}
+                className='px-3 py-1 bg-red-500 border border-red-600 rounded text-white font-medium text-sm hover:bg-red-600'>
+                Delete
               </button>
-              <button
-                onClick={() => move(i, 'down')}
-                disabled={i === stages.length - 1}
-                className='px-3 py-1 bg-white border border-gray-400 rounded text-gray-700 font-bold disabled:opacity-30 hover:bg-gray-100'>
-                ↓
-              </button>
-              <button
-                onClick={() => setEditing(stage)}
-                className='px-3 py-1 bg-white border border-gray-400 rounded text-gray-800 font-medium text-sm hover:bg-gray-100'>
-                Edit
-              </button>
-              {!stage.is_default && (
-                <button
-                  onClick={() => handleDelete(stage.id)}
-                  className='px-3 py-1 bg-red-500 border border-red-600 rounded text-white font-medium text-sm hover:bg-red-600'>
-                  Delete
-                </button>
-              )}
-            </div>
+            )}
+          </div>
           </div>
         );
       })}

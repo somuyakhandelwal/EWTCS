@@ -5,22 +5,20 @@ import { memo, type MouseEvent } from 'react'
 import { Card, CardContent } from '@/shared/components/ui/card'
 import { Clock, AlertTriangle, Hourglass } from 'lucide-react'
 import type { BedWithElapsedTime, DispositionDelayReason } from '../types/bed'
-import { DISPOSITION_DELAY_REASON_LABELS } from '../types/bed'
-import { formatElapsedTime, getStageColorClasses, getDelayColorClasses } from '../lib/utils'
+import { getStageColorClasses, getDelayColorClasses } from '../lib/utils'
 import { useElapsedTime } from '../hooks/useElapsedTime'
+import { CleaningActions, isCleaningStage } from './CleaningActions'
+import { BedBottleneckInfo } from './BedBottleneckInfo'
 import { cn } from '@/shared/lib/utils'
 import { highlightMatch } from '../lib/highlight-match'
-
-const REASON_OPTIONS = Object.entries(DISPOSITION_DELAY_REASON_LABELS) as [
-  DispositionDelayReason,
-  string,
-][]
 
 interface BedCardProps {
   bed: BedWithElapsedTime
   onClick?: (bed: BedWithElapsedTime) => void
   onContextMenu?: (event: MouseEvent<HTMLDivElement>, bed: BedWithElapsedTime) => void
   onReasonSelect?: (bedId: string, reason: DispositionDelayReason) => void
+  onMarkClean?: (bedId: string) => void
+  isMarkCleanUpdating?: boolean
   showUpdated?: boolean
   errorMessage?: string | null
   searchQuery?: string
@@ -34,6 +32,8 @@ export const BedCard = memo(function BedCard({
   onClick,
   onContextMenu,
   onReasonSelect,
+  onMarkClean,
+  isMarkCleanUpdating = false,
   showUpdated = false,
   errorMessage = null,
   searchQuery = '',
@@ -48,6 +48,7 @@ export const BedCard = memo(function BedCard({
   const isOccupied = bed.isOccupied
   const isDelayed = bed.isDelayed
   const isBottleneck = bed.isDispositionBottleneck
+  const isCleaning = isCleaningStage(bed.currentStage?.name)
 
   return (
     <Card
@@ -120,42 +121,14 @@ export const BedCard = memo(function BedCard({
             </div>
           )}
 
-          {/* US-1.6: Disposition bottleneck badge */}
+          {/* US-1.6 / US-1.7: Bottleneck badge + reason selector */}
           {isBottleneck && (
-            <div className="mt-1 flex items-center gap-1 rounded bg-amber-900/40 border border-amber-700/50 px-2 py-0.5">
-              <Hourglass className="h-3 w-3 text-amber-400 shrink-0" />
-              <span className="text-[10px] font-semibold text-amber-300">
-                Disposition Hold · {formatElapsedTime(bed.dispositionElapsedMs)}
-              </span>
-            </div>
-          )}
-
-          {/* US-1.7: Inline reason selector when bottleneck and handler provided */}
-          {isBottleneck && onReasonSelect && (
-            <select
-              className={cn(
-                'mt-1 w-full rounded border border-amber-700/50 bg-zinc-900 px-1.5 py-1 text-[10px] text-zinc-200',
-                'focus:outline-none focus:ring-1 focus:ring-amber-500'
-              )}
-              value={bed.dispositionDelayReason ?? ''}
-              onClick={e => e.stopPropagation()}
-              onChange={e => {
-                e.stopPropagation()
-                onReasonSelect(bed.id, e.target.value as DispositionDelayReason)
-              }}
-            >
-              <option value="" disabled>Select reason…</option>
-              {REASON_OPTIONS.map(([value, label]) => (
-                <option key={value} value={value}>{label}</option>
-              ))}
-            </select>
-          )}
-
-          {/* US-1.6: Show recorded reason label when no handler (read-only) */}
-          {isBottleneck && !onReasonSelect && bed.dispositionDelayReason && (
-            <p className="text-[10px] text-amber-400/80">
-              {DISPOSITION_DELAY_REASON_LABELS[bed.dispositionDelayReason]}
-            </p>
+            <BedBottleneckInfo
+              bedId={bed.id}
+              dispositionElapsedMs={bed.dispositionElapsedMs}
+              dispositionDelayReason={bed.dispositionDelayReason}
+              onReasonSelect={onReasonSelect}
+            />
           )}
         </div>
 
@@ -175,8 +148,18 @@ export const BedCard = memo(function BedCard({
           </div>
         )}
 
+        {/* US-2.4: Cleaning actions */}
+        {isCleaning && onMarkClean && (
+          <CleaningActions
+            bedId={bed.id}
+            lastStageChange={bed.lastStageChange}
+            onMarkClean={onMarkClean}
+            isUpdating={isMarkCleanUpdating}
+          />
+        )}
+
         {/* Empty bed status */}
-        {!isOccupied && (
+        {!isOccupied && !isCleaning && (
           <div className="pt-2 border-t border-zinc-700/50">
             <p className="text-xs text-zinc-500">Status</p>
             <p className="text-sm font-medium text-zinc-400">Available</p>
