@@ -7,6 +7,7 @@ import bcrypt from 'bcrypt'
 import { redirect } from 'next/navigation'
 import { headers } from 'next/headers'
 import { createKioskSession } from '@/features/auth/lib/kiosk'
+import { logger } from '@/shared/config/logger'
 
 const loginSchema = z.object({
     username: z.string().min(1, 'Username is required'),
@@ -100,7 +101,7 @@ export async function login(prevState: unknown, formData: FormData) {
         if (error && typeof error === 'object' && 'digest' in error && typeof error.digest === 'string' && error.digest.startsWith('NEXT_REDIRECT')) {
             throw error
         }
-        console.error('Login error:', error)
+        logger.error('Login error', error instanceof Error ? error : undefined)
         return { message: 'Internal server error' }
     }
 }

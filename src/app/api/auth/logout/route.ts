@@ -3,6 +3,7 @@ import { cookies } from 'next/headers'
 import { deleteSession, verifySession } from '@/shared/lib/session'
 import { invalidateToken } from '@/shared/lib/auth-service'
 import { logAudit } from '@/shared/lib/audit'
+import { logger } from '@/shared/config/logger'
 
 export async function POST() {
     try {
@@ -37,7 +38,7 @@ export async function POST() {
 
         return NextResponse.json({ success: true })
     } catch (error) {
-        console.error('Logout failed:', error)
+        logger.error('Logout failed', error instanceof Error ? error : undefined)
         // Always return success to ensure client cleans up
         return NextResponse.json({ success: true })
     }

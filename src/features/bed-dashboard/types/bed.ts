@@ -46,6 +46,7 @@ export interface Bed {
   lastStageChange: Date | null
   isOccupied: boolean
   isActive: boolean
+  isTemporary: boolean  // US-6.5: present on all bed rows — false for permanent beds
   metadata: Record<string, unknown>
   createdAt: Date
   updatedAt: Date
