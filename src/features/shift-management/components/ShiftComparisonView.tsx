@@ -13,7 +13,7 @@ import { fetchShiftComparison } from '../actions/shift-analytics-actions'
 import { rowsToCsv, downloadCsv } from '../lib/shift-comparison-csv'
 import { ShiftComparisonTable } from './ShiftComparisonTable'
 import { cn } from '@/shared/lib/utils'
-import type { ShiftComparisonReport } from '@/features/management-report/types/report.types'
+import type { ShiftComparisonReport } from '@/shared/types/report.types'
 
 const PRESET_HOURS = [
   { label: '24h', hours: 24 },

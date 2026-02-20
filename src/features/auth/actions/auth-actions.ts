@@ -1,7 +1,7 @@
 'use server'
 
-import { z } from 'zod'
-import { createSession, deleteSession, type KioskOptions } from '@/shared/lib/session'
+import { createSession, type KioskOptions } from '@/shared/lib/session'
+import { UNKNOWN_ACTOR_ID, loginSchema } from '../lib/auth-schema'
 import pool from '@/shared/lib/db'
 import bcrypt from 'bcrypt'
 import { redirect } from 'next/navigation'
@@ -11,13 +11,6 @@ import { createKioskSession } from '@/features/auth/lib/kiosk'
 import { getClientIpFromHeaders } from '@/shared/lib/request-ip'
 import { logger } from '@/shared/config/logger'
 import { getPasswordResetStatus } from '@/features/auth/lib/password-reset-db'
-
-const UNKNOWN_ACTOR_ID = '00000000-0000-0000-0000-000000000000'
-
-const loginSchema = z.object({
-    username: z.string().min(1, 'Username is required'),
-    password: z.string().min(1, 'Password is required'),
-})
 
 export async function login(prevState: unknown, formData: FormData) {
     // Validate form fields
@@ -39,17 +32,24 @@ export async function login(prevState: unknown, formData: FormData) {
         const user = rows[0]
 
         if (!user) {
-            await logAudit({
-                actionType: 'LOGIN_FAILED',
-                entityType: 'auth',
-                entityId: UNKNOWN_ACTOR_ID,
-                performedBy: UNKNOWN_ACTOR_ID,
-                reason: 'Login failed: user not found',
-                metadata: {
-                    username,
-                },
-                ipAddress,
-            })
+            // Wrap in try/catch: UNKNOWN_ACTOR_ID has no FK-matching row in users,
+            // so the INSERT can fail. We must NOT let audit failures expose "Internal
+            // server error" to the client — log the failure and return the safe message.
+            try {
+                await logAudit({
+                    actionType: 'LOGIN_FAILED',
+                    entityType: 'auth',
+                    entityId: UNKNOWN_ACTOR_ID,
+                    performedBy: UNKNOWN_ACTOR_ID,
+                    reason: 'Login failed: user not found',
+                    metadata: {
+                        username,
+                    },
+                    ipAddress,
+                })
+            } catch (auditErr) {
+                logger.warn('Could not write audit log for unknown-user login attempt', { username })
+            }
 
             // Don't reveal user existence
             return { message: 'Invalid credentials' }
@@ -201,9 +201,4 @@ export async function login(prevState: unknown, formData: FormData) {
         logger.error('Login error', error instanceof Error ? error : undefined)
         return { message: 'Internal server error' }
     }
-}
-
-export async function logout() {
-    await deleteSession()
-    redirect('/login')
 }

@@ -67,6 +67,7 @@ Use these default credentials:
 | Admin | `admin1` | `Nurse@123` |
 | Supervisor | `supervisor1` | `Nurse@123` |
 | Nurse | `nurse` or `nurse1` | `Nurse@123` |
+| Auditor | `auditor1` | `Nurse@123` |
 
 ---
 
@@ -110,6 +111,7 @@ After setup, your system has:
 
 ### For Supervisors
 - Access analytics at `/analytics`
+- Sign off daily reports (approved badge is permanently recorded)
 - View stage duration statistics
 - Export data to CSV
 
@@ -134,6 +136,11 @@ npm run dev              # Start development server
 npm run build            # Build for production
 npm run start            # Start production server
 npm run lint             # Run code linting
+
+# Testing
+npm test                 # Run full test suite (365 tests)
+npm run test:watch       # Run tests in watch mode
+npm run test:coverage    # Run tests with coverage report
 
 # Database
 npm run db:migrate       # Apply migrations

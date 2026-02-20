@@ -1,110 +1,18 @@
 'use client';
-import { useCallback, useEffect, useRef, useState } from 'react';
 import type { Stage } from '../types/stage.types';
-import { createStage, updateStage } from '../actions/stage-actions';
 import { getStageColorClasses, getSupportedStageColors } from '@/shared/utils/stage-colors';
-import { isTransientError, retryAsync } from '@/shared/lib/retry';
+import { useStageFormLogic } from '../hooks/useStageFormLogic';
 
 const COLORS = getSupportedStageColors();
-const AUTOSAVE_DEBOUNCE_MS = 500;
-const AUTOSAVE_RETRIES = 2;
-const normalizeStageColor = (value?: string) =>
-  value?.toLowerCase() === 'grey' ? 'gray' : value;
 
 export function StageFormModal({ stage, onClose, onSaved }:
   { stage?: Stage; onClose: () => void; onSaved: (s: Stage) => void }) {
-  const [name, setName] = useState(stage?.name ?? '');
-  const [color, setColor] = useState(normalizeStageColor(stage?.color_code) ?? 'blue');
-  const [desc, setDesc] = useState(stage?.description ?? '');
-  const stageThresholdMins = stage?.threshold_minutes ?? null;
-  const [thresholdHours, setThresholdHours] = useState(
-    stageThresholdMins ? Math.floor(stageThresholdMins / 60) : ''
-  );
-  const [thresholdMins, setThresholdMins] = useState(
-    stageThresholdMins ? stageThresholdMins % 60 : ''
-  );
-  const [error, setError] = useState('');
-  const [loading, setLoading] = useState(false);
-  const [saveState, setSaveState] = useState<'idle' | 'saving' | 'retrying' | 'saved' | 'failed'>('idle');
-  const isInitialized = useRef(false);
-  const savedTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const {
+    name, setName, color, setColor, desc, setDesc,
+    thresholdHours, setThresholdHours, thresholdMins, setThresholdMins,
+    error, loading, saveState, restoredNotice, saveStage,
+  } = useStageFormLogic({ stage, onSaved });
 
-  const validateInput = useCallback(() => {
-    if (!name.trim()) return 'Stage name is required';
-    if (name.length > 50) return 'Name must be max 50 characters';
-    const thH = Number(thresholdHours);
-    const thM = Number(thresholdMins);
-    const hasThreshold = thresholdHours !== '' || thresholdMins !== '';
-    const totalThresholdMins = hasThreshold ? thH * 60 + thM : null;
-    if (hasThreshold && (totalThresholdMins ?? 0) < 30) return 'Stage threshold must be at least 30 minutes';
-    return null;
-  }, [name, thresholdHours, thresholdMins]);
-
-  const getThresholdMinutes = useCallback(() => {
-    const thH = Number(thresholdHours);
-    const thM = Number(thresholdMins);
-    const hasThreshold = thresholdHours !== '' || thresholdMins !== '';
-    return hasThreshold ? thH * 60 + thM : null;
-  }, [thresholdHours, thresholdMins]);
-
-  const saveStage = useCallback(async (fromAutosave = false) => {
-    const validationError = validateInput();
-    if (validationError) {
-      setError(validationError);
-      setSaveState('failed');
-      return;
-    }
-
-    const totalThresholdMins = getThresholdMinutes();
-    setLoading(true);
-    setError('');
-
-    try {
-      if (stage) {
-        await retryAsync(async attempt => {
-          setSaveState(attempt > 1 ? 'retrying' : 'saving');
-          await updateStage({ id: stage.id, name, color_code: color, description: desc,
-            threshold_minutes: totalThresholdMins });
-        }, { retries: AUTOSAVE_RETRIES, shouldRetry: isTransientError });
-
-        onSaved({ ...stage, name, color_code: color, description: desc,
-          threshold_minutes: totalThresholdMins });
-        setSaveState('saved');
-        if (savedTimerRef.current) clearTimeout(savedTimerRef.current);
-        savedTimerRef.current = setTimeout(() => setSaveState('idle'), 1800);
-      } else {
-        await createStage({ name, color_code: color, description: desc });
-        onSaved({ id: Date.now().toString(), name, color_code: color,
-          description: desc, display_order: 99, is_default: false,
-          is_active: true, threshold_minutes: null, created_at: '', updated_at: '' });
-        setSaveState('saved');
-      }
-    } catch (e: unknown) {
-      setSaveState('failed');
-      setError(e instanceof Error ? e.message : 'Something went wrong');
-      if (fromAutosave && typeof window !== 'undefined' && isTransientError(e)) {
-        window.alert('Auto-save failed after retries. Please try again.');
-      }
-    }
-    finally { setLoading(false); }
-  }, [color, desc, getThresholdMinutes, name, onSaved, stage, validateInput]);
-
-  useEffect(() => {
-    if (!stage) return;
-    if (!isInitialized.current) {
-      isInitialized.current = true;
-      return;
-    }
-    const timer = setTimeout(() => {
-      void saveStage(true);
-    }, AUTOSAVE_DEBOUNCE_MS);
-
-    return () => clearTimeout(timer);
-  }, [stage, name, color, desc, thresholdHours, thresholdMins, saveStage]);
-
-  useEffect(() => () => {
-    if (savedTimerRef.current) clearTimeout(savedTimerRef.current);
-  }, []);
 
   return (
     <div className='fixed inset-0 bg-black/60 flex items-center justify-center z-50'>
@@ -177,6 +85,7 @@ export function StageFormModal({ stage, onClose, onSaved }:
           </>
         )}
         {error && <p className='text-red-600 text-sm mb-3'>{error}</p>}
+        {restoredNotice && <p className='text-emerald-700 text-sm mb-3'>Recovered unsaved changes from previous session.</p>}
         {stage && saveState === 'saving' && <p className='text-blue-600 text-sm mb-3'>Saving changes…</p>}
         {stage && saveState === 'retrying' && <p className='text-amber-700 text-sm mb-3'>Retrying save…</p>}
         {stage && saveState === 'saved' && <p className='text-green-600 text-sm mb-3'>✓ Changes saved</p>}

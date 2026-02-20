@@ -1,6 +1,7 @@
 import { verifyActiveSession } from "@/shared/lib/active-session"
 import { getBedGridData } from "@/features/bed-dashboard/actions/bed-grid-actions"
 import { BedDashboardClient } from "@/features/bed-dashboard/components/BedDashboardClient"
+import { createVirtualBed } from "@/features/bed-management/actions/virtual-bed-actions"
 import { AlertTriangle } from "lucide-react"
 import { LogoutButton } from "@/features/auth/components/LogoutButton"
 import { KioskBanner } from "@/features/auth/components/KioskBanner"
@@ -59,7 +60,7 @@ export default async function DashboardPage() {
                 </div>
 
                 {/* Bed Grid */}
-                <BedDashboardClient initialData={bedGridResult.data} />
+                <BedDashboardClient initialData={bedGridResult.data} onCreateVirtualBed={createVirtualBed} />
             </div>
         </div>
     )

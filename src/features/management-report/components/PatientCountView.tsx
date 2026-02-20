@@ -8,21 +8,30 @@
 import { Card, CardContent } from '@/shared/components/ui/card'
 import { Button } from '@/shared/components/ui/button'
 import { AlertCircle, RefreshCw, Users } from 'lucide-react'
-import { formatShiftTime } from '@/features/shift-management/lib/shift-format'
+import { formatShiftTime } from '@/shared/lib/shift-format'
 import { cn } from '@/shared/lib/utils'
 import { usePatientCountData, PRESETS } from '../hooks/usePatientCountData'
 import { PatientCountCards } from './PatientCountCards'
-import type { Shift } from '@/features/shift-management/types/shift.types'
+import { SignOffBadge } from './SignOffBadge'
+import { ReportSignOffButton } from './ReportSignOffButton'
+import type { Shift } from '@/shared/types/shift.types'
+import type { ReportSignOff } from '../types/report.types'
 
 interface PatientCountViewProps {
   /** Active shifts passed from the server component */
   shifts: Shift[]
+  /** ISO date YYYY-MM-DD for sign-off (defaults to today) */
+  reportDate?: string
+  /** Existing sign-off record fetched server-side */
+  initialSignOff?: ReportSignOff | null
   readOnly?: boolean
   className?: string
 }
 
 export function PatientCountView({
   shifts,
+  reportDate = new Date().toISOString().slice(0, 10),
+  initialSignOff = null,
   readOnly = false,
   className,
 }: PatientCountViewProps) {
@@ -86,13 +95,25 @@ export function PatientCountView({
             size="sm"
             variant="ghost"
             onClick={reload}
-            disabled={loading || readOnly}
+            disabled={loading}
             title="Refresh now"
           >
             <RefreshCw className={cn('h-4 w-4', loading && 'animate-spin')} />
           </Button>
+
+          {/* Sign-off button — only visible for supervisor/admin */}
+          <ReportSignOffButton
+            reportDate={reportDate}
+            initialSignOff={initialSignOff}
+            readOnly={readOnly}
+          />
         </div>
       </div>
+
+      {/* Active sign-off badge */}
+      {initialSignOff && (
+        <SignOffBadge signOff={initialSignOff} />
+      )}
 
       {/* Error state */}
       {error && (

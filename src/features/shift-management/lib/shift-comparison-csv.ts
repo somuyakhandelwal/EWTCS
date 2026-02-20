@@ -2,7 +2,7 @@
 // Epic 8: Shift Management
 
 import { formatShiftTime } from './shift-format'
-import type { ShiftPerformanceRow } from '@/features/management-report/types/report.types'
+import type { ShiftPerformanceRow } from '@/shared/types/report.types'
 
 export function rowsToCsv(rows: ShiftPerformanceRow[]): string {
   const header = ['Shift', 'Time Range', 'Patients Treated', 'Avg Stay (min)', 'Delayed Stages']

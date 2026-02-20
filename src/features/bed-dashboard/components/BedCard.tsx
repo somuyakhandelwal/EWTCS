@@ -34,8 +34,8 @@ interface BedCardProps {
 }
 
 export const BedCard = memo(function BedCard({
-  bed, onClick, onContextMenu, onReasonSelect, onMarkClean,
-  isMarkCleanUpdating = false, showUpdated = false, errorMessage = null,
+  bed, onClick, onContextMenu, onReasonSelect,
+  showUpdated = false, errorMessage = null,
   searchQuery = '', showUndo = false, onUndo, undoTimerSeconds = 0,
   animationEnabled = true,
 }: BedCardProps) {

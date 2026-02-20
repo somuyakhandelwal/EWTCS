@@ -43,17 +43,19 @@ describe('AuditorHistoryView audit mode read access', () => {
     })
   })
 
-  it('disables action controls in read-only audit mode', async () => {
+  it('allows all read-only controls in audit mode', async () => {
     render(<AuditorHistoryView readOnly />)
 
     await screen.findByText('ER-01')
 
-    expect(screen.getByRole('button', { name: 'Export CSV' })).toBeDisabled()
-    expect(screen.getByRole('button', { name: 'Apply Filters' })).toBeDisabled()
-    expect(screen.getByRole('button', { name: 'Clear' })).toBeDisabled()
-    expect(screen.getByRole('button', { name: /Timestamp/i })).toBeDisabled()
-    expect(screen.getByRole('button', { name: /Bed/i })).toBeDisabled()
-    expect(screen.getByRole('button', { name: /To/i })).toBeDisabled()
-    expect(screen.getByRole('button', { name: /Username/i })).toBeDisabled()
+    // Export, filter, sort and pagination are all read-only operations.
+    // Auditors must be able to use them — disabling them was a bug.
+    expect(screen.getByRole('button', { name: 'Export CSV' })).not.toBeDisabled()
+    expect(screen.getByRole('button', { name: 'Apply Filters' })).not.toBeDisabled()
+    expect(screen.getByRole('button', { name: 'Clear' })).not.toBeDisabled()
+    expect(screen.getByRole('button', { name: /Timestamp/i })).not.toBeDisabled()
+    expect(screen.getByRole('button', { name: /Bed/i })).not.toBeDisabled()
+    expect(screen.getByRole('button', { name: /To/i })).not.toBeDisabled()
+    expect(screen.getByRole('button', { name: /Username/i })).not.toBeDisabled()
   })
 })

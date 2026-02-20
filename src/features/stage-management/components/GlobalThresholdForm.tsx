@@ -4,9 +4,17 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { setGlobalThresholdAction } from '@/shared/actions/settings-actions'
 import { isTransientError, retryAsync } from '@/shared/lib/retry'
+import {
+  appendRecoveryLog,
+  clearRecoveryDraft,
+  loadRecoveryDraft,
+  saveRecoveryDraft,
+} from '@/shared/lib/recovery-draft'
 
 const AUTOSAVE_DEBOUNCE_MS = 500
 const AUTOSAVE_RETRIES = 2
+const DRAFT_KEY = 'ewtcs:global-threshold-draft'
+const DRAFT_VERSION = 1
 
 interface GlobalThresholdFormProps {
   initialMinutes: number
@@ -17,6 +25,7 @@ export function GlobalThresholdForm({ initialMinutes }: GlobalThresholdFormProps
   const [minutes, setMinutes] = useState(initialMinutes % 60)
   const [error, setError] = useState('')
   const [saved, setSaved] = useState(false)
+  const [restoredNotice, setRestoredNotice] = useState(false)
   const [saveState, setSaveState] = useState<'idle' | 'saving' | 'retrying' | 'failed'>('idle')
   const isInitialized = useRef(false)
   const savedTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
@@ -50,17 +59,48 @@ export function GlobalThresholdForm({ initialMinutes }: GlobalThresholdFormProps
 
       setSaveState('idle')
       setSaved(true)
+      clearRecoveryDraft(DRAFT_KEY)
+      appendRecoveryLog('global_threshold_saved')
       if (savedTimerRef.current) clearTimeout(savedTimerRef.current)
       savedTimerRef.current = setTimeout(() => setSaved(false), 2500)
     } catch (saveError) {
       const message = saveError instanceof Error ? saveError.message : 'Failed to save'
       setError(message)
       setSaveState('failed')
+      appendRecoveryLog('global_threshold_save_failed', { totalMinutes })
       if (typeof window !== 'undefined' && isTransientError(saveError)) {
         window.alert('Auto-save failed after retries. Please retry your threshold change.')
       }
     }
   }, [hours, minutes, totalMinutes])
+
+  useEffect(() => {
+    const restored = loadRecoveryDraft<{ hours: number; minutes: number }>(DRAFT_KEY, {
+      version: DRAFT_VERSION,
+    })
+    if (!restored || typeof window === 'undefined') return
+
+    const shouldRestore = window.confirm('Unsaved threshold changes were found. Restore them now?')
+    if (!shouldRestore) {
+      clearRecoveryDraft(DRAFT_KEY)
+      appendRecoveryLog('global_threshold_restore_rejected')
+      return
+    }
+
+    setHours(restored.data.hours)
+    setMinutes(restored.data.minutes)
+    setRestoredNotice(true)
+    appendRecoveryLog('global_threshold_restored')
+  }, [])
+
+  useEffect(() => {
+    const isDirty = hours !== Math.floor(initialMinutes / 60) || minutes !== initialMinutes % 60
+    if (!isDirty) {
+      clearRecoveryDraft(DRAFT_KEY)
+      return
+    }
+    saveRecoveryDraft(DRAFT_KEY, { hours, minutes }, { version: DRAFT_VERSION })
+  }, [hours, initialMinutes, minutes])
 
   useEffect(() => {
     if (!isInitialized.current) {
@@ -121,6 +161,7 @@ export function GlobalThresholdForm({ initialMinutes }: GlobalThresholdFormProps
       </div>
 
       {error && <p className='text-red-600 text-sm mt-2'>{error}</p>}
+      {restoredNotice && <p className='text-emerald-700 text-sm mt-2'>Recovered unsaved changes from previous session.</p>}
       {saved && <p className='text-green-600 text-sm mt-2'>✓ Threshold updated — applies immediately</p>}
     </div>
   )
