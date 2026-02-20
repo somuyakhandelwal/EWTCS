@@ -5,7 +5,10 @@ import { LosView } from '@/features/bed-dashboard/components/LosView'
 import { PatientCountView } from '@/features/management-report/components/PatientCountView'
 import { ShiftReportView } from '@/features/shift-management/components/ShiftReportView'
 import { ShiftComparisonView } from '@/features/shift-management/components/ShiftComparisonView'
+import { DataRetentionView } from '@/features/data-retention/components/DataRetentionView'
 import { getShifts } from '@/features/shift-management/lib/shift-queries'
+import { getRetentionConfig } from '@/features/data-retention/lib/retention-config-queries'
+import { getRecentArchivalRuns } from '@/features/data-retention/lib/archival-queries'
 import { verifyActiveSession } from '@/shared/lib/active-session'
 import { redirect } from 'next/navigation'
 import { Button } from '@/shared/components/ui/button'
@@ -59,6 +62,11 @@ export default async function AnalyticsPage() {
   } catch {
     // Non-blocking: components will render with an empty shift list gracefully
   }
+
+  // EPIC 14: Retention config + recent archival runs — admin and auditor only
+  const isRetentionVisible = session.role === 'admin' || session.role === 'auditor'
+  const retentionConfig = isRetentionVisible ? await getRetentionConfig().catch(() => null) : null
+  const archivalRuns   = isRetentionVisible ? await getRecentArchivalRuns(10).catch(() => []) : []
 
   return (
     <div className="min-h-screen bg-black text-foreground p-8">
@@ -115,6 +123,15 @@ export default async function AnalyticsPage() {
 
         {/* Shift Performance Comparison (US-8.4) */}
         <ShiftComparisonView readOnly={isAuditMode} />
+
+        {/* ── Data Retention & Archival (EPIC 14 / US-14.1, US-14.2) ───── */}
+        {isRetentionVisible && retentionConfig && (
+          <DataRetentionView
+            initialConfig={retentionConfig}
+            initialRuns={archivalRuns}
+            readOnly={isAuditMode}
+          />
+        )}
       </div>
     </div>
   )
