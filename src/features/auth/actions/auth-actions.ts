@@ -27,14 +27,11 @@ export async function login(prevState: unknown, formData: FormData) {
     const ipAddress = getClientIpFromHeaders(requestHeaders)
 
     try {
-
         const { rows } = await pool.query('SELECT * FROM users WHERE username = $1', [username])
         const user = rows[0]
 
         if (!user) {
-            // Wrap in try/catch: UNKNOWN_ACTOR_ID has no FK-matching row in users,
-            // so the INSERT can fail. We must NOT let audit failures expose "Internal
-            // server error" to the client — log the failure and return the safe message.
+            // Audit best-effort: UNKNOWN_ACTOR_ID has no users row so INSERT may fail — swallow to avoid leaking errors.
             try {
                 await logAudit({
                     actionType: 'LOGIN_FAILED',
@@ -95,7 +92,6 @@ export async function login(prevState: unknown, formData: FormData) {
         }
 
         const passwordsMatch = await bcrypt.compare(password, user.password_hash)
-
 
         if (!passwordsMatch) {
             // Increment failed attempts
