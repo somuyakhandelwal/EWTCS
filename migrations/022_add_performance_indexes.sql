@@ -68,3 +68,15 @@ CREATE UNIQUE INDEX IF NOT EXISTS idx_system_settings_key
 -- TAT queries: LOWER(stages.name) ILIKE 'cleaning' / 'empty'
 CREATE INDEX IF NOT EXISTS idx_stages_name_lower
   ON stages (LOWER(name));
+
+-- Down Migration
+DROP INDEX IF EXISTS idx_stages_name_lower;
+DROP INDEX IF EXISTS idx_system_settings_key;
+DROP INDEX IF EXISTS idx_disp_delay_reasons_bed_open;
+DROP INDEX IF EXISTS idx_stage_delay_thresholds_stage_id;
+DROP INDEX IF EXISTS idx_beds_is_active_occupied;
+DROP INDEX IF EXISTS idx_beds_is_active;
+DROP INDEX IF EXISTS idx_bed_stage_logs_from_stage_id;
+DROP INDEX IF EXISTS idx_bed_stage_logs_to_stage_id;
+DROP INDEX IF EXISTS idx_bed_stage_logs_transition_time;
+DROP INDEX IF EXISTS idx_bed_stage_logs_bed_id_time;
