@@ -1,0 +1,164 @@
+﻿
+C:\Users\aditi\OneDrive\Desktop\EWTCS\EWTCS\check-env.js
+  2:12  error  A `require()` style import is forbidden  @typescript-eslint/no-require-imports
+  3:14  error  A `require()` style import is forbidden  @typescript-eslint/no-require-imports
+  4:15  error  A `require()` style import is forbidden  @typescript-eslint/no-require-imports
+  5:16  error  A `require()` style import is forbidden  @typescript-eslint/no-require-imports
+
+C:\Users\aditi\OneDrive\Desktop\EWTCS\EWTCS\check_limits.js
+  1:12  error  A `require()` style import is forbidden  @typescript-eslint/no-require-imports
+  2:14  error  A `require()` style import is forbidden  @typescript-eslint/no-require-imports
+
+C:\Users\aditi\OneDrive\Desktop\EWTCS\EWTCS\count_lines.js
+  1:12  error  A `require()` style import is forbidden  @typescript-eslint/no-require-imports
+  2:14  error  A `require()` style import is forbidden  @typescript-eslint/no-require-imports
+
+C:\Users\aditi\OneDrive\Desktop\EWTCS\EWTCS\eslint.config.mjs
+  10:1  warning  Assign array to a variable before exporting as module default  import/no-anonymous-default-export
+
+C:\Users\aditi\OneDrive\Desktop\EWTCS\EWTCS\scripts\create-test-users.mjs
+  1:0  error  Parsing error: File appears to be binary
+
+C:\Users\aditi\OneDrive\Desktop\EWTCS\EWTCS\scripts\db-migrations.js
+   4:20  error  A `require()` style import is forbidden  @typescript-eslint/no-require-imports
+   5:17  error  A `require()` style import is forbidden  @typescript-eslint/no-require-imports
+  29:30  error  A `require()` style import is forbidden  @typescript-eslint/no-require-imports
+
+C:\Users\aditi\OneDrive\Desktop\EWTCS\EWTCS\scripts\encrypt-secret.js
+  3:53  error  A `require()` style import is forbidden  @typescript-eslint/no-require-imports
+
+C:\Users\aditi\OneDrive\Desktop\EWTCS\EWTCS\scripts\init-system.js
+   9:29  error  A `require()` style import is forbidden  @typescript-eslint/no-require-imports
+  10:25  error  A `require()` style import is forbidden  @typescript-eslint/no-require-imports
+  17:5   error  A `require()` style import is forbidden  @typescript-eslint/no-require-imports
+
+C:\Users\aditi\OneDrive\Desktop\EWTCS\EWTCS\scripts\lib-db.js
+    5:20  error  A `require()` style import is forbidden  @typescript-eslint/no-require-imports
+    6:17  error  A `require()` style import is forbidden  @typescript-eslint/no-require-imports
+   15:36  error  A `require()` style import is forbidden  @typescript-eslint/no-require-imports
+   50:35  error  A `require()` style import is forbidden  @typescript-eslint/no-require-imports
+  103:18  error  A `require()` style import is forbidden  @typescript-eslint/no-require-imports
+
+C:\Users\aditi\OneDrive\Desktop\EWTCS\EWTCS\scripts\lib-env.js
+  4:12  error  A `require()` style import is forbidden  @typescript-eslint/no-require-imports
+  5:14  error  A `require()` style import is forbidden  @typescript-eslint/no-require-imports
+  6:16  error  A `require()` style import is forbidden  @typescript-eslint/no-require-imports
+  7:42  error  A `require()` style import is forbidden  @typescript-eslint/no-require-imports
+
+C:\Users\aditi\OneDrive\Desktop\EWTCS\EWTCS\scripts\list-tables.js
+  2:1   error  A `require()` style import is forbidden  @typescript-eslint/no-require-imports
+  3:18  error  A `require()` style import is forbidden  @typescript-eslint/no-require-imports
+
+C:\Users\aditi\OneDrive\Desktop\EWTCS\EWTCS\scripts\migration-status.js
+   3:12  error  A `require()` style import is forbidden  @typescript-eslint/no-require-imports
+   4:14  error  A `require()` style import is forbidden  @typescript-eslint/no-require-imports
+  11:24  error  A `require()` style import is forbidden  @typescript-eslint/no-require-imports
+
+C:\Users\aditi\OneDrive\Desktop\EWTCS\EWTCS\scripts\quick-setup-beds.mjs
+  37:14  warning  'err' is defined but never used  @typescript-eslint/no-unused-vars
+
+C:\Users\aditi\OneDrive\Desktop\EWTCS\EWTCS\scripts\quick-start-setup.mjs
+   75:14  warning  'error' is defined but never used  @typescript-eslint/no-unused-vars
+   92:12  warning  'error' is defined but never used  @typescript-eslint/no-unused-vars
+  113:14  warning  'error' is defined but never used  @typescript-eslint/no-unused-vars
+
+C:\Users\aditi\OneDrive\Desktop\EWTCS\EWTCS\scripts\reconcile-migration-history.js
+  3:16  error  A `require()` style import is forbidden  @typescript-eslint/no-require-imports
+  4:20  error  A `require()` style import is forbidden  @typescript-eslint/no-require-imports
+
+C:\Users\aditi\OneDrive\Desktop\EWTCS\EWTCS\scripts\reset-db.js
+  3:12  error  A `require()` style import is forbidden  @typescript-eslint/no-require-imports
+  4:14  error  A `require()` style import is forbidden  @typescript-eslint/no-require-imports
+  5:42  error  A `require()` style import is forbidden  @typescript-eslint/no-require-imports
+  6:16  error  A `require()` style import is forbidden  @typescript-eslint/no-require-imports
+  7:20  error  A `require()` style import is forbidden  @typescript-eslint/no-require-imports
+
+C:\Users\aditi\OneDrive\Desktop\EWTCS\EWTCS\scripts\run-migrations.backup.js
+  23:1  error  Parsing error: '#!' can only be used at the start of a file
+
+C:\Users\aditi\OneDrive\Desktop\EWTCS\EWTCS\scripts\run-migrations.js
+    2:12  error  A `require()` style import is forbidden  @typescript-eslint/no-require-imports
+    3:14  error  A `require()` style import is forbidden  @typescript-eslint/no-require-imports
+    4:23  error  A `require()` style import is forbidden  @typescript-eslint/no-require-imports
+    5:42  error  A `require()` style import is forbidden  @typescript-eslint/no-require-imports
+    6:16  error  A `require()` style import is forbidden  @typescript-eslint/no-require-imports
+    7:25  error  A `require()` style import is forbidden  @typescript-eslint/no-require-imports
+  140:28  error  A `require()` style import is forbidden  @typescript-eslint/no-require-imports
+
+C:\Users\aditi\OneDrive\Desktop\EWTCS\EWTCS\scripts\run-performance-gate.js
+  4:20  error  A `require()` style import is forbidden  @typescript-eslint/no-require-imports
+  5:12  error  A `require()` style import is forbidden  @typescript-eslint/no-require-imports
+  6:14  error  A `require()` style import is forbidden  @typescript-eslint/no-require-imports
+  7:16  error  A `require()` style import is forbidden  @typescript-eslint/no-require-imports
+
+C:\Users\aditi\OneDrive\Desktop\EWTCS\EWTCS\scripts\seed-db.js
+  3:12  error  A `require()` style import is forbidden  @typescript-eslint/no-require-imports
+  4:14  error  A `require()` style import is forbidden  @typescript-eslint/no-require-imports
+  5:42  error  A `require()` style import is forbidden  @typescript-eslint/no-require-imports
+  6:16  error  A `require()` style import is forbidden  @typescript-eslint/no-require-imports
+  7:18  error  A `require()` style import is forbidden  @typescript-eslint/no-require-imports
+  8:16  error  A `require()` style import is forbidden  @typescript-eslint/no-require-imports
+
+C:\Users\aditi\OneDrive\Desktop\EWTCS\EWTCS\scripts\seed-realistic-performance-volume.js
+  4:20  error  A `require()` style import is forbidden  @typescript-eslint/no-require-imports
+  5:12  error  A `require()` style import is forbidden  @typescript-eslint/no-require-imports
+  6:14  error  A `require()` style import is forbidden  @typescript-eslint/no-require-imports
+  7:16  error  A `require()` style import is forbidden  @typescript-eslint/no-require-imports
+
+C:\Users\aditi\OneDrive\Desktop\EWTCS\EWTCS\scripts\setup-database.mjs
+  94:12  warning  'error' is defined but never used  @typescript-eslint/no-unused-vars
+
+C:\Users\aditi\OneDrive\Desktop\EWTCS\EWTCS\scripts\setup-utils.mjs
+  52:12  warning  'error' is defined but never used  @typescript-eslint/no-unused-vars
+
+C:\Users\aditi\OneDrive\Desktop\EWTCS\EWTCS\scripts\validate-db-connection.js
+   9:20  error  A `require()` style import is forbidden  @typescript-eslint/no-require-imports
+  10:14  error  A `require()` style import is forbidden  @typescript-eslint/no-require-imports
+  11:12  error  A `require()` style import is forbidden  @typescript-eslint/no-require-imports
+  12:16  error  A `require()` style import is forbidden  @typescript-eslint/no-require-imports
+
+C:\Users\aditi\OneDrive\Desktop\EWTCS\EWTCS\scripts\validate-db-schema.js
+   9:20  error  A `require()` style import is forbidden  @typescript-eslint/no-require-imports
+  10:14  error  A `require()` style import is forbidden  @typescript-eslint/no-require-imports
+  11:12  error  A `require()` style import is forbidden  @typescript-eslint/no-require-imports
+  12:16  error  A `require()` style import is forbidden  @typescript-eslint/no-require-imports
+  19:5   error  A `require()` style import is forbidden  @typescript-eslint/no-require-imports
+
+C:\Users\aditi\OneDrive\Desktop\EWTCS\EWTCS\scripts\validate-env-example.js
+   9:12  error  A `require()` style import is forbidden  @typescript-eslint/no-require-imports
+  10:14  error  A `require()` style import is forbidden  @typescript-eslint/no-require-imports
+
+C:\Users\aditi\OneDrive\Desktop\EWTCS\EWTCS\scripts\validate-migrations.js
+   9:20  error  A `require()` style import is forbidden  @typescript-eslint/no-require-imports
+  10:14  error  A `require()` style import is forbidden  @typescript-eslint/no-require-imports
+  11:12  error  A `require()` style import is forbidden  @typescript-eslint/no-require-imports
+  12:16  error  A `require()` style import is forbidden  @typescript-eslint/no-require-imports
+
+C:\Users\aditi\OneDrive\Desktop\EWTCS\EWTCS\scripts\validation-tests\menu-and-additional.js
+  1:14  error  A `require()` style import is forbidden  @typescript-eslint/no-require-imports
+
+C:\Users\aditi\OneDrive\Desktop\EWTCS\EWTCS\scripts\verify-audit-immutability.js
+  3:16  error  A `require()` style import is forbidden  @typescript-eslint/no-require-imports
+  4:20  error  A `require()` style import is forbidden  @typescript-eslint/no-require-imports
+
+C:\Users\aditi\OneDrive\Desktop\EWTCS\EWTCS\scripts\verify-logout.js
+  2:1   error  A `require()` style import is forbidden  @typescript-eslint/no-require-imports
+  3:18  error  A `require()` style import is forbidden  @typescript-eslint/no-require-imports
+
+C:\Users\aditi\OneDrive\Desktop\EWTCS\EWTCS\src\features\auth\actions\auth-actions.ts
+  4:10  warning  'UNKNOWN_ACTOR_ID' is defined but never used  @typescript-eslint/no-unused-vars
+
+C:\Users\aditi\OneDrive\Desktop\EWTCS\EWTCS\src\features\auth\lib\auth-helpers.ts
+  25:54  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+C:\Users\aditi\OneDrive\Desktop\EWTCS\EWTCS\tailwind.config.ts
+  77:15  error  A `require()` style import is forbidden  @typescript-eslint/no-require-imports
+
+C:\Users\aditi\OneDrive\Desktop\EWTCS\EWTCS\validate-fixes.js
+  3:12  error  A `require()` style import is forbidden  @typescript-eslint/no-require-imports
+  4:14  error  A `require()` style import is forbidden  @typescript-eslint/no-require-imports
+  5:15  error  A `require()` style import is forbidden  @typescript-eslint/no-require-imports
+  6:39  error  A `require()` style import is forbidden  @typescript-eslint/no-require-imports
+
+Γ£û 93 problems (85 errors, 8 warnings)
+

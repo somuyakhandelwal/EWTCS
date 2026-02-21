@@ -1,0 +1,5 @@
+﻿src\features\auth\actions\auth-actions.ts: 205
+src\features\data-retention\components\ArchiveSearchView.tsx: 221
+src\features\data-retention\__tests__\archive-search-queries.test.ts: 457
+src\features\data-retention\__tests__\storage-stats-queries.test.ts: 455
+Checked 422 files.

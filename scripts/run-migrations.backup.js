@@ -20,6 +20,6 @@ const DEFAULT_ENV = 'development';
 
 const loadEnvFiles = () => {
 	const nodeEnv = process.env.NODE_ENV || DEFAULT_ENV;
-	#!/usr/bin/env node
-	// Backup wrapper for run-migrations.js — keep minimal to stay under 200 lines
-	module.exports = require('./run-migrations');
+};
+
+loadEnvFiles();

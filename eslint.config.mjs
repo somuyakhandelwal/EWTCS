@@ -20,4 +20,10 @@ export default [
       "**/*.test.tsx",
     ],
   },
+  {
+    files: ["scripts/**/*.js", "scripts/**/*.mjs", "*.js"],
+    rules: {
+      "@typescript-eslint/no-require-imports": "off",
+    },
+  },
 ];

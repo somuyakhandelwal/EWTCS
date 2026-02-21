@@ -1,0 +1,123 @@
+﻿≡ƒöì Validating database migrations...
+
+≡ƒôü Found 35 migration files
+
+Γ£à Applied migrations: 35
+
+Applied migrations:
+  Γ£ô 001_init (2026-02-20T20:24:59.678Z)
+  Γ£ô 002_add_user_lockout (2026-02-20T20:24:59.678Z)
+  Γ£ô 003_add_user_management (2026-02-20T20:24:59.678Z)
+  Γ£ô 004_generic_audit_logs (2026-02-20T20:24:59.678Z)
+  Γ£ô 005_create_beds_and_stages (2026-02-20T20:24:59.678Z)
+  Γ£ô 006_add_ward_access_control (2026-02-20T20:24:59.678Z)
+  Γ£ô 007_create_bed_stage_log_corrections (2026-02-20T20:24:59.678Z)
+  Γ£ô 008_add_bed_stage_log_immutability (2026-02-20T20:24:59.678Z)
+  Γ£ô 009_token_blacklist (2026-02-20T20:24:59.678Z)
+  Γ£ô 010_create_stage_transitions (2026-02-20T20:24:59.678Z)
+  Γ£ô 011_add_disposition_bottleneck (2026-02-20T20:24:59.678Z)
+  Γ£ô 012_add_us17_delay_reasons (2026-02-20T20:24:59.678Z)
+  Γ£ô 013_create_patient_admissions (2026-02-20T20:24:59.678Z)
+  Γ£ô 014_add_kiosk_sessions (2026-02-20T20:24:59.678Z)
+  Γ£ô 015_add_password_reset (2026-02-20T20:24:59.678Z)
+  Γ£ô 016_add_tat_to_admissions (2026-02-20T20:24:59.678Z)
+  Γ£ô 017_add_temporary_beds (2026-02-20T20:24:59.678Z)
+  Γ£ô 018_create_shifts (2026-02-20T20:24:59.678Z)
+  Γ£ô 019_add_shift_id_to_logs (2026-02-20T20:24:59.678Z)
+  Γ£ô 020_create_system_settings (2026-02-20T20:24:59.678Z)
+  Γ£ô 021_create_stage_delay_thresholds (2026-02-20T20:24:59.678Z)
+  Γ£ô 022_add_performance_indexes (2026-02-20T20:24:59.678Z)
+  Γ£ô 025_add_audit_log_ip_and_immutability (2026-02-20T20:24:59.678Z)
+  Γ£ô 026_add_auditor_role (2026-02-20T20:24:59.678Z)
+  Γ£ô 027_add_virtual_beds (2026-02-20T20:24:59.678Z)
+  Γ£ô 028_create_archival_tables (2026-02-20T20:24:59.678Z)
+  Γ£ô 029_seed_retention_settings (2026-02-20T20:24:59.678Z)
+  Γ£ô 030_create_report_signoffs (2026-02-20T20:25:00.194Z)
+  Γ£ô 023_create_daily_summaries (2026-02-21T13:09:38.947Z)
+  Γ£ô 024_add_housekeeping_role_and_stages (2026-02-21T13:09:38.947Z)
+  Γ£ô 031_archive_bed_stage_logs (2026-02-21T13:09:38.947Z)
+  Γ£ô 032_enforce_stage_log_retention_and_immutability (2026-02-21T13:09:38.947Z)
+  Γ£ô 033_add_ai_summary_column (2026-02-21T13:09:38.947Z)
+  Γ£ô 034_daily_summary_workflow_and_insights (2026-02-21T13:09:39.053Z)
+  Γ£ô 035_archive_retrieval_storage (2026-02-21T14:06:38.183Z)
+
+≡ƒôï Pending migrations: 0
+
+Γä╣∩╕Å  NOTE: Migration apply timestamps differ from filename order.
+This is informational when pending migrations = 0.
+Expected order: [
+  '001_init',
+  '002_add_user_lockout',
+  '003_add_user_management',
+  '004_generic_audit_logs',
+  '005_create_beds_and_stages',
+  '006_add_ward_access_control',
+  '007_create_bed_stage_log_corrections',
+  '008_add_bed_stage_log_immutability',
+  '009_token_blacklist',
+  '010_create_stage_transitions',
+  '011_add_disposition_bottleneck',
+  '012_add_us17_delay_reasons',
+  '013_create_patient_admissions',
+  '014_add_kiosk_sessions',
+  '015_add_password_reset',
+  '016_add_tat_to_admissions',
+  '017_add_temporary_beds',
+  '018_create_shifts',
+  '019_add_shift_id_to_logs',
+  '020_create_system_settings',
+  '021_create_stage_delay_thresholds',
+  '022_add_performance_indexes',
+  '023_create_daily_summaries',
+  '024_add_housekeeping_role_and_stages',
+  '025_add_audit_log_ip_and_immutability',
+  '026_add_auditor_role',
+  '027_add_virtual_beds',
+  '028_create_archival_tables',
+  '029_seed_retention_settings',
+  '030_create_report_signoffs',
+  '031_archive_bed_stage_logs',
+  '032_enforce_stage_log_retention_and_immutability',
+  '033_add_ai_summary_column',
+  '034_daily_summary_workflow_and_insights',
+  '035_archive_retrieval_storage'
+]
+Applied order: [
+  '001_init',
+  '002_add_user_lockout',
+  '003_add_user_management',
+  '004_generic_audit_logs',
+  '005_create_beds_and_stages',
+  '006_add_ward_access_control',
+  '007_create_bed_stage_log_corrections',
+  '008_add_bed_stage_log_immutability',
+  '009_token_blacklist',
+  '010_create_stage_transitions',
+  '011_add_disposition_bottleneck',
+  '012_add_us17_delay_reasons',
+  '013_create_patient_admissions',
+  '014_add_kiosk_sessions',
+  '015_add_password_reset',
+  '016_add_tat_to_admissions',
+  '017_add_temporary_beds',
+  '018_create_shifts',
+  '019_add_shift_id_to_logs',
+  '020_create_system_settings',
+  '021_create_stage_delay_thresholds',
+  '022_add_performance_indexes',
+  '025_add_audit_log_ip_and_immutability',
+  '026_add_auditor_role',
+  '027_add_virtual_beds',
+  '028_create_archival_tables',
+  '029_seed_retention_settings',
+  '030_create_report_signoffs',
+  '023_create_daily_summaries',
+  '024_add_housekeeping_role_and_stages',
+  '031_archive_bed_stage_logs',
+  '032_enforce_stage_log_retention_and_immutability',
+  '033_add_ai_summary_column',
+  '034_daily_summary_workflow_and_insights',
+  '035_archive_retrieval_storage'
+]
+
+Γ£à All migrations validated successfully

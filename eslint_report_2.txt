@@ -1,0 +1,40 @@
+﻿
+C:\Users\aditi\OneDrive\Desktop\EWTCS\EWTCS\eslint.config.mjs
+  10:1  warning  Assign array to a variable before exporting as module default  import/no-anonymous-default-export
+
+C:\Users\aditi\OneDrive\Desktop\EWTCS\EWTCS\scripts\create-test-users.mjs
+  1:0  error  Parsing error: File appears to be binary
+
+C:\Users\aditi\OneDrive\Desktop\EWTCS\EWTCS\scripts\quick-setup-beds.mjs
+  37:14  warning  'err' is defined but never used  @typescript-eslint/no-unused-vars
+
+C:\Users\aditi\OneDrive\Desktop\EWTCS\EWTCS\scripts\quick-start-setup.mjs
+   75:14  warning  'error' is defined but never used  @typescript-eslint/no-unused-vars
+   92:12  warning  'error' is defined but never used  @typescript-eslint/no-unused-vars
+  113:14  warning  'error' is defined but never used  @typescript-eslint/no-unused-vars
+
+C:\Users\aditi\OneDrive\Desktop\EWTCS\EWTCS\scripts\run-migrations.backup.js
+   4:1   warning  Expected an assignment or function call and instead saw an expression  @typescript-eslint/no-unused-expressions
+  12:7   warning  'fs' is assigned a value but never used                                @typescript-eslint/no-unused-vars
+  13:7   warning  'path' is assigned a value but never used                              @typescript-eslint/no-unused-vars
+  14:9   warning  'spawnSync' is assigned a value but never used                         @typescript-eslint/no-unused-vars
+  15:9   warning  'createDecipheriv' is assigned a value but never used                  @typescript-eslint/no-unused-vars
+  15:27  warning  'scryptSync' is assigned a value but never used                        @typescript-eslint/no-unused-vars
+  16:7   warning  'dotenv' is assigned a value but never used                            @typescript-eslint/no-unused-vars
+  18:7   warning  'SALT' is assigned a value but never used                              @typescript-eslint/no-unused-vars
+  22:8   warning  'nodeEnv' is assigned a value but never used                           @typescript-eslint/no-unused-vars
+
+C:\Users\aditi\OneDrive\Desktop\EWTCS\EWTCS\scripts\setup-database.mjs
+  94:12  warning  'error' is defined but never used  @typescript-eslint/no-unused-vars
+
+C:\Users\aditi\OneDrive\Desktop\EWTCS\EWTCS\scripts\setup-utils.mjs
+  52:12  warning  'error' is defined but never used  @typescript-eslint/no-unused-vars
+
+C:\Users\aditi\OneDrive\Desktop\EWTCS\EWTCS\src\features\auth\actions\auth-actions.ts
+  4:10  warning  'UNKNOWN_ACTOR_ID' is defined but never used  @typescript-eslint/no-unused-vars
+
+C:\Users\aditi\OneDrive\Desktop\EWTCS\EWTCS\tailwind.config.ts
+  77:15  error  A `require()` style import is forbidden  @typescript-eslint/no-require-imports
+
+Γ£û 19 problems (2 errors, 17 warnings)
+

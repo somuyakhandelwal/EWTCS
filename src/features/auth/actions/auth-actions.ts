@@ -12,6 +12,12 @@ import { getClientIpFromHeaders } from '@/shared/lib/request-ip'
 import { logger } from '@/shared/config/logger'
 import { getPasswordResetStatus } from '@/features/auth/lib/password-reset-db'
 
+import {
+    logUnknownUserLoginAttempt,
+    handleFailedLoginAttempt,
+    redirectByRole
+} from '../lib/auth-helpers'
+
 export async function login(prevState: unknown, formData: FormData) {
     // Validate form fields
     const result = loginSchema.safeParse(Object.fromEntries(formData))
@@ -24,7 +30,7 @@ export async function login(prevState: unknown, formData: FormData) {
 
     const { username, password } = result.data
     const requestHeaders = await headers()
-    const ipAddress = getClientIpFromHeaders(requestHeaders)
+    const ipAddress = getClientIpFromHeaders(requestHeaders) ?? 'unknown'
 
     try {
 
@@ -37,29 +43,11 @@ export async function login(prevState: unknown, formData: FormData) {
         const user = rows[0]
 
         if (!user) {
-            // Audit best-effort: UNKNOWN_ACTOR_ID has no users row so INSERT may fail — swallow to avoid leaking errors.
-            try {
-                await logAudit({
-                    actionType: 'LOGIN_FAILED',
-                    entityType: 'auth',
-                    entityId: UNKNOWN_ACTOR_ID,
-                    performedBy: UNKNOWN_ACTOR_ID,
-                    reason: 'Login failed: user not found',
-                    metadata: {
-                        username,
-                    },
-                    ipAddress,
-                })
-            } catch {
-                logger.warn('Could not write audit log for unknown-user login attempt', { username })
-            }
-
-            // Don't reveal user existence
+            await logUnknownUserLoginAttempt(username, ipAddress)
             return { message: 'Invalid credentials' }
         }
 
         // CRITICAL: Check if user account is active
-        // US-5.7 Acceptance Criteria: "Deactivated users cannot log in"
         if (!user.is_active) {
             await logAudit({
                 actionType: 'LOGIN_BLOCKED',
@@ -100,36 +88,7 @@ export async function login(prevState: unknown, formData: FormData) {
         const passwordsMatch = await bcrypt.compare(password, user.password_hash)
 
         if (!passwordsMatch) {
-            // Increment failed attempts
-            const attempts = (user.failed_login_attempts || 0) + 1
-            let lockoutUntil = null
-
-            if (attempts >= 5) {
-                lockoutUntil = new Date(Date.now() + 15 * 60000) // 15 mins lock
-            }
-
-            await pool.query(
-                'UPDATE users SET failed_login_attempts = $1, lockout_until = $2, updated_at = NOW() WHERE id = $3',
-                [attempts, lockoutUntil, user.id]
-            )
-
-            await logAudit({
-                actionType: 'LOGIN_FAILED',
-                entityType: 'user',
-                entityId: user.id,
-                performedBy: user.id,
-                reason: lockoutUntil
-                    ? 'Login failed: invalid password, account locked'
-                    : 'Login failed: invalid password',
-                metadata: {
-                    username: user.username,
-                    role: user.role,
-                    failedAttempts: attempts,
-                    lockoutUntil,
-                },
-                ipAddress,
-            })
-
+            await handleFailedLoginAttempt(user, ipAddress)
             return { message: 'Invalid credentials' }
         }
 
@@ -155,8 +114,6 @@ export async function login(prevState: unknown, formData: FormData) {
                 }
             }
 
-            // Create a normal session (no flag in JWT) and redirect to the
-            // change-password page. The page itself verifies the DB flag.
             await createSession(user.id, user.username, user.role)
             redirect('/change-password')
         }
@@ -183,16 +140,8 @@ export async function login(prevState: unknown, formData: FormData) {
             },
             ipAddress,
         })
-        // Redirect based on role
-        if (user.role === 'admin') {
-            redirect('/admin')
-        } else if (user.role === 'supervisor') {
-            redirect('/supervisor')
-        } else if (user.role === 'auditor') {
-            redirect('/analytics')
-        } else {
-            redirect('/dashboard')
-        }
+
+        redirectByRole(user.role)
     } catch (error) {
         // If it's a redirect error, re-throw it so Next.js handles it
         if (error && typeof error === 'object' && 'digest' in error && typeof error.digest === 'string' && error.digest.startsWith('NEXT_REDIRECT')) {
