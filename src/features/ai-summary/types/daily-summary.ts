@@ -23,8 +23,9 @@ export interface DailySummary {
  */
 export interface DailySummaryMetadata {
     mostDelayedStage?: string     // Stage name with highest delay count
-    busiestHour?: number          // 0-23 hour with most activity
-    peakBedCount?: number         // Max concurrent occupied beds
+    // Future fields (add here when computed):
+    // busiestHour?: number       // 0-23 hour with most activity
+    // peakBedCount?: number      // Max concurrent occupied beds
 }
 
 /**

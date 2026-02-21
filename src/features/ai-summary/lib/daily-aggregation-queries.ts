@@ -11,8 +11,8 @@ import type { DailySummaryInput, DailySummaryMetadata } from '../types/daily-sum
 // Internal raw row types (pg returns numerics as strings)
 // ────────────────────────────────────────────────────────────
 interface RawPatientStats {
-    totalPatients: string
-    totalBedsUsed: string
+    totalPatients: string    // distinct admitted patients (from patient_admissions)
+    totalBedsUsed: string   // distinct bed_ids with stage-log activity
     totalStageUpdates: string
 }
 
@@ -61,12 +61,19 @@ async function getPatientStats(
     dayStart: Date,
     dayEnd: Date
 ): Promise<{ totalPatients: number; totalBedsUsed: number; totalStageUpdates: number }> {
+    // totalPatients  — unique patients admitted during the day (via patient_admissions)
+    // totalBedsUsed  — distinct beds that had at least one stage-log entry during the day
+    // totalStageUpdates — raw count of all stage-log rows
     const sql = `
     SELECT
-      COUNT(DISTINCT bsl.bed_id)     AS "totalPatients",
+      COUNT(DISTINCT pa.id)          AS "totalPatients",
       COUNT(DISTINCT bsl.bed_id)     AS "totalBedsUsed",
       COUNT(bsl.id)                  AS "totalStageUpdates"
     FROM bed_stage_logs bsl
+    LEFT JOIN patient_admissions pa
+      ON pa.bed_id = bsl.bed_id
+     AND pa.admitted_at >= $1
+     AND pa.admitted_at <= $2
     WHERE bsl.transition_time >= $1
       AND bsl.transition_time <= $2
   `

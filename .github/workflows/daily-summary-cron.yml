@@ -13,6 +13,13 @@ on:
         required: false
         default: ''
 
+# ──────────────────────────────────────────────────────────────────
+# Required GitHub Repository Secret (Settings → Secrets → Actions):
+#   DATABASE_URL  — PostgreSQL connection string, e.g.:
+#                   postgresql://user:password@host:5432/dbname
+# Without this secret the job will fail at the "Run daily aggregation" step.
+# ──────────────────────────────────────────────────────────────────
+
 jobs:
   aggregate:
     name: Aggregate daily bed statistics

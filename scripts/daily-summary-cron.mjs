@@ -42,9 +42,15 @@ async function aggregate(client, dateStr) {
 
   const [patients, stageTime, delays, tat, delayedStage] = await Promise.all([
     client.query(
-      `SELECT COUNT(DISTINCT bed_id) AS total, COUNT(id) AS updates
-       FROM bed_stage_logs
-       WHERE transition_time BETWEEN $1 AND $2`, [start, end]
+      `SELECT
+         COUNT(DISTINCT pa.id)    AS total,
+         COUNT(DISTINCT bsl.bed_id) AS bedsused,
+         COUNT(bsl.id)              AS updates
+       FROM bed_stage_logs bsl
+       LEFT JOIN patient_admissions pa
+         ON pa.bed_id = bsl.bed_id
+         AND pa.admitted_at BETWEEN $1 AND $2
+       WHERE bsl.transition_time BETWEEN $1 AND $2`, [start, end]
     ),
     client.query(
       `SELECT AVG(duration_in_previous_stage_ms) AS avg
@@ -75,6 +81,7 @@ async function aggregate(client, dateStr) {
 
   return {
     totalPatients:        parseInt(patients.rows[0]?.total ?? '0', 10),
+    totalBedsUsed:        parseInt(patients.rows[0]?.bedsused ?? '0', 10),
     totalStageUpdates:    parseInt(patients.rows[0]?.updates ?? '0', 10),
     avgStageTimeMinutes:  msToMin(parseFloat(stageTime.rows[0]?.avg ?? '0')),
     delayCount:           parseInt(delays.rows[0]?.cnt ?? '0', 10),
@@ -105,7 +112,7 @@ async function upsert(client, dateStr, stats) {
        metadata              = EXCLUDED.metadata
      RETURNING id, summary_date`,
     [dateStr, stats.totalPatients, stats.avgStageTimeMinutes, stats.delayCount,
-     stats.avgTatMinutes, stats.totalPatients, stats.totalStageUpdates, metadata]
+     stats.avgTatMinutes, stats.totalBedsUsed, stats.totalStageUpdates, metadata]
   )
   return rows[0]
 }
