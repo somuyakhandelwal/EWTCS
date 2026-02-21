@@ -7,7 +7,7 @@ export interface User {
     id: string
     username: string
     password_hash: string
-    role: 'nurse' | 'supervisor' | 'admin' | 'auditor'
+    role: 'nurse' | 'supervisor' | 'admin' | 'housekeeping' | 'auditor'
     is_active: boolean
     created_at: string
     updated_at: string
@@ -16,7 +16,7 @@ export interface User {
 export interface UserSummary {
     id: string
     username: string
-    role: 'nurse' | 'supervisor' | 'admin' | 'auditor'
+    role: 'nurse' | 'supervisor' | 'admin' | 'housekeeping' | 'auditor'
     is_active: boolean
     created_at: string
     updated_at: string
@@ -26,11 +26,11 @@ export interface UserSummary {
 export interface CreateUserInput {
     username: string
     password: string
-    role: 'nurse' | 'supervisor' | 'admin' | 'auditor'
+    role: 'nurse' | 'supervisor' | 'admin' | 'housekeeping' | 'auditor'
 }
 
 export interface UpdateUserInput {
     username?: string
     password?: string
-    role?: 'nurse' | 'supervisor' | 'admin' | 'auditor'
+    role?: 'nurse' | 'supervisor' | 'admin' | 'housekeeping' | 'auditor'
 }

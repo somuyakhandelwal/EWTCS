@@ -11,7 +11,7 @@ import { SupervisorBedOverview } from '@/features/bed-dashboard/components/Super
 import { AddTemporaryBedModal } from '@/features/bed-management/components/AddTemporaryBedModal'
 import { AddVirtualBedModal } from '@/features/bed-dashboard/components/AddVirtualBedModal'
 import { removeTemporaryBed } from '@/features/bed-management/actions/temporary-bed-actions'
-import { removeVirtualBed } from '@/features/bed-management/actions/virtual-bed-actions'
+import { removeVirtualBed, createVirtualBed } from '@/features/bed-management/actions/virtual-bed-actions'
 import { getBedGridData } from '@/features/bed-dashboard/actions/bed-grid-actions'
 import type { BedGridData } from '@/features/bed-dashboard/types/bed'
 
@@ -80,6 +80,7 @@ export function SupervisorClientShell({ initialData }: SupervisorClientShellProp
                     setVirtualModalOpen(false)
                     await refreshData()
                 }}
+                onSubmit={createVirtualBed}
             />
         </>
     )

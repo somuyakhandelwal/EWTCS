@@ -136,3 +136,15 @@ export async function getStageTransitionMap(
     throw error
   }
 }
+
+/** Resolve stage name by ID (null-safe) */
+export async function getStageNameById(stageId: string | null): Promise<string | null> {
+  if (!stageId) return null
+
+  const result = await pool.query<{ name: string }>(
+    `SELECT name FROM stages WHERE id = $1 AND is_active = true LIMIT 1`,
+    [stageId]
+  )
+
+  return result.rows[0]?.name ?? null
+}

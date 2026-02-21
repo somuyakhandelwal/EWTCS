@@ -11,6 +11,7 @@ export const ALLOWED_TABLES = new Set([
   'wards',                        // migration 006 — was incorrectly 'ward'
   'audit_logs',
   'bed_stage_logs',
+  'bed_stage_logs_archive',
   'token_blacklist',
   'bed_stage_log_corrections',
   'stage_transitions',

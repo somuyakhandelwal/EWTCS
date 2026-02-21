@@ -4,8 +4,10 @@
 import type { Dispatch, SetStateAction } from 'react'
 import type { BedGridData, BedWithElapsedTime, Stage } from '../types/bed'
 import { updateBedStage } from '../actions/bed-actions'
+import { isTransientError, retryAsync } from '@/shared/lib/retry'
 
 const UPDATE_TIMEOUT_MS = 2000
+const UPDATE_RETRIES = 2
 
 function isNonPatientStage(stageName: string): boolean {
   const normalized = stageName.trim().toLowerCase()
@@ -49,7 +51,6 @@ export async function executeStageUpdate({
   isUpdateTimedOut,
   options,
 }: ExecuteStageUpdateArgs): Promise<boolean> {
-  // BUG FIX #1: Prevent race condition - check if THIS bed is already updating
   if (updatingBedId === bedId) {
     setTemporaryError(bedId, 'Update in progress, please wait.')
     return false
@@ -93,27 +94,40 @@ export async function executeStageUpdate({
   }))
 
   try {
-    isUpdateTimedOut.current = false
+    const result = await retryAsync(async () => {
+      isUpdateTimedOut.current = false
 
-    const updatePromise = updateBedStage({
-      bedId,
-      toStageId: stageId,
-      supervisorOverride: options?.supervisorOverride ?? false,
-      overrideReason: options?.overrideReason,
+      const updatePromise = updateBedStage({
+        bedId,
+        toStageId: stageId,
+        supervisorOverride: options?.supervisorOverride ?? false,
+        overrideReason: options?.overrideReason,
+      })
+
+      const timeoutPromise = new Promise<never>((_, reject) => {
+        updateTimeoutTimer.current = setTimeout(() => {
+          isUpdateTimedOut.current = true
+          reject(new Error('Update took too long (>2 seconds)'))
+        }, UPDATE_TIMEOUT_MS)
+      })
+
+      try {
+        const response = await Promise.race([updatePromise, timeoutPromise])
+        if (isUpdateTimedOut.current) throw new Error('Update took too long (>2 seconds)')
+        if (!response.success && !(response.requiresOverride && !options?.supervisorOverride)) {
+          throw new Error(response.reason || response.error || 'Failed to update stage')
+        }
+        return response
+      } finally {
+        if (updateTimeoutTimer.current !== null) {
+          clearTimeout(updateTimeoutTimer.current)
+          updateTimeoutTimer.current = null
+        }
+      }
+    }, {
+      retries: UPDATE_RETRIES,
+      shouldRetry: (error) => !options?.supervisorOverride && isTransientError(error),
     })
-
-    const timeoutPromise = new Promise<never>((_, reject) => {
-      updateTimeoutTimer.current = setTimeout(() => {
-        isUpdateTimedOut.current = true
-        reject(new Error('Update took too long (>2 seconds)'))
-      }, UPDATE_TIMEOUT_MS)
-    })
-
-    const result = await Promise.race([updatePromise, timeoutPromise])
-
-    if (isUpdateTimedOut.current) {
-      throw new Error('Update took too long (>2 seconds)')
-    }
 
     if (!result.success) {
       if (result.requiresOverride && !options?.supervisorOverride) {
@@ -166,6 +180,9 @@ export async function executeStageUpdate({
   } catch (error) {
     const message = error instanceof Error ? error.message : 'Failed to update stage'
     setTemporaryError(bedId, message)
+    if (typeof window !== 'undefined' && isTransientError(error)) {
+      window.alert('Stage update failed after retries. Please try again.')
+    }
 
     setData((prev) => ({
       ...prev,
@@ -174,10 +191,6 @@ export async function executeStageUpdate({
     routerRefresh()
     return false
   } finally {
-    if (updateTimeoutTimer.current !== null) {
-      clearTimeout(updateTimeoutTimer.current)
-      updateTimeoutTimer.current = null
-    }
     setUpdatingBedId(null)
     setUpdatingStageId(null)
   }

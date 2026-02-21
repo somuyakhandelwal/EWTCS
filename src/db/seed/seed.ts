@@ -21,7 +21,7 @@ export class DatabaseSeeder {
     this.validator = new SeedValidator();
   }
 
-  private generateBeds(config: SeedConfig): Array<{ code: string; status: string }> {
+  private generateBeds(config: SeedConfig): Array<{ code: string; isOccupied: boolean }> {
     const beds = [];
     const { prefix, start, end } = config.beds;
 
@@ -29,7 +29,7 @@ export class DatabaseSeeder {
       const bedNumber = `${prefix}-${String(i).padStart(2, "0")}`;
       beds.push({
         code: bedNumber,
-        status: "available",
+        isOccupied: false,
       });
     }
 
@@ -40,14 +40,15 @@ export class DatabaseSeeder {
     const client = await this.pool.connect();
 
     try {
+      await client.query("TRUNCATE TABLE beds, stages CASCADE;");
       let stageCount = 0;
 
       for (const stage of config.stages) {
         const query = `
-          INSERT INTO stages (id, name, description, color, sequence)
+          INSERT INTO stages (id, name, description, color_code, display_order)
           VALUES ($1, $2, $3, $4, $5)
           ON CONFLICT (id) DO UPDATE
-          SET name = $2, description = $3, color = $4, sequence = $5
+          SET name = $2, description = $3, color_code = $4, display_order = $5
           RETURNING id;
         `;
 
@@ -79,14 +80,14 @@ export class DatabaseSeeder {
 
       for (const bed of beds) {
         const query = `
-          INSERT INTO beds (code, status, created_at)
+          INSERT INTO beds (bed_number, is_occupied, created_at)
           VALUES ($1, $2, NOW())
-          ON CONFLICT (code) DO UPDATE
-          SET status = $2
+          ON CONFLICT (bed_number) DO UPDATE
+          SET is_occupied = $2
           RETURNING id;
         `;
 
-        const result = await client.query(query, [bed.code, bed.status]);
+        const result = await client.query(query, [bed.code, bed.isOccupied]);
 
         if (result.rows.length > 0) {
           bedCount += 1;

@@ -37,8 +37,8 @@ export async function createSession(
     kiosk?: KioskOptions
 ) {
     const expiresAt = kiosk
-        ? new Date(Date.now() + 365 * 24 * 60 * 60 * 1000) // 1 year for kiosk
-        : new Date(Date.now() + 7 * 24 * 60 * 60 * 1000)   // 7 days standard
+        ? new Date(Date.now() + 365 * 24 * 60 * 60 * 1000)  // 1 year for kiosk
+        : new Date(Date.now() + SESSION_MAX_AGE_MS)           // matches cookie maxAge
     const jwtPayload = {
         userId, username, role,
         ...(kiosk && { isKiosk: true, kioskIp: kiosk.kioskIp, kioskSessionId: kiosk.kioskSessionId }),
@@ -46,7 +46,7 @@ export async function createSession(
     const session = await new SignJWT(jwtPayload)
         .setProtectedHeader({ alg: 'HS256' })
         .setIssuedAt()
-        .setExpirationTime(kiosk ? '1y' : '7d')
+        .setExpirationTime(kiosk ? '1y' : `${Math.floor(SESSION_MAX_AGE_MS / 1000)}s`)
         .sign(encodedKey)
 
     const cookieStore = await cookies()
@@ -84,14 +84,18 @@ export async function verifySession() {
         const lastActivity = sessionData.lastActivity || now
         if (!sessionData.isKiosk && now - lastActivity > INACTIVITY_TIMEOUT_MS) {
             // Idle too long — delete session
-            cookieStore.set('session', '', {
-                httpOnly: true,
-                secure: process.env.NODE_ENV === 'production',
-                expires: new Date(0),
-                sameSite: 'lax',
-                path: '/',
-                maxAge: 0,
-            })
+            try {
+                cookieStore.set('session', '', {
+                    httpOnly: true,
+                    secure: process.env.NODE_ENV === 'production',
+                    expires: new Date(0),
+                    sameSite: 'lax',
+                    path: '/',
+                    maxAge: 0,
+                })
+            } catch {
+                // Ignore: Cannot set cookies in Server Components
+            }
             return null
         }
 
@@ -156,13 +160,17 @@ async function renewSession(sessionData: SessionPayload) {
 }
 
 export async function deleteSession() {
-    const cookieStore = await cookies()
-    cookieStore.set('session', '', {
-        httpOnly: true,
-        secure: process.env.NODE_ENV === 'production',
-        expires: new Date(0),
-        sameSite: 'lax',
-        path: '/',
-        maxAge: 0,
-    })
+    try {
+        const cookieStore = await cookies()
+        cookieStore.set('session', '', {
+            httpOnly: true,
+            secure: process.env.NODE_ENV === 'production',
+            expires: new Date(0),
+            sameSite: 'lax',
+            path: '/',
+            maxAge: 0,
+        })
+    } catch {
+        // Ignore: Cannot set cookies in Server Components
+    }
 }

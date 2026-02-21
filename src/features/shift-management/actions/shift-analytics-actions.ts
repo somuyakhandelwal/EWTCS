@@ -11,7 +11,7 @@ import {
 import type {
   ShiftPerformanceRow,
   ShiftComparisonReport,
-} from '@/features/management-report/types/report.types'
+} from '@/shared/types/report.types'
 
 // ---------------------------------------------------------------------------
 // Shared date-parsing helper

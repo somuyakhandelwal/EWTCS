@@ -2,12 +2,13 @@
 // US-6.3: System Settings Server Actions — admin-only global threshold management
 
 import { query } from '@/shared/lib/db'
-import { revalidatePath } from 'next/cache'
+import { revalidatePath, revalidateTag } from 'next/cache'
 import { requireRole } from '@/shared/lib/auth'
 import { logAudit } from '@/shared/lib/audit'
 import { logger } from '@/shared/config/logger'
 import { z } from 'zod'
 import { getGlobalThresholdMinutes } from '@/shared/lib/threshold'
+import { SETTINGS_CACHE_TAG } from '@/shared/lib/query-cache'
 
 const SetThresholdSchema = z.object({
   hours: z.coerce.number().int().min(0).max(24),
@@ -57,6 +58,9 @@ export async function setGlobalThresholdAction(input: {
       changes: { delay_threshold_minutes: totalMinutes },
     })
     logger.info('Global threshold updated', { totalMinutes, performedBy: session.userId })
+    // EPIC 13: Invalidate the settings cache so the next dashboard request
+    // fetches the new threshold from the DB instead of serving a stale cached value.
+    revalidateTag(SETTINGS_CACHE_TAG)
     revalidatePath('/admin/stages')
     revalidatePath('/dashboard')
     return { success: true }

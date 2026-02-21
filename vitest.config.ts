@@ -8,6 +8,11 @@ export default defineConfig({
     environment: 'jsdom',
     globals: true,
     setupFiles: ['./src/__tests__/setup.ts'],
+    env: {
+      NODE_ENV: 'development',
+      SESSION_SECRET: 'test-secret-at-least-32-characters-long!!',
+      DATABASE_URL: 'postgresql://test:test@localhost/testdb',
+    },
     coverage: {
       provider: 'v8',
       reporter: ['text', 'json-summary'],

@@ -1,8 +1,20 @@
 'use client'
 // US-6.3: Global Delay Threshold configuration form (AC-1, AC-2, AC-4, AC-5)
 
-import { useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import { setGlobalThresholdAction } from '@/shared/actions/settings-actions'
+import { isTransientError, retryAsync } from '@/shared/lib/retry'
+import {
+  appendRecoveryLog,
+  clearRecoveryDraft,
+  loadRecoveryDraft,
+  saveRecoveryDraft,
+} from '@/shared/lib/recovery-draft'
+
+const AUTOSAVE_DEBOUNCE_MS = 500
+const AUTOSAVE_RETRIES = 2
+const DRAFT_KEY = 'ewtcs:global-threshold-draft'
+const DRAFT_VERSION = 1
 
 interface GlobalThresholdFormProps {
   initialMinutes: number
@@ -11,9 +23,12 @@ interface GlobalThresholdFormProps {
 export function GlobalThresholdForm({ initialMinutes }: GlobalThresholdFormProps) {
   const [hours, setHours] = useState(Math.floor(initialMinutes / 60))
   const [minutes, setMinutes] = useState(initialMinutes % 60)
-  const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
   const [saved, setSaved] = useState(false)
+  const [restoredNotice, setRestoredNotice] = useState(false)
+  const [saveState, setSaveState] = useState<'idle' | 'saving' | 'retrying' | 'failed'>('idle')
+  const isInitialized = useRef(false)
+  const savedTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
 
   const totalMinutes = hours * 60 + minutes
   const preview =
@@ -23,23 +38,87 @@ export function GlobalThresholdForm({ initialMinutes }: GlobalThresholdFormProps
       ? `${hours} hour${hours !== 1 ? 's' : ''}`
       : `${minutes} minutes`
 
-  const handleSave = async () => {
+  const handleSave = useCallback(async () => {
     if (totalMinutes < 30) {
       setError('Threshold must be at least 30 minutes')
+      setSaveState('failed')
       return
     }
-    setLoading(true)
     setError('')
     setSaved(false)
-    const res = await setGlobalThresholdAction({ hours, minutes })
-    setLoading(false)
-    if (res.success) {
+
+    try {
+      await retryAsync(async attempt => {
+        setSaveState(attempt > 1 ? 'retrying' : 'saving')
+        const res = await setGlobalThresholdAction({ hours, minutes })
+        if (!res.success) throw new Error(res.error ?? 'Failed to save')
+      }, {
+        retries: AUTOSAVE_RETRIES,
+        shouldRetry: isTransientError,
+      })
+
+      setSaveState('idle')
       setSaved(true)
-      setTimeout(() => setSaved(false), 3000)
-    } else {
-      setError(res.error ?? 'Failed to save')
+      clearRecoveryDraft(DRAFT_KEY)
+      appendRecoveryLog('global_threshold_saved')
+      if (savedTimerRef.current) clearTimeout(savedTimerRef.current)
+      savedTimerRef.current = setTimeout(() => setSaved(false), 2500)
+    } catch (saveError) {
+      const message = saveError instanceof Error ? saveError.message : 'Failed to save'
+      setError(message)
+      setSaveState('failed')
+      appendRecoveryLog('global_threshold_save_failed', { totalMinutes })
+      if (typeof window !== 'undefined' && isTransientError(saveError)) {
+        window.alert('Auto-save failed after retries. Please retry your threshold change.')
+      }
     }
-  }
+  }, [hours, minutes, totalMinutes])
+
+  useEffect(() => {
+    const restored = loadRecoveryDraft<{ hours: number; minutes: number }>(DRAFT_KEY, {
+      version: DRAFT_VERSION,
+    })
+    if (!restored || typeof window === 'undefined') return
+
+    const shouldRestore = window.confirm('Unsaved threshold changes were found. Restore them now?')
+    if (!shouldRestore) {
+      clearRecoveryDraft(DRAFT_KEY)
+      appendRecoveryLog('global_threshold_restore_rejected')
+      return
+    }
+
+    setHours(restored.data.hours)
+    setMinutes(restored.data.minutes)
+    setRestoredNotice(true)
+    appendRecoveryLog('global_threshold_restored')
+  }, [])
+
+  useEffect(() => {
+    const isDirty = hours !== Math.floor(initialMinutes / 60) || minutes !== initialMinutes % 60
+    if (!isDirty) {
+      clearRecoveryDraft(DRAFT_KEY)
+      return
+    }
+    saveRecoveryDraft(DRAFT_KEY, { hours, minutes }, { version: DRAFT_VERSION })
+  }, [hours, initialMinutes, minutes])
+
+  useEffect(() => {
+    if (!isInitialized.current) {
+      isInitialized.current = true
+      return
+    }
+    const timer = setTimeout(() => {
+      void handleSave()
+    }, AUTOSAVE_DEBOUNCE_MS)
+
+    return () => clearTimeout(timer)
+  }, [hours, minutes, handleSave])
+
+  useEffect(() => {
+    return () => {
+      if (savedTimerRef.current) clearTimeout(savedTimerRef.current)
+    }
+  }, [])
 
   return (
     <div className='p-4 rounded-lg border-2 border-blue-200 bg-blue-50 mb-6'>
@@ -56,7 +135,7 @@ export function GlobalThresholdForm({ initialMinutes }: GlobalThresholdFormProps
             min={0}
             max={24}
             value={hours}
-            onChange={e => { setHours(Math.max(0, Math.min(24, Number(e.target.value)))); setSaved(false) }}
+            onChange={e => { setHours(Math.max(0, Math.min(24, Number(e.target.value)))); setSaved(false); setSaveState('idle') }}
             className='w-20 border border-gray-300 rounded-lg px-3 py-2 text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500'
           />
         </div>
@@ -67,7 +146,7 @@ export function GlobalThresholdForm({ initialMinutes }: GlobalThresholdFormProps
             min={0}
             max={59}
             value={minutes}
-            onChange={e => { setMinutes(Math.max(0, Math.min(59, Number(e.target.value)))); setSaved(false) }}
+            onChange={e => { setMinutes(Math.max(0, Math.min(59, Number(e.target.value)))); setSaved(false); setSaveState('idle') }}
             className='w-20 border border-gray-300 rounded-lg px-3 py-2 text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500'
           />
         </div>
@@ -77,16 +156,12 @@ export function GlobalThresholdForm({ initialMinutes }: GlobalThresholdFormProps
             {preview}
           </p>
         </div>
-        <button
-          onClick={handleSave}
-          disabled={loading || totalMinutes < 30}
-          className='px-4 py-2 bg-blue-600 text-white font-semibold rounded-lg hover:bg-blue-700 disabled:opacity-50'
-        >
-          {loading ? 'Saving…' : 'Save Threshold'}
-        </button>
+        {saveState === 'saving' && <p className='text-xs text-blue-700'>Saving…</p>}
+        {saveState === 'retrying' && <p className='text-xs text-amber-700'>Retrying save…</p>}
       </div>
 
       {error && <p className='text-red-600 text-sm mt-2'>{error}</p>}
+      {restoredNotice && <p className='text-emerald-700 text-sm mt-2'>Recovered unsaved changes from previous session.</p>}
       {saved && <p className='text-green-600 text-sm mt-2'>✓ Threshold updated — applies immediately</p>}
     </div>
   )

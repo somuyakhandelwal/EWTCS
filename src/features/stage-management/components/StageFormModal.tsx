@@ -1,64 +1,25 @@
 'use client';
-import { useState } from 'react';
 import type { Stage } from '../types/stage.types';
-import { createStage, updateStage } from '../actions/stage-actions';
 import { getStageColorClasses, getSupportedStageColors } from '@/shared/utils/stage-colors';
+import { useStageFormLogic } from '../hooks/useStageFormLogic';
 
 const COLORS = getSupportedStageColors();
-const normalizeStageColor = (value?: string) =>
-  value?.toLowerCase() === 'grey' ? 'gray' : value;
 
 export function StageFormModal({ stage, onClose, onSaved }:
   { stage?: Stage; onClose: () => void; onSaved: (s: Stage) => void }) {
-  const [name, setName] = useState(stage?.name ?? '');
-  const [color, setColor] = useState(normalizeStageColor(stage?.color_code) ?? 'blue');
-  const [desc, setDesc] = useState(stage?.description ?? '');
-  const stageThresholdMins = stage?.threshold_minutes ?? null;
-  const [thresholdHours, setThresholdHours] = useState(
-    stageThresholdMins ? Math.floor(stageThresholdMins / 60) : ''
-  );
-  const [thresholdMins, setThresholdMins] = useState(
-    stageThresholdMins ? stageThresholdMins % 60 : ''
-  );
-  const [error, setError] = useState('');
-  const [loading, setLoading] = useState(false);
+  const {
+    name, setName, color, setColor, desc, setDesc,
+    thresholdHours, setThresholdHours, thresholdMins, setThresholdMins,
+    error, loading, saveState, restoredNotice, saveStage,
+  } = useStageFormLogic({ stage, onSaved });
 
-  const handleSave = async () => {
-    if (!name.trim()) return setError('Stage name is required');
-    if (name.length > 50) return setError('Name must be max 50 characters');
-    const thH = Number(thresholdHours);
-    const thM = Number(thresholdMins);
-    const hasThreshold = thresholdHours !== '' || thresholdMins !== '';
-    const totalThresholdMins = hasThreshold ? thH * 60 + thM : null;
-    if (hasThreshold && (totalThresholdMins ?? 0) < 30)
-      return setError('Stage threshold must be at least 30 minutes');
-    setLoading(true); setError('');
-    try {
-      if (stage) {
-        await updateStage({ id: stage.id, name, color_code: color, description: desc,
-          threshold_minutes: totalThresholdMins });
-        onSaved({ ...stage, name, color_code: color, description: desc,
-          threshold_minutes: totalThresholdMins });
-      } else {
-        await createStage({ name, color_code: color, description: desc });
-        onSaved({ id: Date.now().toString(), name, color_code: color,
-          description: desc, display_order: 99, is_default: false,
-          is_active: true, threshold_minutes: null, created_at: '', updated_at: '' });
-      }
-    } catch (e: unknown) { setError(e instanceof Error ? e.message : 'Something went wrong'); }
-    finally { setLoading(false); }
-  };
 
   return (
     <div className='fixed inset-0 bg-black/60 flex items-center justify-center z-50'>
       <div className='bg-white rounded-xl p-6 w-full max-w-md shadow-2xl'>
-
-        {/* Title */}
         <h2 className='text-xl font-bold text-gray-900 mb-4'>
           {stage ? 'Edit Stage' : 'Add New Stage'}
         </h2>
-
-        {/* Name */}
         <label className='block text-sm font-semibold text-gray-700 mb-1'>
           Stage Name <span className='text-gray-400 font-normal'>({name.length}/50)</span>
         </label>
@@ -69,8 +30,6 @@ export function StageFormModal({ stage, onClose, onSaved }:
           className='w-full border border-gray-300 rounded-lg px-3 py-2 mb-4 text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500'
           placeholder='e.g. Triage In Progress'
         />
-
-        {/* Color */}
         <label className='block text-sm font-semibold text-gray-700 mb-2'>Color</label>
         <div className='flex gap-3 mb-4'>
           {COLORS.map(c => {
@@ -90,8 +49,6 @@ export function StageFormModal({ stage, onClose, onSaved }:
             );
           })}
         </div>
-
-        {/* Description */}
         <label className='block text-sm font-semibold text-gray-700 mb-1'>
           Description <span className='text-gray-400 font-normal'>(Optional)</span>
         </label>
@@ -101,8 +58,6 @@ export function StageFormModal({ stage, onClose, onSaved }:
           className='w-full border border-gray-300 rounded-lg px-3 py-2 mb-4 text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500'
           placeholder='Stage description...'
         />
-
-        {/* Delay Threshold Override (US-6.3) */}
         {stage && (
           <>
             <label className='block text-sm font-semibold text-gray-700 mb-1'>
@@ -129,25 +84,26 @@ export function StageFormModal({ stage, onClose, onSaved }:
             </div>
           </>
         )}
-
-        {/* Error */}
         {error && <p className='text-red-600 text-sm mb-3'>{error}</p>}
-
-        {/* Buttons */}
+        {restoredNotice && <p className='text-emerald-700 text-sm mb-3'>Recovered unsaved changes from previous session.</p>}
+        {stage && saveState === 'saving' && <p className='text-blue-600 text-sm mb-3'>Saving changes…</p>}
+        {stage && saveState === 'retrying' && <p className='text-amber-700 text-sm mb-3'>Retrying save…</p>}
+        {stage && saveState === 'saved' && <p className='text-green-600 text-sm mb-3'>✓ Changes saved</p>}
         <div className='flex justify-end gap-3'>
           <button
             onClick={onClose}
             className='px-4 py-2 border border-gray-300 rounded-lg text-gray-700 font-medium hover:bg-gray-100'>
             Cancel
           </button>
-          <button
-            onClick={handleSave}
-            disabled={loading}
-            className='px-4 py-2 bg-blue-600 text-white font-medium rounded-lg hover:bg-blue-700 disabled:opacity-50'>
-            {loading ? 'Saving...' : 'Save Stage'}
-          </button>
+          {!stage && (
+            <button
+              onClick={() => void saveStage(false)}
+              disabled={loading}
+              className='px-4 py-2 bg-blue-600 text-white font-medium rounded-lg hover:bg-blue-700 disabled:opacity-50'>
+              {loading ? 'Saving...' : 'Save Stage'}
+            </button>
+          )}
         </div>
-
       </div>
     </div>
   );

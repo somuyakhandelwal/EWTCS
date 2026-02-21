@@ -10,11 +10,11 @@ import { Card, CardContent } from '@/shared/components/ui/card'
 import { Button } from '@/shared/components/ui/button'
 import { AlertCircle, RefreshCw, Clock, Users, AlertTriangle } from 'lucide-react'
 import { fetchShiftReport } from '../actions/shift-analytics-actions'
-import { formatDuration } from '@/features/bed-dashboard/lib/duration-formatters'
+import { formatDuration } from '@/shared/lib/duration-formatters'
 import { formatShiftTime } from '../lib/shift-format'
 import { cn } from '@/shared/lib/utils'
 import { ShiftMetricCard } from './ShiftMetricCard'
-import type { ShiftPerformanceRow } from '@/features/management-report/types/report.types'
+import type { ShiftPerformanceRow } from '@/shared/types/report.types'
 import type { Shift } from '../types/shift.types'
 
 const PRESET_HOURS = [

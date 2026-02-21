@@ -1,7 +1,7 @@
 'use server'
 
-import { z } from 'zod'
-import { createSession, deleteSession, type KioskOptions } from '@/shared/lib/session'
+import { createSession, type KioskOptions } from '@/shared/lib/session'
+import { UNKNOWN_ACTOR_ID, loginSchema } from '../lib/auth-schema'
 import pool from '@/shared/lib/db'
 import bcrypt from 'bcrypt'
 import { redirect } from 'next/navigation'
@@ -11,13 +11,6 @@ import { createKioskSession } from '@/features/auth/lib/kiosk'
 import { getClientIpFromHeaders } from '@/shared/lib/request-ip'
 import { logger } from '@/shared/config/logger'
 import { getPasswordResetStatus } from '@/features/auth/lib/password-reset-db'
-
-const UNKNOWN_ACTOR_ID = '00000000-0000-0000-0000-000000000000'
-
-const loginSchema = z.object({
-    username: z.string().min(1, 'Username is required'),
-    password: z.string().min(1, 'Password is required'),
-})
 
 export async function login(prevState: unknown, formData: FormData) {
     // Validate form fields
@@ -34,22 +27,26 @@ export async function login(prevState: unknown, formData: FormData) {
     const ipAddress = getClientIpFromHeaders(requestHeaders)
 
     try {
-
         const { rows } = await pool.query('SELECT * FROM users WHERE username = $1', [username])
         const user = rows[0]
 
         if (!user) {
-            await logAudit({
-                actionType: 'LOGIN_FAILED',
-                entityType: 'auth',
-                entityId: UNKNOWN_ACTOR_ID,
-                performedBy: UNKNOWN_ACTOR_ID,
-                reason: 'Login failed: user not found',
-                metadata: {
-                    username,
-                },
-                ipAddress,
-            })
+            // Audit best-effort: UNKNOWN_ACTOR_ID has no users row so INSERT may fail — swallow to avoid leaking errors.
+            try {
+                await logAudit({
+                    actionType: 'LOGIN_FAILED',
+                    entityType: 'auth',
+                    entityId: UNKNOWN_ACTOR_ID,
+                    performedBy: UNKNOWN_ACTOR_ID,
+                    reason: 'Login failed: user not found',
+                    metadata: {
+                        username,
+                    },
+                    ipAddress,
+                })
+            } catch (_auditErr) {
+                logger.warn('Could not write audit log for unknown-user login attempt', { username })
+            }
 
             // Don't reveal user existence
             return { message: 'Invalid credentials' }
@@ -95,7 +92,6 @@ export async function login(prevState: unknown, formData: FormData) {
         }
 
         const passwordsMatch = await bcrypt.compare(password, user.password_hash)
-
 
         if (!passwordsMatch) {
             // Increment failed attempts
@@ -169,7 +165,6 @@ export async function login(prevState: unknown, formData: FormData) {
             kioskOpts = { isKiosk: true, kioskIp: boundIp, kioskSessionId }
         }
         await createSession(user.id, user.username, user.role, kioskOpts)
-
         await logAudit({
             actionType: 'LOGIN',
             entityType: 'user',
@@ -182,7 +177,6 @@ export async function login(prevState: unknown, formData: FormData) {
             },
             ipAddress,
         })
-
         // Redirect based on role
         if (user.role === 'admin') {
             redirect('/admin')
@@ -201,9 +195,4 @@ export async function login(prevState: unknown, formData: FormData) {
         logger.error('Login error', error instanceof Error ? error : undefined)
         return { message: 'Internal server error' }
     }
-}
-
-export async function logout() {
-    await deleteSession()
-    redirect('/login')
 }

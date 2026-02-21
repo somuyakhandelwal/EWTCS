@@ -26,6 +26,7 @@ Closes #
 - [ ] Tested locally and works as expected
 - [ ] Added/updated tests if applicable
 - [ ] All existing tests pass
+- [ ] EPIC 13 reliability verification completed (manual/staging) per `docs/EPIC13_VERIFICATION_CHECKLIST.md` (if applicable)
 
 ### Database & Environment
 - [ ] Database migrations tested (if applicable)

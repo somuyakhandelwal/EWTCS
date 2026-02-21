@@ -6,15 +6,16 @@
 import { useTransition, useRef, useState, useEffect } from 'react'
 import { MapPin, X, Loader2 } from 'lucide-react'
 import { Button } from '@/shared/components/ui/button'
-import { createVirtualBed } from '@/features/bed-management/actions/virtual-bed-actions'
 
 interface AddVirtualBedModalProps {
     open: boolean
     onClose: () => void
     onCreated: () => void
+    /** Injected server action — keeps this component free of cross-feature imports */
+    onSubmit: (formData: FormData) => Promise<{ success: boolean; error?: string }>
 }
 
-export function AddVirtualBedModal({ open, onClose, onCreated }: AddVirtualBedModalProps) {
+export function AddVirtualBedModal({ open, onClose, onCreated, onSubmit }: AddVirtualBedModalProps) {
     const [isPending, startTransition] = useTransition()
     const [error, setError] = useState<string | null>(null)
     const formRef = useRef<HTMLFormElement>(null)
@@ -43,7 +44,7 @@ export function AddVirtualBedModal({ open, onClose, onCreated }: AddVirtualBedMo
         const formData = new FormData(e.currentTarget)
 
         startTransition(async () => {
-            const result = await createVirtualBed(formData)
+            const result = await onSubmit(formData)
             if (result.success) {
                 formRef.current?.reset()
                 onCreated()

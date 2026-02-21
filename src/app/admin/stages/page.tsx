@@ -1,6 +1,7 @@
 import { getStages } from '@/features/stage-management/actions/stage-actions';
 import { StageList } from '@/features/stage-management/components/StageList';
 import { GlobalThresholdForm } from '@/features/stage-management/components/GlobalThresholdForm';
+import { RecoveryLogPanel } from '@/features/stage-management/components/RecoveryLogPanel';
 import { getGlobalThresholdMinutes } from '@/shared/lib/threshold';
 
 // Force dynamic rendering - don't pre-render during build
@@ -21,6 +22,7 @@ export default async function StagesPage() {
         </p>
       </div>
       <GlobalThresholdForm initialMinutes={globalThresholdMinutes} />
+      <RecoveryLogPanel />
       <StageList initialStages={stages} />
     </div>
   );

@@ -40,7 +40,9 @@ jobs:
           if [ -n "$DB_CHANGES" ]; then
             DOC_CHANGES=$(git diff --name-only origin/${{ github.base_ref }}...HEAD | grep -E '^(DATABASE_SETUP.md|README.md|CONFIGURATION.md)' || true)
             if [ -z "$DOC_CHANGES" ]; then
-              echo "⚠️  WARNING: Database files changed but no documentation updates found"
+              echo "❌ ERROR: Database files changed but no documentation updates found"
+              echo "Please update DATABASE_SETUP.md, README.md, or CONFIGURATION.md"
+              exit 1
             else
               echo "✅ Documentation files also updated"
             fi
@@ -50,7 +52,8 @@ jobs:
       - name: Validate README has setup instructions
         run: |
           if ! grep -q "## Setup" README.md && ! grep -q "## Getting Started" README.md; then
-            echo "⚠️  README.md should contain setup instructions"
+            echo "❌ ERROR: README.md must contain setup instructions (## Setup or ## Getting Started)"
+            exit 1
           else
             echo "✅ README.md contains setup instructions"
           fi
@@ -64,7 +67,7 @@ jobs:
         with:
           script: |
             const pr = context.payload.pull_request;
-            const body = pr.body || '';
+            const body = pr?.body || '';
             const requiredChecks = [
               'No file exceeds 200 lines (except lock files: package-lock.json, yarn.lock, pnpm-lock.yaml)',
               'Code is properly formatted',

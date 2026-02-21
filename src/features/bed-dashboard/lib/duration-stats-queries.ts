@@ -1,10 +1,13 @@
 // Stage Duration Statistics Queries
 // Purpose: Analyze duration statistics for each stage
 // Epic: EPIC 3 - Time Tracking & Stage Logging
+// EPIC 13: getStageDurationStats wrapped with 60 s cache to cut DB load on the
+//          analytics page (PERCENTILE_CONT is expensive on large log tables).
 
 import { query } from '@/shared/lib/db'
 import { logger } from '@/shared/config/logger'
 import type { StageDurationStats } from './stage-analytics'
+import { withCache, ANALYTICS_CACHE_TAG, ANALYTICS_CACHE_TTL_S } from '@/shared/lib/query-cache'
 
 // pg returns COUNT as string — raw row before coercion
 interface RawStageDurationStats {
@@ -20,11 +23,10 @@ interface RawStageDurationStats {
 }
 
 /**
- * Get duration statistics for each stage
- * @param startDate - Filter from this date
- * @param endDate - Filter until this date
+ * Internal implementation. Call the exported `getStageDurationStats` instead
+ * to benefit from the 60 s result cache.
  */
-export async function getStageDurationStats(
+async function getStageDurationStatsImpl(
   startDate?: Date,
   endDate?: Date
 ): Promise<StageDurationStats[]> {
@@ -80,3 +82,15 @@ export async function getStageDurationStats(
     throw new Error('Failed to fetch stage duration statistics from database')
   }
 }
+
+/**
+ * Get duration statistics for each stage.
+ * EPIC 13: Cached for 60 s — PERCENTILE_CONT on large log tables is expensive.
+ * Invalidated via `revalidateTag('analytics')` when stage logs are mutated.
+ */
+export const getStageDurationStats = withCache(
+  getStageDurationStatsImpl,
+  'stage-duration-stats',
+  ANALYTICS_CACHE_TTL_S,
+  [ANALYTICS_CACHE_TAG],
+)

@@ -171,4 +171,4 @@ The system uses an immutable `audit_logs` table for compliance-critical events.
 | `ENCRYPTION_KEY is required` | Set ENCRYPTION_KEY when using DATABASE_URL_ENCRYPTED |
 | `Database connectivity test failed` | Verify Postgres is running on host:port and DATABASE_URL is valid |
 
-Last Updated: 2026-02-19
+Last Updated: 2026-02-21

@@ -3,10 +3,10 @@
 
 import { Card, CardContent, CardHeader, CardTitle } from '@/shared/components/ui/card'
 import { Trophy, TrendingDown } from 'lucide-react'
-import { formatDuration } from '@/features/bed-dashboard/lib/duration-formatters'
+import { formatDuration } from '@/shared/lib/duration-formatters'
 import { formatShiftTime } from '../lib/shift-format'
 import { cn } from '@/shared/lib/utils'
-import type { ShiftComparisonReport } from '@/features/management-report/types/report.types'
+import type { ShiftComparisonReport } from '@/shared/types/report.types'
 
 function ShiftBadge({ type }: { type: 'best' | 'worst' }) {
   return type === 'best' ? (

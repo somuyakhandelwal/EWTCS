@@ -8,7 +8,7 @@ import {
   CardTitle,
   CardDescription,
 } from '@/shared/components/ui/card'
-import { formatDuration } from '@/features/bed-dashboard/lib/duration-formatters'
+import { formatDuration } from '@/shared/lib/duration-formatters'
 import type { PatientCountSummary } from '../types/report.types'
 
 interface PatientCountCardsProps {

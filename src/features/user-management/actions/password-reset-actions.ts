@@ -5,7 +5,7 @@ import { randomBytes } from 'crypto'
 import { adminResetPasswordSchema } from '@/features/user-management/schemas/password-reset-schema'
 import { requireAdmin } from '@/features/user-management/lib/auth'
 import { logUserAction } from '@/features/user-management/lib/audit'
-import { setTempPassword } from '@/features/auth/lib/password-reset-db'
+import { setTempPassword } from '@/shared/lib/password-reset-db'
 import { logger } from '@/shared/config/logger'
 
 /**
