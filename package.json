@@ -7,7 +7,7 @@
     "build": "node -e \"try{require('fs').rmSync('.next',{recursive:true,force:true})}catch(e){}\" && next build",
     "start": "node scripts/run-migrations.js up && next start",
     "lint": "next lint",
-    "test": "vitest run",
+    "test": "vitest run --no-cache",
     "test:watch": "vitest",
     "test:coverage": "vitest run --coverage",
     "test:bugs": "tsx scripts/run-bug-tests.ts",
