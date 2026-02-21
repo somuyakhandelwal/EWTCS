@@ -1,16 +1,24 @@
 'use server'
 
 // Server Action — EPIC 9: Daily AI Summary Generator
-// Composes aggregation queries + upsert into a single callable action.
-// Called by: API route (manual trigger) and scheduled cron job.
+// Handles generation, individual fetch, recent list, and history query.
+// Called by: API route (manual trigger), scheduled cron job, and history UI.
 
 import { logger } from '@/shared/config/logger'
 import { requireRole } from '@/shared/lib/auth'
 import { logAudit } from '@/shared/lib/audit'
 import { generateSummarySchema } from '../schemas/generate-summary'
+import { historyQuerySchema } from '../schemas/history-query'
+import type { HistoryQueryInput } from '../schemas/history-query'
 import { aggregateDailyStats } from '../lib/daily-aggregation-queries'
 import { generateAiSummary } from '../lib/ai-service'
-import { upsertDailySummary, getDailySummaryByDate, getRecentDailySummaries } from '../lib/daily-summary-store'
+import {
+    upsertDailySummary,
+    getDailySummaryByDate,
+    getRecentDailySummaries,
+    getDailySummariesByDateRange,
+    searchDailySummaries,
+} from '../lib/daily-summary-store'
 import type { AggregationResult, DailySummary } from '../types/daily-summary'
 
 /** Returns yesterday's date string in YYYY-MM-DD (UTC). */
@@ -135,6 +143,55 @@ export async function fetchRecentDailySummaries(
     } catch (error) {
         const message = error instanceof Error ? error.message : 'Fetch failed'
         logger.error('[ai-summary] fetchRecentDailySummaries failed', error as Error)
+        return { success: false, error: message }
+    }
+}
+
+/**
+ * Fetch historical summaries with optional date-range, search, and status filter (US-9.5).
+ * - Auditors always receive published summaries only.
+ * - Search takes priority over date range when both are provided.
+ */
+export async function fetchDailySummaryHistory(
+    rawInput: HistoryQueryInput = {}
+): Promise<{ success: boolean; summaries?: DailySummary[]; error?: string }> {
+    try {
+        const session = await requireRole(['admin', 'supervisor', 'auditor'])
+
+        const parsed = historyQuerySchema.safeParse(rawInput)
+        if (!parsed.success) {
+            return {
+                success: false,
+                error: parsed.error.issues[0]?.message ?? 'Invalid query parameters',
+            }
+        }
+
+        const { from, to, search, status, limit } = parsed.data
+        // Auditors can only see published summaries regardless of requested filter
+        const effectiveStatus =
+            session.role === 'auditor' ? 'published' : status
+
+        let summaries: DailySummary[]
+
+        if (search && search.trim().length > 0) {
+            summaries = await searchDailySummaries(search.trim(), limit, effectiveStatus)
+        } else {
+            // Default date range: last 90 days if not specified
+            const today = new Date().toISOString().slice(0, 10)
+            const defaultFrom = new Date(Date.now() - 90 * 24 * 60 * 60 * 1000)
+                .toISOString()
+                .slice(0, 10)
+            summaries = await getDailySummariesByDateRange(
+                from ?? defaultFrom,
+                to ?? today,
+                effectiveStatus
+            )
+        }
+
+        return { success: true, summaries }
+    } catch (error) {
+        const message = error instanceof Error ? error.message : 'History fetch failed'
+        logger.error('[ai-summary] fetchDailySummaryHistory failed', error as Error)
         return { success: false, error: message }
     }
 }

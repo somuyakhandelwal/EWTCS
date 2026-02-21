@@ -82,11 +82,10 @@ export function DailySummaryCard({ summary }: DailySummaryCardProps) {
                     <ul className="space-y-1">
                         {insights.map((i) => (
                             <li key={i.id} className="flex items-start gap-2 text-sm">
-                                <span className={`shrink-0 rounded px-1.5 py-0.5 text-xs font-medium tabular-nums ${
-                                    (i.confidence ?? 0) >= 70 ? 'bg-emerald-900/30 text-emerald-400' :
+                                <span className={`shrink-0 rounded px-1.5 py-0.5 text-xs font-medium tabular-nums ${(i.confidence ?? 0) >= 70 ? 'bg-emerald-900/30 text-emerald-400' :
                                     (i.confidence ?? 0) >= 50 ? 'bg-amber-900/30 text-amber-400' :
-                                    'bg-red-900/30 text-red-400'
-                                }`}>
+                                        'bg-red-900/30 text-red-400'
+                                    }`}>
                                     {i.confidence ?? 0}%
                                 </span>
                                 <span className={i.flagged ? 'ring-1 ring-amber-500/50 rounded px-1' : ''}>
@@ -95,6 +94,31 @@ export function DailySummaryCard({ summary }: DailySummaryCardProps) {
                             </li>
                         ))}
                     </ul>
+                </div>
+            )}
+
+            {/* US-9.5: Approval / rejection info for history view */}
+            {summary.reviewedBy && (
+                <div className="rounded-lg border border-zinc-800 bg-zinc-900/50 px-3 py-2 space-y-1">
+                    <div className="flex items-center gap-2 text-xs">
+                        <span className="text-muted-foreground">
+                            {status === 'published' ? 'Approved by' : 'Reviewed by'}:
+                        </span>
+                        <span className="font-medium text-foreground">{summary.reviewedBy}</span>
+                        {summary.reviewedAt && (
+                            <span className="ml-auto text-muted-foreground">
+                                {new Date(summary.reviewedAt).toLocaleString('en-IN', {
+                                    day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit',
+                                })}
+                            </span>
+                        )}
+                    </div>
+                    {/* Rejection reason is mandatory (US-9.4) — shown when present */}
+                    {status === 'rejected' && summary.rejectionReason && (
+                        <p className="text-xs text-red-400 italic">
+                            Reason: {summary.rejectionReason}
+                        </p>
+                    )}
                 </div>
             )}
 

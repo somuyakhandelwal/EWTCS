@@ -1,5 +1,6 @@
 // Tests — EPIC 9: daily-summary-actions.ts (server actions)
-// Verifies generateDailySummary, fetchDailySummaryByDate, fetchRecentDailySummaries.
+// Verifies generateDailySummary, fetchDailySummaryByDate, fetchRecentDailySummaries,
+// and fetchDailySummaryHistory (US-9.5).
 
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 
@@ -18,6 +19,8 @@ vi.mock('@/features/ai-summary/lib/daily-summary-store', () => ({
     upsertDailySummary: vi.fn(),
     getDailySummaryByDate: vi.fn(),
     getRecentDailySummaries: vi.fn(),
+    getDailySummariesByDateRange: vi.fn(),
+    searchDailySummaries: vi.fn(),
 }))
 
 import { requireRole } from '@/shared/lib/auth'
@@ -27,11 +30,14 @@ import {
     upsertDailySummary,
     getDailySummaryByDate,
     getRecentDailySummaries,
+    getDailySummariesByDateRange,
+    searchDailySummaries,
 } from '@/features/ai-summary/lib/daily-summary-store'
 import {
     generateDailySummary,
     fetchDailySummaryByDate,
     fetchRecentDailySummaries,
+    fetchDailySummaryHistory,
 } from '@/features/ai-summary/actions/daily-summary-actions'
 import type { DailySummary, DailySummaryInput } from '@/features/ai-summary/types/daily-summary'
 
@@ -181,5 +187,95 @@ describe('fetchRecentDailySummaries', () => {
 
         expect(result.success).toBe(false)
         expect(result.error).toBe('query failed')
+    })
+})
+
+const SAVED_SUMMARY_PUB: DailySummary = {
+    id: 'pub-uuid',
+    summaryDate: '2026-02-20',
+    totalPatients: 10,
+    avgStageTimeMinutes: 5,
+    delayCount: 2,
+    avgTatMinutes: 25,
+    totalBedsUsed: 12,
+    totalStageUpdates: 40,
+    generatedAt: '2026-02-21T00:00:00.000Z',
+    status: 'published',
+    reviewedBy: 'supervisor-1',
+    reviewedAt: '2026-02-21T08:00:00.000Z',
+    aiInsights: [],
+    metadata: {},
+}
+
+describe('fetchDailySummaryHistory', () => {
+    beforeEach(() => vi.clearAllMocks())
+
+    it('returns summaries via date range on happy path', async () => {
+        vi.mocked(requireRole).mockResolvedValue(ADMIN_SESSION as never)
+        vi.mocked(getDailySummariesByDateRange).mockResolvedValue([SAVED_SUMMARY_PUB])
+
+        const result = await fetchDailySummaryHistory({
+            from: '2026-02-01',
+            to: '2026-02-20',
+        })
+
+        expect(result.success).toBe(true)
+        expect(result.summaries).toHaveLength(1)
+        expect(getDailySummariesByDateRange).toHaveBeenCalledWith(
+            '2026-02-01', '2026-02-20', 'all'
+        )
+    })
+
+    it('uses searchDailySummaries when search is provided', async () => {
+        vi.mocked(requireRole).mockResolvedValue(ADMIN_SESSION as never)
+        vi.mocked(searchDailySummaries).mockResolvedValue([SAVED_SUMMARY_PUB])
+
+        const result = await fetchDailySummaryHistory({ search: 'bottleneck' })
+
+        expect(result.success).toBe(true)
+        expect(searchDailySummaries).toHaveBeenCalledWith('bottleneck', 90, 'all')
+        expect(getDailySummariesByDateRange).not.toHaveBeenCalled()
+    })
+
+    it('auditor always gets published-only filter', async () => {
+        const auditorSession = { userId: 'auditor-1', role: 'auditor' }
+        vi.mocked(requireRole).mockResolvedValue(auditorSession as never)
+        vi.mocked(getDailySummariesByDateRange).mockResolvedValue([])
+
+        await fetchDailySummaryHistory({})
+
+        expect(getDailySummariesByDateRange).toHaveBeenCalledWith(
+            expect.any(String), expect.any(String), 'published'
+        )
+    })
+
+    it('returns validation error for invalid date format', async () => {
+        vi.mocked(requireRole).mockResolvedValue(ADMIN_SESSION as never)
+
+        const result = await fetchDailySummaryHistory({ from: 'not-a-date' })
+
+        expect(result.success).toBe(false)
+        expect(result.error).toMatch(/YYYY-MM-DD/i)
+    })
+
+    it('returns validation error when from > to', async () => {
+        vi.mocked(requireRole).mockResolvedValue(ADMIN_SESSION as never)
+
+        const result = await fetchDailySummaryHistory({
+            from: '2026-02-20',
+            to: '2026-02-01',
+        })
+
+        expect(result.success).toBe(false)
+        expect(result.error).toMatch(/from.*before.*to/i)
+    })
+
+    it('returns error when role check fails', async () => {
+        vi.mocked(requireRole).mockRejectedValue(new Error('Unauthorized'))
+
+        const result = await fetchDailySummaryHistory({})
+
+        expect(result.success).toBe(false)
+        expect(result.error).toBe('Unauthorized')
     })
 })

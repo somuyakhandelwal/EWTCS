@@ -20,9 +20,22 @@ interface RawDailySummaryRow {
     metadata: Record<string, unknown>
     status?: string
     reviewed_by?: string | null
+    reviewed_by_display?: string | null
     reviewed_at?: string | null
     published_at?: string | null
     ai_insights?: unknown
+}
+
+async function getSummaryWithReviewerDisplay(id: string): Promise<RawDailySummaryRow | null> {
+    const sql = `
+    SELECT ds.*, COALESCE(u.username, ds.reviewed_by::text) AS reviewed_by_display
+    FROM daily_summaries ds
+    LEFT JOIN users u ON u.id = ds.reviewed_by
+    WHERE ds.id = $1
+    LIMIT 1
+  `
+    const result = await query<RawDailySummaryRow>(sql, [id])
+    return result.rows[0] ?? null
 }
 
 function parseAiInsights(raw: unknown): AiInsight[] {
@@ -50,7 +63,7 @@ function mapRow(row: RawDailySummaryRow): DailySummary {
         generatedAt: row.generated_at,
         aiSummary: row.ai_summary ?? undefined,
         status,
-        reviewedBy: row.reviewed_by ?? undefined,
+        reviewedBy: row.reviewed_by_display ?? row.reviewed_by ?? undefined,
         reviewedAt: row.reviewed_at ?? undefined,
         publishedAt: row.published_at ?? undefined,
         // US-9.4: surface rejectionReason from metadata for display
@@ -86,7 +99,12 @@ export async function updateDailySummaryStatus(
     const row = result.rows[0]
     if (!row) return null
     logger.info(`[ai-summary] Summary ${id} ${status}`)
-    return mapRow(row)
+    try {
+        const enriched = await getSummaryWithReviewerDisplay(row.id)
+        return mapRow(enriched ?? row)
+    } catch {
+        return mapRow(row)
+    }
 }
 
 /** Update draft text and insights (supervisor edit). */
