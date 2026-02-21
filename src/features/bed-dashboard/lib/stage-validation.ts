@@ -56,7 +56,6 @@ export async function validateTransition(
         validNextStages,
       }
     }
-
     // Rule explicitly allows transition
     if (rule.isAllowed) {
       return {
@@ -66,7 +65,6 @@ export async function validateTransition(
         validNextStages,
       }
     }
-
     // Rule forbids transition but allows supervisor override
     if (!rule.isAllowed && rule.requiresSupervisorOverride) {
       const canOverride = userRole === 'supervisor' || userRole === 'admin'
@@ -80,7 +78,6 @@ export async function validateTransition(
         validNextStages,
       }
     }
-
     // Rule forbids transition permanently - no override available
     return {
       isValid: false,
@@ -91,8 +88,7 @@ export async function validateTransition(
       validNextStages,
     }
   } catch (error) {
-    logger.error('Failed to validate transition', error as Error)
-    
+    logger.error('Failed to validate transition', error as Error) 
     // BUG FIX #4: Provide fallback behavior instead of throwing
     // If validation system fails, allow admin to proceed with override
     if (userRole === 'admin') {
@@ -103,7 +99,6 @@ export async function validateTransition(
         validNextStages: [], // Client should fetch valid stages separately
       }
     }
-    
     // For nurses/supervisors, require supervisor approval as safety measure
     return {
       isValid: false,
@@ -113,7 +108,6 @@ export async function validateTransition(
     }
   }
 }
-
 /**
  * Categorize all possible stages into allowed, override-required, and invalid
  * Used for UI to show which transitions are available and which need approval
@@ -135,39 +129,32 @@ export async function categorizeStagesForTransition(
           result: await validateTransition(fromStageId, toStageId, userRole),
         }))
       )
-
       return {
         allowed: results.filter(r => r.result.isValid).map(r => r.toStageId),
         requiresOverride: [],
         invalid: results.filter(r => !r.result.isValid).map(r => r.toStageId),
       }
     }
-
     const allowed: string[] = []
     const requiresOverride: string[] = []
     const invalid: string[] = []
-
     // Fetch all transition rules in parallel (single DB batch instead of sequential queries)
     const rules = await Promise.all(
       allStageIds.map(toStageId => getTransitionRule(fromStageId, toStageId))
     )
-
     // Process all results together
     allStageIds.forEach((toStageId, index) => {
       const rule = rules[index]
-
       // No rule = allowed by default
       if (!rule) {
         allowed.push(toStageId)
         return
       }
-
       // Explicitly allowed
       if (rule.isAllowed) {
         allowed.push(toStageId)
         return
       }
-
       // Requires override
       if (rule.requiresSupervisorOverride) {
         if (userRole === 'supervisor' || userRole === 'admin') {
@@ -177,11 +164,9 @@ export async function categorizeStagesForTransition(
         }
         return
       }
-
       // Explicitly forbidden with no override option
       invalid.push(toStageId)
     })
-
     return { allowed, requiresOverride, invalid }
   } catch (error) {
     logger.error('Failed to categorize stages for transition', error as Error)
@@ -195,7 +180,6 @@ export async function categorizeStagesForTransition(
     }
   }
 }
-
 // Re-export types and rules for convenience
 export type {
   TransitionRule,
@@ -203,7 +187,6 @@ export type {
   StageCategories,
   UserRole,
 } from './stage-validation-types'
-
 export {
   getTransitionRule,
   getValidNextStages,

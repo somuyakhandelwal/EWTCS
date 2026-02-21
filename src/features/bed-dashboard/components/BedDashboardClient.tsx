@@ -139,7 +139,6 @@ export function BedDashboardClient({
         />
         <ConnectionStatus status={connectionStatus} onReconnect={reconnect} />
       </div>
-
       <BedGrid
         data={data}
         onRefresh={handleRefresh}
@@ -160,7 +159,6 @@ export function BedDashboardClient({
       {undoError && (
         <div className="text-center text-xs text-red-500 font-semibold mt-2">{undoError}</div>
       )}
-
       <SupervisorOverrideModal
         isOpen={Boolean(overrideState)}
         bedNumber={overrideState?.bedNumber ?? null}
@@ -171,7 +169,6 @@ export function BedDashboardClient({
         onCancel={closeOverrideModal}
         isLoading={isOverrideSubmitting}
       />
-
       <ConfirmationModal
         isOpen={Boolean(confirmationState)}
         bedNumber={confirmationState?.bedNumber ?? null}
@@ -190,7 +187,6 @@ export function BedDashboardClient({
         onCancel={closeDischargeModal}
         isSubmitting={isDischargeSubmitting}
       />
-
       {/* US-6.6: Add virtual (hallway/stretcher) bed modal */}
       <AddVirtualBedModal
         open={virtualBedModalOpen}
