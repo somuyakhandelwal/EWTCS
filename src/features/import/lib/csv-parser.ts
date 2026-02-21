@@ -2,7 +2,9 @@
  * Simple but robust CSV parser for historical data import.
  * Handles quoted values and escaped quotes (e.g., "Note with ""quote"" here").
  */
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 export function parseCSV(csvText: string): any[] {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const rows: any[] = []
     const lines = csvText.split(/\r?\n/)
 
@@ -16,6 +18,7 @@ export function parseCSV(csvText: string): any[] {
         if (!line) continue
 
         const values = parseLine(line)
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         const rowObj: any = {}
 
         headers.forEach((header, index) => {

@@ -38,12 +38,14 @@ export const BedFilterBar = memo(function BedFilterBar({
         size="sm"
         onClick={onToggleFilter}
         className={cn(showDelayedOnly && 'bg-red-900/30 border-red-700 text-red-300')}
+        aria-pressed={showDelayedOnly}
       >
-        <Filter className="h-4 w-4 mr-2" />
+        <Filter className="h-4 w-4 mr-2" aria-hidden="true" />
         {showDelayedOnly ? 'Delayed Only' : 'Show Delayed Only'}
         {delayedCount > 0 && (
           <span className="ml-2 px-2 py-0.5 text-xs bg-red-500 text-white rounded-full">
             {delayedCount}
+            <span className="sr-only"> active delays</span>
           </span>
         )}
       </Button>
@@ -55,15 +57,16 @@ export const BedFilterBar = memo(function BedFilterBar({
         onClick={onToggleSortOrder}
         className={cn(sortOrder === 'desc' && 'bg-amber-900/30 border-amber-700 text-amber-300')}
         title="Sort beds by elapsed time — longest wait first"
+        aria-pressed={sortOrder === 'desc'}
       >
-        <ArrowDownWideNarrow className="h-4 w-4 mr-2" />
+        <ArrowDownWideNarrow className="h-4 w-4 mr-2" aria-hidden="true" />
         {sortOrder === 'desc' ? 'Sorted by Delay' : 'Sort by Delay'}
       </Button>
 
       {/* AC: Clear indication when filter is active + one-click to clear */}
       {isFilterActive && (
         <>
-          <span className="text-xs font-medium px-2 py-1 rounded bg-amber-900/20 border border-amber-700/30 text-amber-400">
+          <span className="text-xs font-medium px-2 py-1 rounded bg-amber-900/20 border border-amber-700/30 text-amber-400" role="status">
             Filter Active
           </span>
           <Button
@@ -72,8 +75,9 @@ export const BedFilterBar = memo(function BedFilterBar({
             onClick={onClear}
             className="text-zinc-400 hover:text-white"
             title="Clear all filters and sorting"
+            aria-label="Clear all filters and sorting"
           >
-            <X className="h-4 w-4 mr-1" />
+            <X className="h-4 w-4 mr-1" aria-hidden="true" />
             Clear
           </Button>
         </>

@@ -127,10 +127,11 @@ export function BedDashboardClient({
         <button
           type="button"
           onClick={() => setVirtualBedModalOpen(true)}
-          className="flex items-center gap-1.5 rounded-md bg-purple-800/50 border border-purple-700/50 px-3 py-1.5 text-xs font-semibold text-purple-200 hover:bg-purple-700/60 transition-colors"
+          className="flex items-center gap-1.5 rounded-md bg-purple-800/50 border border-purple-700/50 px-3 py-1.5 text-xs font-semibold text-purple-200 hover:bg-purple-700/60 transition-colors focus:ring-2 focus:ring-purple-500"
           title="Add virtual (hallway/stretcher) bed"
+          aria-label="Add virtual hallway or stretcher bed"
         >
-          <MapPin className="h-3.5 w-3.5" />
+          <MapPin className="h-3.5 w-3.5" aria-hidden="true" />
           Add Virtual Bed
         </button>
         <DashboardSettings

@@ -12,89 +12,12 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/sha
 import { Button } from '@/shared/components/ui/button'
 import { cn } from '@/shared/lib/utils'
 import { searchArchive } from '../actions/archive-search-actions'
+import { ArchiveAdmissionsTable } from './ArchiveAdmissionsTable'
+import { ArchiveAuditLogsTable } from './ArchiveAuditLogsTable'
 import type { ArchivedAdmission, ArchivedAuditLog } from '../lib/data-retention-types'
 
-type TableChoice = 'patient_admissions' | 'audit_logs'
+export type TableChoice = 'patient_admissions' | 'audit_logs'
 
-function formatDate(d: Date | string | null): string {
-  if (!d) return '—'
-  return new Date(d).toLocaleString('en-GB', {
-    day: '2-digit', month: 'short', year: 'numeric',
-    hour: '2-digit', minute: '2-digit',
-  })
-}
-
-function msToHours(ms: number): string {
-  return (ms / 3_600_000).toFixed(1) + ' h'
-}
-
-// ── Sub-tables ─────────────────────────────────────────────────────────────
-
-interface AdmissionsTableProps { rows: ArchivedAdmission[] }
-
-function AdmissionsTable({ rows }: AdmissionsTableProps) {
-  return (
-    <div className="overflow-x-auto">
-      <table className="w-full text-xs">
-        <thead>
-          <tr className="text-zinc-500 border-b border-zinc-800">
-            <th className="pb-2 text-left font-medium">Admitted</th>
-            <th className="pb-2 text-left font-medium">Discharged</th>
-            <th className="pb-2 text-right font-medium">Duration</th>
-            <th className="pb-2 text-left font-medium">Bed ID</th>
-            <th className="pb-2 text-left font-medium">Notes</th>
-            <th className="pb-2 text-left font-medium">Archived</th>
-          </tr>
-        </thead>
-        <tbody className="divide-y divide-zinc-800/60">
-          {rows.map((row) => (
-            <tr key={row.id} className="text-zinc-300">
-              <td className="py-2 pr-4 whitespace-nowrap">{formatDate(row.admittedAt)}</td>
-              <td className="py-2 pr-4 whitespace-nowrap">{formatDate(row.dischargedAt)}</td>
-              <td className="py-2 pr-4 text-right tabular-nums">{msToHours(row.totalDurationMs)}</td>
-              <td className="py-2 pr-4 font-mono text-zinc-400 truncate max-w-[96px]">{row.bedId}</td>
-              <td className="py-2 pr-4 text-zinc-500 truncate max-w-[160px]">{row.notes ?? '—'}</td>
-              <td className="py-2 text-zinc-500 whitespace-nowrap">{formatDate(row.archivedAt)}</td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
-    </div>
-  )
-}
-
-interface AuditLogsTableProps { rows: ArchivedAuditLog[] }
-
-function AuditLogsTable({ rows }: AuditLogsTableProps) {
-  return (
-    <div className="overflow-x-auto">
-      <table className="w-full text-xs">
-        <thead>
-          <tr className="text-zinc-500 border-b border-zinc-800">
-            <th className="pb-2 text-left font-medium">Date</th>
-            <th className="pb-2 text-left font-medium">Action</th>
-            <th className="pb-2 text-left font-medium">Entity</th>
-            <th className="pb-2 text-left font-medium">Entity ID</th>
-            <th className="pb-2 text-left font-medium">Reason</th>
-            <th className="pb-2 text-left font-medium">Archived</th>
-          </tr>
-        </thead>
-        <tbody className="divide-y divide-zinc-800/60">
-          {rows.map((row) => (
-            <tr key={row.id} className="text-zinc-300">
-              <td className="py-2 pr-4 whitespace-nowrap">{formatDate(row.createdAt)}</td>
-              <td className="py-2 pr-4 font-mono text-blue-400 uppercase text-[10px]">{row.actionType}</td>
-              <td className="py-2 pr-4 text-zinc-400">{row.entityType}</td>
-              <td className="py-2 pr-4 font-mono text-zinc-500 truncate max-w-[96px]">{row.entityId}</td>
-              <td className="py-2 pr-4 text-zinc-500 truncate max-w-[160px]">{row.reason ?? '—'}</td>
-              <td className="py-2 text-zinc-500 whitespace-nowrap">{formatDate(row.archivedAt)}</td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
-    </div>
-  )
-}
 
 // ── Main component ─────────────────────────────────────────────────────────
 
@@ -207,10 +130,10 @@ export function ArchiveSearchView({ className }: ArchiveSearchViewProps) {
                 : `${results.length.toLocaleString()} record${results.length === 1 ? '' : 's'} found`}
             </p>
             {results.length > 0 && resultTable === 'patient_admissions' && (
-              <AdmissionsTable rows={results as ArchivedAdmission[]} />
+              <ArchiveAdmissionsTable rows={results as ArchivedAdmission[]} />
             )}
             {results.length > 0 && resultTable === 'audit_logs' && (
-              <AuditLogsTable rows={results as ArchivedAuditLog[]} />
+              <ArchiveAuditLogsTable rows={results as ArchivedAuditLog[]} />
             )}
           </div>
         )}

@@ -63,3 +63,16 @@ export interface PdfSection {
   /** Human-readable section title printed above the screenshot */
   title: string
 }
+
+export interface ExportDialogProps {
+  scope: ExportScope
+  /** Section DOM id attributes for PDF capture (per-section or full-report). */
+  pdfSections?: PdfSection[]
+  /** Title embedded in the PDF header. */
+  pdfTitle?: string
+  /** Username of the logged-in user for PDF metadata. */
+  exportedBy?: string
+  /** Optional shift filter to forward to server CSV actions. */
+  shiftId?: string
+  onClose: () => void
+}

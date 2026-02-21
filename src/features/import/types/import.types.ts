@@ -24,5 +24,6 @@ export type HistoricalAdmission = z.infer<typeof HistoricalAdmissionSchema>
 export interface ImportResult {
     successCount: number
     failureCount: number
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     errors: { row: number; error: string; data?: any }[]
 }

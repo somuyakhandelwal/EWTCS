@@ -1,0 +1,10 @@
+﻿C:\Users\aditi\OneDrive\Desktop\EWTCS\EWTCS\src\features\ai-summary\lib\daily-aggregation-queries.ts: 205
+C:\Users\aditi\OneDrive\Desktop\EWTCS\EWTCS\src\features\auth\actions\auth-actions.ts: 205
+C:\Users\aditi\OneDrive\Desktop\EWTCS\EWTCS\src\features\bed-dashboard\components\BedCard.tsx: 202
+C:\Users\aditi\OneDrive\Desktop\EWTCS\EWTCS\src\features\data-retention\components\ArchiveSearchView.tsx: 221
+C:\Users\aditi\OneDrive\Desktop\EWTCS\EWTCS\src\features\data-retention\__tests__\storage-stats-queries.test.ts: 455
+C:\Users\aditi\OneDrive\Desktop\EWTCS\EWTCS\src\features\export\components\ExportDialog.tsx: 380
+C:\Users\aditi\OneDrive\Desktop\EWTCS\EWTCS\src\features\export\lib\csv-utils.ts: 220
+C:\Users\aditi\OneDrive\Desktop\EWTCS\EWTCS\src\features\export\lib\pdf-generator.ts: 320
+C:\Users\aditi\OneDrive\Desktop\EWTCS\EWTCS\src\features\export\__tests__\csv-utils.test.ts: 258
+C:\Users\aditi\OneDrive\Desktop\EWTCS\EWTCS\src\features\import\components\ImportDialog.tsx: 209

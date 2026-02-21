@@ -1,0 +1,51 @@
+
+> ewtcs@0.1.0 lint
+> next lint
+
+`next lint` is deprecated and will be removed in Next.js 16.
+For new projects, use create-next-app to choose your preferred linter.
+For existing projects, migrate to the ESLint CLI:
+npx @next/codemod@canary next-lint-to-eslint-cli .
+
+
+./src/features/auth/actions/auth-actions.ts
+4:10  Warning: 'UNKNOWN_ACTOR_ID' is defined but never used.  @typescript-eslint/no-unused-vars
+
+./src/features/bed-dashboard/components/BedCard.tsx
+8:17  Warning: 'AlertTriangle' is defined but never used.  @typescript-eslint/no-unused-vars
+8:32  Warning: 'Hourglass' is defined but never used.  @typescript-eslint/no-unused-vars
+8:43  Warning: 'Zap' is defined but never used.  @typescript-eslint/no-unused-vars
+8:48  Warning: 'MapPin' is defined but never used.  @typescript-eslint/no-unused-vars
+
+./src/features/export/lib/export-utils.ts
+1:28  Warning: 'ResolvedDateRange' is defined but never used.  @typescript-eslint/no-unused-vars
+1:47  Warning: 'ExportFormat' is defined but never used.  @typescript-eslint/no-unused-vars
+
+./src/features/export/lib/pdf-core-utils.ts
+20:10  Error: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+48:32  Error: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+
+./src/features/export/lib/pdf-generator.ts
+6:3  Warning: 'PAGE_WIDTH_MM' is defined but never used.  @typescript-eslint/no-unused-vars
+25:16  Error: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+
+./src/features/import/actions/import-actions.ts
+14:11  Error: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+62:21  Error: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+
+./src/features/import/hooks/useImportLogic.ts
+50:23  Error: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+
+./src/features/import/lib/csv-parser.ts
+5:44  Error: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+6:17  Error: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+19:23  Error: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+
+./src/features/import/lib/import-service.ts
+78:29  Error: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+92:21  Error: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+
+./src/features/import/types/import.types.ts
+27:50  Error: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+
+info  - Need to disable some ESLint rules? Learn more here: https://nextjs.org/docs/app/api-reference/config/eslint#disabling-rules
