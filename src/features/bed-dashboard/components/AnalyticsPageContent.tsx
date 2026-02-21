@@ -105,7 +105,7 @@ export function AnalyticsPageContent({
           <StageAnalyticsView readOnly={isAuditMode} />
         </div>
         <div data-export-id="export-auditor-history" className="print-section print-no-break">
-          <AuditorHistoryView readOnly={isAuditMode} />
+          <AuditorHistoryView readOnly={isAuditMode} showCorrections />
         </div>
         <div data-export-id="export-tat" className="print-section print-no-break">
           <TatAnalyticsView readOnly={isAuditMode} />
