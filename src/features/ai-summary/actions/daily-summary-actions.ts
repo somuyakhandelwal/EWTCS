@@ -9,6 +9,7 @@ import { requireRole } from '@/shared/lib/auth'
 import { logAudit } from '@/shared/lib/audit'
 import { generateSummarySchema } from '../schemas/generate-summary'
 import { aggregateDailyStats } from '../lib/daily-aggregation-queries'
+import { generateAiSummaryText } from '../lib/ai-service'
 import { upsertDailySummary, getDailySummaryByDate, getRecentDailySummaries } from '../lib/daily-summary-store'
 import type { AggregationResult, DailySummary } from '../types/daily-summary'
 
@@ -51,6 +52,9 @@ export async function generateDailySummary(
 
         // Run aggregation across existing tables
         const summaryInput = await aggregateDailyStats(targetDate)
+
+        // Generate AI text summary from the aggregated stats
+        summaryInput.aiSummary = await generateAiSummaryText(summaryInput)
 
         // Upsert into daily_summaries (idempotent ON CONFLICT DO UPDATE)
         const saved = await upsertDailySummary(summaryInput)

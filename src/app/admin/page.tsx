@@ -11,6 +11,8 @@ import { getWards } from "@/features/user-management/lib/queries"
 import UserManagementTable from "@/features/user-management/components/UserManagementTable"
 import CreateUserDialog from "@/features/user-management/components/CreateUserDialog"
 import { KioskSessionsPanel } from "@/features/user-management/components/KioskSessionsPanel"
+import { DailySummaryTrigger } from "@/features/ai-summary/components/DailySummaryTrigger"
+import { DailySummaryHistory } from "@/features/ai-summary/components/DailySummaryHistory"
 
 export default async function AdminDashboard() {
     const session = await verifyActiveSession()
@@ -110,6 +112,22 @@ export default async function AdminDashboard() {
 
                 {/* Kiosk Sessions — US-5.3 */}
                 <KioskSessionsPanel />
+
+                {/* AI Daily Summaries — EPIC 9 */}
+                <Card className="bg-zinc-900 border-zinc-800">
+                    <CardHeader className="flex flex-row items-center justify-between">
+                        <div>
+                            <CardTitle className="text-xl text-white">Daily AI Summaries</CardTitle>
+                            <p className="text-sm text-zinc-400 mt-1">
+                                Automated operational reports and performance metrics
+                            </p>
+                        </div>
+                        <DailySummaryTrigger />
+                    </CardHeader>
+                    <CardContent>
+                        <DailySummaryHistory />
+                    </CardContent>
+                </Card>
 
                 {/* Recent Activity Log */}
                 <AdminRecentActivity recentLogs={recentLogs} />

@@ -43,6 +43,12 @@ export function DailySummaryCard({ summary }: DailySummaryCardProps) {
                 <StatItem label="Avg Stage Time" value={`${summary.avgStageTimeMinutes} min`} />
             </div>
 
+            {summary.aiSummary && (
+                <div className="rounded-lg bg-muted/50 p-3 italic text-sm text-foreground/90 leading-relaxed border-l-4 border-primary/30">
+                    "{summary.aiSummary}"
+                </div>
+            )}
+
             <div className="flex items-center justify-between text-xs text-muted-foreground">
                 <span>Delays: <strong className="text-foreground">{summary.delayCount}</strong></span>
                 <span>

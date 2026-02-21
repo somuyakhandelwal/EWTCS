@@ -17,6 +17,7 @@ interface RawDailySummaryRow {
     total_beds_used: string
     total_stage_updates: string
     generated_at: string
+    ai_summary: string | null
     metadata: Record<string, unknown>
 }
 
@@ -32,6 +33,7 @@ function mapRow(row: RawDailySummaryRow): DailySummary {
         totalBedsUsed: parseInt(row.total_beds_used, 10),
         totalStageUpdates: parseInt(row.total_stage_updates, 10),
         generatedAt: row.generated_at,
+        aiSummary: row.ai_summary ?? undefined,
         metadata: row.metadata ?? {},
     }
 }
@@ -54,8 +56,9 @@ export async function upsertDailySummary(
       total_beds_used,
       total_stage_updates,
       generated_at,
+      ai_summary,
       metadata
-    ) VALUES ($1, $2, $3, $4, $5, $6, $7, NOW(), $8)
+    ) VALUES ($1, $2, $3, $4, $5, $6, $7, NOW(), $8, $9)
     ON CONFLICT (summary_date) DO UPDATE SET
       total_patients        = EXCLUDED.total_patients,
       avg_stage_time_minutes = EXCLUDED.avg_stage_time_minutes,
@@ -64,6 +67,7 @@ export async function upsertDailySummary(
       total_beds_used       = EXCLUDED.total_beds_used,
       total_stage_updates   = EXCLUDED.total_stage_updates,
       generated_at          = NOW(),
+      ai_summary            = EXCLUDED.ai_summary,
       metadata              = EXCLUDED.metadata
     RETURNING *
   `
@@ -76,6 +80,7 @@ export async function upsertDailySummary(
         input.avgTatMinutes,
         input.totalBedsUsed,
         input.totalStageUpdates,
+        input.aiSummary ?? null,
         JSON.stringify(input.metadata),
     ])
 

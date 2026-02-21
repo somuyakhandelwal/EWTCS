@@ -90,8 +90,52 @@ async function aggregate(client, dateStr) {
   }
 }
 
+// ─── AI Text Generation (mirrors ai-service.ts) ────────────────────────────────
+async function generateAiSummary(stats, dateStr) {
+  const apiKey = process.env.GEMINI_API_KEY || process.env.GOOGLE_GENERATIVE_AI_API_KEY
+  if (!apiKey) {
+    console.warn('[daily-summary] ⚠️ GEMINI_API_KEY missing. Skipping AI text.')
+    return 'Summary generated without AI text (missing API key).'
+  }
+
+  try {
+    // We fetch dynamically to avoid overhead if key is missing
+    const { GoogleGenerativeAI } = await import('@google/generative-ai')
+    const genAI = new GoogleGenerativeAI(apiKey)
+    const model = genAI.getGenerativeModel({ model: 'gemini-1.5-flash' })
+
+    const prompt = `
+      You are an expert hospital operations analyst. 
+      Analyze the following emergency ward statistics for ${dateStr} and provide a concise, professional summary (max 3-4 sentences).
+      Focus on patient flow, bottlenecks, and efficiency.
+
+      STATISTICS:
+      - Total Patients Admitted: ${stats.totalPatients}
+      - Unique Beds Used: ${stats.totalBedsUsed}
+      - Average Turnaround Time: ${stats.avgTatMinutes} minutes
+      - Average Time per Stage: ${stats.avgStageTimeMinutes} minutes
+      - Total Stage Transitions: ${stats.totalStageUpdates}
+      - Disposition Delays: ${stats.delayCount}
+      ${stats.mostDelayedStage ? `- Most Congested Stage: ${stats.mostDelayedStage}` : ''}
+
+      INSTRUCTIONS:
+      - Be professional and clinical.
+      - Identify volume level (12 beds total capacity).
+      - Highlight delays if present.
+      - No markdown formatting.
+    `
+
+    const result = await model.generateContent(prompt)
+    const response = await result.response
+    return response.text().trim()
+  } catch (err) {
+    console.error(`[daily-summary] ❌ AI generation failed: ${err.message}`)
+    return 'AI text generation failed for this date.'
+  }
+}
+
 // ─── Upsert ───────────────────────────────────────────────────────────────────
-async function upsert(client, dateStr, stats) {
+async function upsert(client, dateStr, stats, aiText) {
   const metadata = stats.mostDelayedStage
     ? JSON.stringify({ mostDelayedStage: stats.mostDelayedStage })
     : '{}'
@@ -99,8 +143,9 @@ async function upsert(client, dateStr, stats) {
   const { rows } = await client.query(
     `INSERT INTO daily_summaries
        (summary_date, total_patients, avg_stage_time_minutes, delay_count,
-        avg_tat_minutes, total_beds_used, total_stage_updates, generated_at, metadata)
-     VALUES ($1,$2,$3,$4,$5,$6,$7,NOW(),$8)
+        avg_tat_minutes, total_beds_used, total_stage_updates, generated_at, 
+        ai_summary, metadata)
+     VALUES ($1,$2,$3,$4,$5,$6,$7,NOW(),$8,$9)
      ON CONFLICT (summary_date) DO UPDATE SET
        total_patients        = EXCLUDED.total_patients,
        avg_stage_time_minutes = EXCLUDED.avg_stage_time_minutes,
@@ -108,11 +153,12 @@ async function upsert(client, dateStr, stats) {
        avg_tat_minutes       = EXCLUDED.avg_tat_minutes,
        total_beds_used       = EXCLUDED.total_beds_used,
        total_stage_updates   = EXCLUDED.total_stage_updates,
+       ai_summary            = EXCLUDED.ai_summary,
        generated_at          = NOW(),
        metadata              = EXCLUDED.metadata
      RETURNING id, summary_date`,
     [dateStr, stats.totalPatients, stats.avgStageTimeMinutes, stats.delayCount,
-     stats.avgTatMinutes, stats.totalBedsUsed, stats.totalStageUpdates, metadata]
+     stats.avgTatMinutes, stats.totalBedsUsed, stats.totalStageUpdates, aiText, metadata]
   )
   return rows[0]
 }
@@ -130,7 +176,8 @@ async function main() {
   try {
     await client.connect()
     const stats = await aggregate(client, dateStr)
-    const saved = await upsert(client, dateStr, stats)
+    const aiText = await generateAiSummary(stats, dateStr)
+    const saved = await upsert(client, dateStr, stats, aiText)
 
     console.log(`[daily-summary] ✅ Done — id=${saved.id} date=${saved.summary_date}`)
     console.log(`[daily-summary]    patients=${stats.totalPatients}  delays=${stats.delayCount}  avgTAT=${stats.avgTatMinutes}min`)

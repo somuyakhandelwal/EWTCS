@@ -9,7 +9,7 @@
 
 BEGIN;
 
-CREATE TABLE report_signoffs (
+CREATE TABLE IF NOT EXISTS report_signoffs (
   id              UUID PRIMARY KEY DEFAULT gen_random_uuid(),
 
   -- Which report is being signed off
@@ -35,11 +35,11 @@ CREATE TABLE report_signoffs (
 );
 
 -- Fast lookup: find the active sign-off for a given date + type
-CREATE INDEX idx_report_signoffs_date_type
+CREATE INDEX IF NOT EXISTS idx_report_signoffs_date_type
   ON report_signoffs(report_date, report_type);
 
 -- Lookup sign-offs by supervisor
-CREATE INDEX idx_report_signoffs_signed_off_by
+CREATE INDEX IF NOT EXISTS idx_report_signoffs_signed_off_by
   ON report_signoffs(signed_off_by);
 
 COMMENT ON TABLE report_signoffs IS
