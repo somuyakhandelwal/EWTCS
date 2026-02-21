@@ -35,6 +35,8 @@ interface AuditorHistoryViewProps {
   showCorrections?: boolean
 }
 
+// readOnly: auditors may still export/filter/sort (Export stays enabled; see auditor-history-view-readonly.test)
+// eslint-disable-next-line @typescript-eslint/no-unused-vars -- prop part of API, not used to disable Export
 export function AuditorHistoryView({ readOnly = false, canEdit = false, showCorrections = false }: AuditorHistoryViewProps) {
   const shouldFetchCorrections = canEdit || showCorrections
 
@@ -131,7 +133,7 @@ export function AuditorHistoryView({ readOnly = false, canEdit = false, showCorr
                   : 'Read-only audit timeline with filters, sorting, and export.'}
               </CardDescription>
             </div>
-            <Button size="sm" variant="outline" disabled={exporting || readOnly} onClick={onExport}>
+            <Button size="sm" variant="outline" disabled={exporting} onClick={onExport}>
               <Download className="h-4 w-4 mr-2" />
               {exporting ? 'Exporting...' : 'Export CSV'}
             </Button>
