@@ -5,6 +5,7 @@
 'use client'
 
 import { useCallback, useState, useRef, useEffect, useTransition } from 'react'
+import { MapPin } from 'lucide-react'
 import { BedGrid } from './BedGrid'
 import { SearchInput } from './SearchInput'
 import { ConnectionStatus } from './ConnectionStatus'
@@ -12,28 +13,27 @@ import { SupervisorOverrideModal } from './SupervisorOverrideModal'
 import { ConfirmationModal } from './ConfirmationModal'
 import { DischargeModal } from './DischargeModal'
 import { DashboardSettings } from './DashboardSettings'
+import { AddVirtualBedModal } from './AddVirtualBedModal'
 import type { BedGridData, BedWithElapsedTime, DispositionDelayReason } from '../types/bed'
 import { useRealtimeBedUpdates } from '../hooks/useRealtimeBedUpdates'
 import { useBedStageUpdate } from '../hooks/useBedStageUpdate'
+import { useUndoManager } from '../hooks/useUndoManager'
 import { recordDispositionDelayReason } from '../actions/disposition-actions'
+import { fetchTatSummary } from '../actions/tat-actions'
+import type { TatSummary } from '../types/bed'
 
 interface BedDashboardClientProps {
   initialData: BedGridData
   canRecordDispositionReasons?: boolean
+  /** Server action for creating virtual beds — injected from app layer (no cross-feature import) */
+  onCreateVirtualBed: (fd: FormData) => Promise<{ success: boolean; error?: string }>
 }
 
 export function BedDashboardClient({
   initialData,
   canRecordDispositionReasons = true,
+  onCreateVirtualBed,
 }: BedDashboardClientProps) {
-  // Undo state: which bed can be undone, timer, and previous stage info
-  const [undoState, setUndoState] = useState<{
-    bedId: string;
-    prevStageId: string;
-    timer: number;
-  } | null>(null);
-  const undoTimerRef = useRef<NodeJS.Timeout | null>(null);
-
   const {
     data: realtimeData,
     connectionStatus,
@@ -66,50 +66,7 @@ export function BedDashboardClient({
     closeDischargeModal,
   } = useBedStageUpdate(realtimeData);
 
-  // Watch for stage update to enable Undo
-  useEffect(() => {
-    if (lastUpdatedBedId && lastUpdatedStageId) {
-      setUndoState({ bedId: lastUpdatedBedId, prevStageId: lastUpdatedStageId, timer: 30 });
-      if (undoTimerRef.current) clearInterval(undoTimerRef.current);
-      undoTimerRef.current = setInterval(() => {
-        setUndoState(prev => {
-          if (!prev) return null;
-          if (prev.timer <= 1) {
-            clearInterval(undoTimerRef.current!);
-            return null;
-          }
-          return { ...prev, timer: prev.timer - 1 };
-        });
-      }, 1000);
-    }
-    // Cleanup timer if bed changes
-    return () => {
-      if (undoTimerRef.current) clearInterval(undoTimerRef.current);
-    };
-  }, [lastUpdatedBedId, lastUpdatedStageId]);
-
-  // Undo handler (to be implemented: call API, refresh, etc.)
-  const [undoError, setUndoError] = useState<string | null>(null);
-  const handleUndo = useCallback(async () => {
-    if (!undoState) return;
-    setUndoError(null);
-    try {
-      const res = await fetch('/src/features/bed-dashboard/api/undo', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ bedId: undoState.bedId, prevStageId: undoState.prevStageId }),
-      });
-      const data = await res.json();
-      if (!data.success) {
-        setUndoError(data.error || 'Undo failed');
-      }
-    } catch (e) {
-      setUndoError('Undo failed');
-    }
-    setUndoState(null);
-    if (undoTimerRef.current) clearInterval(undoTimerRef.current);
-    await handleRefresh();
-  }, [undoState, handleRefresh]);
+  const { undoState, undoError, handleUndo } = useUndoManager(lastUpdatedBedId, lastUpdatedStageId, handleRefresh)
 
   // Search state: immediate input and debounced query used for filtering (US-1.2)
   const [searchInput, setSearchInput] = useState('')
@@ -135,6 +92,18 @@ export function BedDashboardClient({
     void bed
   }, [])
 
+  // US-2.4: TAT summary for the stats bar
+  const [tatSummary, setTatSummary] = useState<TatSummary | null>(null)
+
+  // US-6.6: virtual bed modal (nurse can add hallway/stretcher patients)
+  const [virtualBedModalOpen, setVirtualBedModalOpen] = useState(false)
+
+  useEffect(() => {
+    fetchTatSummary(24)
+      .then(r => { if (r.success && r.data) setTatSummary(r.data) })
+      .catch(() => { /* TAT is non-critical */ })
+  }, [])
+
   const [, startTransition] = useTransition()
 
   const handleReasonSelect = useCallback(
@@ -155,6 +124,15 @@ export function BedDashboardClient({
       />
       {/* Connection Status Indicator */}
       <div className="flex justify-end items-center gap-2">
+        <button
+          type="button"
+          onClick={() => setVirtualBedModalOpen(true)}
+          className="flex items-center gap-1.5 rounded-md bg-purple-800/50 border border-purple-700/50 px-3 py-1.5 text-xs font-semibold text-purple-200 hover:bg-purple-700/60 transition-colors"
+          title="Add virtual (hallway/stretcher) bed"
+        >
+          <MapPin className="h-3.5 w-3.5" />
+          Add Virtual Bed
+        </button>
         <DashboardSettings
           enabled={settings.confirmCriticalStages}
           onToggle={toggleConfirmation}
@@ -168,6 +146,7 @@ export function BedDashboardClient({
         onBedClick={handleBedClick}
         onStageSelect={handleStageSelect}
         onReasonSelect={canRecordDispositionReasons ? handleReasonSelect : undefined}
+        tatSummary={tatSummary}
         updatingBedId={updatingBedId}
         updatingStageId={updatingStageId}
         lastUpdatedBedId={lastUpdatedBedId}
@@ -175,6 +154,8 @@ export function BedDashboardClient({
         errorByBedId={errorByBedId}
         isRefreshing={isLoading}
         searchQuery={searchQuery}
+        undoState={undoState}
+        onUndo={handleUndo}
       />
       {undoError && (
         <div className="text-center text-xs text-red-500 font-semibold mt-2">{undoError}</div>
@@ -208,6 +189,14 @@ export function BedDashboardClient({
         onConfirm={handleDischargeConfirm}
         onCancel={closeDischargeModal}
         isSubmitting={isDischargeSubmitting}
+      />
+
+      {/* US-6.6: Add virtual (hallway/stretcher) bed modal */}
+      <AddVirtualBedModal
+        open={virtualBedModalOpen}
+        onClose={() => setVirtualBedModalOpen(false)}
+        onCreated={() => { setVirtualBedModalOpen(false); handleRefresh() }}
+        onSubmit={onCreateVirtualBed}
       />
     </div>
   )

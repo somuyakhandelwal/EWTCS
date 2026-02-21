@@ -223,9 +223,16 @@ Visit [http://localhost:3000/login](http://localhost:3000/login) and log in:
 | `audit_logs` | Security & compliance logging | id, action_type, performed_by, timestamp |
 | `stages` | Patient workflow stages | id, name, display_order, color_code |
 | `beds` | Emergency ward beds | id, bed_number, current_stage_id, is_occupied, ward_id |
-| `bed_stage_logs` | Bed transition history | id, bed_id, from_stage_id, to_stage_id |
+| `bed_stage_logs` | Bed transition history | id, bed_id, from_stage_id, to_stage_id, transition_time |
 | `stage_transitions` | Workflow rules for stage updates | from_stage_id, to_stage_id, is_allowed, requires_supervisor_override |
 | `wards` | Hospital ward definitions | id, name, code, description, is_active |
+| `patient_admissions` | Completed patient stays (source of truth for analytics) | id, bed_id, admitted_at, discharged_at, duration_ms |
+| `shifts` | Shift definitions for filtering | id, name, start_time, end_time |
+| `system_settings` | Global configurable thresholds (key-value store) | key, value, updated_at |
+| `stage_delay_thresholds` | Per-stage delay threshold overrides | stage_id, threshold_minutes |
+| `disposition_delay_reasons` | Open delay reason log per bed | id, bed_id, reason, recorded_at, resolved_at |
+| `token_blacklist` | Invalidated JWT tokens | token_hash, expires_at |
+| `kiosk_sessions` | Kiosk mode session tracking | id, ward_id, created_at, expires_at |
 
 ### Default Stages
 
@@ -264,6 +271,44 @@ beds (1) ──< (many) bed_stage_logs
 wards (1) ──< (many) users
 wards (1) ──< (many) beds
 ```
+
+---
+
+## System Settings (Configurable Thresholds)
+
+The `system_settings` table is a key-value store for global runtime configuration. Values can be updated by admins via the `/analytics` page without a code deployment.
+
+| Key | Type | Default | Description |
+|-----|------|---------|-------------|
+| `los_target_minutes` | integer | — | Target length-of-stay in minutes for the LOS trend chart |
+| `delay_threshold_minutes` | integer | 180 | Minutes after which a patient stay is considered delayed |
+| `delay_target_pct` | decimal | — | Target % of delayed patients (displayed on the Delayed Patients gauge) |
+
+**Priority chain for delay threshold resolution:**
+`los_target_minutes` → `delay_threshold_minutes` → 180 min hard-coded fallback
+
+**Per-stage overrides:** The `stage_delay_thresholds` table allows individual stages to have their own threshold, overriding the global setting.
+
+---
+
+## Performance Indexes (Migration 022)
+
+Migration 022 adds database indexes supporting the Dashboard (<2s) and Reports (<3s) SLA targets. These indexes are non-destructive (`IF NOT EXISTS`) and can be safely re-applied.
+
+| Index | Table | Columns | Purpose |
+|-------|-------|---------|--------|
+| `idx_bed_stage_logs_bed_id_time` | `bed_stage_logs` | `bed_id, transition_time DESC` | Primary filter for transition and TAT queries |
+| `idx_bed_stage_logs_transition_time` | `bed_stage_logs` | `transition_time DESC` | Date-range analytics filtering |
+| `idx_bed_stage_logs_to_stage_id` | `bed_stage_logs` | `to_stage_id` | Stage duration stats GROUP BY |
+| `idx_bed_stage_logs_from_stage_id` | `bed_stage_logs` | `from_stage_id` | TAT queries filtering by from+to stage |
+| `idx_beds_is_active` | `beds` | `is_active` (partial) | Dashboard active beds filter |
+| `idx_beds_is_active_occupied` | `beds` | `is_active, is_occupied` (partial) | Wait-time occupied beds filter |
+| `idx_stage_delay_thresholds_stage_id` | `stage_delay_thresholds` | `stage_id` (unique) | Per-stage threshold lookup |
+| `idx_disp_delay_reasons_bed_open` | `disposition_delay_reasons` | `bed_id, recorded_at DESC` (partial, unresolved) | Bottleneck LATERAL join |
+| `idx_system_settings_key` | `system_settings` | `key` (unique) | Global threshold key lookups |
+| `idx_stages_name_lower` | `stages` | `LOWER(name)` | Stage name matching (cleaning/empty detection) |
+
+> **Note:** `CONCURRENTLY` is not used because migrations run inside a single transaction.
 
 ---
 
@@ -520,6 +565,17 @@ UPDATE beds SET ward_id = (SELECT id FROM wards WHERE code = 'EWA'), ward_name =
 
 ---
 
+## Recent Schema Changes
+
+| Migration | Description |
+|---|---|
+| `028_create_archival_tables` | EPIC 14 — archival tables for data retention (`archival_records`, `audit_logs_archive`, `patient_admissions_archive`) |
+| `029_seed_retention_settings` | EPIC 14 — default data retention policy settings in `system_settings` |
+| `030_create_report_signoffs` | EPIC 12 — `report_signoffs` table for immutable supervisor sign-offs on daily reports |
+| `seed_config_jmch` | Updated JMCH hospital seed configuration with customized workflow stages |
+
+---
+
 ## Migration Commands
 
 ### Available Commands
@@ -606,11 +662,21 @@ SELECT bed_number, is_occupied FROM beds ORDER BY bed_number;
 
 ### Expected Table Count
 
-Run `\dt` in psql - you should see **6 tables**:
+Run `\dt` in psql — you should see **15 tables**:
 - audit_logs
+- bed_stage_log_corrections
 - bed_stage_logs
 - beds
+- disposition_delay_reasons
+- kiosk_sessions
+- password_reset_tokens
+- patient_admissions
+- shifts
+- stage_delay_thresholds
+- stage_transitions
 - stages
+- system_settings
+- token_blacklist
 - users
 - wards
 

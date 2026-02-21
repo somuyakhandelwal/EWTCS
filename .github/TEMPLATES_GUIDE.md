@@ -109,7 +109,7 @@ Closes #
 - [ ] Test
 
 ## Checklist
-- [ ] No file exceeds 200 lines
+- [ ] No file exceeds 200 lines (except lock files: package-lock.json, yarn.lock, pnpm-lock.yaml)
 - [ ] Code is properly formatted
 - [ ] Tested locally and works as expected
 - [ ] Added/updated tests if applicable
@@ -151,7 +151,7 @@ Closes #1
 - [ ] Test
 
 ## Checklist
-- [x] No file exceeds 200 lines
+- [x] No file exceeds 200 lines (except lock files: package-lock.json, yarn.lock, pnpm-lock.yaml)
 - [x] Code is properly formatted
 - [x] Tested locally and works as expected
 - [ ] Added/updated tests if applicable
@@ -171,7 +171,7 @@ Closes #1
 
 ### What It Does
 
-Automatically checks that **no file exceeds 200 lines** when you create or update a pull request.
+Automatically checks that **no file exceeds 200 lines** (except lock/config exclusions like `package-lock.json`) when you create or update a pull request.
 
 ### How It Works
 
@@ -380,7 +380,7 @@ git push origin feature/issue-5-authentication
    - [x] Feature
    
    ## Checklist
-   - [x] No file exceeds 200 lines
+   - [x] No file exceeds 200 lines (except lock files: package-lock.json, yarn.lock, pnpm-lock.yaml)
    - [x] Code is properly formatted
    - [x] Tested locally and works as expected
    ```

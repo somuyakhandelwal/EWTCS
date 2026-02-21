@@ -4,7 +4,7 @@
 // Epic 5: Authentication & Role-Based Access (US-5.3)
 // Purpose: Server actions for admin to list and revoke kiosk sessions
 
-import { requireAdmin } from '@/features/user-management/lib/auth'
+import { requireAdmin, requireAdminWrite } from '@/features/user-management/lib/auth'
 import { listActiveKioskSessions, revokeKioskSession } from '@/shared/lib/kiosk-queries'
 import { logger } from '@/shared/config/logger'
 
@@ -34,7 +34,11 @@ export async function getActiveKioskSessionsAction() {
  */
 export async function revokeKioskSessionAction(kioskSessionId: string) {
   try {
-    const session = await requireAdmin()
+    const session = await requireAdminWrite({
+      actionType: 'DEACTIVATE',
+      entityType: 'kiosk_session',
+      entityId: kioskSessionId,
+    })
     await revokeKioskSession(kioskSessionId, session.userId)
     return { success: true as const }
   } catch (error) {

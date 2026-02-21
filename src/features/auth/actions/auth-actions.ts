@@ -1,17 +1,16 @@
 'use server'
 
-import { z } from 'zod'
-import { createSession, deleteSession, type KioskOptions } from '@/shared/lib/session'
+import { createSession, type KioskOptions } from '@/shared/lib/session'
+import { UNKNOWN_ACTOR_ID, loginSchema } from '../lib/auth-schema'
 import pool from '@/shared/lib/db'
 import bcrypt from 'bcrypt'
 import { redirect } from 'next/navigation'
+import { logAudit } from '@/shared/lib/audit'
 import { headers } from 'next/headers'
 import { createKioskSession } from '@/features/auth/lib/kiosk'
-
-const loginSchema = z.object({
-    username: z.string().min(1, 'Username is required'),
-    password: z.string().min(1, 'Password is required'),
-})
+import { getClientIpFromHeaders } from '@/shared/lib/request-ip'
+import { logger } from '@/shared/config/logger'
+import { getPasswordResetStatus } from '@/features/auth/lib/password-reset-db'
 
 export async function login(prevState: unknown, formData: FormData) {
     // Validate form fields
@@ -24,13 +23,30 @@ export async function login(prevState: unknown, formData: FormData) {
     }
 
     const { username, password } = result.data
+    const requestHeaders = await headers()
+    const ipAddress = getClientIpFromHeaders(requestHeaders)
 
     try {
-
         const { rows } = await pool.query('SELECT * FROM users WHERE username = $1', [username])
         const user = rows[0]
 
         if (!user) {
+            // Audit best-effort: UNKNOWN_ACTOR_ID has no users row so INSERT may fail — swallow to avoid leaking errors.
+            try {
+                await logAudit({
+                    actionType: 'LOGIN_FAILED',
+                    entityType: 'auth',
+                    entityId: UNKNOWN_ACTOR_ID,
+                    performedBy: UNKNOWN_ACTOR_ID,
+                    reason: 'Login failed: user not found',
+                    metadata: {
+                        username,
+                    },
+                    ipAddress,
+                })
+            } catch (_auditErr) {
+                logger.warn('Could not write audit log for unknown-user login attempt', { username })
+            }
 
             // Don't reveal user existence
             return { message: 'Invalid credentials' }
@@ -39,17 +55,43 @@ export async function login(prevState: unknown, formData: FormData) {
         // CRITICAL: Check if user account is active
         // US-5.7 Acceptance Criteria: "Deactivated users cannot log in"
         if (!user.is_active) {
+            await logAudit({
+                actionType: 'LOGIN_BLOCKED',
+                entityType: 'user',
+                entityId: user.id,
+                performedBy: user.id,
+                reason: 'Login blocked: account deactivated',
+                metadata: {
+                    username: user.username,
+                    role: user.role,
+                },
+                ipAddress,
+            })
+
             return { message: 'Account is deactivated. Contact administrator.' }
         }
 
         // Check for lockout
         if (user.lockout_until && new Date(user.lockout_until) > new Date()) {
             const remaining = Math.ceil((new Date(user.lockout_until).getTime() - Date.now()) / 60000)
+            await logAudit({
+                actionType: 'LOGIN_BLOCKED',
+                entityType: 'user',
+                entityId: user.id,
+                performedBy: user.id,
+                reason: 'Login blocked: account lockout active',
+                metadata: {
+                    username: user.username,
+                    role: user.role,
+                    lockoutUntil: user.lockout_until,
+                },
+                ipAddress,
+            })
+
             return { message: `Account locked. Try again in ${remaining} minutes.` }
         }
 
         const passwordsMatch = await bcrypt.compare(password, user.password_hash)
-
 
         if (!passwordsMatch) {
             // Increment failed attempts
@@ -65,6 +107,23 @@ export async function login(prevState: unknown, formData: FormData) {
                 [attempts, lockoutUntil, user.id]
             )
 
+            await logAudit({
+                actionType: 'LOGIN_FAILED',
+                entityType: 'user',
+                entityId: user.id,
+                performedBy: user.id,
+                reason: lockoutUntil
+                    ? 'Login failed: invalid password, account locked'
+                    : 'Login failed: invalid password',
+                metadata: {
+                    username: user.username,
+                    role: user.role,
+                    failedAttempts: attempts,
+                    lockoutUntil,
+                },
+                ipAddress,
+            })
+
             return { message: 'Invalid credentials' }
         }
 
@@ -74,7 +133,27 @@ export async function login(prevState: unknown, formData: FormData) {
             [user.id]
         )
 
-        // US-5.3: Kiosk mode — long-lived session bound to the login IP
+        // US-5.5: Check if user must change their password before accessing the app
+        const { mustChangePassword, tempPasswordSetAt } = await getPasswordResetStatus(user.id)
+
+        if (mustChangePassword) {
+            const TEMP_PASSWORD_EXPIRY_MS = 24 * 60 * 60 * 1000 // 24 hours
+            const isExpired =
+                tempPasswordSetAt !== null &&
+                Date.now() - new Date(tempPasswordSetAt).getTime() > TEMP_PASSWORD_EXPIRY_MS
+
+            if (isExpired) {
+                return {
+                    message:
+                        'Temporary password has expired. Contact your administrator to reset your password.',
+                }
+            }
+
+            // Create a normal session (no flag in JWT) and redirect to the
+            // change-password page. The page itself verifies the DB flag.
+            await createSession(user.id, user.username, user.role)
+            redirect('/change-password')
+        }
         const isKiosk = formData.get('kioskMode') === 'on'
         let kioskOpts: KioskOptions | undefined
         if (isKiosk) {
@@ -86,12 +165,25 @@ export async function login(prevState: unknown, formData: FormData) {
             kioskOpts = { isKiosk: true, kioskIp: boundIp, kioskSessionId }
         }
         await createSession(user.id, user.username, user.role, kioskOpts)
-
+        await logAudit({
+            actionType: 'LOGIN',
+            entityType: 'user',
+            entityId: user.id,
+            performedBy: user.id,
+            reason: 'User authenticated successfully',
+            metadata: {
+                username: user.username,
+                role: user.role,
+            },
+            ipAddress,
+        })
         // Redirect based on role
         if (user.role === 'admin') {
             redirect('/admin')
         } else if (user.role === 'supervisor') {
             redirect('/supervisor')
+        } else if (user.role === 'auditor') {
+            redirect('/analytics')
         } else {
             redirect('/dashboard')
         }
@@ -100,12 +192,7 @@ export async function login(prevState: unknown, formData: FormData) {
         if (error && typeof error === 'object' && 'digest' in error && typeof error.digest === 'string' && error.digest.startsWith('NEXT_REDIRECT')) {
             throw error
         }
-        console.error('Login error:', error)
+        logger.error('Login error', error instanceof Error ? error : undefined)
         return { message: 'Internal server error' }
     }
-}
-
-export async function logout() {
-    await deleteSession()
-    redirect('/login')
 }

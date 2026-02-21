@@ -4,7 +4,7 @@
 
 import { logger } from '@/shared/config/logger'
 import { getUserWard, getBedWard } from '../lib/bed-queries'
-import { requireRole } from '@/shared/lib/auth'
+import { requireWriteRole } from '@/shared/lib/auth'
 import { logAudit } from '@/shared/lib/audit'
 import pool from '@/shared/lib/db'
 import type { DispositionDelayReason } from '../types/bed'
@@ -19,7 +19,11 @@ export async function recordDispositionDelayReason(input: {
   notes?: string
 }): Promise<{ success: boolean; error?: string }> {
   try {
-    const session = await requireRole(['nurse', 'supervisor', 'admin'])
+    const session = await requireWriteRole(['nurse', 'supervisor', 'admin'], {
+      actionType: 'UPDATE',
+      entityType: 'disposition_delay_reason',
+      entityId: input.bedId,
+    })
 
     // Ward-level access check (same IDOR pattern as updateBedStage)
     const userWard = await getUserWard(session.userId)

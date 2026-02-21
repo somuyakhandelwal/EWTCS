@@ -6,6 +6,7 @@ import { Button } from '@/shared/components/ui/button'
 import { Input } from '@/shared/components/ui/input'
 import { Label } from '@/shared/components/ui/label'
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/shared/components/ui/card'
+import ForgotPasswordInfo from '@/features/auth/components/ForgotPasswordInfo'
 
 export default function LoginPage() {
     const router = useRouter()
@@ -123,6 +124,9 @@ export default function LoginPage() {
                                 </p>
                             </div>
                         </div>
+
+                        {/* US-5.5: Forgot password info */}
+                        <ForgotPasswordInfo />
                     </CardContent>
                     <CardFooter>
                         <Button className="w-full" type="submit" disabled={pending}>

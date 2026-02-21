@@ -1,6 +1,7 @@
 import { verifyActiveSession } from "@/shared/lib/active-session"
 import { getBedGridData } from "@/features/bed-dashboard/actions/bed-grid-actions"
 import { BedDashboardClient } from "@/features/bed-dashboard/components/BedDashboardClient"
+import { createVirtualBed } from "@/features/bed-management/actions/virtual-bed-actions"
 import { AlertTriangle } from "lucide-react"
 import { LogoutButton } from "@/features/auth/components/LogoutButton"
 import { KioskBanner } from "@/features/auth/components/KioskBanner"
@@ -62,6 +63,7 @@ export default async function DashboardPage() {
                 <BedDashboardClient
                     initialData={bedGridResult.data}
                     canRecordDispositionReasons={session.role !== 'housekeeping'}
+                    onCreateVirtualBed={createVirtualBed}
                 />
             </div>
         </div>

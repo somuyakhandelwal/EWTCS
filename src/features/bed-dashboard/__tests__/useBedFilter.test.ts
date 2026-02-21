@@ -19,6 +19,8 @@ function makeBed(
     lastStageChange: null,
     isOccupied: true,
     isActive: true,
+    isTemporary: false,
+    isVirtual: false,
     metadata: {},
     createdAt: new Date(),
     updatedAt: new Date(),

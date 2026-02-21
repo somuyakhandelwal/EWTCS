@@ -25,6 +25,8 @@ export async function getBedsWithElapsedTime(
         b.last_stage_change                   AS "lastStageChange",
         b.is_occupied                         AS "isOccupied",
         b.is_active                           AS "isActive",
+        b.is_temporary                        AS "isTemporary",
+        b.is_virtual                          AS "isVirtual",
         b.metadata,
         b.created_at                          AS "createdAt",
         b.updated_at                          AS "updatedAt",
@@ -42,10 +44,16 @@ export async function getBedsWithElapsedTime(
           THEN EXTRACT(EPOCH FROM (CURRENT_TIMESTAMP - b.patient_start_time)) * 1000
           ELSE NULL
         END                                   AS "elapsedTimeMs",
-        -- Flag overall delay (> configurable threshold, default 3 h)
+        -- Flag overall delay (> per-stage threshold if set, else global — US-6.3)
         CASE
           WHEN b.is_occupied AND b.patient_start_time IS NOT NULL
-            AND EXTRACT(EPOCH FROM (CURRENT_TIMESTAMP - b.patient_start_time)) * 1000 > $1
+            AND EXTRACT(EPOCH FROM (CURRENT_TIMESTAMP - b.patient_start_time)) * 1000
+              > COALESCE(
+                  (SELECT sdt.threshold_minutes * 60000.0
+                   FROM stage_delay_thresholds sdt
+                   WHERE sdt.stage_id = b.current_stage_id),
+                  $1
+                )
           THEN true
           ELSE false
         END                                   AS "isDelayed",

@@ -46,6 +46,8 @@ export interface Bed {
   lastStageChange: Date | null
   isOccupied: boolean
   isActive: boolean
+  isTemporary: boolean  // US-6.5: present on all bed rows — false for permanent beds
+  isVirtual: boolean    // US-6.6: true for nurse-created hallway/stretcher patients
   metadata: Record<string, unknown>
   createdAt: Date
   updatedAt: Date
@@ -108,4 +110,44 @@ export interface DischargeState {
   /** Total elapsed ms for the current patient — displayed in the modal */
   elapsedTimeMs: number | null
   patientStartTime: Date | null
+}
+
+// Turnaround Time (TAT) tracking types (US-2.4)
+
+export interface TatRecord {
+  bedId: string
+  bedNumber: string
+  dischargeStartTime: Date
+  cleaningStartTime: Date | null
+  cleaningEndTime: Date | null
+  tatMs: number
+  cleaningDurationMs: number | null
+}
+
+export interface TatSummary {
+  averageTatMs: number
+  medianTatMs: number | null
+  maxTatMs: number | null
+  minTatMs: number | null
+  totalCompleted: number
+  averageCleaningMs: number | null
+}
+
+// Full-Cycle TAT types (US-3.4: Discharge → Next Admission)
+
+export interface FullCycleTatRecord {
+  bedId: string
+  bedNumber: string
+  previousDischargedAt: Date
+  admittedAt: Date
+  tatMs: number
+}
+
+export interface FullCycleTatSummary {
+  totalCycles: number
+  averageTatMs: number
+  medianTatMs: number | null
+  minTatMs: number | null
+  maxTatMs: number | null
+  p90TatMs: number | null
 }

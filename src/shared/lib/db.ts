@@ -3,6 +3,14 @@ import { config } from '@/shared/config/env';
 import { logger } from '@/shared/config/logger';
 
 /**
+ * Slow-query thresholds for EPIC 13 SLA monitoring.
+ * Dashboard SLA: <2 s — any single query over 500 ms is a warning signal.
+ * Reports SLA:   <3 s — any query over 2 s risks breaching the page budget.
+ */
+const SLOW_QUERY_WARN_MS = 500;
+const SLOW_QUERY_ERROR_MS = 2000;
+
+/**
  * Initializes the PostgreSQL connection pool.
  * Supports scalability for hospital-grade deployment.
  * Includes error handling and automatic reconnection.
@@ -83,6 +91,19 @@ export const query = async <T extends QueryResultRow = QueryResultRow>(
       duration,
       affectedRows: result.rowCount,
     });
+
+    // EPIC 13: Detect queries that risk breaching page-level SLAs.
+    if (duration > SLOW_QUERY_ERROR_MS) {
+      logger.error('Very slow query (>2 s) — SLA breach risk', undefined, {
+        duration,
+        truncatedQuery: text.substring(0, 200),
+      });
+    } else if (duration > SLOW_QUERY_WARN_MS) {
+      logger.warn('Slow query (>500 ms) — monitor for SLA impact', {
+        duration,
+        truncatedQuery: text.substring(0, 200),
+      });
+    }
 
     return result;
   } catch (error) {

@@ -5,7 +5,7 @@
 // Separated from bed-actions.ts to keep files under the 200-line limit.
 // DB query helpers live in ../lib/discharge-queries.ts.
 
-import { requireRole } from '@/shared/lib/auth'
+import { requireWriteRole } from '@/shared/lib/auth'
 import { logAudit } from '@/shared/lib/audit'
 import { logger } from '@/shared/config/logger'
 import pool from '@/shared/lib/db'
@@ -42,7 +42,11 @@ export async function dischargeAndResetBed(input: {
   notes?: string
 }): Promise<DischargeAndResetResult> {
   try {
-    const session = await requireRole(['nurse', 'supervisor', 'admin'])
+    const session = await requireWriteRole(['nurse', 'supervisor', 'admin'], {
+      actionType: 'DISCHARGE',
+      entityType: 'bed',
+      entityId: input.bedId,
+    })
 
     // Ward-level access check (same IDOR pattern as updateBedStage)
     const userWard = await getUserWard(session.userId)

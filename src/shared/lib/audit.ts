@@ -1,6 +1,8 @@
 import 'server-only'
 import pool from '@/shared/lib/db'
 import { logger } from '@/shared/config/logger'
+import { headers } from 'next/headers'
+import { getClientIpFromHeaders } from '@/shared/lib/request-ip'
 
 /**
  * Generic audit logging system for all features
@@ -24,6 +26,8 @@ export interface AuditLogEntry {
     reason?: string
     /** Optional metadata for additional context */
     metadata?: Record<string, unknown>
+    /** Optional client IP address */
+    ipAddress?: string | null
 }
 
 export interface AuditLogRecord {
@@ -35,6 +39,7 @@ export interface AuditLogRecord {
     changes: Record<string, unknown>
     reason: string | null
     metadata: Record<string, unknown>
+    ip_address: string | null
     created_at: string
     performed_by_username?: string | null
     performed_by_role?: string | null
@@ -68,10 +73,21 @@ export interface AuditLogRecord {
  */
 export async function logAudit(entry: AuditLogEntry): Promise<void> {
     try {
+        let resolvedIpAddress = entry.ipAddress || null
+
+        if (!resolvedIpAddress) {
+            try {
+                const requestHeaders = await headers()
+                resolvedIpAddress = getClientIpFromHeaders(requestHeaders)
+            } catch {
+                resolvedIpAddress = null
+            }
+        }
+
         await pool.query(
             `INSERT INTO audit_logs 
-            (action_type, entity_type, entity_id, performed_by_user_id, changes, reason, metadata) 
-            VALUES ($1, $2, $3, $4, $5, $6, $7)`,
+            (action_type, entity_type, entity_id, performed_by_user_id, changes, reason, metadata, ip_address) 
+            VALUES ($1, $2, $3, $4, $5, $6, $7, $8)`,
             [
                 entry.actionType,
                 entry.entityType,
@@ -79,7 +95,8 @@ export async function logAudit(entry: AuditLogEntry): Promise<void> {
                 entry.performedBy,
                 JSON.stringify(entry.changes || {}),
                 entry.reason || null,
-                JSON.stringify(entry.metadata || {})
+                JSON.stringify(entry.metadata || {}),
+                resolvedIpAddress,
             ]
         )
         

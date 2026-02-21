@@ -1,6 +1,7 @@
 import 'server-only'
 import { jwtVerify } from 'jose'
 import pool from '@/shared/lib/db'
+import { logger } from '@/shared/config/logger'
 
 const secretKey = process.env.SESSION_SECRET
 if (!secretKey) {
@@ -29,7 +30,7 @@ export async function invalidateToken(token: string) {
             [token, expiresAt]
         )
     } catch (error) {
-        console.error('Failed to invalidate token:', error)
+        logger.error('Failed to invalidate token', error instanceof Error ? error : undefined)
         // Ensure we don't throw, just log.
     }
 }
@@ -47,7 +48,7 @@ export async function isTokenBlacklisted(token: string): Promise<boolean> {
         )
         return rows.length > 0
     } catch (error) {
-        console.error('Failed to check token blacklist:', error)
-        return false
+        logger.error('Failed to check token blacklist', error instanceof Error ? error : undefined)
+        return true  // Bug 8 fix: fail-closed — treat DB errors as blacklisted (US-6.5)
     }
 }
