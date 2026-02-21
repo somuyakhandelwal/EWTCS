@@ -1,4 +1,6 @@
 import type { ResolvedDateRange } from '../types/export.types'
+import type { jsPDF } from 'jspdf'
+import type html2canvas from 'html2canvas'
 
 export const PAGE_WIDTH_MM = 210
 export const PAGE_HEIGHT_MM = 297
@@ -25,7 +27,7 @@ export async function loadDeps() {
 }
 
 export function addHeader(
-    doc: any,
+    doc: jsPDF,
     title: string,
     range: ResolvedDateRange,
     exportedBy: string,
@@ -53,7 +55,7 @@ export function addHeader(
     doc.line(MARGIN_MM, HEADER_HEIGHT_MM - 2, PAGE_WIDTH_MM - MARGIN_MM, HEADER_HEIGHT_MM - 2)
 }
 
-export function addFooter(doc: any, exportTimestamp: string) {
+export function addFooter(doc: jsPDF, exportTimestamp: string) {
     const y = PAGE_HEIGHT_MM - FOOTER_HEIGHT_MM
     doc.setDrawColor(...COLORS.divider)
     doc.line(MARGIN_MM, y, PAGE_WIDTH_MM - MARGIN_MM, y)
@@ -66,10 +68,10 @@ export function addFooter(doc: any, exportTimestamp: string) {
 }
 
 export async function captureElement(
-    html2canvas: any,
+    h2c: typeof html2canvas,
     element: HTMLElement
 ): Promise<HTMLCanvasElement> {
-    return html2canvas(element, {
+    return h2c(element, {
         scale: 2,
         useCORS: true,
         logging: false,

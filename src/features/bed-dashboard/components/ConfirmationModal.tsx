@@ -49,7 +49,7 @@ export const ConfirmationModal = memo(function ConfirmationModal({
         }
     }, [isOpen, onCancel, onConfirm])
 
-    const confirmButtonRef = useEffect(() => {
+    useEffect(() => {
         if (isOpen) {
             // Find the confirm button and focus it
             const timer = setTimeout(() => {
