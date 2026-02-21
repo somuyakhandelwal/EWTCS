@@ -159,6 +159,7 @@ const run = async () => {
                 ['023_add_shift_id_to_logs',         '019_add_shift_id_to_logs'],
                 ['024_create_system_settings',       '020_create_system_settings'],
                 ['025_create_stage_delay_thresholds','021_create_stage_delay_thresholds'],
+                ['015_add_housekeeping_role_and_stages', '024_add_housekeeping_role_and_stages'],
             ];
             for (const [oldName, newName] of renames) {
                 await healClient.query(

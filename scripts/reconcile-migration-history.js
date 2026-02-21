@@ -57,6 +57,10 @@ async function reconcileMigrationHistory() {
       console.log('[reconcile] Expected migration names not found; no changes applied');
     }
 
+    await client.query(
+      "UPDATE pgmigrations SET name = '024_add_housekeeping_role_and_stages' WHERE name = '015_add_housekeeping_role_and_stages'"
+    );
+
     const orderedRows = await client.query(
       `SELECT id, name, run_on,
               ROW_NUMBER() OVER (ORDER BY name) AS expected_id

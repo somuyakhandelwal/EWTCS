@@ -1,4 +1,4 @@
--- Migration 015: Add housekeeping role
+-- Migration 024: Add housekeeping role
 -- Purpose: Allow housekeeping staff login with limited permissions for cleaning workflow
 
 -- Up Migration

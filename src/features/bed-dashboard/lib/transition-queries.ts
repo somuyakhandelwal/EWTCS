@@ -5,6 +5,7 @@
 import { query } from '@/shared/lib/db'
 import { logger } from '@/shared/config/logger'
 import type { StageTransitionRecord, BedStageTimeline } from './stage-analytics'
+import { STAGE_LOG_HISTORY_CTE } from './stage-log-history-source'
 
 /**
  * Get all stage transitions with calculated durations
@@ -21,32 +22,44 @@ export async function getStageTransitions(
 ): Promise<StageTransitionRecord[]> {
   try {
     let sql = `
-      SELECT 
-        bsl.id,
-        b.bed_number as "bedNumber",
-        b.id as "bedId",
-        fs.name as "fromStageName",
-        ts.name as "toStageName",
-        bsl.transition_time as "transitionTime",
-        bsl.duration_in_previous_stage_ms as "durationInPreviousStageMs",
-        -- EPIC 13 perf: replaced correlated subquery (N+1) with LEAD() window function.
-        -- LEAD() reads the next row per bed in one pass; the subquery issued one DB
-        -- round-trip per result row.
-        EXTRACT(EPOCH FROM (
-          COALESCE(
-            LEAD(bsl.transition_time) OVER (
-              PARTITION BY bsl.bed_id ORDER BY bsl.transition_time ASC
-            ),
-            CURRENT_TIMESTAMP
-          ) - bsl.transition_time
-        )) * 1000 as "durationInCurrentStageMs",
-        u.username as "changedByUsername",
-        bsl.notes
-      FROM bed_stage_logs bsl
-      JOIN beds b ON bsl.bed_id = b.id
-      LEFT JOIN stages fs ON bsl.from_stage_id = fs.id
-      JOIN stages ts ON bsl.to_stage_id = ts.id
-      JOIN users u ON bsl.changed_by_user_id = u.id
+      ${STAGE_LOG_HISTORY_CTE},
+      logs_with_duration AS (
+        SELECT
+          sl.id,
+          sl.bed_id,
+          sl.bed_number,
+          sl.from_stage_id,
+          sl.to_stage_id,
+          sl.from_stage_name,
+          sl.to_stage_name,
+          sl.changed_by_user_id,
+          sl.changed_by_username,
+          sl.transition_time,
+          sl.duration_in_previous_stage_ms,
+          sl.notes,
+          EXTRACT(EPOCH FROM (
+            COALESCE(
+              LEAD(sl.transition_time) OVER (
+                PARTITION BY sl.bed_id ORDER BY sl.transition_time ASC
+              ),
+              CURRENT_TIMESTAMP
+            ) - sl.transition_time
+          )) * 1000 AS duration_in_current_stage_ms
+        FROM stage_logs sl
+      )
+      SELECT
+        l.id,
+        l.bed_number AS "bedNumber",
+        l.bed_id AS "bedId",
+        l.from_stage_name AS "fromStageName",
+        l.to_stage_name AS "toStageName",
+        l.transition_time AS "transitionTime",
+        l.duration_in_previous_stage_ms AS "durationInPreviousStageMs",
+        l.duration_in_current_stage_ms AS "durationInCurrentStageMs",
+        l.changed_by_user_id AS "changedByUserId",
+        l.changed_by_username AS "changedByUsername",
+        l.notes
+      FROM logs_with_duration l
       WHERE 1=1
     `
 
@@ -54,25 +67,25 @@ export async function getStageTransitions(
 
     if (startDate) {
       params.push(startDate)
-      sql += ` AND bsl.transition_time >= $${params.length}`
+      sql += ` AND l.transition_time >= $${params.length}`
     }
 
     if (endDate) {
       params.push(endDate)
-      sql += ` AND bsl.transition_time <= $${params.length}`
+      sql += ` AND l.transition_time <= $${params.length}`
     }
 
     if (bedId) {
       params.push(bedId)
-      sql += ` AND bsl.bed_id = $${params.length}`
+      sql += ` AND l.bed_id = $${params.length}`
     }
 
     if (stageId) {
       params.push(stageId)
-      sql += ` AND bsl.to_stage_id = $${params.length}`
+      sql += ` AND l.to_stage_id = $${params.length}`
     }
 
-    sql += ` ORDER BY bsl.transition_time DESC`
+    sql += ` ORDER BY l.transition_time DESC, l.id DESC`
 
     const result = await query<StageTransitionRecord>(sql, params)
     return result.rows

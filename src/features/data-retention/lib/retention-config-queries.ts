@@ -7,7 +7,7 @@ import type { RetentionConfig } from './data-retention-types'
 const DEFAULTS: RetentionConfig = {
   patientAdmissionsYears: 7,
   auditLogsYears: 7,
-  bedStageLogYears: 2,
+  bedStageLogDays: 90,
   requiresApproval: true,
 }
 
@@ -21,12 +21,16 @@ export async function getRetentionConfig(): Promise<RetentionConfig> {
      WHERE key IN (
        'retention_patient_admissions_years',
        'retention_audit_logs_years',
+       'retention_bed_stage_log_days',
        'retention_bed_stage_log_years',
        'retention_requires_approval'
      )`
   )
 
   const map = Object.fromEntries(result.rows.map((r) => [r.key, r.value]))
+
+  const legacyYears = parseInt(map['retention_bed_stage_log_years'] ?? '', 10)
+  const legacyDays = Number.isInteger(legacyYears) && legacyYears > 0 ? legacyYears * 365 : null
 
   return {
     patientAdmissionsYears:
@@ -35,9 +39,10 @@ export async function getRetentionConfig(): Promise<RetentionConfig> {
     auditLogsYears:
       parseInt(map['retention_audit_logs_years'] ?? '', 10) ||
       DEFAULTS.auditLogsYears,
-    bedStageLogYears:
-      parseInt(map['retention_bed_stage_log_years'] ?? '', 10) ||
-      DEFAULTS.bedStageLogYears,
+    bedStageLogDays:
+      parseInt(map['retention_bed_stage_log_days'] ?? '', 10) ||
+      legacyDays ||
+      DEFAULTS.bedStageLogDays,
     requiresApproval:
       (map['retention_requires_approval'] ?? 'true') !== 'false',
   }
@@ -66,9 +71,14 @@ export async function saveRetentionConfig(config: RetentionConfig): Promise<void
       'Years to retain audit_logs rows before archiving (EPIC 14)',
     ],
     [
+      'retention_bed_stage_log_days',
+      String(config.bedStageLogDays),
+      'Days to retain bed_stage_log rows before archiving (US-3.6)',
+    ],
+    [
       'retention_bed_stage_log_years',
-      String(config.bedStageLogYears),
-      'Years to retain bed_stage_log rows before archiving (EPIC 14)',
+      String(Math.max(1, Math.ceil(config.bedStageLogDays / 365))),
+      'Legacy years setting derived from bed_stage_log retention days',
     ],
     [
       'retention_requires_approval',
