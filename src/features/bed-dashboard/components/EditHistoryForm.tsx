@@ -4,12 +4,20 @@
  * EPIC 7 — EditHistoryForm
  * Extracted from EditHistoryModal to keep each file under 200 lines.
  * Renders: original record (read-only), editable stage/timestamp/notes, mandatory reason.
+ * US-7.4: Reason dropdown with common reasons + free text "Other" option.
  */
 
 import { Clock, FileText, ShieldCheck, AlertTriangle, ArrowRight } from 'lucide-react'
 import { Input } from '@/shared/components/ui/input'
 import { Label } from '@/shared/components/ui/label'
 import type { AuditorHistoryRecord } from '../lib/auditor-history-queries'
+
+const COMMON_REASONS = [
+  'Data entry error',
+  'Wrong stage selected',
+  'System glitch / technical error',
+  'Retrospective correction',
+]
 
 export interface StageOption {
   id: string
@@ -35,6 +43,15 @@ export function EditHistoryForm({
   correctionReason, formError,
   onStageChange, onNotesChange, onTimeChange, onReasonChange,
 }: EditHistoryFormProps) {
+
+  const isCommonReason = COMMON_REASONS.includes(correctionReason)
+  const dropdownValue = isCommonReason ? correctionReason : correctionReason ? 'Other' : ''
+
+  function handleDropdownChange(e: React.ChangeEvent<HTMLSelectElement>) {
+    if (e.target.value === 'Other') onReasonChange('')
+    else onReasonChange(e.target.value)
+  }
+
   return (
     <div className="p-5 space-y-5 overflow-y-auto max-h-[72vh]">
       {/* AC 3: Original record — read-only */}
@@ -97,16 +114,33 @@ export function EditHistoryForm({
           className="w-full rounded-md bg-zinc-800 border border-zinc-700 text-white text-sm px-3 py-2 placeholder:text-zinc-600 focus:outline-none focus:ring-2 focus:ring-amber-500/40 resize-none" />
       </div>
 
-      {/* AC 2: Mandatory correction reason */}
+      {/* AC 2: Mandatory correction reason — US-7.4: dropdown + free text */}
       <div className="space-y-1.5">
         <Label className="flex items-center gap-1.5 text-sm text-amber-400">
           <ShieldCheck className="h-3.5 w-3.5" />
           Correction Reason
           <span className="text-red-400 ml-0.5" aria-label="required">*</span>
         </Label>
-        <textarea value={correctionReason} onChange={(e) => onReasonChange(e.target.value)} rows={2}
-          placeholder="Required — explain why this correction is necessary…"
-          className="w-full rounded-md bg-zinc-800 border border-amber-700/40 text-white text-sm px-3 py-2 placeholder:text-zinc-600 focus:outline-none focus:ring-2 focus:ring-amber-500/40 resize-none" />
+        <select
+          value={dropdownValue}
+          onChange={handleDropdownChange}
+          className="w-full rounded-md bg-zinc-800 border border-amber-700/40 text-white text-sm px-3 py-2 focus:outline-none focus:ring-2 focus:ring-amber-500/40"
+        >
+          <option value="">— Select a reason —</option>
+          {COMMON_REASONS.map((r) => (
+            <option key={r} value={r}>{r}</option>
+          ))}
+          <option value="Other">Other (specify below)</option>
+        </select>
+        {(dropdownValue === 'Other' || (!isCommonReason && correctionReason === '')) && dropdownValue !== '' && (
+          <textarea
+            value={correctionReason}
+            onChange={(e) => onReasonChange(e.target.value)}
+            rows={2}
+            placeholder="Required — explain why this correction is necessary…"
+            className="w-full rounded-md bg-zinc-800 border border-amber-700/40 text-white text-sm px-3 py-2 placeholder:text-zinc-600 focus:outline-none focus:ring-2 focus:ring-amber-500/40 resize-none"
+          />
+        )}
         <p className="text-xs text-zinc-500">
           Your supervisor ID and this reason are stored in the audit trail alongside the original data.
         </p>
