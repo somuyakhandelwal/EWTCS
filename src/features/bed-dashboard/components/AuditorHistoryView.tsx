@@ -110,6 +110,7 @@ export function AuditorHistoryView({ readOnly = false, canEdit = false, showCorr
     setExporting(false)
   }
 
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars -- signature required by EditHistoryModal
   const handleCorrectionSaved = (_correctionId: string) => {
     if (!editingRecord) return
     setCorrectedLogIds(prev => new Set([...prev, editingRecord.id]))
@@ -130,7 +131,7 @@ export function AuditorHistoryView({ readOnly = false, canEdit = false, showCorr
                   : 'Read-only audit timeline with filters, sorting, and export.'}
               </CardDescription>
             </div>
-            <Button size="sm" variant="outline" disabled={exporting} onClick={onExport}>
+            <Button size="sm" variant="outline" disabled={exporting || readOnly} onClick={onExport}>
               <Download className="h-4 w-4 mr-2" />
               {exporting ? 'Exporting...' : 'Export CSV'}
             </Button>
