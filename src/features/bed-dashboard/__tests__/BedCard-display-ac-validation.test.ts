@@ -44,7 +44,7 @@ describe('BedCard Elapsed Time Display - AC-4: Prominent Display', () => {
     it('should be readable at standard screen distances', () => {
       const fontSize = 'text-lg'
       const fontWeight = 'font-bold'
-      
+
       const isReadable = fontSize && fontWeight
       expect(isReadable).toBeTruthy()
     })
@@ -113,8 +113,19 @@ describe('BedCard Elapsed Time Display - AC-4: Prominent Display', () => {
     it('scenario: patient delayed beyond threshold', () => {
       const elapsedTime = '3h 30m'
       const isDelayed = true
+      const isEscalated = false
       expect(elapsedTime).toBe('3h 30m')
       expect(isDelayed).toBe(true)
+      expect(isEscalated).toBe(false)
+    })
+
+    it('scenario: patient escalated beyond critical threshold', () => {
+      const elapsedTime = '4h 15m'
+      const isDelayed = true
+      const isEscalated = true
+      expect(elapsedTime).toBe('4h 15m')
+      expect(isDelayed).toBe(true)
+      expect(isEscalated).toBe(true)
     })
 
     it('scenario: multi-day patient', () => {

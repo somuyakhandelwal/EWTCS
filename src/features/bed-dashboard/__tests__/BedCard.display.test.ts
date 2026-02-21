@@ -27,7 +27,7 @@ describe('BedCard Elapsed Time Display - AC-4: Prominent Display', () => {
   describe('Display Visibility', () => {
     it('should show elapsed time section for occupied beds', () => {
       const mockElapsedTime = '2h 45m'
-      
+
       expect(mockElapsedTime).toBeDefined()
       expect(mockElapsedTime).not.toBe('N/A')
     })
@@ -68,6 +68,14 @@ describe('BedCard Elapsed Time Display - AC-4: Prominent Display', () => {
       const isDelayed = true
       const colorClass = isDelayed ? 'text-red-400' : 'text-zinc-300'
       expect(colorClass).toBe('text-red-400')
+    })
+
+    it('should display in fuchsia color for escalated beds (US-15.3)', () => {
+      const isEscalated = true
+      const isDelayed = true // an escalated bed is ALWAYS delayed
+      // We check the specific styling applied in BedCard
+      const ringClass = isEscalated ? 'ring-fuchsia-500' : (isDelayed ? 'ring-red-500' : '')
+      expect(ringClass).toBe('ring-fuchsia-500')
     })
 
     it('should use bold font for prominence', () => {

@@ -6,7 +6,7 @@ import type { BedGridData } from '../types/bed'
 import { getUserWard, getBedWard } from '../lib/bed-queries'
 import { requireRole } from '@/shared/lib/auth'
 import { categorizeStagesForTransition } from '../lib/stage-validation'
-import { getGlobalThresholdMs } from '@/shared/lib/threshold'
+import { getGlobalThresholdMs, getGlobalEscalationThresholdMs } from '@/shared/lib/threshold'
 import { perfStart, perfEnd, logPerf, PERF_SLA } from '@/shared/lib/perf-monitor'
 
 /**
@@ -27,21 +27,27 @@ export async function getBedGridData(): Promise<{
 
     logger.info('Fetching bed grid data')
 
-    const delayThresholdMs = await getGlobalThresholdMs()
+    const [delayThresholdMs, escalationThresholdMs] = await Promise.all([
+      getGlobalThresholdMs(),
+      getGlobalEscalationThresholdMs()
+    ])
 
     // Fetch beds and stages in parallel
     const [beds, stages] = await Promise.all([
-      getBedsWithElapsedTime(delayThresholdMs),
+      getBedsWithElapsedTime(delayThresholdMs, escalationThresholdMs),
       getAllStages(),
     ])
 
     const bottleneckCount = beds.filter(b => b.isDispositionBottleneck).length
+    const escalationCount = beds.filter(b => b.isEscalated).length
 
     const data: BedGridData = {
       beds,
       stages,
       delayThresholdMs,
+      escalationThresholdMs,
       bottleneckCount,
+      escalationCount,
     }
 
     logger.info('Bed grid data fetched successfully', {
@@ -49,6 +55,7 @@ export async function getBedGridData(): Promise<{
       stageCount: stages.length,
       delayedBeds: beds.filter(b => b.isDelayed).length,
       bottleneckBeds: bottleneckCount,
+      escalationCount,
     })
 
     // EPIC 13: log latency sample — WARN is emitted if > 2 s SLA.
@@ -76,8 +83,11 @@ export async function getDelayedBeds(): Promise<{
   error?: string
 }> {
   try {
-    const delayThresholdMs = await getGlobalThresholdMs()
-    const allBeds = await getBedsWithElapsedTime(delayThresholdMs)
+    const [delayThresholdMs, escalationThresholdMs] = await Promise.all([
+      getGlobalThresholdMs(),
+      getGlobalEscalationThresholdMs()
+    ])
+    const allBeds = await getBedsWithElapsedTime(delayThresholdMs, escalationThresholdMs)
     const delayedBeds = allBeds.filter(bed => bed.isDelayed)
 
     logger.info('Delayed beds fetched', { count: delayedBeds.length })
