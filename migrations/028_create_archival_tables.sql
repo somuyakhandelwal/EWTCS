@@ -61,12 +61,17 @@ COMMENT ON TABLE audit_logs_archive IS
 
 -- ── archival_runs ─────────────────────────────────────────────────────────
 
-CREATE TYPE archival_run_status AS ENUM (
-    'running',
-    'pending_approval',
-    'completed',
-    'failed'
-);
+DO $$
+BEGIN
+    CREATE TYPE archival_run_status AS ENUM (
+        'running',
+        'pending_approval',
+        'completed',
+        'failed'
+    );
+EXCEPTION
+    WHEN duplicate_object THEN null;
+END $$;
 
 CREATE TABLE IF NOT EXISTS archival_runs (
     id                  UUID            PRIMARY KEY DEFAULT uuid_generate_v4(),

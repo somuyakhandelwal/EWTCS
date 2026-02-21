@@ -43,6 +43,7 @@ export interface DailySummaryMetadata {
     mostDelayedStage?: string     // Stage name with highest delay count
     summaryWordCount?: number     // Post-generation validation (US-9.1)
     meetsWordCountRequirement?: boolean  // true if 100-400 words (200-300 target)
+    rejectionReason?: string      // Reason provided when a supervisor rejects a draft (US-9.2)
 }
 
 /**

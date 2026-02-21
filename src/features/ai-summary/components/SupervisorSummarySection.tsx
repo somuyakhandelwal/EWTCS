@@ -5,7 +5,6 @@
 import { useEffect, useState } from 'react'
 import { SupervisorSummaryBanner } from './SupervisorSummaryBanner'
 import { DailySummaryReviewCard } from './DailySummaryReviewCard'
-import { DailySummaryCard } from './DailySummaryCard'
 import { fetchDraftSummariesPendingReview } from '../actions/daily-summary-review-actions'
 import type { DailySummary } from '../types/daily-summary'
 
