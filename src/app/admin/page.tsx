@@ -2,8 +2,8 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/shared/components/ui
 import { Shield, Users, Settings, Activity } from "lucide-react"
 import { LogoutButton } from "@/features/auth/components/LogoutButton"
 import { redirect } from "next/navigation"
-import { AdminRecentActivity } from './AdminRecentActivity'
-import { AdminQuickActions } from "./_components/AdminQuickActions"
+import { AdminRecentActivity } from './components/AdminRecentActivity'
+import { AdminQuickActions } from "./components/AdminQuickActions"
 
 import { verifyActiveSession } from "@/shared/lib/active-session"
 import { getAllUsers, getUserLogs } from "@/features/user-management/actions/user-management-actions"
