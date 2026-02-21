@@ -8,6 +8,14 @@ export default defineConfig({
     environment: 'jsdom',
     globals: true,
     setupFiles: ['./src/__tests__/setup.ts'],
+    environmentOptions: {
+      jsdom: {
+        // Provide a real origin so that jsdom enables localStorage/sessionStorage.
+        // Without this, jsdom uses an opaque origin and throws SecurityError on
+        // every localStorage access, breaking all recovery-draft tests.
+        url: 'http://localhost:3000',
+      },
+    },
     env: {
       NODE_ENV: 'development',
       SESSION_SECRET: 'test-secret-at-least-32-characters-long!!',

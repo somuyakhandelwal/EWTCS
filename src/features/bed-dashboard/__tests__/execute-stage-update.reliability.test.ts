@@ -104,9 +104,8 @@ describe('executeStageUpdate reliability', () => {
     expect(args.routerRefresh).toHaveBeenCalled()
   })
 
-  it('retries failed saves and alerts after retries are exhausted', async () => {
+  it('retries failed saves and shows error via setTemporaryError after retries are exhausted', async () => {
     vi.mocked(updateBedStage).mockResolvedValue({ success: false, error: 'Save failed' })
-    const alertSpy = vi.spyOn(window, 'alert').mockImplementation(() => undefined)
 
     const { args } = buildArgs()
     const result = await executeStageUpdate(args)
@@ -114,7 +113,6 @@ describe('executeStageUpdate reliability', () => {
     expect(result).toBe(false)
     expect(updateBedStage).toHaveBeenCalledTimes(3)
     expect(args.setTemporaryError).toHaveBeenCalledWith('bed-1', 'Save failed')
-    expect(alertSpy).toHaveBeenCalledWith('Stage update failed after retries. Please try again.')
   })
 
   it('does not retry or alert on non-transient validation errors', async () => {

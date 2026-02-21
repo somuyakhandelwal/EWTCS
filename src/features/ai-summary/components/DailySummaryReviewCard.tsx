@@ -1,15 +1,14 @@
 'use client'
 
-// EPIC 9 (US-9.2, US-9.3, US-9.4): Draft summary with edit, approve, reject, and insight flagging.
-// US-9.4: Reject button opens RejectionReasonModal — reason is mandatory before rejection.
+// EPIC 9 (US-9.2, US-9.3): Draft summary with edit, approve, reject, and insight flagging
 
 import { useState } from 'react'
 import { Check, X, Pencil } from 'lucide-react'
 import { DailySummaryCard } from './DailySummaryCard'
 import { InsightWithConfidence } from './InsightWithConfidence'
-import { RejectionReasonModal } from './RejectionReasonModal'
 import {
     approveSummary,
+    rejectSummary,
     updateSummaryDraftAction,
     flagInsightAction,
 } from '../actions/daily-summary-review-actions'
@@ -26,8 +25,6 @@ export function DailySummaryReviewCard({ summary, onUpdate }: DailySummaryReview
     const [editInsights, setEditInsights] = useState<AiInsight[]>(summary.aiInsights ?? [])
     const [pending, setPending] = useState(false)
     const [error, setError] = useState<string | null>(null)
-    // US-9.4: controls whether the rejection reason modal is visible
-    const [showRejectModal, setShowRejectModal] = useState(false)
 
     const isDraft = summary.status === 'draft'
 
@@ -35,6 +32,15 @@ export function DailySummaryReviewCard({ summary, onUpdate }: DailySummaryReview
         setPending(true)
         setError(null)
         const res = await approveSummary({ id: summary.id })
+        setPending(false)
+        if (res.success && res.summary) onUpdate?.(res.summary)
+        else setError(res.error ?? 'Failed')
+    }
+
+    const handleReject = async () => {
+        setPending(true)
+        setError(null)
+        const res = await rejectSummary({ id: summary.id })
         setPending(false)
         if (res.success && res.summary) onUpdate?.(res.summary)
         else setError(res.error ?? 'Failed')
@@ -66,18 +72,7 @@ export function DailySummaryReviewCard({ summary, onUpdate }: DailySummaryReview
     }
 
     if (!isDraft) {
-        return (
-            <div className="space-y-2">
-                <DailySummaryCard summary={summary} />
-                {/* US-9.4: surface rejection reason on rejected summaries */}
-                {summary.status === 'rejected' && summary.rejectionReason && (
-                    <div className="rounded-lg border border-red-800/40 bg-red-900/10 px-3 py-2 text-sm">
-                        <span className="text-xs font-medium text-red-400 uppercase">Rejection reason</span>
-                        <p className="mt-0.5 text-foreground/80">{summary.rejectionReason}</p>
-                    </div>
-                )}
-            </div>
-        )
+        return <DailySummaryCard summary={summary} />
     }
 
     return (
@@ -162,10 +157,9 @@ export function DailySummaryReviewCard({ summary, onUpdate }: DailySummaryReview
                         >
                             <Check className="h-3.5 w-3.5" /> Approve
                         </button>
-                        {/* US-9.4: opens modal instead of direct rejection */}
                         <button
                             type="button"
-                            onClick={() => setShowRejectModal(true)}
+                            onClick={handleReject}
                             disabled={pending}
                             className="flex items-center gap-1.5 rounded bg-red-800 px-3 py-1.5 text-sm hover:bg-red-700 disabled:opacity-50"
                         >
@@ -178,17 +172,6 @@ export function DailySummaryReviewCard({ summary, onUpdate }: DailySummaryReview
                 <p className="text-xs text-red-400" role="alert">
                     {error}
                 </p>
-            )}
-            {/* US-9.4: rejection reason modal — mounts only when needed */}
-            {showRejectModal && (
-                <RejectionReasonModal
-                    summaryId={summary.id}
-                    onRejected={(updated) => {
-                        setShowRejectModal(false)
-                        onUpdate?.(updated)
-                    }}
-                    onCancel={() => setShowRejectModal(false)}
-                />
             )}
         </div>
     )

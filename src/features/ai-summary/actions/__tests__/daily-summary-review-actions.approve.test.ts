@@ -54,14 +54,19 @@ describe('approveSummary', () => {
         const result = await approveSummary({ id: VALID_UUID })
         expect(result.success).toBe(true)
         expect(result.summary?.status).toBe('published')
-        expect(vi.mocked(requireRole)).toHaveBeenCalledWith(['supervisor'])
+        expect(vi.mocked(requireRole)).toHaveBeenCalledWith(['admin', 'supervisor'])
     })
 
-    it('returns error when admin attempts approval', async () => {
-        vi.mocked(requireRole).mockRejectedValue(new Error('Unauthorized: Required role(s): supervisor'))
+    it('returns success when admin approves', async () => {
+        const ADMIN_SESSION = { userId: 'admin-1', role: 'admin' }
+        vi.mocked(requireRole).mockResolvedValue(ADMIN_SESSION as never)
+        vi.mocked(updateDailySummaryStatus).mockResolvedValue({
+            ...DRAFT_SUMMARY,
+            status: 'published',
+        })
         const result = await approveSummary({ id: VALID_UUID })
-        expect(result.success).toBe(false)
-        expect(updateDailySummaryStatus).not.toHaveBeenCalled()
+        expect(result.success).toBe(true)
+        expect(vi.mocked(requireRole)).toHaveBeenCalledWith(['admin', 'supervisor'])
     })
 
     it('returns error when not draft (SQL returns null)', async () => {

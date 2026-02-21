@@ -42,3 +42,75 @@ export interface RetentionConfig {
   bedStageLogDays: number
   requiresApproval: boolean
 }
+
+// ── US-14.3: Archive retrieval ─────────────────────────────────────────────
+
+/** Date-range search parameters for archive queries */
+export interface ArchiveSearchParams {
+  /** Table to search: 'patient_admissions' | 'audit_logs' */
+  table: 'patient_admissions' | 'audit_logs'
+  /** Inclusive start of the date range (ISO string or Date) */
+  from: string
+  /** Inclusive end of the date range (ISO string or Date) */
+  to: string
+  /** Max rows to return — guards against huge result sets */
+  limit?: number
+}
+
+/** A single row returned from patient_admissions_archive */
+export interface ArchivedAdmission {
+  id: string
+  bedId: string
+  admittedAt: Date
+  dischargedAt: Date
+  totalDurationMs: number
+  dischargedByUserId: string
+  notes: string | null
+  createdAt: Date
+  tatFromPreviousDischargeMs: number | null
+  archivedAt: Date
+}
+
+/** A single row returned from audit_logs_archive */
+export interface ArchivedAuditLog {
+  id: string
+  actionType: string
+  entityType: string
+  entityId: string
+  performedByUserId: string
+  changes: Record<string, unknown>
+  reason: string | null
+  metadata: Record<string, unknown>
+  ipAddress: string | null
+  createdAt: Date
+  archivedAt: Date
+}
+
+export type ArchivedRecord = ArchivedAdmission | ArchivedAuditLog
+
+// ── US-14.4: Storage monitoring ────────────────────────────────────────────
+
+/** Size metrics for a single database table */
+export interface TableSizeInfo {
+  tableName: string
+  /** Total size including indexes, in bytes */
+  totalBytes: number
+  /** Readable label e.g. "14 MB" */
+  prettySize: string
+}
+
+/** Aggregated database storage stats */
+export interface StorageStats {
+  /** Per-table breakdown — sorted largest first */
+  tables: TableSizeInfo[]
+  /** Total database size in bytes */
+  totalDatabaseBytes: number
+  /** Human-readable total e.g. "512 MB" */
+  prettyTotal: string
+  /** Admin-configured alert threshold in GB */
+  alertThresholdGb: number
+  /** true when total size > alertThresholdGb */
+  isAlertTriggered: boolean
+  /** Timestamp of when stats were sampled */
+  sampledAt: Date
+}

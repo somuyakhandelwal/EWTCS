@@ -13,8 +13,6 @@ import {
     upsertDailySummary,
     getDailySummaryByDate,
     getRecentDailySummaries,
-    getDailySummariesByDateRange,
-    searchDailySummaries,
 } from '../daily-summary-store'
 import type { DailySummaryInput } from '../../types/daily-summary'
 
@@ -98,21 +96,6 @@ describe('getDailySummaryByDate', () => {
         const result = await getDailySummaryByDate('2026-02-19')
         expect(result).toBeNull()
     })
-
-    it('prefers reviewed_by_display when present', async () => {
-        vi.mocked(query).mockResolvedValueOnce({
-            rows: [{
-                ...RAW_ROW,
-                status: 'published',
-                reviewed_by: '8b2f2586-8d63-49ca-b271-08cd7ecb170b',
-                reviewed_by_display: 'supervisor01',
-            }],
-        } as never)
-
-        const result = await getDailySummaryByDate('2026-02-20')
-
-        expect(result?.reviewedBy).toBe('supervisor01')
-    })
 })
 
 describe('getRecentDailySummaries', () => {
@@ -134,75 +117,6 @@ describe('getRecentDailySummaries', () => {
         vi.mocked(query).mockResolvedValueOnce({ rows: [] } as never)
 
         const results = await getRecentDailySummaries()
-        expect(results).toEqual([])
-    })
-})
-
-describe('getDailySummariesByDateRange', () => {
-    beforeEach(() => vi.clearAllMocks())
-
-    it('returns mapped summaries for a valid date range', async () => {
-        vi.mocked(query).mockResolvedValueOnce({ rows: [RAW_ROW] } as never)
-
-        const results = await getDailySummariesByDateRange('2026-02-01', '2026-02-20')
-
-        expect(results).toHaveLength(1)
-        expect(results[0].summaryDate).toBe('2026-02-20')
-        expect(query).toHaveBeenCalledWith(
-            expect.stringContaining('BETWEEN'),
-            expect.arrayContaining(['2026-02-01', '2026-02-20'])
-        )
-    })
-
-    it('passes status param when statusFilter is not all', async () => {
-        vi.mocked(query).mockResolvedValueOnce({ rows: [] } as never)
-
-        await getDailySummariesByDateRange('2026-02-01', '2026-02-20', 'published')
-
-        expect(query).toHaveBeenCalledWith(
-            expect.stringContaining('status'),
-            expect.arrayContaining(['2026-02-01', '2026-02-20', 'published'])
-        )
-    })
-
-    it('returns empty array when no rows match', async () => {
-        vi.mocked(query).mockResolvedValueOnce({ rows: [] } as never)
-
-        const results = await getDailySummariesByDateRange('2025-01-01', '2025-01-31')
-        expect(results).toEqual([])
-    })
-})
-
-describe('searchDailySummaries', () => {
-    beforeEach(() => vi.clearAllMocks())
-
-    it('returns matching rows for search text', async () => {
-        vi.mocked(query).mockResolvedValueOnce({ rows: [RAW_ROW] } as never)
-
-        const results = await searchDailySummaries('bottleneck')
-
-        expect(results).toHaveLength(1)
-        expect(query).toHaveBeenCalledWith(
-            expect.stringContaining('ILIKE'),
-            expect.arrayContaining(['%bottleneck%'])
-        )
-    })
-
-    it('restricts to published when statusFilter is published', async () => {
-        vi.mocked(query).mockResolvedValueOnce({ rows: [] } as never)
-
-        await searchDailySummaries('delay', 10, 'published')
-
-        expect(query).toHaveBeenCalledWith(
-            expect.stringContaining('status'),
-            expect.arrayContaining(['%delay%', 10, 'published'])
-        )
-    })
-
-    it('returns empty array when nothing matches', async () => {
-        vi.mocked(query).mockResolvedValueOnce({ rows: [] } as never)
-
-        const results = await searchDailySummaries('xyznotfound')
         expect(results).toEqual([])
     })
 })

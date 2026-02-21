@@ -13,7 +13,7 @@ export type StageRow = {
 
 export function isNonPatientStage(stageName: string): boolean {
   const normalized = stageName.trim().toLowerCase()
-  return normalized === 'empty'
+  return normalized === 'empty' || normalized === 'cleaning'
 }
 
 export const SELECT_BED_FOR_UPDATE_SQL = `

@@ -44,7 +44,7 @@ export function formatSummariesAsCsv(summaries: DailySummary[]): string {
                 s.reviewedAt
                     ? new Date(s.reviewedAt).toLocaleString('en-IN')
                     : '',
-                s.rejectionReason ?? s.metadata?.rejectionReason ?? '',
+                s.metadata?.rejectionReason ?? '',
                 s.totalPatients,
                 s.totalBedsUsed,
                 s.avgTatMinutes,

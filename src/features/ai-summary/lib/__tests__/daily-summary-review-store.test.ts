@@ -1,4 +1,4 @@
-// Tests — EPIC 9: daily-summary-review-store.ts (US-9.2, US-9.3, US-9.4)
+// Tests — EPIC 9: daily-summary-review-store.ts (US-9.2, US-9.3)
 
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 
@@ -47,17 +47,6 @@ describe('updateDailySummaryStatus', () => {
         vi.mocked(query).mockResolvedValueOnce({ rows: [] } as never)
         const result = await updateDailySummaryStatus('uuid-123', 'published', 'user-1')
         expect(result).toBeNull()
-    })
-
-    // US-9.4: rejectionReason must be forwarded to the SQL layer as 4th parameter
-    it('passes rejectionReason to query params when rejecting', async () => {
-        vi.mocked(query).mockResolvedValueOnce({
-            rows: [{ ...RAW_ROW, status: 'rejected' }],
-        } as never)
-        await updateDailySummaryStatus('uuid-123', 'rejected', 'user-1', 'Incomplete data provided')
-        const callArgs = vi.mocked(query).mock.calls[0]
-        // 4th element of params array should be the rejection reason
-        expect(callArgs[1]).toEqual(['rejected', 'user-1', 'uuid-123', 'Incomplete data provided'])
     })
 })
 

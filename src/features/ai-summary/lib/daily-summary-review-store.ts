@@ -1,6 +1,5 @@
-// Daily Summary Review Store — EPIC 9 (US-9.2, US-9.3, US-9.4)
+// Daily Summary Review Store — EPIC 9 (US-9.2, US-9.3)
 // Status updates, draft edits, and draft listing for supervisor workflow.
-// US-9.4: Rejection reason is mandatory and persisted in metadata JSONB.
 
 import { query } from '@/shared/lib/db'
 import { logger } from '@/shared/config/logger'
@@ -20,22 +19,9 @@ interface RawDailySummaryRow {
     metadata: Record<string, unknown>
     status?: string
     reviewed_by?: string | null
-    reviewed_by_display?: string | null
     reviewed_at?: string | null
     published_at?: string | null
     ai_insights?: unknown
-}
-
-async function getSummaryWithReviewerDisplay(id: string): Promise<RawDailySummaryRow | null> {
-    const sql = `
-    SELECT ds.*, COALESCE(u.username, ds.reviewed_by::text) AS reviewed_by_display
-    FROM daily_summaries ds
-    LEFT JOIN users u ON u.id = ds.reviewed_by
-    WHERE ds.id = $1
-    LIMIT 1
-  `
-    const result = await query<RawDailySummaryRow>(sql, [id])
-    return result.rows[0] ?? null
 }
 
 function parseAiInsights(raw: unknown): AiInsight[] {
@@ -50,7 +36,6 @@ function parseAiInsights(raw: unknown): AiInsight[] {
 function mapRow(row: RawDailySummaryRow): DailySummary {
     const status = (row.status === 'published' || row.status === 'rejected')
         ? row.status : 'draft'
-    const metadata = (row.metadata ?? {}) as DailySummary['metadata']
     return {
         id: row.id,
         summaryDate: row.summary_date,
@@ -63,48 +48,32 @@ function mapRow(row: RawDailySummaryRow): DailySummary {
         generatedAt: row.generated_at,
         aiSummary: row.ai_summary ?? undefined,
         status,
-        reviewedBy: row.reviewed_by_display ?? row.reviewed_by ?? undefined,
+        reviewedBy: row.reviewed_by ?? undefined,
         reviewedAt: row.reviewed_at ?? undefined,
         publishedAt: row.published_at ?? undefined,
-        // US-9.4: surface rejectionReason from metadata for display
-        rejectionReason: typeof metadata.rejectionReason === 'string'
-            ? metadata.rejectionReason : undefined,
         aiInsights: parseAiInsights(row.ai_insights) ?? [],
-        metadata,
+        metadata: (row.metadata ?? {}) as DailySummary['metadata'],
     }
 }
 
-/** Update summary status to published or rejected. Only drafts can be approved/rejected.
- *  US-9.4: rejectionReason is required when status is 'rejected' and is merged into metadata.
- */
+/** Update summary status to published or rejected. Only drafts can be approved/rejected. */
 export async function updateDailySummaryStatus(
     id: string,
     status: 'published' | 'rejected',
-    reviewedBy: string,
-    rejectionReason?: string
+    reviewedBy: string
 ): Promise<DailySummary | null> {
     const sql = `
     UPDATE daily_summaries
     SET status = $1, reviewed_by = $2, reviewed_at = NOW(),
-        published_at = CASE WHEN $1 = 'published' THEN NOW() ELSE published_at END,
-        metadata = CASE
-            WHEN $1 = 'rejected' AND $4::text IS NOT NULL
-            THEN metadata || jsonb_build_object('rejectionReason', $4::text)
-            ELSE metadata
-        END
+        published_at = CASE WHEN $1 = 'published' THEN NOW() ELSE published_at END
     WHERE id = $3 AND status = 'draft'
     RETURNING *
   `
-    const result = await query<RawDailySummaryRow>(sql, [status, reviewedBy, id, rejectionReason ?? null])
+    const result = await query<RawDailySummaryRow>(sql, [status, reviewedBy, id])
     const row = result.rows[0]
     if (!row) return null
     logger.info(`[ai-summary] Summary ${id} ${status}`)
-    try {
-        const enriched = await getSummaryWithReviewerDisplay(row.id)
-        return mapRow(enriched ?? row)
-    } catch {
-        return mapRow(row)
-    }
+    return mapRow(row)
 }
 
 /** Update draft text and insights (supervisor edit). */
