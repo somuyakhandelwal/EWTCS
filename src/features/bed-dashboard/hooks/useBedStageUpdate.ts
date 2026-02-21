@@ -31,8 +31,9 @@ interface UseBedStageUpdateReturn {
   confirmationState: ConfirmationState | null
   handleConfirmationConfirm: () => Promise<void>
   closeConfirmationModal: () => void
-  settings: { confirmCriticalStages: boolean }
+  settings: { confirmCriticalStages: boolean; animationEnabled: boolean }
   toggleConfirmation: () => void
+  toggleAnimations: () => void
   // US-2.3: Discharge workflow
   dischargeState: DischargeState | null
   isDischargeSubmitting: boolean
@@ -53,7 +54,7 @@ export function useBedStageUpdate(initialData: BedGridData): UseBedStageUpdateRe
   const { errorByBedId, setTemporaryError, clearError } = useErrorTimers()
   const { lastUpdatedBedId, lastUpdatedStageId, showSuccessFeedback } =
     useSuccessFeedback(SUCCESS_FEEDBACK_MS)
-  const { settings, toggleConfirmation } = useDashboardSettings()
+  const { settings, toggleConfirmation, toggleAnimations } = useDashboardSettings()
 
   const stageById = useMemo(() => {
     const map = new Map<string, Stage>()
@@ -162,6 +163,7 @@ export function useBedStageUpdate(initialData: BedGridData): UseBedStageUpdateRe
     closeConfirmationModal,
     settings,
     toggleConfirmation,
+    toggleAnimations,
     // US-2.3
     dischargeState,
     isDischargeSubmitting,

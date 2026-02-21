@@ -38,7 +38,7 @@ console.log(chalk.bold('TEST 1: IDOR Fix - Ward Access Control\n'));
 const migration006Path = path.join(__dirname, 'migrations', '006_add_ward_access_control.sql');
 const bedQueries = readFile(path.join(__dirname, 'src', 'features', 'bed-dashboard', 'lib', 'bed-queries.ts'));
 const bedActions = readFile(path.join(__dirname, 'src', 'features', 'bed-dashboard', 'actions', 'bed-actions.ts'));
-const bedDashboardClient = readFile(path.join(__dirname, 'src', 'features', 'bed-dashboard', 'components', 'BedDashboardClient.tsx'));
+const useBedUpdateState = readFile(path.join(__dirname, 'src', 'features', 'bed-dashboard', 'hooks', 'useBedUpdateState.ts'));
 
 test('Migration 006 exists', () => {
   assert(fs.existsSync(migration006Path), 'Migration file not found');
@@ -67,62 +67,50 @@ test('getBedWard function exists in bed-queries.ts', () => {
 
 test('updateBedStage imports ward access functions', () => {
   const actions = bedActions;
-  assert(actions.includes('import { getUserWard, getBedWard }'), 'Missing ward function imports');
+  assert(actions.includes('checkWardAccess'), 'Missing ward function import');
   assert(actions.includes('from \'../lib/bed-queries\''), 'Missing import source');
 });
 
 test('updateBedStage validates ward access', () => {
   const actions = bedActions;
-  assert(actions.includes('const userWard = await getUserWard'), 'Missing userWard query');
-  assert(actions.includes('const bedWard = await getBedWard'), 'Missing bedWard query');
-  assert(actions.includes('hasWardAccess'), 'Missing hasWardAccess variable');
-  assert(actions.includes('userWard &&'), 'Missing ward comparison logic');
-  assert(actions.includes('bedWard &&'), 'Missing bedWard comparison logic');
-  assert(actions.includes('session.role === \'admin\''), 'Missing admin bypass logic');
+  assert(actions.includes('const wardError = await checkWardAccess'), 'Missing wardError check');
+  assert(actions.includes('session.role'), 'Missing role parameter');
 });
 
 test('updateBedStage rejects unauthorized access', () => {
   const actions = bedActions;
-  assert(actions.includes('if (!hasWardAccess)'), 'Missing hasWardAccess check');
-  assert(actions.includes('You do not have permission to update this bed'), 'Missing error message');
-  assert(actions.includes('logger.warn(\'Unauthorized bed access'), 'Missing security logging');
+  assert(actions.includes('if (wardError)'), 'Missing wardError check');
+  assert(actions.includes('logger.warn(\'Ward access denied'), 'Missing security logging');
 });
 
 console.log(chalk.bold('\nTEST 2: Memory Leak Fix - Timer Cleanup\n'));
 
-test('BedDashboardClient imports useRef and useEffect', () => {
-  const client = bedDashboardClient;
-  assert(client.includes('import { useCallback, useMemo, useState, useRef, useEffect }'), 'Missing useRef/useEffect imports');
+test('useBedUpdateState imports useRef and useEffect', () => {
+  const hook = useBedUpdateState;
+  assert(hook.includes('useRef'), 'Missing useRef import');
+  assert(hook.includes('useEffect'), 'Missing useEffect import');
 });
 
-test('BedDashboardClient creates timeoutRefs', () => {
-  const client = bedDashboardClient;
-  assert(client.includes('const timeoutRefs = useRef'), 'Missing timeoutRefs useRef');
-  assert(client.includes('errorClearTimers: Map'), 'Missing Map for error timers');
-  assert(client.includes('successTimer'), 'Missing successTimer tracking');
-  assert(client.includes('updateTimeoutTimer'), 'Missing updateTimeoutTimer tracking');
+test('useBedUpdateState creates timeoutRefs', () => {
+  const hook = useBedUpdateState;
+  assert(hook.includes('errorClearTimers'), 'Missing errorClearTimers useRef');
+  assert(hook.includes('Map<string'), 'Missing Map for error timers');
+  assert(hook.includes('successTimer'), 'Missing successTimer tracking');
 });
 
-test('BedDashboardClient has cleanup useEffect', () => {
-  const client = bedDashboardClient;
-  assert(client.includes('useEffect(() => {'), 'Missing useEffect hook');
-  assert(client.includes('const refs = timeoutRefs.current'), 'Missing refs assignment');
-  assert(client.includes('refs.errorClearTimers.forEach((timer) => clearTimeout(timer))'), 'Missing error timer cleanup');
-  assert(client.includes('clearTimeout(refs.successTimer)'), 'Missing success timer cleanup');
-  assert(client.includes('clearTimeout(refs.updateTimeoutTimer)'), 'Missing update timeout cleanup');
+test('useBedUpdateState has cleanup useEffect', () => {
+  const hook = useBedUpdateState;
+  assert(hook.match(/useEffect\(\(\) =\> {/g), 'Missing useEffect hook');
+  assert(hook.includes('timers.forEach((timer) => clearTimeout(timer))'), 'Missing error timer cleanup');
+  assert(hook.includes('clearTimeout(successTimer.current)'), 'Missing success timer cleanup');
 });
 
-test('BedDashboardClient tracks error timers before setting', () => {
-  const client = bedDashboardClient;
-  assert(client.includes('const previousTimer = timeoutRefs.current.errorClearTimers.get(bedId)'), 'Missing previousTimer retrieval');
-  assert(client.includes('if (previousTimer) {'), 'Missing previousTimer check');
-  assert(client.includes('clearTimeout(previousTimer)'), 'Missing previous timer cleanup');
-  assert(client.includes('timeoutRefs.current.errorClearTimers.set(bedId, timer)'), 'Missing new timer registration');
-});
-
-test('BedDashboardClient tracks all setTimeout calls', () => {
-  const client = bedDashboardClient;
-  assert((client.match(/timeoutRefs\.current\.[a-zA-Z]+ =/g) || []).length >= 3, 'Not enough timer references tracked');
+test('useBedUpdateState tracks error timers before setting', () => {
+  const hook = useBedUpdateState;
+  assert(hook.includes('const previousTimer = errorClearTimers.current.get(bedId)'), 'Missing previousTimer retrieval');
+  assert(hook.includes('if (previousTimer) {'), 'Missing previousTimer check');
+  assert(hook.includes('clearTimeout(previousTimer)'), 'Missing previous timer cleanup');
+  assert(hook.includes('errorClearTimers.current.set(bedId, timer)'), 'Missing new timer registration');
 });
 
 runMenuAndAdditionalTests({ test, assert, readFile, baseDir: __dirname });

@@ -1,11 +1,3 @@
-// Supervisor Bed Overview Component
-// Epic 1: Nurse Desk Bed Dashboard (US-1.7)
-// Epic 6: Surge Capacity (US-6.5)
-// Epic 15: Notifications & Alerts (US-15.x)
-// Purpose: Read-only bed status view for supervisors — shows delays,
-//   bottleneck beds, and recorded reasons for delay.
-//   Supervisors can also add and remove temporary beds.
-
 'use client'
 
 import { useTransition, useState, useCallback, useMemo, useEffect } from 'react'

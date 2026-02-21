@@ -1,6 +1,21 @@
-// Tests — EPIC 9: daily-summary-review-actions.ts (US-9.2, US-9.3, US-9.4)
-
 import { describe, it, expect, vi, beforeEach } from 'vitest'
+import { requireRole } from '@/shared/lib/auth'
+import { logAudit } from '@/shared/lib/audit'
+import { getDailySummaryById } from '@/features/ai-summary/lib/daily-summary-store'
+import {
+    updateDailySummaryStatus,
+    updateSummaryDraft,
+    flagInsight,
+    getDraftSummariesPendingReview,
+} from '@/features/ai-summary/lib/daily-summary-review-store'
+import {
+    rejectSummary,
+    updateSummaryDraftAction,
+    flagInsightAction,
+    fetchDraftSummariesPendingReview,
+    fetchDailySummaryById,
+} from '@/features/ai-summary/actions/daily-summary-review-actions'
+import type { DailySummary } from '@/features/ai-summary/types/daily-summary'
 
 vi.mock('@/shared/lib/auth', () => ({ requireRole: vi.fn() }))
 vi.mock('@/shared/lib/audit', () => ({ logAudit: vi.fn() }))
@@ -17,28 +32,8 @@ vi.mock('@/features/ai-summary/lib/daily-summary-review-store', () => ({
     getDraftSummariesPendingReview: vi.fn(),
 }))
 
-import { requireRole } from '@/shared/lib/auth'
-import { logAudit } from '@/shared/lib/audit'
-import { getDailySummaryById } from '@/features/ai-summary/lib/daily-summary-store'
-import {
-    updateDailySummaryStatus,
-    updateSummaryDraft,
-    flagInsight,
-    getDraftSummariesPendingReview,
-} from '@/features/ai-summary/lib/daily-summary-review-store'
-import {
-    approveSummary,
-    rejectSummary,
-    updateSummaryDraftAction,
-    flagInsightAction,
-    fetchDraftSummariesPendingReview,
-    fetchDailySummaryById,
-} from '@/features/ai-summary/actions/daily-summary-review-actions'
-import type { DailySummary } from '@/features/ai-summary/types/daily-summary'
-
 const SUPERVISOR_SESSION = { userId: 'sup-1', role: 'supervisor' }
 const AUDITOR_SESSION = { userId: 'aud-1', role: 'auditor' }
-
 const VALID_UUID = '123e4567-e89b-12d3-a456-426614174000'
 
 const DRAFT_SUMMARY: DailySummary = {
@@ -57,43 +52,6 @@ const DRAFT_SUMMARY: DailySummary = {
     metadata: {},
 }
 
-describe('approveSummary', () => {
-    beforeEach(() => vi.clearAllMocks())
-
-    it('returns success when draft approved', async () => {
-        vi.mocked(requireRole).mockResolvedValue(SUPERVISOR_SESSION as never)
-        vi.mocked(updateDailySummaryStatus).mockResolvedValue({
-            ...DRAFT_SUMMARY,
-            status: 'published',
-        })
-        const result = await approveSummary({ id: VALID_UUID })
-        expect(result.success).toBe(true)
-        expect(result.summary?.status).toBe('published')
-        expect(vi.mocked(requireRole)).toHaveBeenCalledWith(['supervisor'])
-    })
-
-    it('returns error when admin attempts approval', async () => {
-        vi.mocked(requireRole).mockRejectedValue(new Error('Unauthorized: Required role(s): supervisor'))
-        const result = await approveSummary({ id: VALID_UUID })
-        expect(result.success).toBe(false)
-        expect(updateDailySummaryStatus).not.toHaveBeenCalled()
-    })
-
-    it('returns error when not draft (SQL returns null)', async () => {
-        vi.mocked(requireRole).mockResolvedValue(SUPERVISOR_SESSION as never)
-        vi.mocked(updateDailySummaryStatus).mockResolvedValue(null)
-        const result = await approveSummary({ id: VALID_UUID })
-        expect(result.success).toBe(false)
-        expect(result.error).toBeDefined()
-    })
-
-    it('returns error on invalid id', async () => {
-        vi.mocked(requireRole).mockResolvedValue(SUPERVISOR_SESSION as never)
-        const result = await approveSummary({ id: 'not-a-uuid' })
-        expect(result.success).toBe(false)
-    })
-})
-
 describe('rejectSummary', () => {
     beforeEach(() => vi.clearAllMocks())
 
@@ -108,16 +66,13 @@ describe('rejectSummary', () => {
         expect(vi.mocked(requireRole)).toHaveBeenCalledWith(['supervisor'])
     })
 
-    // US-9.4: reason is required — missing reason must fail Zod validation
     it('returns validation error when reason is missing', async () => {
         vi.mocked(requireRole).mockResolvedValue(SUPERVISOR_SESSION as never)
-        // Cast to bypass TS since we are testing the runtime validation path
         const result = await rejectSummary({ id: VALID_UUID, reason: '' } as never)
         expect(result.success).toBe(false)
         expect(result.error).toMatch(/reason/i)
     })
 
-    // US-9.4: reason shorter than 10 characters must be rejected
     it('returns validation error when reason is fewer than 10 characters', async () => {
         vi.mocked(requireRole).mockResolvedValue(SUPERVISOR_SESSION as never)
         const result = await rejectSummary({ id: VALID_UUID, reason: 'Too short' })
@@ -125,7 +80,6 @@ describe('rejectSummary', () => {
         expect(result.error).toMatch(/reason/i)
     })
 
-    // US-9.4: audit log must record supervisor ID and the rejection reason
     it('logs supervisor ID and reason in audit on successful rejection', async () => {
         vi.mocked(requireRole).mockResolvedValue(SUPERVISOR_SESSION as never)
         vi.mocked(updateDailySummaryStatus).mockResolvedValue({

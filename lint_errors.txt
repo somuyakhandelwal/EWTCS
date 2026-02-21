@@ -1,0 +1,17 @@
+
+C:\Users\aditi\OneDrive\Desktop\EWTCS\EWTCS\src\features\ai-summary\components\SupervisorSummarySection.tsx
+  8:10  warning  'DailySummaryCard' is defined but never used  @typescript-eslint/no-unused-vars
+
+C:\Users\aditi\OneDrive\Desktop\EWTCS\EWTCS\src\features\bed-dashboard\components\BedDashboardClient.tsx
+  14:28  warning  'BedWithElapsedTime' is defined but never used  @typescript-eslint/no-unused-vars
+
+C:\Users\aditi\OneDrive\Desktop\EWTCS\EWTCS\src\features\bed-dashboard\components\ConfirmationModal.tsx
+  52:11  warning  'confirmButtonRef' is assigned a value but never used  @typescript-eslint/no-unused-vars
+
+C:\Users\aditi\OneDrive\Desktop\EWTCS\EWTCS\src\features\export\lib\pdf-core-utils.ts
+  28:10  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  56:32  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  69:18  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+✖ 6 problems (3 errors, 3 warnings)
+

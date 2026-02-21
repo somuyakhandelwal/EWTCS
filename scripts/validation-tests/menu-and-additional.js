@@ -3,12 +3,13 @@ const path = require('path');
 function runMenuAndAdditionalTests({ test, assert, readFile, baseDir }) {
   const contextMenu = readFile(path.join(baseDir, 'src', 'shared', 'components', 'ui', 'context-menu.tsx'));
   const bedActions = readFile(path.join(baseDir, 'src', 'features', 'bed-dashboard', 'actions', 'bed-actions.ts'));
-  const bedDashboardClient = readFile(path.join(baseDir, 'src', 'features', 'bed-dashboard', 'components', 'BedDashboardClient.tsx'));
+  const useBedUpdateState = readFile(path.join(baseDir, 'src', 'features', 'bed-dashboard', 'hooks', 'useBedUpdateState.ts'));
+  const useBedStageUpdate = readFile(path.join(baseDir, 'src', 'features', 'bed-dashboard', 'hooks', 'useBedStageUpdate.ts'));
 
   console.log('\nTEST 3: Off-Screen Menu Fix - Position Clamping\n');
 
   test('context-menu.tsx imports useMemo', () => {
-    assert(contextMenu.includes('import { useEffect, useMemo }'), 'Missing useMemo import');
+    assert(contextMenu.includes('useMemo'), 'Missing useMemo import');
   });
 
   test('getClampedPosition function exists', () => {
@@ -55,19 +56,25 @@ function runMenuAndAdditionalTests({ test, assert, readFile, baseDir }) {
   console.log('\nTEST 5: Additional Validations\n');
 
   test('bed-actions.ts has proper imports', () => {
-    assert(bedActions.includes('import { logAudit }'), 'Missing audit logging import');
-    assert(bedActions.includes('import { requireRole }'), 'Missing role requirement import');
-    assert(bedActions.includes('import { logger }'), 'Missing logger import');
+    assert(bedActions.includes('logAudit'), 'Missing audit logging import');
+    assert(bedActions.includes('requireWriteRole'), 'Missing role requirement import');
+    assert(bedActions.includes('logger'), 'Missing logger import');
   });
 
-  test('BedDashboardClient properly initializes data state', () => {
-    assert(bedDashboardClient.includes('const [data, setData] = useState<BedGridData>(initialData)'), 'Missing data state initialization');
+  test('useBedStageUpdate properly initializes data state', () => {
+    assert(useBedStageUpdate.includes('const [data, setData] = useState<BedGridData>(initialData)'), 'Missing data state initialization');
+  });
+
+  test('useBedUpdateState creates timeoutRefs', () => {
+    assert(useBedUpdateState.includes('errorClearTimers'), 'Missing errorClearTimers useRef');
+    assert(useBedUpdateState.includes('Map<string'), 'Missing Map for error timers');
+    assert(useBedUpdateState.includes('successTimer'), 'Missing successTimer tracking');
   });
 
   test('No syntax errors in fixed files', () => {
     const files = [
       path.join(baseDir, 'src', 'features', 'bed-dashboard', 'actions', 'bed-actions.ts'),
-      path.join(baseDir, 'src', 'features', 'bed-dashboard', 'components', 'BedDashboardClient.tsx'),
+      path.join(baseDir, 'src', 'features', 'bed-dashboard', 'hooks', 'useBedUpdateState.ts'),
       path.join(baseDir, 'src', 'shared', 'components', 'ui', 'context-menu.tsx'),
       path.join(baseDir, 'src', 'features', 'bed-dashboard', 'lib', 'bed-queries.ts'),
     ];

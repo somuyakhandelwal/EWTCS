@@ -69,7 +69,7 @@ export const BedCard = memo(function BedCard({
   return (
     <Card
       className={cn(
-        'relative overflow-hidden transition-all cursor-pointer sm:hover:scale-105 sm:hover:shadow-lg active:scale-[0.97]',
+        'relative overflow-hidden transition-all cursor-pointer sm:hover:scale-105 sm:hover:shadow-lg active:scale-[0.97] focus-visible:ring-4 focus-visible:ring-blue-500 outline-none',
         colorClasses.bg,
         colorClasses.border,
         'border-2',
@@ -82,6 +82,15 @@ export const BedCard = memo(function BedCard({
       )}
       onClick={handleClick}
       onContextMenu={(e) => onContextMenu?.(e, bed)}
+      role="button"
+      tabIndex={0}
+      onKeyDown={(e) => {
+        if (e.key === 'Enter' || e.key === ' ') {
+          e.preventDefault()
+          handleClick()
+        }
+      }}
+      aria-label={`Bed ${bed.bedNumber}, ${stageName}, ${isOccupied ? `Elapsed time ${elapsedTime}` : 'Available'}${isDelayed ? ', Delayed' : ''}${isBottleneck ? ', Bottleneck' : ''}`}
     >
       {/* US-6.6: Virtual / hallway bed badge — shown instead of Surge when isVirtual */}
       {isVirtual && (

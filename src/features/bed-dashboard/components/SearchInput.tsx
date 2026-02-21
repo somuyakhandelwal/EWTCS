@@ -1,4 +1,4 @@
- 'use client'
+'use client'
 
 import { Search, X } from 'lucide-react'
 
@@ -25,13 +25,15 @@ export function SearchInput({
         value={value}
         onChange={(e) => onChange(e.target.value)}
         placeholder={placeholder}
+        aria-label="Search beds by number or status"
         className="w-full pl-10 pr-10 py-2 bg-zinc-900 border border-zinc-700 rounded-md text-white placeholder-zinc-500 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
       />
       {value && (
         <button
           onClick={handleClear}
-          className="absolute right-3 top-1/2 transform -translate-y-1/2 text-zinc-500 hover:text-zinc-300"
+          className="absolute right-3 top-1/2 transform -translate-y-1/2 text-zinc-500 hover:text-zinc-300 focus:ring-2 focus:ring-blue-500 rounded"
           title="Clear search"
+          aria-label="Clear search"
         >
           <X className="h-4 w-4" />
         </button>

@@ -65,7 +65,7 @@ export default function AnalyticsDashboardPage() {
 // ============================================================================
 // Alternative: Simple Analytics View
 // ============================================================================
-// 
+//
 // If you want a minimal analytics page, use:
 
 /*
@@ -106,7 +106,7 @@ export default function CustomAnalyticsPage() {
 //
 // 1. Add route to your navigation:
 //    In src/app/layout.tsx or in your navigation component:
-//    
+//
 //    <Link href="/analytics">Analytics</Link>
 //
 // 2. Add to your navigation menu:
@@ -120,71 +120,6 @@ export default function CustomAnalyticsPage() {
 // 4. Environment Setup:
 //    - No additional environment variables needed
 //    - Uses existing database connection
-
-// ============================================================================
-// Role-Based Access
-// ============================================================================
-//
-// The analytics component requires supervisor or admin role
-// Automatic protection is built into the server actions
-//
-// To add role-based route protection, wrap the page:
-
-/*
-'use client'
-
-import { useEffect } from 'react'
-import { useRouter } from 'next/navigation'
-import { requireRole } from '@/shared/lib/auth'
-
-export default function AnalyticsDashboardPage() {
-  const router = useRouter()
-
-  useEffect(() => {
-    const checkAccess = async () => {
-      try {
-        await requireRole(['supervisor', 'admin'])
-      } catch {
-        router.push('/dashboard')
-      }
-    }
-    void checkAccess()
-  }, [router])
-
-  return <StageAnalyticsView />
-}
-*/
-
-// ============================================================================
-// Refresh Data Periodically
-// ============================================================================
-//
-// If you want real-time updates, add a refresh interval:
-
-/*
-'use client'
-
-import { useState, useEffect } from 'react'
-import { StageAnalyticsView } from '@/features/bed-dashboard/components/StageAnalyticsView'
-
-export default function AnalyticsDashboardPage() {
-  const [refreshKey, setRefreshKey] = useState(0)
-
-  useEffect(() => {
-    const interval = setInterval(() => {
-      setRefreshKey(prev => prev + 1)
-    }, 60000) // Refresh every minute
-
-    return () => clearInterval(interval)
-  }, [])
-
-  return (
-    <div key={refreshKey}>
-      <StageAnalyticsView />
-    </div>
-  )
-}
-*/
 
 // ============================================================================
 // Export Analytics Data

@@ -6,10 +6,12 @@ const SETTINGS_KEY = 'ewtcs-dashboard-settings'
 
 interface DashboardSettings {
     confirmCriticalStages: boolean
+    animationEnabled: boolean
 }
 
 const DEFAULT_SETTINGS: DashboardSettings = {
     confirmCriticalStages: true,
+    animationEnabled: true,
 }
 
 export function useDashboardSettings() {
@@ -41,10 +43,15 @@ export function useDashboardSettings() {
         updateSettings({ confirmCriticalStages: !settings.confirmCriticalStages })
     }, [settings.confirmCriticalStages, updateSettings])
 
+    const toggleAnimations = useCallback(() => {
+        updateSettings({ animationEnabled: !settings.animationEnabled })
+    }, [settings.animationEnabled, updateSettings])
+
     return {
         settings,
         isLoaded,
         updateSettings,
         toggleConfirmation,
+        toggleAnimations,
     }
 }
