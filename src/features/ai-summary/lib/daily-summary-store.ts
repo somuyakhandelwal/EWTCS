@@ -4,9 +4,9 @@
 
 import { query } from '@/shared/lib/db'
 import { logger } from '@/shared/config/logger'
-import type { DailySummary, DailySummaryInput } from '../types/daily-summary'
+import type { DailySummary, DailySummaryInput, AiInsight } from '../types/daily-summary'
 
-// Raw DB row before camelCase mapping
+// Raw DB row before camelCase mapping (includes migration 034 columns)
 interface RawDailySummaryRow {
     id: string
     summary_date: string
@@ -19,10 +19,26 @@ interface RawDailySummaryRow {
     generated_at: string
     ai_summary: string | null
     metadata: Record<string, unknown>
+    status?: string
+    reviewed_by?: string | null
+    reviewed_at?: string | null
+    published_at?: string | null
+    ai_insights?: unknown
+}
+
+function parseAiInsights(raw: unknown): AiInsight[] {
+    if (!Array.isArray(raw)) return []
+    return raw.filter((x): x is AiInsight => Boolean(x && typeof x === 'object'
+        && typeof (x as AiInsight).id === 'string'
+        && typeof (x as AiInsight).text === 'string'
+        && typeof (x as AiInsight).confidence === 'number'))
+        .map(x => ({ ...x, confidence: Math.max(0, Math.min(100, x.confidence)) }))
 }
 
 /** Map a raw pg row to the typed DailySummary shape. */
 function mapRow(row: RawDailySummaryRow): DailySummary {
+    const status = (row.status === 'published' || row.status === 'rejected')
+        ? row.status : 'draft'
     return {
         id: row.id,
         summaryDate: row.summary_date,
@@ -34,18 +50,23 @@ function mapRow(row: RawDailySummaryRow): DailySummary {
         totalStageUpdates: parseInt(row.total_stage_updates, 10),
         generatedAt: row.generated_at,
         aiSummary: row.ai_summary ?? undefined,
-        metadata: row.metadata ?? {},
+        status,
+        reviewedBy: row.reviewed_by ?? undefined,
+        reviewedAt: row.reviewed_at ?? undefined,
+        publishedAt: row.published_at ?? undefined,
+        aiInsights: parseAiInsights(row.ai_insights) ?? [],
+        metadata: (row.metadata ?? {}) as DailySummary['metadata'],
     }
 }
 
 /**
- * Upsert a daily summary row.
+ * Upsert a daily summary row. Saves as draft (US-9.2).
  * If a row for the same date already exists it is overwritten (idempotent).
- * Returns the saved DailySummary record.
  */
 export async function upsertDailySummary(
     input: DailySummaryInput
 ): Promise<DailySummary> {
+    const aiInsights = input.aiInsights ?? []
     const sql = `
     INSERT INTO daily_summaries (
       summary_date,
@@ -57,8 +78,10 @@ export async function upsertDailySummary(
       total_stage_updates,
       generated_at,
       ai_summary,
-      metadata
-    ) VALUES ($1, $2, $3, $4, $5, $6, $7, NOW(), $8, $9)
+      metadata,
+      status,
+      ai_insights
+    ) VALUES ($1, $2, $3, $4, $5, $6, $7, NOW(), $8, $9, 'draft', $10)
     ON CONFLICT (summary_date) DO UPDATE SET
       total_patients        = EXCLUDED.total_patients,
       avg_stage_time_minutes = EXCLUDED.avg_stage_time_minutes,
@@ -68,7 +91,12 @@ export async function upsertDailySummary(
       total_stage_updates   = EXCLUDED.total_stage_updates,
       generated_at          = NOW(),
       ai_summary            = EXCLUDED.ai_summary,
-      metadata              = EXCLUDED.metadata
+      metadata              = EXCLUDED.metadata,
+      status                = 'draft',
+      ai_insights           = EXCLUDED.ai_insights,
+      reviewed_by           = NULL,
+      reviewed_at           = NULL,
+      published_at          = NULL
     RETURNING *
   `
 
@@ -82,6 +110,7 @@ export async function upsertDailySummary(
         input.totalStageUpdates,
         input.aiSummary ?? null,
         JSON.stringify(input.metadata),
+        JSON.stringify(aiInsights),
     ])
 
     const saved = result.rows[0]
@@ -89,6 +118,18 @@ export async function upsertDailySummary(
 
     logger.info(`[ai-summary] Summary upserted for ${input.summaryDate}`)
     return mapRow(saved)
+}
+
+/**
+ * Fetch a single daily summary by ID.
+ */
+export async function getDailySummaryById(
+    id: string
+): Promise<DailySummary | null> {
+    const sql = `SELECT * FROM daily_summaries WHERE id = $1 LIMIT 1`
+    const result = await query<RawDailySummaryRow>(sql, [id])
+    const row = result.rows[0]
+    return row ? mapRow(row) : null
 }
 
 /**
@@ -108,13 +149,26 @@ export async function getDailySummaryByDate(
     return row ? mapRow(row) : null
 }
 
+/** Status filter for read APIs: 'all' or 'published' (US-9.2: published-only for non-review) */
+export type SummaryStatusFilter = 'all' | 'published'
+
 /**
  * Fetch the most recent N daily summaries, ordered newest-first.
+ * Use statusFilter='published' to exclude drafts (e.g. for auditors).
  */
 export async function getRecentDailySummaries(
-    limit: number = 30
+    limit: number = 30,
+    statusFilter: SummaryStatusFilter = 'all'
 ): Promise<DailySummary[]> {
-    const sql = `
+    const sql =
+        statusFilter === 'published'
+            ? `
+    SELECT * FROM daily_summaries
+    WHERE status = 'published'
+    ORDER BY summary_date DESC
+    LIMIT $1
+  `
+            : `
     SELECT * FROM daily_summaries
     ORDER BY summary_date DESC
     LIMIT $1

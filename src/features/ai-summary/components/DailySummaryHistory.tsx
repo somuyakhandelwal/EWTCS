@@ -6,9 +6,15 @@
 import { useEffect, useState } from 'react'
 import { fetchRecentDailySummaries } from '../actions/daily-summary-actions'
 import { DailySummaryCard } from './DailySummaryCard'
+import { DailySummaryReviewCard } from './DailySummaryReviewCard'
 import type { DailySummary } from '../types/daily-summary'
 
-export function DailySummaryHistory() {
+interface DailySummaryHistoryProps {
+    /** If true, drafts render with review controls (edit/approve/reject) */
+    canReview?: boolean
+}
+
+export function DailySummaryHistory({ canReview = false }: DailySummaryHistoryProps) {
     const [summaries, setSummaries] = useState<DailySummary[]>([])
     const [loading, setLoading] = useState(true)
     const [error, setError] = useState<string | null>(null)
@@ -22,6 +28,12 @@ export function DailySummaryHistory() {
             setError(result.error ?? 'Failed to load summaries')
         }
         setLoading(false)
+    }
+
+    const handleUpdate = (updated: DailySummary) => {
+        setSummaries((prev) =>
+            prev.map((s) => (s.id === updated.id ? updated : s))
+        )
     }
 
     useEffect(() => {
@@ -56,9 +68,17 @@ export function DailySummaryHistory() {
 
     return (
         <div className="grid gap-4">
-            {summaries.map(summary => (
-                <DailySummaryCard key={summary.id} summary={summary} />
-            ))}
+            {summaries.map((summary) =>
+                canReview && summary.status === 'draft' ? (
+                    <DailySummaryReviewCard
+                        key={summary.id}
+                        summary={summary}
+                        onUpdate={handleUpdate}
+                    />
+                ) : (
+                    <DailySummaryCard key={summary.id} summary={summary} />
+                )
+            )}
         </div>
     )
 }

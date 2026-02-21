@@ -6,13 +6,13 @@ import { describe, it, expect, vi, beforeEach } from 'vitest'
 vi.mock('@/shared/lib/auth', () => ({ requireRole: vi.fn() }))
 vi.mock('@/shared/lib/audit', () => ({ logAudit: vi.fn() }))
 vi.mock('@/shared/config/logger', () => ({
-    logger: { info: vi.fn(), error: vi.fn() },
+    logger: { info: vi.fn(), error: vi.fn(), warn: vi.fn() },
 }))
 vi.mock('@/features/ai-summary/lib/daily-aggregation-queries', () => ({
     aggregateDailyStats: vi.fn(),
 }))
 vi.mock('@/features/ai-summary/lib/ai-service', () => ({
-    generateAiSummaryText: vi.fn(),
+    generateAiSummary: vi.fn(),
 }))
 vi.mock('@/features/ai-summary/lib/daily-summary-store', () => ({
     upsertDailySummary: vi.fn(),
@@ -22,7 +22,7 @@ vi.mock('@/features/ai-summary/lib/daily-summary-store', () => ({
 
 import { requireRole } from '@/shared/lib/auth'
 import { aggregateDailyStats } from '@/features/ai-summary/lib/daily-aggregation-queries'
-import { generateAiSummaryText } from '@/features/ai-summary/lib/ai-service'
+import { generateAiSummary } from '@/features/ai-summary/lib/ai-service'
 import {
     upsertDailySummary,
     getDailySummaryByDate,
@@ -52,6 +52,8 @@ const SAVED_SUMMARY: DailySummary = {
     ...SAMPLE_INPUT,
     id: 'summary-uuid',
     generatedAt: '2026-02-21T00:00:00.000Z',
+    status: 'draft',
+    aiInsights: [],
 }
 
 describe('generateDailySummary', () => {
@@ -60,21 +62,21 @@ describe('generateDailySummary', () => {
     it('returns success with summary on happy path', async () => {
         vi.mocked(requireRole).mockResolvedValue(ADMIN_SESSION as never)
         vi.mocked(aggregateDailyStats).mockResolvedValue(SAMPLE_INPUT)
-        vi.mocked(generateAiSummaryText).mockResolvedValue('AI Summary Text')
+        vi.mocked(generateAiSummary).mockResolvedValue({ narrative: 'AI Summary Text', insights: [] })
         vi.mocked(upsertDailySummary).mockResolvedValue(SAVED_SUMMARY)
 
         const result = await generateDailySummary({ date: '2026-02-20' })
 
         expect(result.success).toBe(true)
         expect(result.date).toBe('2026-02-20')
-        expect(generateAiSummaryText).toHaveBeenCalledWith(SAMPLE_INPUT)
+        expect(generateAiSummary).toHaveBeenCalledWith(SAMPLE_INPUT)
         expect(result.summary?.totalPatients).toBe(10)
     })
 
     it('defaults to yesterday when no date is supplied', async () => {
         vi.mocked(requireRole).mockResolvedValue(ADMIN_SESSION as never)
         vi.mocked(aggregateDailyStats).mockResolvedValue(SAMPLE_INPUT)
-        vi.mocked(generateAiSummaryText).mockResolvedValue('AI Summary Text')
+        vi.mocked(generateAiSummary).mockResolvedValue({ narrative: 'AI Summary Text', insights: [] })
         vi.mocked(upsertDailySummary).mockResolvedValue(SAVED_SUMMARY)
 
         const result = await generateDailySummary({})

@@ -61,8 +61,10 @@ feature-name/
 ### `ai-summary/`
 **EPIC 9: Daily AI Summary Generator ✅**
 - Daily bed statistics aggregation (patients, stage time, delays, TAT)
+- AI narrative (200-300 words) + structured insights with confidence (US-9.1, US-9.3)
+- Draft → Review → Approve/Reject workflow (US-9.2)
 - Idempotent upsert into `daily_summaries` table
-- Server actions: `generateDailySummary`, `fetchDailySummaryByDate`, `fetchRecentDailySummaries`
+- Server actions: `generateDailySummary`, `fetchDailySummaryByDate`, `fetchRecentDailySummaries`, `approveSummary`, `rejectSummary`, `updateSummaryDraftAction`, `flagInsightAction`
 - API route: `POST /api/daily-summary/generate`, `GET /api/daily-summary/generate`
 - Midnight auto-run via GitHub Actions cron (18:30 UTC = 00:00 IST)
 - Manual trigger: `npm run cron:summary`

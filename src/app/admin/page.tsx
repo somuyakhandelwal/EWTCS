@@ -125,7 +125,7 @@ export default async function AdminDashboard() {
                         <DailySummaryTrigger />
                     </CardHeader>
                     <CardContent>
-                        <DailySummaryHistory />
+                        <DailySummaryHistory canReview />
                     </CardContent>
                 </Card>
 

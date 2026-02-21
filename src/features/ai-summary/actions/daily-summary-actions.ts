@@ -9,7 +9,7 @@ import { requireRole } from '@/shared/lib/auth'
 import { logAudit } from '@/shared/lib/audit'
 import { generateSummarySchema } from '../schemas/generate-summary'
 import { aggregateDailyStats } from '../lib/daily-aggregation-queries'
-import { generateAiSummaryText } from '../lib/ai-service'
+import { generateAiSummary } from '../lib/ai-service'
 import { upsertDailySummary, getDailySummaryByDate, getRecentDailySummaries } from '../lib/daily-summary-store'
 import type { AggregationResult, DailySummary } from '../types/daily-summary'
 
@@ -53,10 +53,27 @@ export async function generateDailySummary(
         // Run aggregation across existing tables
         const summaryInput = await aggregateDailyStats(targetDate)
 
-        // Generate AI text summary from the aggregated stats
-        summaryInput.aiSummary = await generateAiSummaryText(summaryInput)
+        // Generate AI narrative + insights (200-300 words, US-9.1, US-9.3)
+        const { narrative, insights } = await generateAiSummary(summaryInput)
+        summaryInput.aiSummary = narrative
+        summaryInput.aiInsights = insights
 
-        // Upsert into daily_summaries (idempotent ON CONFLICT DO UPDATE)
+        // Post-generation validation: 200-300 word criterion (US-9.1)
+        const wordCount = narrative.split(/\s+/).filter(Boolean).length
+        summaryInput.metadata = {
+            ...summaryInput.metadata,
+            summaryWordCount: wordCount,
+            meetsWordCountRequirement: wordCount >= 100 && wordCount <= 400,
+        }
+        if (!summaryInput.metadata.meetsWordCountRequirement) {
+            logger.warn('[ai-summary] Summary word count outside 100-400 range', {
+                date: targetDate,
+                wordCount,
+                target: '200-300',
+            })
+        }
+
+        // Upsert into daily_summaries as draft (US-9.2)
         const saved = await upsertDailySummary(summaryInput)
 
         // Audit log the generation event
@@ -83,15 +100,18 @@ export async function generateDailySummary(
 
 /**
  * Fetch a specific day's summary (read-only).
- * Returns null if no summary has been generated for that date.
+ * Returns null if no summary or if auditor requests and only draft exists.
  * Accessible by admin, supervisor, and auditor.
  */
 export async function fetchDailySummaryByDate(
     dateStr: string
 ): Promise<{ success: boolean; summary?: DailySummary | null; error?: string }> {
     try {
-        await requireRole(['admin', 'supervisor', 'auditor'])
+        const session = await requireRole(['admin', 'supervisor', 'auditor'])
         const summary = await getDailySummaryByDate(dateStr)
+        if (session.role === 'auditor' && summary?.status !== 'published') {
+            return { success: true, summary: null }
+        }
         return { success: true, summary }
     } catch (error) {
         const message = error instanceof Error ? error.message : 'Fetch failed'
@@ -102,14 +122,15 @@ export async function fetchDailySummaryByDate(
 
 /**
  * Fetch the N most recent daily summaries, newest first.
- * Accessible by admin, supervisor, and auditor.
+ * Auditors receive only published summaries; admin/supervisor receive all.
  */
 export async function fetchRecentDailySummaries(
     limit: number = 30
 ): Promise<{ success: boolean; summaries?: DailySummary[]; error?: string }> {
     try {
-        await requireRole(['admin', 'supervisor', 'auditor'])
-        const summaries = await getRecentDailySummaries(limit)
+        const session = await requireRole(['admin', 'supervisor', 'auditor'])
+        const statusFilter = session.role === 'auditor' ? 'published' : 'all'
+        const summaries = await getRecentDailySummaries(limit, statusFilter)
         return { success: true, summaries }
     } catch (error) {
         const message = error instanceof Error ? error.message : 'Fetch failed'
