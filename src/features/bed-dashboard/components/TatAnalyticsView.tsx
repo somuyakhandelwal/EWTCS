@@ -64,7 +64,7 @@ export function TatAnalyticsView({ className, readOnly = false }: TatAnalyticsVi
         </CardHeader>
         <CardContent>
           <p className="text-sm text-red-600">{error}</p>
-          <Button variant="outline" onClick={loadData} className="mt-4" disabled={readOnly}>Retry</Button>
+          <Button variant="outline" onClick={loadData} className="mt-4">Retry</Button>
         </CardContent>
       </Card>
     )

@@ -33,7 +33,11 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
   const cutoffs = buildCutoffs(config)
   // Earliest cutoff stored in the run record (for display only)
   const earliestCutoff = new Date(
-    Math.min(cutoffs.patientAdmissions.getTime(), cutoffs.auditLogs.getTime()),
+    Math.min(
+      cutoffs.patientAdmissions.getTime(),
+      cutoffs.auditLogs.getTime(),
+      cutoffs.bedStageLogs.getTime(),
+    ),
   )
 
   // ── Approval gate ─────────────────────────────────────────────────────

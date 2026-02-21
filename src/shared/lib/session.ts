@@ -84,14 +84,18 @@ export async function verifySession() {
         const lastActivity = sessionData.lastActivity || now
         if (!sessionData.isKiosk && now - lastActivity > INACTIVITY_TIMEOUT_MS) {
             // Idle too long — delete session
-            cookieStore.set('session', '', {
-                httpOnly: true,
-                secure: process.env.NODE_ENV === 'production',
-                expires: new Date(0),
-                sameSite: 'lax',
-                path: '/',
-                maxAge: 0,
-            })
+            try {
+                cookieStore.set('session', '', {
+                    httpOnly: true,
+                    secure: process.env.NODE_ENV === 'production',
+                    expires: new Date(0),
+                    sameSite: 'lax',
+                    path: '/',
+                    maxAge: 0,
+                })
+            } catch {
+                // Ignore: Cannot set cookies in Server Components
+            }
             return null
         }
 
@@ -156,13 +160,17 @@ async function renewSession(sessionData: SessionPayload) {
 }
 
 export async function deleteSession() {
-    const cookieStore = await cookies()
-    cookieStore.set('session', '', {
-        httpOnly: true,
-        secure: process.env.NODE_ENV === 'production',
-        expires: new Date(0),
-        sameSite: 'lax',
-        path: '/',
-        maxAge: 0,
-    })
+    try {
+        const cookieStore = await cookies()
+        cookieStore.set('session', '', {
+            httpOnly: true,
+            secure: process.env.NODE_ENV === 'production',
+            expires: new Date(0),
+            sameSite: 'lax',
+            path: '/',
+            maxAge: 0,
+        })
+    } catch {
+        // Ignore: Cannot set cookies in Server Components
+    }
 }

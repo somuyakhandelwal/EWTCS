@@ -19,6 +19,9 @@ const envSchema = z.object({
   RED_ALERT_THRESHOLD_MS: z.coerce.number().int().positive().default(10800000),
   OPENAI_API_KEY: z.string().optional(),
   OPENAI_API_KEY_ENCRYPTED: z.string().optional(),
+  // EPIC 9: Gemini AI key (either name is accepted)
+  GEMINI_API_KEY: z.string().optional(),
+  GOOGLE_GENERATIVE_AI_API_KEY: z.string().optional(),
 }).superRefine((value, ctx) => {
   if (!value.DATABASE_URL && !value.DATABASE_URL_ENCRYPTED) {
     ctx.addIssue({
@@ -128,13 +131,16 @@ if (!validatePostgresUrl(databaseSecret.value)) {
 
 const aiSecret = envVars.OPENAI_API_KEY_ENCRYPTED || envVars.OPENAI_API_KEY
   ? resolveSecret(
-      'OPENAI_API_KEY',
-      envVars.OPENAI_API_KEY,
-      envVars.OPENAI_API_KEY_ENCRYPTED,
-      envVars.ENCRYPTION_KEY,
-      false
-    )
+    'OPENAI_API_KEY',
+    envVars.OPENAI_API_KEY,
+    envVars.OPENAI_API_KEY_ENCRYPTED,
+    envVars.ENCRYPTION_KEY,
+    false
+  )
   : null;
+
+// Gemini key (EPIC 9): read directly from env, used by ai-service.ts
+const geminiApiKey = envVars.GEMINI_API_KEY || envVars.GOOGLE_GENERATIVE_AI_API_KEY || null;
 
 const createAppConfig = (env: z.infer<typeof envSchema>): AppConfig => {
   const isDevelopment = env.NODE_ENV === 'development';
@@ -163,6 +169,11 @@ const createAppConfig = (env: z.infer<typeof envSchema>): AppConfig => {
         encrypted: aiSecret.encrypted,
       },
     }),
+    ...(geminiApiKey && {
+      gemini: {
+        apiKey: geminiApiKey,
+      },
+    }),
   };
 };
 
@@ -176,7 +187,8 @@ export const logConfigurationStatus = (): void => {
     databaseUrl: maskSensitive(config.database.url),
     sslEnabled: config.database.ssl,
     databaseEncrypted: config.database.encrypted,
-    aiKeyConfigured: Boolean(config.ai?.apiKey),
+    aiKeyConfigured: Boolean(config.ai?.apiKey) || Boolean((config as Record<string, unknown> & { gemini?: { apiKey?: string } }).gemini?.apiKey),
+    geminiKeyConfigured: Boolean(geminiApiKey),
     aiKeyEncrypted: Boolean(config.ai?.encrypted),
     alertThreshold: `${env.RED_ALERT_THRESHOLD_MS}ms (${(env.RED_ALERT_THRESHOLD_MS / 3600000).toFixed(1)} hours)`,
   });

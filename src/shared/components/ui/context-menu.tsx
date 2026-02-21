@@ -5,7 +5,8 @@ import { cn } from "@/shared/lib/utils"
 
 export interface ContextMenuItem {
   id: string
-  label: string
+  label: React.ReactNode
+  icon?: React.ReactNode
   disabled?: boolean
   onSelect: () => void
   className?: string
@@ -171,7 +172,8 @@ export function ContextMenu({
               }}
               role="menuitem"
             >
-              {item.label}
+              {item.icon && <span className="flex-shrink-0">{item.icon}</span>}
+              <span>{item.label}</span>
             </button>
           ))}
         </div>

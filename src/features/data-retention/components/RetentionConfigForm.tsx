@@ -18,6 +18,9 @@ interface FieldConfig {
   key: keyof Omit<RetentionConfig, 'requiresApproval'>
   label: string
   description: string
+  min: number
+  max: number
+  unit: 'yr' | 'day'
 }
 
 const FIELDS: FieldConfig[] = [
@@ -25,16 +28,25 @@ const FIELDS: FieldConfig[] = [
     key: 'patientAdmissionsYears',
     label: 'Patient Admissions',
     description: 'Discharge records in patient_admissions',
+    min: 1,
+    max: 99,
+    unit: 'yr',
   },
   {
     key: 'auditLogsYears',
     label: 'Audit Logs',
     description: 'All system audit trail entries',
+    min: 1,
+    max: 99,
+    unit: 'yr',
   },
   {
-    key: 'bedStageLogYears',
+    key: 'bedStageLogDays',
     label: 'Bed Stage Logs',
-    description: 'Bed stage transition history',
+    description: 'Bed stage transition history retention window',
+    min: 1,
+    max: 3650,
+    unit: 'day',
   },
 ]
 
@@ -74,7 +86,7 @@ export function RetentionConfigForm({ initialConfig }: RetentionConfigFormProps)
   return (
     <div className="space-y-5">
       <div className="space-y-3">
-        {FIELDS.map(({ key, label, description }) => (
+        {FIELDS.map(({ key, label, description, min, max, unit }) => (
           <div key={key} className="flex items-center justify-between gap-4">
             <div>
               <p className="text-sm text-zinc-200">{label}</p>
@@ -83,15 +95,15 @@ export function RetentionConfigForm({ initialConfig }: RetentionConfigFormProps)
             <div className="flex items-center gap-2 shrink-0">
               <input
                 type="number"
-                min={1}
-                max={99}
+                min={min}
+                max={max}
                 value={config[key] as number}
                 onChange={(e) => handleYearChange(key, e.target.value)}
                 disabled={isPending}
-                aria-label={`${label} retention years`}
+                aria-label={`${label} retention ${unit === 'yr' ? 'years' : 'days'}`}
                 className={inputClass}
               />
-              <span className="text-xs text-zinc-500 w-8">yr</span>
+              <span className="text-xs text-zinc-500 w-8">{unit === 'yr' ? 'yr' : 'day'}</span>
             </div>
           </div>
         ))}

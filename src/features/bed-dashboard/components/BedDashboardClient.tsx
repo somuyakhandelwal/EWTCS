@@ -24,9 +24,16 @@ import type { TatSummary } from '../types/bed'
 
 interface BedDashboardClientProps {
   initialData: BedGridData
+  canRecordDispositionReasons?: boolean
+  /** Server action for creating virtual beds — injected from app layer (no cross-feature import) */
+  onCreateVirtualBed: (fd: FormData) => Promise<{ success: boolean; error?: string }>
 }
 
-export function BedDashboardClient({ initialData }: BedDashboardClientProps) {
+export function BedDashboardClient({
+  initialData,
+  canRecordDispositionReasons = true,
+  onCreateVirtualBed,
+}: BedDashboardClientProps) {
   const {
     data: realtimeData,
     connectionStatus,
@@ -132,13 +139,12 @@ export function BedDashboardClient({ initialData }: BedDashboardClientProps) {
         />
         <ConnectionStatus status={connectionStatus} onReconnect={reconnect} />
       </div>
-
       <BedGrid
         data={data}
         onRefresh={handleRefresh}
         onBedClick={handleBedClick}
         onStageSelect={handleStageSelect}
-        onReasonSelect={handleReasonSelect}
+        onReasonSelect={canRecordDispositionReasons ? handleReasonSelect : undefined}
         tatSummary={tatSummary}
         updatingBedId={updatingBedId}
         updatingStageId={updatingStageId}
@@ -153,7 +159,6 @@ export function BedDashboardClient({ initialData }: BedDashboardClientProps) {
       {undoError && (
         <div className="text-center text-xs text-red-500 font-semibold mt-2">{undoError}</div>
       )}
-
       <SupervisorOverrideModal
         isOpen={Boolean(overrideState)}
         bedNumber={overrideState?.bedNumber ?? null}
@@ -164,7 +169,6 @@ export function BedDashboardClient({ initialData }: BedDashboardClientProps) {
         onCancel={closeOverrideModal}
         isLoading={isOverrideSubmitting}
       />
-
       <ConfirmationModal
         isOpen={Boolean(confirmationState)}
         bedNumber={confirmationState?.bedNumber ?? null}
@@ -183,15 +187,12 @@ export function BedDashboardClient({ initialData }: BedDashboardClientProps) {
         onCancel={closeDischargeModal}
         isSubmitting={isDischargeSubmitting}
       />
-
       {/* US-6.6: Add virtual (hallway/stretcher) bed modal */}
       <AddVirtualBedModal
         open={virtualBedModalOpen}
         onClose={() => setVirtualBedModalOpen(false)}
-        onCreated={() => {
-          setVirtualBedModalOpen(false)
-          handleRefresh()
-        }}
+        onCreated={() => { setVirtualBedModalOpen(false); handleRefresh() }}
+        onSubmit={onCreateVirtualBed}
       />
     </div>
   )

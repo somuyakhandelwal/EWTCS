@@ -85,10 +85,14 @@ describe('executeStageUpdate reliability', () => {
     vi.mocked(updateBedStage).mockResolvedValue({
       success: true,
       data: {
-        patientStartTime: new Date().toISOString(),
-        lastStageChange: new Date().toISOString(),
+        bedId: 'bed-1',
+        fromStageId: 'stage-1',
+        toStageId: 'stage-2',
+        durationInPreviousStageMs: 1000,
         isOccupied: true,
-      } as unknown as Awaited<ReturnType<typeof updateBedStage>>['data'],
+        patientStartTime: new Date(),
+        lastStageChange: new Date(),
+      },
     })
 
     const { args } = buildArgs()

@@ -37,7 +37,7 @@ export async function fetchRetentionConfig(): Promise<FetchRetentionConfigResult
 
 /**
  * Persist updated retention configuration. Admin only.
- * Validates that all period values are positive integers ≤ 99 years.
+ * Validates yearly periods and stage-log day retention.
  */
 export async function updateRetentionConfig(
   config: RetentionConfig,
@@ -48,7 +48,6 @@ export async function updateRetentionConfig(
     const yearFields: Array<keyof RetentionConfig> = [
       'patientAdmissionsYears',
       'auditLogsYears',
-      'bedStageLogYears',
     ]
 
     for (const field of yearFields) {
@@ -58,6 +57,13 @@ export async function updateRetentionConfig(
           success: false,
           error: `${field} must be a whole number between 1 and 99`,
         }
+      }
+    }
+
+    if (!Number.isInteger(config.bedStageLogDays) || config.bedStageLogDays < 1 || config.bedStageLogDays > 3650) {
+      return {
+        success: false,
+        error: 'bedStageLogDays must be a whole number between 1 and 3650',
       }
     }
 

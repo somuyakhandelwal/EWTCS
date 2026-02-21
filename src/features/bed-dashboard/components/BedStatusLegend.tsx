@@ -3,6 +3,7 @@ import type { Stage } from '../types/bed'
 import { getStageColorClasses } from '@/shared/utils/stage-colors'
 import { cn } from '@/shared/lib/utils'
 import { ChevronDown, ChevronRight } from 'lucide-react'
+import { StageIcon } from './StageIcon'
 
 interface BedStatusLegendProps {
   stages: Stage[]
@@ -43,11 +44,13 @@ export const BedStatusLegend = memo(function BedStatusLegend({ stages, delayThre
                 >
                   <div
                     className={cn(
-                      'w-4 h-4 rounded border-2',
+                      'w-5 h-5 rounded border-2 flex items-center justify-center flex-shrink-0',
                       colorClasses.bg,
                       colorClasses.border
                     )}
-                  />
+                  >
+                    <StageIcon colorCode={stage.colorCode} className={cn("h-3.5 w-3.5", colorClasses.text)} />
+                  </div>
                   <span className="text-xs text-zinc-400 group-hover:text-zinc-300 transition-colors">
                     {stage.name}
                   </span>
@@ -55,7 +58,7 @@ export const BedStatusLegend = memo(function BedStatusLegend({ stages, delayThre
               )
             })}
           </div>
-          
+
           {/* Delay indicator */}
           <div className="mt-3 pt-3 border-t border-zinc-800 flex flex-wrap gap-4">
             <div className="flex items-center gap-2">

@@ -39,7 +39,7 @@ export interface RawArchivalRunRow {
 export interface RetentionConfig {
   patientAdmissionsYears: number
   auditLogsYears: number
-  bedStageLogYears: number
+  bedStageLogDays: number
   requiresApproval: boolean
 }
 
