@@ -106,12 +106,17 @@ export function BedGrid({
         available={stats.available}
         delayed={stats.delayed}
         bottleneckCount={data.bottleneckCount}
+        escalationCount={data.escalationCount}
         cleaningCount={cleaningCount}
         avgTatMs={tatSummary?.averageTatMs}
       />
 
       {/* Legend */}
-      <BedStatusLegend stages={data.stages} delayThresholdMs={data.delayThresholdMs} />
+      <BedStatusLegend
+        stages={data.stages}
+        delayThresholdMs={data.delayThresholdMs}
+        escalationThresholdMs={data.escalationThresholdMs}
+      />
 
       {/* US-1.6: Disposition bottleneck panel */}
       <BottleneckPanel beds={data.beds} onReasonRecorded={onRefresh} />
