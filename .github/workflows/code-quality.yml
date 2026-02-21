@@ -38,6 +38,8 @@ jobs:
             "*.jpeg"
             "*.gif"
             "*.ico"
+            "*.txt"
+            "*.log"
             ".github/*"
           )
           

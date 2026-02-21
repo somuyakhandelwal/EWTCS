@@ -1,7 +1,3 @@
-// Bed Dashboard Client Wrapper
-// Epic 1: Nurse Desk Bed Dashboard
-// US-1.2: Real-time updates with intelligent polling + Search functionality
-
 'use client'
 
 import { useCallback, useState, useRef, useEffect, useTransition } from 'react'

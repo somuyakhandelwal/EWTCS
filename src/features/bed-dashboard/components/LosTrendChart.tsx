@@ -1,9 +1,5 @@
 // LosTrendChart — Daily average LoS trend chart with optional target line
 // EPIC 10: Management Report Dashboard
-//
-// Pure CSS/SVG — no external chart library required.
-// The target line is rendered as a horizontal rule at the configured value.
-
 'use client'
 
 import { memo, useMemo } from 'react'

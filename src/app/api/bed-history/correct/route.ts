@@ -58,7 +58,7 @@ export async function POST(req: NextRequest) {
       correctedFields: correctedFields as { notes?: string; transition_time?: string },
     })
 
-    if (!result.success) {
+    if (result.success === false) {
       const isAuthError =
         result.error?.startsWith('Unauthorized') ||
         result.error?.startsWith('Read-only')

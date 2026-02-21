@@ -21,11 +21,12 @@ export async function exportChartAsPng(
   const { default: html2canvas } = await import('html2canvas')
 
   const canvas = await html2canvas(el, {
-    backgroundColor: '#18181b',
+    background: '#18181b',
     scale: 2,
     useCORS: true,
     logging: false,
-  })
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  } as any)
 
   const link = document.createElement('a')
   link.download = `${filename}.png`
