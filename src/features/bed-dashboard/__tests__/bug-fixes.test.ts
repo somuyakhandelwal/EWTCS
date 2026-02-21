@@ -33,6 +33,7 @@ function makeBed(overrides: Partial<BedWithElapsedTime> = {}): BedWithElapsedTim
     dispositionElapsedMs: null,
     dispositionDelayReason: null,
     dispositionDelayLogId: null,
+    isEscalated: false,
     ...overrides,
   }
 }

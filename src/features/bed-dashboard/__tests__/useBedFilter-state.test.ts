@@ -30,6 +30,7 @@ function makeBed(
     dispositionElapsedMs: null,
     dispositionDelayReason: null,
     dispositionDelayLogId: null,
+    isEscalated: false,
   }
 }
 

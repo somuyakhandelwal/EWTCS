@@ -31,6 +31,9 @@ NEXT_PUBLIC_APP_URL=http://localhost:3000
 NODE_ENV=development
 ```
 
+### Database System Settings (system_settings table)
+- `escalation_threshold_minutes` - Critical escalation threshold for delayed beds (default: 240 minutes / 4 hours)
+
 ## Encrypted Secrets (Production)
 
 Secrets use the format: `ivhex:encryptedhex`

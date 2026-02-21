@@ -43,6 +43,7 @@ function makeBed(overrides: Partial<BedWithElapsedTime> = {}): BedWithElapsedTim
     dispositionElapsedMs: null,
     dispositionDelayReason: null,
     dispositionDelayLogId: null,
+    isEscalated: false,
     ...overrides,
   }
 }
@@ -53,7 +54,9 @@ function buildArgs() {
     beds: [makeBed()],
     stages: [nextStage],
     delayThresholdMs: 1000,
+    escalationThresholdMs: 2000,
     bottleneckCount: 0,
+    escalationCount: 0,
   }
   let currentData = data
 

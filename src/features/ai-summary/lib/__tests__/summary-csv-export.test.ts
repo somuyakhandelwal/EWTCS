@@ -76,7 +76,6 @@ describe('formatSummariesAsCsv', () => {
         const summary: DailySummary = {
             ...BASE,
             reviewedBy: undefined,
-            rejectionReason: undefined,
             aiSummary: undefined,
         }
         const csv = formatSummariesAsCsv([summary])
