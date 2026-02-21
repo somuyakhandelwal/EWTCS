@@ -1,0 +1,102 @@
+@media print {
+
+  @page {
+    size: A4 portrait;
+    margin: 16mm 14mm 16mm 14mm;
+  }
+
+  /* Hide non-print elements */
+  .print\:hidden,
+  nav,
+  aside,
+  footer {
+    display: none !important;
+  }
+
+  /* Hide all buttons in print */
+  button {
+    display: none !important;
+  }
+
+  /* Reset background for print */
+  * {
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+    box-shadow: none !important;
+    text-shadow: none !important;
+  }
+
+  html, body {
+    background: #ffffff !important;
+    color: #111111 !important;
+    font-size: 11pt;
+  }
+
+  .min-h-screen {
+    min-height: unset !important;
+    background: #ffffff !important;
+    padding: 0 !important;
+  }
+
+  .max-w-7xl {
+    max-width: 100% !important;
+    margin: 0 !important;
+  }
+
+  /* Text colors */
+  h1, h2, h3, h4, h5, h6 { color: #111111 !important; }
+  p, span, td, th, li { color: #333333 !important; }
+
+  /* Card backgrounds */
+  [class*="bg-zinc"],
+  [class*="bg-black"],
+  [class*="bg-gray"] {
+    background: #f8f8f8 !important;
+    border: 1px solid #dddddd !important;
+  }
+
+  /* Page breaks */
+  .print-section {
+    break-before: page;
+    page-break-before: always;
+  }
+
+  .print-no-break {
+    break-inside: avoid;
+    page-break-inside: avoid;
+  }
+
+  /* Tables */
+  table { border-collapse: collapse; width: 100%; }
+  thead { display: table-header-group; }
+  th {
+    background: #eeeeee !important;
+    color: #111111 !important;
+    font-weight: 700;
+    border: 1px solid #cccccc !important;
+    padding: 6px 10px;
+  }
+  td {
+    border: 1px solid #dddddd !important;
+    padding: 5px 10px;
+  }
+  tr {
+    break-inside: avoid;
+    page-break-inside: avoid;
+  }
+
+  /* Print-only header */
+  .print-header {
+    display: block !important;
+    text-align: center;
+    margin-bottom: 20px;
+    padding-bottom: 12px;
+    border-bottom: 2px solid #111111;
+  }
+
+  .print-header h1 { font-size: 18pt; font-weight: 700; margin: 0 0 4px 0; }
+  .print-header p { font-size: 10pt; color: #555555 !important; margin: 0; }
+
+  /* Remove overflow restrictions */
+  [class*="overflow"] { overflow: visible !important; }
+}
