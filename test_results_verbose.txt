@@ -1,0 +1,215 @@
+﻿
+[1m[46m RUN [49m[22m [36mv3.2.4 [39m[90mC:/Users/kapil/Desktop/EWTCS/EWTCS[39m
+
+ [32mΓ£ô[39m src/__tests__/comprehensive-feature-tests.test.ts[2m > [22mformatElapsedTime[2m > [22mreturns N/A for null[32m 1[2mms[22m[39m
+ [32mΓ£ô[39m src/__tests__/comprehensive-feature-tests.test.ts[2m > [22mformatElapsedTime[2m > [22mreturns N/A for negative time[32m 0[2mms[22m[39m
+ [32mΓ£ô[39m src/__tests__/comprehensive-feature-tests.test.ts[2m > [22mformatElapsedTime[2m > [22mreturns "< 1m" for 0 ms[32m 0[2mms[22m[39m
+ [32mΓ£ô[39m src/__tests__/comprehensive-feature-tests.test.ts[2m > [22mformatElapsedTime[2m > [22mreturns "< 1m" for 59 seconds[32m 0[2mms[22m[39m
+ [32mΓ£ô[39m src/__tests__/comprehensive-feature-tests.test.ts[2m > [22mformatElapsedTime[2m > [22mreturns minutes only when < 1 hour[32m 0[2mms[22m[39m
+ [32mΓ£ô[39m src/__tests__/comprehensive-feature-tests.test.ts[2m > [22mformatElapsedTime[2m > [22mreturns hours only when exactly on the hour[32m 0[2mms[22m[39m
+ [32mΓ£ô[39m src/__tests__/comprehensive-feature-tests.test.ts[2m > [22mformatElapsedTime[2m > [22mreturns hours and minutes[32m 0[2mms[22m[39m
+ [32mΓ£ô[39m src/__tests__/comprehensive-feature-tests.test.ts[2m > [22mformatElapsedTime[2m > [22mhandles large values (25h 30m)[32m 0[2mms[22m[39m
+ [32mΓ£ô[39m src/__tests__/comprehensive-feature-tests.test.ts[2m > [22mgetDelayColorClasses[2m > [22mreturns red classes for delayed beds[32m 0[2mms[22m[39m
+ [32mΓ£ô[39m src/__tests__/comprehensive-feature-tests.test.ts[2m > [22mgetDelayColorClasses[2m > [22mreturns neutral classes for non-delayed beds[32m 0[2mms[22m[39m
+ [32mΓ£ô[39m src/__tests__/comprehensive-feature-tests.test.ts[2m > [22mgetDelayColorClasses[2m > [22malways returns bg, text, border props[32m 0[2mms[22m[39m
+ [32mΓ£ô[39m src/__tests__/comprehensive-feature-tests.test.ts[2m > [22mgetDelayColorClasses[2m > [22mdelayed vs non-delayed have different bg[32m 1[2mms[22m[39m
+ [32mΓ£ô[39m src/__tests__/comprehensive-feature-tests.test.ts[2m > [22mcalculateOccupancyPercentage[2m > [22mreturns 0 for empty array[32m 0[2mms[22m[39m
+ [32mΓ£ô[39m src/__tests__/comprehensive-feature-tests.test.ts[2m > [22mcalculateOccupancyPercentage[2m > [22mreturns 0 when none occupied[32m 0[2mms[22m[39m
+ [32mΓ£ô[39m src/__tests__/comprehensive-feature-tests.test.ts[2m > [22mcalculateOccupancyPercentage[2m > [22mreturns 100 when all occupied[32m 0[2mms[22m[39m
+ [32mΓ£ô[39m src/__tests__/comprehensive-feature-tests.test.ts[2m > [22mcalculateOccupancyPercentage[2m > [22mreturns 50 for half occupancy[32m 0[2mms[22m[39m
+ [32mΓ£ô[39m src/__tests__/comprehensive-feature-tests.test.ts[2m > [22mcalculateOccupancyPercentage[2m > [22mrounds correctly for 1 of 3[32m 0[2mms[22m[39m
+ [32mΓ£ô[39m src/__tests__/comprehensive-feature-tests.test.ts[2m > [22mgetBedStatistics[2m > [22mtotal/occupied/available/delayed counts[32m 0[2mms[22m[39m
+ [32mΓ£ô[39m src/__tests__/comprehensive-feature-tests.test.ts[2m > [22mgetBedStatistics[2m > [22moccupancy percentage[32m 0[2mms[22m[39m
+ [32mΓ£ô[39m src/__tests__/comprehensive-feature-tests.test.ts[2m > [22mgetBedStatistics[2m > [22maverage elapsed time for occupied beds[32m 0[2mms[22m[39m
+ [32mΓ£ô[39m src/__tests__/comprehensive-feature-tests.test.ts[2m > [22mgetBedStatistics[2m > [22mnull average when no occupied beds have elapsed time[32m 0[2mms[22m[39m
+ [32mΓ£ô[39m src/__tests__/comprehensive-feature-tests.test.ts[2m > [22mgetBedStatistics[2m > [22mall-empty beds returns zeroes[32m 0[2mms[22m[39m
+ [32mΓ£ô[39m src/__tests__/comprehensive-feature-tests.test.ts[2m > [22misCriticalStage[2m > [22mreturns false for empty string[32m 0[2mms[22m[39m
+ [32mΓ£ô[39m src/__tests__/comprehensive-feature-tests.test.ts[2m > [22misCriticalStage[2m > [22mdetects discharge (case-insensitive)[32m 0[2mms[22m[39m
+ [32mΓ£ô[39m src/__tests__/comprehensive-feature-tests.test.ts[2m > [22misCriticalStage[2m > [22mdetects code keyword[32m 0[2mms[22m[39m
+ [32mΓ£ô[39m src/__tests__/comprehensive-feature-tests.test.ts[2m > [22misCriticalStage[2m > [22mdetects critical[32m 0[2mms[22m[39m
+ [32mΓ£ô[39m src/__tests__/comprehensive-feature-tests.test.ts[2m > [22misCriticalStage[2m > [22mdetects deceased[32m 0[2mms[22m[39m
+ [32mΓ£ô[39m src/__tests__/comprehensive-feature-tests.test.ts[2m > [22misCriticalStage[2m > [22mdetects terminal[32m 0[2mms[22m[39m
+ [32mΓ£ô[39m src/__tests__/comprehensive-feature-tests.test.ts[2m > [22misCriticalStage[2m > [22mdetects transfer[32m 0[2mms[22m[39m
+ [32mΓ£ô[39m src/__tests__/comprehensive-feature-tests.test.ts[2m > [22misCriticalStage[2m > [22mreturns false for non-critical stages[32m 0[2mms[22m[39m
+ [32mΓ£ô[39m src/__tests__/comprehensive-feature-tests.test.ts[2m > [22misCriticalStage[2m > [22mdetects keyword embedded in longer name[32m 0[2mms[22m[39m
+ [32mΓ£ô[39m src/__tests__/comprehensive-feature-tests.test.ts[2m > [22mcalculateStagePercentage[2m > [22mreturns 0 when total is 0[32m 0[2mms[22m[39m
+ [32mΓ£ô[39m src/__tests__/comprehensive-feature-tests.test.ts[2m > [22mcalculateStagePercentage[2m > [22mreturns 100 when equal[32m 0[2mms[22m[39m
+ [32mΓ£ô[39m src/__tests__/comprehensive-feature-tests.test.ts[2m > [22mcalculateStagePercentage[2m > [22mreturns 50 for half[32m 0[2mms[22m[39m
+ [32mΓ£ô[39m src/__tests__/comprehensive-feature-tests.test.ts[2m > [22mcalculateStagePercentage[2m > [22mreturns 25 for quarter[32m 0[2mms[22m[39m
+ [32mΓ£ô[39m src/__tests__/comprehensive-feature-tests.test.ts[2m > [22mcalculateStagePercentage[2m > [22mcan exceed 100 for anomalous data[32m 0[2mms[22m[39m
+ [32mΓ£ô[39m src/__tests__/comprehensive-feature-tests.test.ts[2m > [22misDelayed[2m > [22mfalse when equal to threshold[32m 0[2mms[22m[39m
+ [32mΓ£ô[39m src/__tests__/comprehensive-feature-tests.test.ts[2m > [22misDelayed[2m > [22mtrue when exceeds threshold by 1ms[32m 0[2mms[22m[39m
+ [32mΓ£ô[39m src/__tests__/comprehensive-feature-tests.test.ts[2m > [22misDelayed[2m > [22mfalse below threshold[32m 0[2mms[22m[39m
+ [32mΓ£ô[39m src/__tests__/comprehensive-feature-tests.test.ts[2m > [22misDelayed[2m > [22muses 1-hour default threshold[32m 0[2mms[22m[39m
+ [32mΓ£ô[39m src/__tests__/comprehensive-feature-tests.test.ts[2m > [22mgetDelayColorClass[2m > [22mgray for null[32m 0[2mms[22m[39m
+ [32mΓ£ô[39m src/__tests__/comprehensive-feature-tests.test.ts[2m > [22mgetDelayColorClass[2m > [22mred beyond threshold[32m 0[2mms[22m[39m
+ [32mΓ£ô[39m src/__tests__/comprehensive-feature-tests.test.ts[2m > [22mgetDelayColorClass[2m > [22myellow at 71% of threshold[32m 0[2mms[22m[39m
+ [32mΓ£ô[39m src/__tests__/comprehensive-feature-tests.test.ts[2m > [22mgetDelayColorClass[2m > [22mgreen below 70%[32m 0[2mms[22m[39m
+ [32mΓ£ô[39m src/__tests__/comprehensive-feature-tests.test.ts[2m > [22mgroupByDate[2m > [22mgroups same-day items together[32m 0[2mms[22m[39m
+ [32mΓ£ô[39m src/__tests__/comprehensive-feature-tests.test.ts[2m > [22mgroupByDate[2m > [22mhandles string dates[32m 0[2mms[22m[39m
+ [32mΓ£ô[39m src/__tests__/comprehensive-feature-tests.test.ts[2m > [22mgroupByDate[2m > [22mgroups by month[32m 0[2mms[22m[39m
+ [32mΓ£ô[39m src/__tests__/comprehensive-feature-tests.test.ts[2m > [22mgroupByDate[2m > [22mreturns empty map for empty input[32m 0[2mms[22m[39m
+ [32mΓ£ô[39m src/__tests__/comprehensive-feature-tests.test.ts[2m > [22mcalculateAverageDuration[2m > [22mreturns 0 for empty array[32m 0[2mms[22m[39m
+ [32mΓ£ô[39m src/__tests__/comprehensive-feature-tests.test.ts[2m > [22mcalculateAverageDuration[2m > [22mreturns 0 if all durations are null[32m 0[2mms[22m[39m
+ [32mΓ£ô[39m src/__tests__/comprehensive-feature-tests.test.ts[2m > [22mcalculateAverageDuration[2m > [22mignores null values[32m 0[2mms[22m[39m
+ [32mΓ£ô[39m src/__tests__/comprehensive-feature-tests.test.ts[2m > [22mcalculateAverageDuration[2m > [22mcalculates correct average[32m 0[2mms[22m[39m
+ [32mΓ£ô[39m src/__tests__/comprehensive-feature-tests.test.ts[2m > [22mcalculatePercentile[2m > [22mreturns null for empty array[32m 0[2mms[22m[39m
+ [32mΓ£ô[39m src/__tests__/comprehensive-feature-tests.test.ts[2m > [22mcalculatePercentile[2m > [22mreturns the only value for single element[32m 0[2mms[22m[39m
+ [32mΓ£ô[39m src/__tests__/comprehensive-feature-tests.test.ts[2m > [22mcalculatePercentile[2m > [22mreturns max for p100[32m 0[2mms[22m[39m
+ [32mΓ£ô[39m src/__tests__/comprehensive-feature-tests.test.ts[2m > [22mcalculatePercentile[2m > [22mreturns correct p50 for [10,20,30,40,50][32m 0[2mms[22m[39m
+ [32mΓ£ô[39m src/__tests__/comprehensive-feature-tests.test.ts[2m > [22mcalculatePercentile[2m > [22msorts unordered input[32m 0[2mms[22m[39m
+ [32mΓ£ô[39m src/__tests__/comprehensive-feature-tests.test.ts[2m > [22mcalculatePercentile[2m > [22mp90 of 1-10 is 9[32m 0[2mms[22m[39m
+ [32mΓ£ô[39m src/__tests__/comprehensive-feature-tests.test.ts[2m > [22mdetectAnomalies[2m > [22mempty returns empty[32m 0[2mms[22m[39m
+ [32mΓ£ô[39m src/__tests__/comprehensive-feature-tests.test.ts[2m > [22mdetectAnomalies[2m > [22msingle element is never an anomaly (threshold=Infinity)[32m 0[2mms[22m[39m
+ [31m├ù[39m src/__tests__/comprehensive-feature-tests.test.ts[2m > [22mdetectAnomalies[2m > [22mdetects clear outlier[32m 7[2mms[22m[39m
+[31m   ΓåÆ expected false to be true // Object.is equality[39m
+ [32mΓ£ô[39m src/__tests__/comprehensive-feature-tests.test.ts[2m > [22mdetectAnomalies[2m > [22mdoes not flag normal values[32m 0[2mms[22m[39m
+ [32mΓ£ô[39m src/__tests__/comprehensive-feature-tests.test.ts[2m > [22mdetectAnomalies[2m > [22msame length as input[32m 1[2mms[22m[39m
+ [32mΓ£ô[39m src/__tests__/comprehensive-feature-tests.test.ts[2m > [22mgenerateTransitionCSV[2m > [22mhas correct headers[32m 0[2mms[22m[39m
+ [32mΓ£ô[39m src/__tests__/comprehensive-feature-tests.test.ts[2m > [22mgenerateTransitionCSV[2m > [22mproduces header + 2 data rows[32m 0[2mms[22m[39m
+ [32mΓ£ô[39m src/__tests__/comprehensive-feature-tests.test.ts[2m > [22mgenerateTransitionCSV[2m > [22muses N/A for null fromStageName[32m 0[2mms[22m[39m
+ [32mΓ£ô[39m src/__tests__/comprehensive-feature-tests.test.ts[2m > [22mgenerateTransitionCSV[2m > [22mhandles Date objects for transitionTime[32m 0[2mms[22m[39m
+ [32mΓ£ô[39m src/__tests__/comprehensive-feature-tests.test.ts[2m > [22mgenerateTransitionCSV[2m > [22mwraps fields in quotes[32m 0[2mms[22m[39m
+ [32mΓ£ô[39m src/__tests__/comprehensive-feature-tests.test.ts[2m > [22mgenerateTransitionCSV[2m > [22mreturns only header for empty array[32m 0[2mms[22m[39m
+ [32mΓ£ô[39m src/__tests__/comprehensive-feature-tests.test.ts[2m > [22mgenerateAuditorHistoryCSV[2m > [22mhas required headers[32m 0[2mms[22m[39m
+ [32mΓ£ô[39m src/__tests__/comprehensive-feature-tests.test.ts[2m > [22mgenerateAuditorHistoryCSV[2m > [22mproduces header + 2 rows[32m 0[2mms[22m[39m
+ [32mΓ£ô[39m src/__tests__/comprehensive-feature-tests.test.ts[2m > [22mgenerateAuditorHistoryCSV[2m > [22muses N/A for null fromStageName[32m 0[2mms[22m[39m
+ [32mΓ£ô[39m src/__tests__/comprehensive-feature-tests.test.ts[2m > [22mgenerateAuditorHistoryCSV[2m > [22mnull notes renders as empty string[32m 0[2mms[22m[39m
+ [32mΓ£ô[39m src/__tests__/comprehensive-feature-tests.test.ts[2m > [22mgenerateAuditorHistoryCSV[2m > [22monly header for empty array[32m 0[2mms[22m[39m
+ [32mΓ£ô[39m src/__tests__/comprehensive-feature-tests.test.ts[2m > [22mhasBedChanged[2m > [22mfalse for identical beds[32m 0[2mms[22m[39m
+ [32mΓ£ô[39m src/__tests__/comprehensive-feature-tests.test.ts[2m > [22mhasBedChanged[2m > [22mtrue when id changes[32m 0[2mms[22m[39m
+ [32mΓ£ô[39m src/__tests__/comprehensive-feature-tests.test.ts[2m > [22mhasBedChanged[2m > [22mtrue when isOccupied changes[32m 0[2mms[22m[39m
+ [32mΓ£ô[39m src/__tests__/comprehensive-feature-tests.test.ts[2m > [22mhasBedChanged[2m > [22mtrue when isDelayed changes[32m 0[2mms[22m[39m
+ [32mΓ£ô[39m src/__tests__/comprehensive-feature-tests.test.ts[2m > [22mhasBedChanged[2m > [22mtrue when isTemporary changes[32m 0[2mms[22m[39m
+ [32mΓ£ô[39m src/__tests__/comprehensive-feature-tests.test.ts[2m > [22mhasBedChanged[2m > [22mtrue when isVirtual changes[32m 0[2mms[22m[39m
+ [32mΓ£ô[39m src/__tests__/comprehensive-feature-tests.test.ts[2m > [22mhasBedChanged[2m > [22mtrue when isActive changes[32m 0[2mms[22m[39m
+ [32mΓ£ô[39m src/__tests__/comprehensive-feature-tests.test.ts[2m > [22mhasBedChanged[2m > [22mtrue when stage id changes[32m 0[2mms[22m[39m
+ [32mΓ£ô[39m src/__tests__/comprehensive-feature-tests.test.ts[2m > [22mhasBedChanged[2m > [22mfalse for elapsed time diff < 30s[32m 0[2mms[22m[39m
+ [32mΓ£ô[39m src/__tests__/comprehensive-feature-tests.test.ts[2m > [22mhasBedChanged[2m > [22mtrue for elapsed time diff > 30s[32m 0[2mms[22m[39m
+ [32mΓ£ô[39m src/__tests__/comprehensive-feature-tests.test.ts[2m > [22mhasBedsChanged[2m > [22mfalse for identical arrays[32m 0[2mms[22m[39m
+ [32mΓ£ô[39m src/__tests__/comprehensive-feature-tests.test.ts[2m > [22mhasBedsChanged[2m > [22mtrue when lengths differ[32m 0[2mms[22m[39m
+ [32mΓ£ô[39m src/__tests__/comprehensive-feature-tests.test.ts[2m > [22mhasBedsChanged[2m > [22mtrue when bed property changes[32m 0[2mms[22m[39m
+ [32mΓ£ô[39m src/__tests__/comprehensive-feature-tests.test.ts[2m > [22mhasBedsChanged[2m > [22mfalse for two empty arrays[32m 0[2mms[22m[39m
+ [32mΓ£ô[39m src/__tests__/comprehensive-feature-tests.test.ts[2m > [22mgetStableBeds[2m > [22mreturns old reference when nothing changed[32m 0[2mms[22m[39m
+ [32mΓ£ô[39m src/__tests__/comprehensive-feature-tests.test.ts[2m > [22mgetStableBeds[2m > [22mreturns new array when changed[32m 0[2mms[22m[39m
+ [32mΓ£ô[39m src/__tests__/comprehensive-feature-tests.test.ts[2m > [22mgetBedFingerprint[2m > [22mreturns string containing bed id, number, stage, delay[32m 0[2mms[22m[39m
+ [32mΓ£ô[39m src/__tests__/comprehensive-feature-tests.test.ts[2m > [22mgetBedFingerprint[2m > [22muses "none" when currentStage is null[32m 0[2mms[22m[39m
+ [32mΓ£ô[39m src/__tests__/comprehensive-feature-tests.test.ts[2m > [22mgetBedsFingerprint[2m > [22mempty string for empty array[32m 0[2mms[22m[39m
+ [32mΓ£ô[39m src/__tests__/comprehensive-feature-tests.test.ts[2m > [22mgetBedsFingerprint[2m > [22muses pipe separator for multiple beds[32m 0[2mms[22m[39m
+ [32mΓ£ô[39m src/__tests__/comprehensive-feature-tests.test.ts[2m > [22mgetBedsFingerprint[2m > [22msame fingerprint for same bed[32m 0[2mms[22m[39m
+ [32mΓ£ô[39m src/__tests__/comprehensive-feature-tests.test.ts[2m > [22mgetAttributionForDelay[2m > [22memergency_staff for stage orders 1-4[32m 0[2mms[22m[39m
+ [32mΓ£ô[39m src/__tests__/comprehensive-feature-tests.test.ts[2m > [22mgetAttributionForDelay[2m > [22mhospital_capacity for stage 5 with bed-unavailability reasons[32m 0[2mms[22m[39m
+ [32mΓ£ô[39m src/__tests__/comprehensive-feature-tests.test.ts[2m > [22mgetAttributionForDelay[2m > [22munattributed for stage 5 with null reason[32m 0[2mms[22m[39m
+ [32mΓ£ô[39m src/__tests__/comprehensive-feature-tests.test.ts[2m > [22mgetAttributionForDelay[2m > [22munattributed for stage > 5[32m 0[2mms[22m[39m
+ [32mΓ£ô[39m src/__tests__/comprehensive-feature-tests.test.ts[2m > [22mgetAttributionForDelay[2m > [22munattributed for stage 0[32m 0[2mms[22m[39m
+ [32mΓ£ô[39m src/__tests__/comprehensive-feature-tests.test.ts[2m > [22mgetAttributionForDelay[2m > [22mrespects custom config[32m 0[2mms[22m[39m
+ [32mΓ£ô[39m src/__tests__/comprehensive-feature-tests.test.ts[2m > [22mATTRIBUTION_CONFIG[2m > [22mhas emergency staff stage orders [1,2,3,4][32m 0[2mms[22m[39m
+ [32mΓ£ô[39m src/__tests__/comprehensive-feature-tests.test.ts[2m > [22mATTRIBUTION_CONFIG[2m > [22mdisposition stage is 5[32m 0[2mms[22m[39m
+ [32mΓ£ô[39m src/__tests__/comprehensive-feature-tests.test.ts[2m > [22mATTRIBUTION_CONFIG[2m > [22mincludes all bed-unavailability reasons[32m 0[2mms[22m[39m
+ [32mΓ£ô[39m src/__tests__/comprehensive-feature-tests.test.ts[2m > [22mATTRIBUTION_LABELS[2m > [22mhas correct labels[32m 0[2mms[22m[39m
+ [32mΓ£ô[39m src/__tests__/comprehensive-feature-tests.test.ts[2m > [22mATTRIBUTION_COLORS[2m > [22mhas bg/text/border/bar for each type[32m 0[2mms[22m[39m
+ [32mΓ£ô[39m src/__tests__/comprehensive-feature-tests.test.ts[2m > [22mformatDateLabel[2m > [22mformats valid ISO date to readable label[32m 16[2mms[22m[39m
+ [32mΓ£ô[39m src/__tests__/comprehensive-feature-tests.test.ts[2m > [22mformatDateLabel[2m > [22mreturns string for invalid date (graceful fallback)[32m 0[2mms[22m[39m
+ [32mΓ£ô[39m src/__tests__/comprehensive-feature-tests.test.ts[2m > [22mformatDateLabel[2m > [22mJan 1 contains "1" and "Jan"[32m 0[2mms[22m[39m
+ [32mΓ£ô[39m src/__tests__/comprehensive-feature-tests.test.ts[2m > [22mcomputeChartData[2m > [22mreturns null for empty trend[32m 0[2mms[22m[39m
+ [32mΓ£ô[39m src/__tests__/comprehensive-feature-tests.test.ts[2m > [22mcomputeChartData[2m > [22mreturns ChartComputed object for valid trend[32m 0[2mms[22m[39m
+ [32mΓ£ô[39m src/__tests__/comprehensive-feature-tests.test.ts[2m > [22mcomputeChartData[2m > [22mtoX is within SVG bounds[32m 0[2mms[22m[39m
+ [32mΓ£ô[39m src/__tests__/comprehensive-feature-tests.test.ts[2m > [22mcomputeChartData[2m > [22mtoY is within chart height[32m 0[2mms[22m[39m
+ [32mΓ£ô[39m src/__tests__/comprehensive-feature-tests.test.ts[2m > [22mcomputeChartData[2m > [22mlinePoints has 3 coordinate pairs[32m 0[2mms[22m[39m
+ [32mΓ£ô[39m src/__tests__/comprehensive-feature-tests.test.ts[2m > [22mcomputeChartData[2m > [22msingle data point does not produce NaN[32m 0[2mms[22m[39m
+ [32mΓ£ô[39m src/__tests__/comprehensive-feature-tests.test.ts[2m > [22mcomputeChartData[2m > [22mgenerates 4 ticks[32m 0[2mms[22m[39m
+ [32mΓ£ô[39m src/__tests__/comprehensive-feature-tests.test.ts[2m > [22mcomputeChartData[2m > [22maccommodates high targetLosMs in range[32m 0[2mms[22m[39m
+ [32mΓ£ô[39m src/__tests__/comprehensive-feature-tests.test.ts[2m > [22mtoDateInput[2m > [22mformats to YYYY-MM-DD[32m 0[2mms[22m[39m
+ [32mΓ£ô[39m src/__tests__/comprehensive-feature-tests.test.ts[2m > [22mtoDateInput[2m > [22mreturns 10-char string[32m 0[2mms[22m[39m
+ [32mΓ£ô[39m src/__tests__/comprehensive-feature-tests.test.ts[2m > [22mtoDateInput[2m > [22mDec 31 formats correctly[32m 0[2mms[22m[39m
+ [32mΓ£ô[39m src/__tests__/comprehensive-feature-tests.test.ts[2m > [22mmakeDatePreset[2m > [22mreturns startDate and endDate as Date[32m 0[2mms[22m[39m
+ [32mΓ£ô[39m src/__tests__/comprehensive-feature-tests.test.ts[2m > [22mmakeDatePreset[2m > [22mstart is before end[32m 0[2mms[22m[39m
+ [32mΓ£ô[39m src/__tests__/comprehensive-feature-tests.test.ts[2m > [22mmakeDatePreset[2m > [22m0 days gives ~0 diff[32m 0[2mms[22m[39m
+ [32mΓ£ô[39m src/__tests__/comprehensive-feature-tests.test.ts[2m > [22mmakeDatePreset[2m > [22m30 days gives ~30 day diff[32m 0[2mms[22m[39m
+ [32mΓ£ô[39m src/__tests__/comprehensive-feature-tests.test.ts[2m > [22mmakeDatePreset[2m > [22m90 days gives ~90 day diff[32m 0[2mms[22m[39m
+ [32mΓ£ô[39m src/__tests__/comprehensive-feature-tests.test.ts[2m > [22mSHIFT_PRESETS[2m > [22mhas 3 shifts[32m 0[2mms[22m[39m
+ [32mΓ£ô[39m src/__tests__/comprehensive-feature-tests.test.ts[2m > [22mSHIFT_PRESETS[2m > [22mmorning shift does not cross midnight[32m 0[2mms[22m[39m
+ [32mΓ£ô[39m src/__tests__/comprehensive-feature-tests.test.ts[2m > [22mSHIFT_PRESETS[2m > [22mnight shift crosses midnight[32m 0[2mms[22m[39m
+ [32mΓ£ô[39m src/__tests__/comprehensive-feature-tests.test.ts[2m > [22mSHIFT_PRESETS[2m > [22meach has label/start/end/crossesMidnight[32m 0[2mms[22m[39m
+ [32mΓ£ô[39m src/__tests__/comprehensive-feature-tests.test.ts[2m > [22mDATE_RANGE_PRESETS[2m > [22mhas 4 presets[32m 0[2mms[22m[39m
+ [32mΓ£ô[39m src/__tests__/comprehensive-feature-tests.test.ts[2m > [22mDATE_RANGE_PRESETS[2m > [22mincludes 0, 7, 30, 90 days[32m 0[2mms[22m[39m
+ [32mΓ£ô[39m src/__tests__/comprehensive-feature-tests.test.ts[2m > [22mgetStageColorClasses[2m > [22mgray for null[32m 0[2mms[22m[39m
+ [32mΓ£ô[39m src/__tests__/comprehensive-feature-tests.test.ts[2m > [22mgetStageColorClasses[2m > [22mgray for undefined[32m 0[2mms[22m[39m
+ [32mΓ£ô[39m src/__tests__/comprehensive-feature-tests.test.ts[2m > [22mgetStageColorClasses[2m > [22mgray for empty string[32m 0[2mms[22m[39m
+ [32mΓ£ô[39m src/__tests__/comprehensive-feature-tests.test.ts[2m > [22mgetStageColorClasses[2m > [22mblue for "blue"[32m 0[2mms[22m[39m
+ [32mΓ£ô[39m src/__tests__/comprehensive-feature-tests.test.ts[2m > [22mgetStageColorClasses[2m > [22mcase-insensitive[32m 0[2mms[22m[39m
+ [32mΓ£ô[39m src/__tests__/comprehensive-feature-tests.test.ts[2m > [22mgetStageColorClasses[2m > [22mfallback gray for unknown color[32m 0[2mms[22m[39m
+ [32mΓ£ô[39m src/__tests__/comprehensive-feature-tests.test.ts[2m > [22mgetStageColorClasses[2m > [22mreturns bg/text/border[32m 0[2mms[22m[39m
+ [32mΓ£ô[39m src/__tests__/comprehensive-feature-tests.test.ts[2m > [22mgetStageColorClasses[2m > [22mall 9 named colors resolve without gray fallback[32m 0[2mms[22m[39m
+ [32mΓ£ô[39m src/__tests__/comprehensive-feature-tests.test.ts[2m > [22mgetSupportedStageColors[2m > [22mreturns array[32m 0[2mms[22m[39m
+ [32mΓ£ô[39m src/__tests__/comprehensive-feature-tests.test.ts[2m > [22mgetSupportedStageColors[2m > [22mhas exactly 9 unique colors[32m 0[2mms[22m[39m
+ [32mΓ£ô[39m src/__tests__/comprehensive-feature-tests.test.ts[2m > [22mgetSupportedStageColors[2m > [22mcontains expected values[32m 0[2mms[22m[39m
+ [32mΓ£ô[39m src/__tests__/comprehensive-feature-tests.test.ts[2m > [22mformatDuration[2m > [22mN/A for null[32m 0[2mms[22m[39m
+ [32mΓ£ô[39m src/__tests__/comprehensive-feature-tests.test.ts[2m > [22mformatDuration[2m > [22mN/A for undefined[32m 0[2mms[22m[39m
+ [32mΓ£ô[39m src/__tests__/comprehensive-feature-tests.test.ts[2m > [22mformatDuration[2m > [22mN/A for negative[32m 0[2mms[22m[39m
+ [32mΓ£ô[39m src/__tests__/comprehensive-feature-tests.test.ts[2m > [22mformatDuration[2m > [22m0s for 0 ms[32m 0[2mms[22m[39m
+ [32mΓ£ô[39m src/__tests__/comprehensive-feature-tests.test.ts[2m > [22mformatDuration[2m > [22m30s for 30000 ms[32m 0[2mms[22m[39m
+ [32mΓ£ô[39m src/__tests__/comprehensive-feature-tests.test.ts[2m > [22mformatDuration[2m > [22m1m 30s for 90000 ms[32m 0[2mms[22m[39m
+ [32mΓ£ô[39m src/__tests__/comprehensive-feature-tests.test.ts[2m > [22mformatDuration[2m > [22m1h 0m for 3600000 ms[32m 0[2mms[22m[39m
+ [32mΓ£ô[39m src/__tests__/comprehensive-feature-tests.test.ts[2m > [22mformatDuration[2m > [22m1h 30m for 5400000 ms[32m 0[2mms[22m[39m
+ [32mΓ£ô[39m src/__tests__/comprehensive-feature-tests.test.ts[2m > [22mformatDuration[2m > [22mignores seconds when hours present[32m 0[2mms[22m[39m
+ [32mΓ£ô[39m src/__tests__/comprehensive-feature-tests.test.ts[2m > [22mformatDurationDetailed[2m > [22mN/A for null[32m 0[2mms[22m[39m
+ [32mΓ£ô[39m src/__tests__/comprehensive-feature-tests.test.ts[2m > [22mformatDurationDetailed[2m > [22mN/A for negative[32m 0[2mms[22m[39m
+ [32mΓ£ô[39m src/__tests__/comprehensive-feature-tests.test.ts[2m > [22mformatDurationDetailed[2m > [22m0 second for 0 ms[32m 0[2mms[22m[39m
+ [32mΓ£ô[39m src/__tests__/comprehensive-feature-tests.test.ts[2m > [22mformatDurationDetailed[2m > [22m1 second for 1000 ms[32m 0[2mms[22m[39m
+ [32mΓ£ô[39m src/__tests__/comprehensive-feature-tests.test.ts[2m > [22mformatDurationDetailed[2m > [22m2 seconds plural[32m 0[2mms[22m[39m
+ [32mΓ£ô[39m src/__tests__/comprehensive-feature-tests.test.ts[2m > [22mformatDurationDetailed[2m > [22m1 minute for 60000 ms[32m 0[2mms[22m[39m
+ [32mΓ£ô[39m src/__tests__/comprehensive-feature-tests.test.ts[2m > [22mformatDurationDetailed[2m > [22m1 minute 30 seconds for 90000 ms[32m 0[2mms[22m[39m
+ [32mΓ£ô[39m src/__tests__/comprehensive-feature-tests.test.ts[2m > [22mformatDurationDetailed[2m > [22m2 hours plural[32m 0[2mms[22m[39m
+ [32mΓ£ô[39m src/__tests__/comprehensive-feature-tests.test.ts[2m > [22mformatDurationDetailed[2m > [22m1 hour 2 minutes[32m 0[2mms[22m[39m
+ [32mΓ£ô[39m src/__tests__/comprehensive-feature-tests.test.ts[2m > [22mconvertDuration[2m > [22mms to seconds[32m 0[2mms[22m[39m
+ [32mΓ£ô[39m src/__tests__/comprehensive-feature-tests.test.ts[2m > [22mconvertDuration[2m > [22mms to minutes[32m 0[2mms[22m[39m
+ [32mΓ£ô[39m src/__tests__/comprehensive-feature-tests.test.ts[2m > [22mconvertDuration[2m > [22mms to hours[32m 0[2mms[22m[39m
+ [32mΓ£ô[39m src/__tests__/comprehensive-feature-tests.test.ts[2m > [22mconvertDuration[2m > [22mms to days[32m 0[2mms[22m[39m
+ [32mΓ£ô[39m src/__tests__/comprehensive-feature-tests.test.ts[2m > [22mconvertDuration[2m > [22m0 ms = 0 in any unit[32m 0[2mms[22m[39m
+ [32mΓ£ô[39m src/__tests__/comprehensive-feature-tests.test.ts[2m > [22mconvertDuration[2m > [22mfractional minutes[32m 0[2mms[22m[39m
+ [32mΓ£ô[39m src/__tests__/comprehensive-feature-tests.test.ts[2m > [22mconvertDuration[2m > [22mfractional hours[32m 0[2mms[22m[39m
+node.exe : 
+At line:1 char:1
++ & "C:\Program Files\nodejs/node.exe" "C:\Program Files\nodejs/node_mo ...
++ ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : NotSpecified: (:String) [], RemoteException
+    + FullyQualifiedErrorId : NativeCommandError
+ 
+[31mΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»[39m[1m[41m Failed Tests 1 
+[49m[22m[31mΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»[39m
+
+[41m[1m FAIL [22m[49m src/__tests__/comprehensive-feature-tests.test.ts[2m > 
+[22mdetectAnomalies[2m > [22mdetects clear outlier
+[31m[1mAssertionError[22m: expected false to be true // Object.is equality[39m
+
+[32m- Expected[39m
+[31m+ Received[39m
+
+[32m- true[39m
+[31m+ false[39m
+
+[36m [2mΓ¥»[22m 
+src/__tests__/comprehensive-feature-tests.test.ts:[2m364:32[22m[39m
+    [90m362| [39m    [34mit[39m([32m'detects clear outlier'[39m[33m,[39m () 
+[33m=>[39m {
+    [90m363| [39m        [35mconst[39m r [33m=[39m 
+[34mdetectAnomalies[39m([[34m100[39m[33m,[39m [34m110[39m[33m,[39m 
+[34m120[39m[33m,[39m [34m105[39m[33m,[39m [34m1000[39m][33m,[39m 
+[34m2[39m)
+    [90m364| [39m        [34mexpect[39m(r[[34m4[39m][33m.[39misAnomaly)[33m
+.[39m[34mtoBe[39m([35mtrue[39m)
+    [90m   | [39m                               [31m^[39m
+    [90m365| [39m    })
+    [90m366| [39m    [34mit[39m([32m'does not flag normal 
+values'[39m[33m,[39m () [33m=>[39m {
+
+[31m[2mΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»[1/
+1]ΓÄ»[22m[39m
+
+
+[2m Test Files [22m [1m[31m1 failed[39m[22m[90m (1)[39m
+[2m      Tests [22m [1m[31m1 failed[39m[22m[2m | [22m[1m[32m166 passed[39m[22m[90m (167)[39m
+[2m   Start at [22m 10:14:52
+[2m   Duration [22m 2.50s[2m (transform 156ms, setup 328ms, collect 189ms, tests 43ms, environment 1.00s, prepare 164ms)[22m
+

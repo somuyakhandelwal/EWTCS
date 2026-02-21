@@ -12,7 +12,11 @@ export async function createRunRecord(
 ): Promise<string> {
   // Store the earliest cutoff in the log row for display purposes
   const earliestCutoff = new Date(
-    Math.min(cutoffs.patientAdmissions.getTime(), cutoffs.auditLogs.getTime()),
+    Math.min(
+      cutoffs.patientAdmissions.getTime(),
+      cutoffs.auditLogs.getTime(),
+      cutoffs.bedStageLogs.getTime(),
+    ),
   )
   const result = await query<{ id: string }>(
     `INSERT INTO archival_runs (triggered_by, status, cutoff_date)
@@ -67,6 +71,13 @@ function yearsAgo(years: number): Date {
   return d
 }
 
+/** Subtract days from today and return the resulting Date. */
+function daysAgo(days: number): Date {
+  const d = new Date()
+  d.setDate(d.getDate() - days)
+  return d
+}
+
 /**
  * Build per-table cutoff dates from the retention config.
  * Each table uses its own configured retention period — not a shared minimum.
@@ -75,5 +86,6 @@ export function buildCutoffs(config: RetentionConfig): ArchivalCutoffs {
   return {
     patientAdmissions: yearsAgo(config.patientAdmissionsYears),
     auditLogs: yearsAgo(config.auditLogsYears),
+    bedStageLogs: daysAgo(config.bedStageLogDays),
   }
 }

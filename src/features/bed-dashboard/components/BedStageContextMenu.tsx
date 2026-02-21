@@ -34,6 +34,18 @@ export function BedStageContextMenu({
   onStageSelect,
   onClose,
 }: BedStageContextMenuProps) {
+  const getActionLabel = (fromStageName: string, toStageName: string) => {
+    if (fromStageName === 'Discharge Process' && toStageName === 'Cleaning') {
+      return 'Start Cleaning'
+    }
+
+    if (fromStageName === 'Cleaning' && toStageName === 'Empty') {
+      return 'Cleaning Complete'
+    }
+
+    return toStageName
+  }
+
   const items = useMemo<ContextMenuItem[]>(() => {
     if (!bed) {
       return []
@@ -46,9 +58,10 @@ export function BedStageContextMenu({
       const requiresOverride = overrideRequiredStages.includes(stage.id)
       const isDisabled = !isValid && !requiresOverride
 
-      let label = stage.name
+      const baseLabel = getActionLabel(bed.currentStage?.name ?? 'Empty', stage.name)
+      let label = baseLabel
       if (requiresOverride) {
-        label = `⚠️ ${stage.name} (needs approval)`
+        label = `⚠️ ${baseLabel} (needs approval)`
       }
 
       return {

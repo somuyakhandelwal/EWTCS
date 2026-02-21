@@ -569,9 +569,10 @@ UPDATE beds SET ward_id = (SELECT id FROM wards WHERE code = 'EWA'), ward_name =
 
 | Migration | Description |
 |---|---|
-| `028_create_archival_tables` | EPIC 14 — archival tables for data retention (`archival_records`, `audit_logs_archive`, `patient_admissions_archive`) |
+| `028_create_archival_tables` | EPIC 14 — archival tables for data retention (`audit_logs_archive`, `patient_admissions_archive`, `archival_runs`) |
 | `029_seed_retention_settings` | EPIC 14 — default data retention policy settings in `system_settings` |
 | `030_create_report_signoffs` | EPIC 12 — `report_signoffs` table for immutable supervisor sign-offs on daily reports |
+| `031_archive_bed_stage_logs` | EPIC 3 — `bed_stage_logs_archive` table for historical stage-transition retention (>90 days) |
 | `seed_config_jmch` | Updated JMCH hospital seed configuration with customized workflow stages |
 
 ---

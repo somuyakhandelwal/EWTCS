@@ -82,7 +82,7 @@ export function TatAnalyticsView({ className, readOnly = false }: TatAnalyticsVi
         <div className="flex items-center gap-2">
           {[24, 48, 168].map(h => (
             <Button key={h} size="sm" variant={hoursBack === h ? 'default' : 'outline'}
-              onClick={() => setHoursBack(h)}>
+              onClick={() => setHoursBack(h)} disabled={readOnly}>
               {h === 168 ? '7d' : `${h}h`}
             </Button>
           ))}

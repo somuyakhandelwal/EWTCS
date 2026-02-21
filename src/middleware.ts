@@ -65,7 +65,7 @@ export async function middleware(request: NextRequest) {
     }
 
     if (pathname.startsWith('/dashboard')) {
-        if (!session || session.role !== 'nurse') {
+        if (!session || (session.role !== 'nurse' && session.role !== 'housekeeping')) {
             return NextResponse.redirect(new URL('/login', request.url))
         }
     }

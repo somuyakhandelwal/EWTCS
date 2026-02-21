@@ -1,4 +1,3 @@
-import type { StageColor } from '@/shared/utils/stage-colors'
 import {
     Bed,
     Activity,

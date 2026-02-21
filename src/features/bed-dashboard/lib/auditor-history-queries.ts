@@ -1,5 +1,6 @@
 import { query } from '@/shared/lib/db'
 import { logger } from '@/shared/config/logger'
+import { STAGE_LOG_HISTORY_CTE } from './stage-log-history-source'
 
 export type AuditorHistorySortBy =
   | 'transitionTime'
@@ -37,10 +38,10 @@ export interface AuditorHistoryRecord {
 }
 
 const SORT_COLUMN_MAP: Record<AuditorHistorySortBy, string> = {
-  transitionTime: 'bsl.transition_time',
-  bedNumber: 'b.bed_number',
-  toStageName: 'ts.name',
-  changedByUsername: 'u.username',
+  transitionTime: 'sl.transition_time',
+  bedNumber: 'sl.bed_number',
+  toStageName: 'sl.to_stage_name',
+  changedByUsername: 'sl.changed_by_username',
 }
 
 function buildWhereClause(filters: AuditorHistoryFilters): {
@@ -52,32 +53,32 @@ function buildWhereClause(filters: AuditorHistoryFilters): {
 
   if (filters.startDate) {
     params.push(filters.startDate)
-    whereClauses.push(`bsl.transition_time >= $${params.length}`)
+    whereClauses.push(`sl.transition_time >= $${params.length}`)
   }
 
   if (filters.endDate) {
     params.push(filters.endDate)
-    whereClauses.push(`bsl.transition_time <= $${params.length}`)
+    whereClauses.push(`sl.transition_time <= $${params.length}`)
   }
 
   if (filters.bedNumber?.trim()) {
     params.push(`%${filters.bedNumber.trim()}%`)
-    whereClauses.push(`b.bed_number ILIKE $${params.length}`)
+    whereClauses.push(`sl.bed_number ILIKE $${params.length}`)
   }
 
   if (filters.stageName?.trim()) {
     params.push(`%${filters.stageName.trim()}%`)
-    whereClauses.push(`ts.name ILIKE $${params.length}`)
+    whereClauses.push(`sl.to_stage_name ILIKE $${params.length}`)
   }
 
   if (filters.changedByUserId?.trim()) {
     params.push(filters.changedByUserId.trim())
-    whereClauses.push(`u.id::text = $${params.length}`)
+    whereClauses.push(`sl.changed_by_user_id::text = $${params.length}`)
   }
 
   if (filters.changedByUsername?.trim()) {
     params.push(`%${filters.changedByUsername.trim()}%`)
-    whereClauses.push(`u.username ILIKE $${params.length}`)
+    whereClauses.push(`sl.changed_by_username ILIKE $${params.length}`)
   }
 
   if (whereClauses.length === 0) {
@@ -109,11 +110,9 @@ export async function fetchAuditorHistory(options: FetchAuditorHistoryOptions): 
 
     const countResult = await query<{ totalCount: string }>(
       `
+      ${STAGE_LOG_HISTORY_CTE}
       SELECT COUNT(*)::text as "totalCount"
-      FROM bed_stage_logs bsl
-      JOIN beds b ON b.id = bsl.bed_id
-      LEFT JOIN stages ts ON ts.id = bsl.to_stage_id
-      JOIN users u ON u.id = bsl.changed_by_user_id
+      FROM stage_logs sl
       ${whereSql}
       `,
       params
@@ -123,22 +122,19 @@ export async function fetchAuditorHistory(options: FetchAuditorHistoryOptions): 
 
     const rowsResult = await query<AuditorHistoryRecord>(
       `
+      ${STAGE_LOG_HISTORY_CTE}
       SELECT
-        bsl.id,
-        b.id as "bedId",
-        b.bed_number as "bedNumber",
-        fs.name as "fromStageName",
-        ts.name as "toStageName",
-        bsl.changed_by_user_id as "changedByUserId",
-        u.username as "changedByUsername",
-        bsl.transition_time as "transitionTime",
-        bsl.duration_in_previous_stage_ms as "durationInPreviousStageMs",
-        bsl.notes
-      FROM bed_stage_logs bsl
-      JOIN beds b ON b.id = bsl.bed_id
-      LEFT JOIN stages fs ON fs.id = bsl.from_stage_id
-      LEFT JOIN stages ts ON ts.id = bsl.to_stage_id
-      JOIN users u ON u.id = bsl.changed_by_user_id
+        sl.id,
+        sl.bed_id as "bedId",
+        sl.bed_number as "bedNumber",
+        sl.from_stage_name as "fromStageName",
+        sl.to_stage_name as "toStageName",
+        sl.changed_by_user_id as "changedByUserId",
+        sl.changed_by_username as "changedByUsername",
+        sl.transition_time as "transitionTime",
+        sl.duration_in_previous_stage_ms as "durationInPreviousStageMs",
+        sl.notes
+      FROM stage_logs sl
       ${whereSql}
       ORDER BY ${SORT_COLUMN_MAP[safeSortBy]} ${safeSortOrder}
       LIMIT $${listParams.length - 1}

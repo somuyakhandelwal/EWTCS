@@ -1,25 +1,58 @@
 'use client'
 
-import { useActionState } from 'react'
-import { useFormStatus } from 'react-dom'
-import { login } from '@/features/auth/actions/auth-actions'
+import { type FormEvent, useState } from 'react'
+import { useRouter } from 'next/navigation'
 import { Button } from '@/shared/components/ui/button'
 import { Input } from '@/shared/components/ui/input'
 import { Label } from '@/shared/components/ui/label'
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/shared/components/ui/card'
 import ForgotPasswordInfo from '@/features/auth/components/ForgotPasswordInfo'
 
-function SubmitButton() {
-    const { pending } = useFormStatus()
-    return (
-        <Button className="w-full" type="submit" disabled={pending}>
-            {pending ? 'Signing in...' : 'Sign In'}
-        </Button>
-    )
-}
-
 export default function LoginPage() {
-    const [state, action] = useActionState(login, undefined)
+    const router = useRouter()
+    const [pending, setPending] = useState(false)
+    const [state, setState] = useState<{
+        message?: string
+        errors?: Record<string, string[]>
+    }>({})
+
+    const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
+        event.preventDefault()
+        setPending(true)
+        setState({})
+
+        const formData = new FormData(event.currentTarget)
+        const payload = {
+            username: String(formData.get('username') || ''),
+            password: String(formData.get('password') || ''),
+            kioskMode: formData.get('kioskMode') === 'on',
+        }
+
+        try {
+            const response = await fetch('/api/auth/login', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload),
+            })
+
+            const result = await response.json()
+
+            if (!response.ok || !result.success) {
+                setState({
+                    message: result.message,
+                    errors: result.errors,
+                })
+                return
+            }
+
+            router.push(result.redirectTo || '/dashboard')
+            router.refresh()
+        } catch {
+            setState({ message: 'Unable to sign in right now. Please try again.' })
+        } finally {
+            setPending(false)
+        }
+    }
 
     return (
         <div className="flex min-h-screen items-center justify-center bg-black px-4 py-12 sm:px-6 lg:px-8 relative overflow-hidden">
@@ -37,7 +70,7 @@ export default function LoginPage() {
                         Enter your credentials to access the nurse dashboard
                     </CardDescription>
                 </CardHeader>
-                <form action={action}>
+                <form onSubmit={handleSubmit}>
                     <CardContent className="space-y-4">
                         <div className="space-y-2">
                             <Label htmlFor="username" className="text-zinc-200">Username</Label>
@@ -96,7 +129,9 @@ export default function LoginPage() {
                         <ForgotPasswordInfo />
                     </CardContent>
                     <CardFooter>
-                        <SubmitButton />
+                        <Button className="w-full" type="submit" disabled={pending}>
+                            {pending ? 'Signing in...' : 'Sign In'}
+                        </Button>
                     </CardFooter>
                 </form>
             </Card>

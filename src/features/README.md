@@ -58,6 +58,15 @@ feature-name/
 - Read-only auditor history with filtering, sorting, pagination
 - Comprehensive audit trail with IP tracking and timestamps
 
+### `ai-summary/`
+**EPIC 9: Daily AI Summary Generator ✅**
+- Daily bed statistics aggregation (patients, stage time, delays, TAT)
+- Idempotent upsert into `daily_summaries` table
+- Server actions: `generateDailySummary`, `fetchDailySummaryByDate`, `fetchRecentDailySummaries`
+- API route: `POST /api/daily-summary/generate`, `GET /api/daily-summary/generate`
+- Midnight auto-run via GitHub Actions cron (18:30 UTC = 00:00 IST)
+- Manual trigger: `npm run cron:summary`
+
 ## Future Features
 
 Based on EPICS.md, upcoming features may include:
@@ -69,10 +78,8 @@ Based on EPICS.md, upcoming features may include:
 - Analytics
 
 ### `ai-summary/`
-**EPIC 9: Daily AI Summary Generator**
-- AI report generation
-- Summary formatting
-- Export functionality
+**EPIC 9: Daily AI Summary Generator** *(planned — Phase 3)*
+- Remaining: AI model integration, report formatting, PDF/email export
 
 ### `notifications/`
 **EPIC 15: Notifications & Alerts**

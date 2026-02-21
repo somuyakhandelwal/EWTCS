@@ -60,7 +60,11 @@ export default async function DashboardPage() {
                 </div>
 
                 {/* Bed Grid */}
-                <BedDashboardClient initialData={bedGridResult.data} onCreateVirtualBed={createVirtualBed} />
+                <BedDashboardClient
+                    initialData={bedGridResult.data}
+                    canRecordDispositionReasons={session.role !== 'housekeeping'}
+                    onCreateVirtualBed={createVirtualBed}
+                />
             </div>
         </div>
     )

@@ -109,6 +109,7 @@ export function EditUserDialogContent({
               className="w-full px-3 py-2 bg-black/50 border border-zinc-700 rounded-md text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
             >
               <option value="nurse">Nurse</option>
+              <option value="housekeeping">Housekeeping</option>
               <option value="supervisor">Supervisor</option>
               <option value="admin">Admin</option>
               <option value="auditor">Auditor</option>

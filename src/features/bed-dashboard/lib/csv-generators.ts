@@ -14,6 +14,7 @@ export function generateTransitionCSV(
     transitionTime: Date | string
     durationInPreviousStageMs: number | null
     durationInCurrentStageMs: number | null
+    changedByUserId: string
     changedByUsername: string
     notes: string | null
   }>
@@ -26,6 +27,7 @@ export function generateTransitionCSV(
     'Transition Time',
     'Duration in Previous Stage (ms)',
     'Duration in Current Stage (ms)',
+    'Changed By User ID',
     'Changed By',
     'Notes',
   ]
@@ -38,6 +40,7 @@ export function generateTransitionCSV(
     t.transitionTime instanceof Date ? t.transitionTime.toISOString() : t.transitionTime,
     t.durationInPreviousStageMs?.toString() || 'N/A',
     t.durationInCurrentStageMs?.toString() || 'N/A',
+    t.changedByUserId,
     t.changedByUsername,
     `"${t.notes || ''}"`,
   ])

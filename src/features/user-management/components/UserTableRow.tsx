@@ -31,6 +31,8 @@ function getRoleBadgeColor(role: string): string {
         case 'admin':      return 'bg-purple-900/30 text-purple-400 border-purple-900/50'
         case 'supervisor': return 'bg-blue-900/30 text-blue-400 border-blue-900/50'
         case 'nurse':      return 'bg-green-900/30 text-green-400 border-green-900/50'
+        case 'housekeeping': return 'bg-amber-900/30 text-amber-400 border-amber-900/50'
+        case 'auditor':    return 'bg-cyan-900/30 text-cyan-400 border-cyan-900/50'
         default:           return 'bg-zinc-800 text-zinc-400 border-zinc-700'
     }
 }

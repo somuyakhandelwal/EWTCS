@@ -56,6 +56,26 @@ const validateMigrations = async () => {
     .map((file) => path.parse(file).name)
     .sort();
 
+  const numberToNames = new Map();
+  for (const name of migrationFiles) {
+    const match = name.match(/^(\d+)_/);
+    if (!match) continue;
+    const number = match[1];
+    const existing = numberToNames.get(number) ?? [];
+    existing.push(name);
+    numberToNames.set(number, existing);
+  }
+
+  const duplicates = Array.from(numberToNames.entries()).filter(([, names]) => names.length > 1);
+  if (duplicates.length > 0) {
+    console.error('❌ Duplicate migration number prefixes detected:');
+    for (const [number, names] of duplicates) {
+      console.error(`  ${number}: ${names.join(', ')}`);
+    }
+    console.error('Use unique numeric prefixes for migration files.');
+    process.exit(1);
+  }
+
   console.log(`📁 Found ${migrationFiles.length} migration files\n`);
 
   const client = new Client({ connectionString: databaseUrl });
