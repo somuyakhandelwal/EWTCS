@@ -283,6 +283,12 @@ npm run db:seed      # Seed initial test data
 npm run db:reset     # Drop and recreate schema (development only)
 ```
 
+### AI Summary
+```bash
+npm run cron:summary           # Aggregate yesterday's data manually
+node scripts/daily-summary-cron.mjs 2026-02-20  # Aggregate a specific date
+```
+
 **New to the project?** Run `npm run setup` for automated database setup!
 
 Migration details and best practices: See [CONFIGURATION.md#migrations](CONFIGURATION.md#migrations)
@@ -385,12 +391,20 @@ Full environment variable reference: See [CONFIGURATION.md](CONFIGURATION.md)
 - [x] CSV export for audit data analysis
 - [x] 100% test coverage (302 tests, 19 test files)
 
-### ⏳ Phase 3: AI & Reporting (PLANNED)
+### 🔄 Phase 3: AI & Reporting (IN PROGRESS)
 
-- [ ] Daily AI summary reports generator
-- [ ] Management dashboard with KPIs
+**Daily AI Summary — Data Aggregation Layer (EPIC 9) ✅**
+- [x] `daily_summaries` database table (migration 022)
+- [x] Daily aggregation engine (patients, stage time, delays, TAT)
+- [x] Server actions and API route (`POST /api/daily-summary/generate`)
+- [x] Midnight auto-run via GitHub Actions cron
+- [x] Manual trigger: `npm run cron:summary`
+
+**Remaining Phase 3:**
+- [ ] AI model integration for human-readable report generation
+- [ ] Management KPI dashboard
 - [ ] Predictive analytics for bed allocation
-- [ ] Automated performance reports (PDF/CSV)
+- [ ] Automated PDF/CSV reports
 - [ ] Historical trend analysis
 - [ ] Bottleneck identification algorithms
 

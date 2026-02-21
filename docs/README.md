@@ -28,6 +28,7 @@ Start here if you're new to the project:
 
 ### Technical Documentation
 - **[Analytics System](../src/features/bed-dashboard/ANALYTICS_README.md)** - Stage analytics and reporting documentation
+- **[Daily AI Summary (EPIC 9)](../src/features/ai-summary/)** - Data aggregation layer: `daily_summaries` table, server actions, API route, and cron scheduler
 - **Auditor Bed History (EPIC 12)** - Read-only stage transition history with filtering, sorting, pagination, and CSV export in [AuditorHistoryView](../src/features/bed-dashboard/components/AuditorHistoryView.tsx)
 - **Auditor Read-Only Enforcement (EPIC 12)** - Centralized write guard for auditor role in [auth.ts](../src/shared/lib/auth.ts) (`requireWriteRole` / `requireAdminWrite`) with deny logging, analytics audit-mode banner, and full read-only analytics exploration controls
 - **[PROJECT_STATUS.md](../PROJECT_STATUS.md)** - Current project status, completed features, roadmap
@@ -69,6 +70,7 @@ Historical requirements and design documents (for reference only):
 | Contribute code | [CONTRIBUTING.md](../CONTRIBUTING.md) |
 | Build a new feature | [Features Guide](../src/features/README.md) |
 | Use analytics | [Analytics Documentation](../src/features/bed-dashboard/ANALYTICS_README.md) |
+| Generate daily summary | `npm run cron:summary` or `POST /api/daily-summary/generate` |
 | Check project status | [PROJECT_STATUS.md](../PROJECT_STATUS.md) |
 | Report a bug | [GitHub Issues](https://github.com/somuyakhandelwal/EWTCS/issues) |
 
@@ -128,4 +130,4 @@ Current state overview:
 
 ---
 
-**Last Updated:** February 19, 2026
+**Last Updated:** February 21, 2026
