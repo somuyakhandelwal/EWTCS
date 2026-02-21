@@ -1,6 +1,7 @@
 // Supervisor Bed Overview Component
 // Epic 1: Nurse Desk Bed Dashboard (US-1.7)
 // Epic 6: Surge Capacity (US-6.5)
+// Epic 15: Notifications & Alerts (US-15.x)
 // Purpose: Read-only bed status view for supervisors — shows delays,
 //   bottleneck beds, and recorded reasons for delay.
 //   Supervisors can also add and remove temporary beds.
@@ -12,6 +13,7 @@ import { BedGridStats } from './BedGridStats'
 import { BedStatusLegend } from './BedStatusLegend'
 import { BottleneckPanel } from './BottleneckPanel'
 import { BedCard } from './BedCard'
+import { DelayedBedCountBanner } from './DelayedBedCountBanner'
 import { Button } from '@/shared/components/ui/button'
 import { RefreshCw, Zap, Trash2 } from 'lucide-react'
 import type { BedGridData } from '../types/bed'
@@ -41,6 +43,7 @@ export function SupervisorBedOverview({
 }: SupervisorBedOverviewProps) {
   const [data, setData] = useState<BedGridData>(initialData)
   const [isRefreshing, setIsRefreshing] = useState(false)
+  const [showDelayedOnly, setShowDelayedOnly] = useState(false)
   const [, startTransition] = useTransition()
 
   // US-6.5: when the shell re-fetches and passes new initialData, sync local state
@@ -81,6 +84,14 @@ export function SupervisorBedOverview({
 
   return (
     <div className="space-y-6">
+
+      {/* US-15.x: Prominent delayed bed count banner with color coding + click-to-filter */}
+      <DelayedBedCountBanner
+        delayedCount={delayedBeds.length}
+        onFilterDelayed={() => setShowDelayedOnly(prev => !prev)}
+        isFiltered={showDelayedOnly}
+      />
+
       {/* Stats */}
       <BedGridStats
         total={stats.total}
@@ -155,8 +166,8 @@ export function SupervisorBedOverview({
       {/* Bottleneck panel — supervisor can see + trigger refresh after update */}
       <BottleneckPanel beds={data.beds} onReasonRecorded={handleRefresh} />
 
-      {/* Delayed / bottleneck bed cards (read-only — no stage update controls) */}
-      {delayedBeds.length > 0 && (
+      {/* US-15.x: Delayed / bottleneck bed cards — shown when filter is active */}
+      {showDelayedOnly && delayedBeds.length > 0 && (
         <div className="space-y-3">
           <div className="flex items-center justify-between">
             <h2 className="text-sm font-semibold text-zinc-300 uppercase tracking-wider">
@@ -180,7 +191,7 @@ export function SupervisorBedOverview({
         </div>
       )}
 
-      {delayedBeds.length === 0 && (
+      {showDelayedOnly && delayedBeds.length === 0 && (
         <div className="rounded-lg border border-zinc-800 bg-zinc-900/30 py-10 text-center">
           <p className="text-zinc-400">🎉 No delayed beds — all patients are on track.</p>
         </div>
