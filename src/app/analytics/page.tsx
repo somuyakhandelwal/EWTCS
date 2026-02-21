@@ -135,7 +135,7 @@ export default async function AnalyticsPage() {
 
         {/* EPIC 12: Auditor read-only stage history */}
         <div data-export-id="export-auditor-history">
-          <AuditorHistoryView readOnly={isAuditMode} />
+          <AuditorHistoryView readOnly={isAuditMode} showCorrections={true} />
         </div>
 
         {/* Turnaround Time Analytics (US-2.4) */}

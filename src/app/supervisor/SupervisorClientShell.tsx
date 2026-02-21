@@ -2,6 +2,8 @@
 // US-6.5: owns modal open/close state and wires AddTemporaryBedModal +
 //   removeTemporaryBed action to SupervisorBedOverview.
 // US-6.6: also wires AddVirtualBedModal + removeVirtualBed.
+// EPIC 7: renders AuditorHistoryView with canEdit=true so supervisors
+//   can access "Edit History" without a separate page.
 // Lives in app/supervisor/ (app layer) so it may import from multiple features.
 
 'use client'
@@ -10,6 +12,7 @@ import { useState, useTransition, useCallback } from 'react'
 import { SupervisorBedOverview } from '@/features/bed-dashboard/components/SupervisorBedOverview'
 import { AddTemporaryBedModal } from '@/features/bed-management/components/AddTemporaryBedModal'
 import { AddVirtualBedModal } from '@/features/bed-dashboard/components/AddVirtualBedModal'
+import { AuditorHistoryView } from '@/features/bed-dashboard/components/AuditorHistoryView'
 import { removeTemporaryBed } from '@/features/bed-management/actions/temporary-bed-actions'
 import { removeVirtualBed, createVirtualBed } from '@/features/bed-management/actions/virtual-bed-actions'
 import { getBedGridData } from '@/features/bed-dashboard/actions/bed-grid-actions'
@@ -64,6 +67,11 @@ export function SupervisorClientShell({ initialData }: SupervisorClientShellProp
                 onAddVirtualBed={() => setVirtualModalOpen(true)}
                 onRemoveVirtualBed={handleRemoveVirtualBed}
             />
+
+            {/* EPIC 7: Supervisors access "Edit History" directly on this page (AC 1).
+                canEdit=true enables the Edit button per row and the EditHistoryModal. */}
+            <AuditorHistoryView canEdit={true} />
+
             <AddTemporaryBedModal
                 open={modalOpen}
                 onClose={() => setModalOpen(false)}
