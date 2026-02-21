@@ -75,22 +75,23 @@ export async function processHistoricalImport(
                 ])
 
                 result.successCount++
-            } catch (error: any) {
+            } catch (error) {
                 result.failureCount++
+                const errorMessage = (error as Error).message || 'Unknown processing error'
                 result.errors.push({
                     row: rowIndex,
-                    error: error.message || 'Unknown processing error',
+                    error: errorMessage,
                     data: row
                 })
-                logger.warn(`[import] Failed to process row ${rowIndex}: ${error.message}`)
+                logger.warn(`[import] Failed to process row ${rowIndex}: ${errorMessage}`)
             }
         }
 
         logger.info(`[import] Completed: ${result.successCount} success, ${result.failureCount} failed`)
         return result
 
-    } catch (error: any) {
-        logger.error('[import] Fatal error during import process', error)
+    } catch (error) {
+        logger.error('[import] Fatal error during import process', error as Error)
         throw new Error('Import process failed at a systemic level')
     }
 }

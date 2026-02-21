@@ -90,3 +90,49 @@ export function generateAuditorHistoryCSV(
     .map((line) => line.map((cell) => `"${cell}"`).join(','))
     .join('\n')
 }
+
+/**
+ * Generate CSV for the Correction Audit Trail (US-7.3).
+ * Flattened view including original and corrected fields.
+ */
+export function generateCorrectionAuditCSV(
+  rows: Array<{
+    correctedAt: Date | string
+    correctedByUsername: string
+    bedNumber: string
+    correctionReason: string
+    originalToStageName: string
+    originalTransitionTime: Date | string
+    originalNotes: string | null
+    correctedFields: Record<string, { from: unknown; to: unknown }>
+    correctedToStageName?: string | null
+  }>
+): string {
+  const headers = [
+    'Correction Time',
+    'Approver',
+    'Bed #',
+    'Reason',
+    'Original Stage',
+    'Original Time',
+    'Original Notes',
+    'Corrected Stage Name',
+    'Corrected Fields (JSON)',
+  ]
+
+  const csvRows = rows.map((r) => [
+    r.correctedAt instanceof Date ? r.correctedAt.toISOString() : r.correctedAt,
+    r.correctedByUsername,
+    r.bedNumber,
+    r.correctionReason,
+    r.originalToStageName,
+    r.originalTransitionTime instanceof Date ? r.originalTransitionTime.toISOString() : r.originalTransitionTime,
+    r.originalNotes ?? '',
+    r.correctedToStageName || '',
+    JSON.stringify(r.correctedFields).replace(/"/g, '""'), // Escape quotes for CSV
+  ])
+
+  return [headers, ...csvRows]
+    .map((line) => line.map((cell) => `"${cell}"`).join(','))
+    .join('\n')
+}

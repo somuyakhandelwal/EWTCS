@@ -24,5 +24,5 @@ export type HistoricalAdmission = z.infer<typeof HistoricalAdmissionSchema>
 export interface ImportResult {
     successCount: number
     failureCount: number
-    errors: { row: number; error: string; data?: any }[]
+    errors: { row: number; error: string; data?: Record<string, unknown> }[]
 }

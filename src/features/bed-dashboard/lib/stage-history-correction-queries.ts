@@ -6,28 +6,12 @@
 
 import { query } from '@/shared/lib/db'
 import { logger } from '@/shared/config/logger'
-
-export interface CorrectedFieldDiff {
-  from: unknown
-  to: unknown
-}
-
-export interface HistoryCorrection {
-  id: string
-  bedStageLogId: string
-  correctedByUserId: string
-  correctedByUsername: string
-  correctionReason: string
-  correctedFields: Record<string, CorrectedFieldDiff>
-  correctedAt: Date
-}
-
-export interface InsertCorrectionParams {
-  bedStageLogId: string
-  correctedByUserId: string
-  correctionReason: string
-  correctedFields: Record<string, CorrectedFieldDiff>
-}
+import type {
+  HistoryCorrection,
+  InsertCorrectionParams,
+  CorrectionAuditFilters,
+  CorrectionAuditRecord
+} from '../types/corrections'
 
 /** Insert a correction row and return its new UUID. Never modifies bed_stage_logs. */
 export async function insertHistoryCorrection(params: InsertCorrectionParams): Promise<{ id: string }> {
@@ -132,5 +116,76 @@ export async function fetchBedStageLogOriginal(logId: string): Promise<{
   } catch (error) {
     logger.error('fetchBedStageLogOriginal: DB error', error as Error)
     throw new Error('Failed to fetch original log record')
+  }
+}
+
+/** Fetch a flat list of all corrections with filters for compliance auditing. */
+export async function fetchCorrectionAuditTrail(filters: CorrectionAuditFilters): Promise<CorrectionAuditRecord[]> {
+  try {
+    const whereClauses: string[] = []
+    const params: unknown[] = []
+
+    if (filters.startDate) {
+      params.push(filters.startDate)
+      whereClauses.push(`c.corrected_at >= $${params.length}`)
+    }
+    if (filters.endDate) {
+      params.push(filters.endDate)
+      whereClauses.push(`c.corrected_at <= $${params.length}`)
+    }
+    if (filters.correctedByUserId) {
+      params.push(filters.correctedByUserId)
+      whereClauses.push(`c.corrected_by_user_id = $${params.length}`)
+    }
+    if (filters.bedNumber) {
+      params.push(`%${filters.bedNumber}%`)
+      whereClauses.push(`b.bed_number ILIKE $${params.length}`)
+    }
+    if (filters.reason) {
+      params.push(`%${filters.reason}%`)
+      whereClauses.push(`c.correction_reason ILIKE $${params.length}`)
+    }
+
+    const whereSql = whereClauses.length > 0 ? `WHERE ${whereClauses.join(' AND ')}` : ''
+
+    const result = await query<CorrectionAuditRecord>(
+      `SELECT
+         c.id,
+         c.bed_stage_log_id       AS "bedStageLogId",
+         c.corrected_by_user_id   AS "correctedByUserId",
+         u.username               AS "correctedByUsername",
+         c.correction_reason      AS "correctionReason",
+         c.corrected_fields       AS "correctedFields",
+         c.corrected_at           AS "correctedAt",
+         b.bed_number             AS "bedNumber",
+         bsl.notes                AS "originalNotes",
+         bsl.transition_time      AS "originalTransitionTime",
+         bsl.to_stage_id          AS "originalToStageId",
+         s.name                   AS "originalToStageName",
+         st_new.name              AS "correctedToStageName"
+       FROM bed_stage_log_corrections c
+       JOIN users u ON u.id = c.corrected_by_user_id
+       JOIN bed_stage_logs bsl ON bsl.id = c.bed_stage_log_id
+       JOIN beds b ON b.id = bsl.bed_id
+       JOIN stages s ON s.id = bsl.to_stage_id
+       LEFT JOIN stages st_new ON st_new.id = (
+         CASE 
+           WHEN c.corrected_fields ? 'to_stage_id' THEN
+             CASE 
+               WHEN jsonb_typeof(c.corrected_fields -> 'to_stage_id' -> 'to') = 'object' 
+               THEN (c.corrected_fields -> 'to_stage_id' -> 'to' ->> 'id')
+               ELSE (c.corrected_fields -> 'to_stage_id' ->> 'to')
+             END
+           ELSE NULL
+         END
+       )::uuid
+       ${whereSql}
+       ORDER BY c.corrected_at DESC`,
+      params
+    )
+    return result.rows
+  } catch (error) {
+    logger.error('fetchCorrectionAuditTrail: DB error', error as Error)
+    throw new Error('Failed to fetch correction audit trail')
   }
 }

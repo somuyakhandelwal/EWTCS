@@ -12,6 +12,7 @@ import { DataRetentionView } from '@/features/data-retention/components/DataRete
 import { StaffingHeatmap } from '@/features/bed-dashboard/components/StaffingHeatmap'
 import { ExportReportButton } from '@/features/export/components/ExportReportButton'
 import { LogoutButton } from '@/features/auth/components/LogoutButton'
+import { CorrectionAuditTrailView } from '@/features/bed-dashboard/components/CorrectionAuditTrailView'
 import { PrintButton } from '@/features/bed-dashboard/components/PrintButton'
 import { Button } from '@/shared/components/ui/button'
 import { ArrowLeft } from 'lucide-react'
@@ -22,17 +23,18 @@ import type { getRetentionConfig } from '@/features/data-retention/lib/retention
 import type { getRecentArchivalRuns } from '@/features/data-retention/lib/archival-queries'
 
 const FULL_REPORT_SECTIONS: PdfSection[] = [
-  { exportId: 'export-stage-analytics',   title: 'Stage Analytics' },
-  { exportId: 'export-auditor-history',   title: 'Bed Stage Change History' },
-  { exportId: 'export-tat',              title: 'Full-Cycle Bed Turnaround' },
-  { exportId: 'export-los',              title: 'Average Length of Stay' },
-  { exportId: 'export-patients',         title: 'Total Patients Treated' },
-  { exportId: 'export-delayed',          title: 'Delayed Patients %' },
-  { exportId: 'export-beds',             title: 'Bed-Wise Performance' },
-  { exportId: 'export-stages',           title: 'Stage-Wise Delays' },
-  { exportId: 'export-shift-report',     title: 'Shift Performance Report' },
+  { exportId: 'export-stage-analytics', title: 'Stage Analytics' },
+  { exportId: 'export-auditor-history', title: 'Bed Stage Change History' },
+  { exportId: 'export-tat', title: 'Full-Cycle Bed Turnaround' },
+  { exportId: 'export-los', title: 'Average Length of Stay' },
+  { exportId: 'export-patients', title: 'Total Patients Treated' },
+  { exportId: 'export-delayed', title: 'Delayed Patients %' },
+  { exportId: 'export-beds', title: 'Bed-Wise Performance' },
+  { exportId: 'export-stages', title: 'Stage-Wise Delays' },
+  { exportId: 'export-shift-report', title: 'Shift Performance Report' },
   { exportId: 'export-shift-comparison', title: 'Shift Performance Comparison' },
-  { exportId: 'export-heatmap',          title: 'Staffing Heatmap' },
+  { exportId: 'export-correction-audit', title: 'Correction Audit Trail' },
+  { exportId: 'export-heatmap', title: 'Staffing Heatmap' },
 ]
 
 interface Props {
@@ -113,16 +115,16 @@ export function AnalyticsPageContent({
         <div data-export-id="export-los" className="print-section print-no-break">
           <LosView role={role} readOnly={isAuditMode} />
         </div>
-        <div data-export-id="export-patients" className="print-section print-no-break">
+        <div className="print-section print-no-break">
           <PatientCountView shifts={activeShifts} readOnly={isAuditMode} />
         </div>
-        <div data-export-id="export-delayed" className="print-section print-no-break">
+        <div className="print-section print-no-break">
           <DelayedPatientPercentageView shifts={activeShifts} readOnly={isAuditMode} role={role} />
         </div>
-        <div data-export-id="export-beds" className="print-section print-no-break">
+        <div className="print-section print-no-break">
           <BedPerformanceView shifts={activeShifts} readOnly={isAuditMode} />
         </div>
-        <div data-export-id="export-stages" className="print-section print-no-break">
+        <div className="print-section print-no-break">
           <StageDelayView readOnly={isAuditMode} />
         </div>
         {activeShifts.length > 0 && (
@@ -132,6 +134,9 @@ export function AnalyticsPageContent({
         )}
         <div data-export-id="export-shift-comparison" className="print-section print-no-break">
           <ShiftComparisonView readOnly={isAuditMode} />
+        </div>
+        <div data-export-id="export-correction-audit" className="print-section print-no-break">
+          <CorrectionAuditTrailView readOnly={isAuditMode} />
         </div>
         {isRetentionVisible && retentionConfig && (
           <div className="print-section print-no-break">

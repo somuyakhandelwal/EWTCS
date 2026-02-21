@@ -20,7 +20,7 @@ import type { BedGridData } from '../types/bed'
 import { getBedGridData } from '../actions/bed-grid-actions'
 import { getBedStatistics } from '../lib/utils'
 import { VirtualBedsSection } from './VirtualBedsSection'
-import { SurgeBedsSection } from './SurgeBedsSection'
+import { SupervisorTemporaryBeds } from './SupervisorTemporaryBeds'
 
 interface SupervisorBedOverviewProps {
   initialData: BedGridData
@@ -100,18 +100,13 @@ export function SupervisorBedOverview({
         available={stats.available}
         delayed={stats.delayed}
         bottleneckCount={data.bottleneckCount}
-        escalationCount={data.escalationCount}
       />
 
       {/* Legend */}
-      <BedStatusLegend
-        stages={data.stages}
-        delayThresholdMs={data.delayThresholdMs}
-        escalationThresholdMs={data.escalationThresholdMs}
-      />
+      <BedStatusLegend stages={data.stages} />
 
       {/* US-6.5: Surge / Temporary Beds section */}
-      <SurgeBedsSection
+      <SupervisorTemporaryBeds
         temporaryBeds={temporaryBeds}
         onAddTempBed={onAddTempBed}
         onRemoveTempBed={onRemoveTempBed}

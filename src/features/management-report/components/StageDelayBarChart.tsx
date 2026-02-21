@@ -1,62 +1,40 @@
 'use client'
-// StageDelayBarChart — Interactive Recharts vertical bar chart (US-10.7 / #66)
+// StageDelayBarChart — Vertical SVG bar chart for US-10.5
 // Epic 10: Management Report Dashboard
 //
-// Features: avg/median/p90 tooltips, bottleneck highlighting,
-// Brush zoom/pan (when >6 stages), responsive layout, PNG export.
+// Shows average duration per stage sorted by duration (worst first).
+// Bottleneck stages highlighted in red/amber.
+// Pure SVG — no external chart library required.
 
-import { memo, useId } from 'react'
-import {
-  BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip,
-  ResponsiveContainer, Brush, Cell,
-} from 'recharts'
-import { Button } from '@/shared/components/ui/button'
+import { memo, useMemo } from 'react'
 import { formatDuration } from '@/features/bed-dashboard/lib/duration-formatters'
-import { exportChartAsPng } from '../lib/chart-export-utils'
 import type { StageDelayRow } from '../types/report.types'
 
 interface StageDelayBarChartProps {
   rows: StageDelayRow[]
 }
 
-// ---------- Tooltip (Recharts v3 custom interface) ----------
-interface StageTooltipProps {
-  active?: boolean
-  payload?: ReadonlyArray<{ payload: StageDelayRow }>
-}
-function StageTooltip({ active, payload }: StageTooltipProps) {
-  if (!active || !payload?.length) return null
-  const row = payload[0].payload
-  return (
-    <div className="rounded border border-zinc-700 bg-zinc-900 p-2.5 text-xs shadow-lg min-w-[180px]">
-      <p className="font-semibold text-white mb-1">{row.stageName}</p>
-      <p className="text-zinc-300">
-        Avg: <span className="text-blue-300">{formatDuration(row.avgDurationMs)}</span>
-      </p>
-      {row.medianDurationMs !== null && (
-        <p className="text-zinc-300">Median: {formatDuration(row.medianDurationMs)}</p>
-      )}
-      {row.p90DurationMs !== null && (
-        <p className="text-zinc-300">P90: {formatDuration(row.p90DurationMs)}</p>
-      )}
-      <p className="text-zinc-300">Transitions: {row.totalTransitions}</p>
-      {row.isBottleneck && <p className="text-red-400 mt-1">🔴 Bottleneck</p>}
-    </div>
-  )
+const PADDING_TOP = 22   // room for duration label above tallest bar
+const CHART_H = 160
+const BAR_GAP = 10
+const LABEL_AREA_H = 44
+const SVG_H = PADDING_TOP + CHART_H + LABEL_AREA_H
+const BAR_W = 36         // fixed width — prevents "bold" bars with few stages
+
+function getBarColor(row: StageDelayRow): string {
+  if (row.isBottleneck) return '#ef4444' // red
+  return '#3b82f6'                       // blue
 }
 
-// ---------- Main ----------
 export const StageDelayBarChart = memo(function StageDelayBarChart({
   rows,
 }: StageDelayBarChartProps) {
-  const rawId = useId().replace(/:/g, '')
-  const chartId = `${rawId}-stage-chart`
+  const displayRows = useMemo(
+    () => rows.filter((r) => r.totalTransitions > 0),
+    [rows]
+  )
 
-  const display = rows
-    .filter((r) => r.totalTransitions > 0)
-    .map((r) => ({ ...r, avgMs: r.avgDurationMs }))
-
-  if (display.length === 0) {
+  if (displayRows.length === 0) {
     return (
       <div className="flex items-center justify-center h-40 text-zinc-500 text-sm">
         No transition data for selected period
@@ -64,68 +42,91 @@ export const StageDelayBarChart = memo(function StageDelayBarChart({
     )
   }
 
-  const showBrush = display.length > 6
+  const maxMs = Math.max(...displayRows.map((r) => r.avgDurationMs), 1)
+  const barCount = displayRows.length
+  const totalW = Math.max(300, barCount * (BAR_W + BAR_GAP) + BAR_GAP)
+  const barW = BAR_W
 
   return (
-    <div className="space-y-2">
-      {/* Export control */}
-      <div className="flex justify-end">
-        <Button
-          size="sm"
-          variant="outline"
-          className="h-7 text-xs"
-          onClick={() => exportChartAsPng(chartId, 'stage-delays')}
-        >
-          Export PNG
-        </Button>
-      </div>
+    <svg
+      viewBox={`0 0 ${totalW} ${SVG_H}`}
+      width="100%"
+      aria-label="Stage average duration bar chart"
+      role="img"
+      style={{ minHeight: SVG_H }}
+    >
+      {displayRows.map((row, i) => {
+        const x = BAR_GAP + i * (barW + BAR_GAP)
+        const barH = Math.max(4, (row.avgDurationMs / maxMs) * CHART_H)
+        const y = PADDING_TOP + (CHART_H - barH)
+        const color = getBarColor(row)
 
-      {/* Chart */}
-      <div id={chartId} role="img" aria-label="Stage average duration bar chart">
-        <ResponsiveContainer width="100%" height={showBrush ? 280 : 240}>
-          <BarChart
-            data={display}
-            margin={{ top: 20, right: 16, left: 8, bottom: showBrush ? 40 : 56 }}
-          >
-            <CartesianGrid strokeDasharray="3 3" stroke="#27272a" vertical={false} />
-            <XAxis
-              dataKey="stageName"
-              tick={{ fill: '#a1a1aa', fontSize: 10 }}
-              axisLine={{ stroke: '#3f3f46' }}
-              tickLine={false}
-              angle={-30}
-              textAnchor="end"
-              interval={0}
+        // Truncate long stage names
+        const label =
+          row.stageName.length > 8
+            ? row.stageName.slice(0, 7) + '…'
+            : row.stageName
+
+        return (
+          <g key={row.stageId}>
+            {/* Background track */}
+            <rect
+              x={x}
+              y={PADDING_TOP}
+              width={barW}
+              height={CHART_H}
+              rx={3}
+              fill="#18181b"
             />
-            <YAxis
-              tickFormatter={(v: number) => formatDuration(v)}
-              tick={{ fill: '#71717a', fontSize: 10 }}
-              axisLine={false}
-              tickLine={false}
-              width={52}
+
+            {/* Value bar */}
+            <rect
+              x={x}
+              y={y}
+              width={barW}
+              height={barH}
+              rx={3}
+              fill={color}
+              opacity={0.85}
             />
-            <Tooltip content={<StageTooltip />} cursor={{ fill: '#27272a' }} />
-            {showBrush && (
-              <Brush
-                dataKey="stageName"
-                height={18}
-                travellerWidth={6}
-                fill="#18181b"
-                stroke="#3f3f46"
-              />
+
+            {/* Duration label above bar */}
+            <text
+              x={x + barW / 2}
+              y={Math.max(12, y - 4)}
+              textAnchor="middle"
+              style={{
+                fontSize: 9,
+                fill: color,
+                fontFamily: 'inherit',
+                fontWeight: 600,
+              }}
+            >
+              {formatDuration(row.avgDurationMs)}
+            </text>
+
+            {/* Stage name label below bar */}
+            <text
+              x={x + barW / 2}
+              y={PADDING_TOP + CHART_H + 16}
+              textAnchor="middle"
+              style={{
+                fontSize: 9,
+                fill: row.isBottleneck ? color : '#71717a',
+                fontFamily: 'inherit',
+                fontWeight: row.isBottleneck ? 700 : 400,
+              }}
+            >
+              {label}
+            </text>
+
+            {/* Bottleneck indicator dot */}
+            {row.isBottleneck && (
+              <circle cx={x + barW / 2} cy={PADDING_TOP + CHART_H + 32} r={3} fill={color} />
             )}
-            <Bar dataKey="avgMs" maxBarSize={40} radius={[3, 3, 0, 0]}>
-              {display.map((row) => (
-                <Cell
-                  key={row.stageId}
-                  fill={row.isBottleneck ? '#ef4444' : '#3b82f6'}
-                  opacity={0.88}
-                />
-              ))}
-            </Bar>
-          </BarChart>
-        </ResponsiveContainer>
-      </div>
-    </div>
+          </g>
+        )
+      })}
+    </svg>
   )
 })

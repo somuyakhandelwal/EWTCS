@@ -2,8 +2,8 @@
  * Simple but robust CSV parser for historical data import.
  * Handles quoted values and escaped quotes (e.g., "Note with ""quote"" here").
  */
-export function parseCSV(csvText: string): any[] {
-    const rows: any[] = []
+export function parseCSV(csvText: string): Record<string, string | null>[] {
+    const rows: Record<string, string | null>[] = []
     const lines = csvText.split(/\r?\n/)
 
     if (lines.length < 2) return []
@@ -16,7 +16,7 @@ export function parseCSV(csvText: string): any[] {
         if (!line) continue
 
         const values = parseLine(line)
-        const rowObj: any = {}
+        const rowObj: Record<string, string | null> = {}
 
         headers.forEach((header, index) => {
             rowObj[header.trim()] = values[index]?.trim() || null
