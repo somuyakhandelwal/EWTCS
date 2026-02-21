@@ -1,4 +1,4 @@
--- Migration 022: Daily summaries table for EPIC 9 (Daily AI Summary Generator)
+-- Migration 023: Daily summaries table for EPIC 9 (Daily AI Summary Generator)
 -- Stores one rolled-up snapshot per calendar day for AI report generation.
 -- Aggregation covers: total patients, avg stage time, delay count, avg TAT.
 -- Idempotent: ON CONFLICT (summary_date) DO UPDATE ensures safe re-runs.

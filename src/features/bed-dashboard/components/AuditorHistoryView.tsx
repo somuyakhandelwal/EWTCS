@@ -114,7 +114,7 @@ export function AuditorHistoryView({ readOnly = false }: { readOnly?: boolean })
             <CardTitle>Bed Stage Change History</CardTitle>
             <CardDescription>Read-only audit timeline with filters, sorting, and export.</CardDescription>
           </div>
-          <Button size="sm" variant="outline" disabled={exporting} onClick={onExport}>
+          <Button size="sm" variant="outline" disabled={exporting || readOnly} onClick={onExport}>
             <Download className="h-4 w-4 mr-2" />
             {exporting ? 'Exporting...' : 'Export CSV'}
           </Button>

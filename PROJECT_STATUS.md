@@ -114,7 +114,7 @@ All Phase 2 core features are now complete:
 ## ⏳ Phase 3 — In Progress 🔄
 
 ### Daily AI Summary & Reporting (EPIC 9) ✅
-- [x] Daily data aggregation layer (`daily_summaries` table, migration 022)
+- [x] Daily data aggregation layer (`daily_summaries` table, migration 023)
 - [x] Core aggregation queries (patients, stage time, delays, TAT)
 - [x] Server actions: `generateDailySummary`, `fetchDailySummaryByDate`, `fetchRecentDailySummaries`
 - [x] API route: `POST /api/daily-summary/generate` (manual + cron trigger)

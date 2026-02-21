@@ -7,7 +7,7 @@
 
 'use client'
 
-import { useState, useCallback, useEffect } from 'react'
+import { useState, useCallback, useEffect, useMemo } from 'react'
 import { fetchLosSummary, fetchLosTrend } from '../actions/los-actions'
 import type { LosSummary, LosTrendPoint, LosFilters } from '../lib/los-queries'
 import { logger } from '@/shared/config/logger'
@@ -32,14 +32,34 @@ export function useLosData(filters: LosFilters): UseLosDataReturn {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
 
+  const startDateIso = filters.startDate?.toISOString()
+  const endDateIso = filters.endDate?.toISOString()
+
+  const stableFilters = useMemo<LosFilters>(
+    () => ({
+      startDate: startDateIso ? new Date(startDateIso) : undefined,
+      endDate: endDateIso ? new Date(endDateIso) : undefined,
+      shiftStartTime: filters.shiftStartTime,
+      shiftEndTime: filters.shiftEndTime,
+      shiftCrossesMidnight: filters.shiftCrossesMidnight,
+    }),
+    [
+      startDateIso,
+      endDateIso,
+      filters.shiftStartTime,
+      filters.shiftEndTime,
+      filters.shiftCrossesMidnight,
+    ]
+  )
+
   const reload = useCallback(async () => {
     setLoading(true)
     setError(null)
 
     try {
       const [summaryResult, trendResult] = await Promise.all([
-        fetchLosSummary(filters),
-        fetchLosTrend(filters),
+        fetchLosSummary(stableFilters),
+        fetchLosTrend(stableFilters),
       ])
 
       if (!summaryResult.success) {
@@ -58,14 +78,7 @@ export function useLosData(filters: LosFilters): UseLosDataReturn {
     } finally {
       setLoading(false)
     }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [
-    filters.startDate?.toISOString(),
-    filters.endDate?.toISOString(),
-    filters.shiftStartTime,
-    filters.shiftEndTime,
-    filters.shiftCrossesMidnight,
-  ])
+  }, [stableFilters])
 
   useEffect(() => {
     void reload()

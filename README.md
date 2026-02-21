@@ -394,7 +394,7 @@ Full environment variable reference: See [CONFIGURATION.md](CONFIGURATION.md)
 ### 🔄 Phase 3: AI & Reporting (IN PROGRESS)
 
 **Daily AI Summary — Data Aggregation Layer (EPIC 9) ✅**
-- [x] `daily_summaries` database table (migration 022)
+- [x] `daily_summaries` database table (migration 023)
 - [x] Daily aggregation engine (patients, stage time, delays, TAT)
 - [x] Server actions and API route (`POST /api/daily-summary/generate`)
 - [x] Midnight auto-run via GitHub Actions cron

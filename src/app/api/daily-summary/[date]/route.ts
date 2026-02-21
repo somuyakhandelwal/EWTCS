@@ -16,9 +16,9 @@ const ISO_DATE_RE = /^\d{4}-\d{2}-\d{2}$/
  */
 export async function GET(
     _req: NextRequest,
-    { params }: { params: { date: string } }
+    { params }: { params: Promise<{ date: string }> }
 ) {
-    const { date } = params
+    const { date } = await params
 
     if (!ISO_DATE_RE.test(date)) {
         return NextResponse.json(

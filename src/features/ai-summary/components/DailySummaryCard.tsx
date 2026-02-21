@@ -45,7 +45,7 @@ export function DailySummaryCard({ summary }: DailySummaryCardProps) {
 
             {summary.aiSummary && (
                 <div className="rounded-lg bg-muted/50 p-3 italic text-sm text-foreground/90 leading-relaxed border-l-4 border-primary/30">
-                    "{summary.aiSummary}"
+                    <q>{summary.aiSummary}</q>
                 </div>
             )}
 
