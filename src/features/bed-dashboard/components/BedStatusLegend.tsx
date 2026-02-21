@@ -8,13 +8,21 @@ import { StageIcon } from './StageIcon'
 interface BedStatusLegendProps {
   stages: Stage[]
   delayThresholdMs?: number
+  escalationThresholdMs?: number
 }
 
-export const BedStatusLegend = memo(function BedStatusLegend({ stages, delayThresholdMs }: BedStatusLegendProps) {
+export const BedStatusLegend = memo(function BedStatusLegend({
+  stages,
+  delayThresholdMs,
+  escalationThresholdMs
+}: BedStatusLegendProps) {
   const [isCollapsed, setIsCollapsed] = useState(false)
   const thresholdLabel = delayThresholdMs
     ? `${Math.round(delayThresholdMs / 3600000)} hours`
     : '3 hours'
+  const escalationThresholdLabel = escalationThresholdMs
+    ? `${Math.round(escalationThresholdMs / 3600000)} hours`
+    : '4 hours'
   return (
     <div className="bg-zinc-900/50 rounded-lg border border-zinc-800 overflow-hidden">
       <button
@@ -61,6 +69,12 @@ export const BedStatusLegend = memo(function BedStatusLegend({ stages, delayThre
 
           {/* Delay indicator */}
           <div className="mt-3 pt-3 border-t border-zinc-800 flex flex-wrap gap-4">
+            <div className="flex items-center gap-2">
+              <div className="w-4 h-4 rounded border-2 border-fuchsia-700 bg-fuchsia-900/50 motion-safe:animate-pulse" />
+              <span className="text-xs text-zinc-400">
+                Critical Escalation (&gt;{escalationThresholdLabel})
+              </span>
+            </div>
             <div className="flex items-center gap-2">
               <div className="w-4 h-4 rounded border-2 border-red-700 bg-red-900/50 motion-safe:animate-pulse" />
               <span className="text-xs text-zinc-400">

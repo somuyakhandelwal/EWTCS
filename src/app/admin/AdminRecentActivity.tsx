@@ -23,15 +23,14 @@ export function AdminRecentActivity({ recentLogs }: AdminRecentActivityProps) {
               >
                 <div className="flex items-center gap-3">
                   <div
-                    className={`h-2 w-2 rounded-full ${
-                      log.action_type === 'CREATE'
+                    className={`h-2 w-2 rounded-full ${log.action_type === 'CREATE'
                         ? 'bg-green-500'
                         : log.action_type === 'UPDATE'
                           ? 'bg-blue-500'
                           : log.action_type === 'DEACTIVATE'
                             ? 'bg-red-500'
                             : 'bg-yellow-500'
-                    }`}
+                      }`}
                   />
                   <div>
                     <p className="text-sm text-white">
