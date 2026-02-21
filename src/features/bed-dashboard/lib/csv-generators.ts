@@ -49,6 +49,9 @@ export function generateTransitionCSV(
   return csvRows.join('\n')
 }
 
+/**
+ * Generate CSV for auditor history view
+ */
 export function generateAuditorHistoryCSV(
   rows: Array<{
     id: string
