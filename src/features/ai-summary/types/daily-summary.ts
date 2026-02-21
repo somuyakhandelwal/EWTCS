@@ -28,9 +28,10 @@ export interface DailySummary {
     generatedAt: string           // ISO timestamp
     aiSummary?: string            // Human-readable summary text (200-300 words)
     status: DailySummaryStatus
-    reviewedBy?: string           // User ID who approved/rejected
+    reviewedBy?: string           // User ID who approved/rejected (US-9.4)
     reviewedAt?: string           // ISO timestamp
     publishedAt?: string          // ISO timestamp
+    rejectionReason?: string      // Required when status is 'rejected' (US-9.4)
     aiInsights: AiInsight[]
     metadata: DailySummaryMetadata
 }
@@ -43,6 +44,7 @@ export interface DailySummaryMetadata {
     mostDelayedStage?: string     // Stage name with highest delay count
     summaryWordCount?: number     // Post-generation validation (US-9.1)
     meetsWordCountRequirement?: boolean  // true if 100-400 words (200-300 target)
+    rejectionReason?: string      // Persisted JSONB field — supervisor rejection reason (US-9.4)
 }
 
 /**

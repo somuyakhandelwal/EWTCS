@@ -1,4 +1,4 @@
-// Tests — EPIC 9: daily-summary-review-actions.ts (US-9.2, US-9.3)
+// Tests — EPIC 9: daily-summary-review-actions.ts (US-9.2, US-9.3, US-9.4)
 
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 
@@ -18,6 +18,7 @@ vi.mock('@/features/ai-summary/lib/daily-summary-review-store', () => ({
 }))
 
 import { requireRole } from '@/shared/lib/auth'
+import { logAudit } from '@/shared/lib/audit'
 import { getDailySummaryById } from '@/features/ai-summary/lib/daily-summary-store'
 import {
     updateDailySummaryStatus,
@@ -68,6 +69,14 @@ describe('approveSummary', () => {
         const result = await approveSummary({ id: VALID_UUID })
         expect(result.success).toBe(true)
         expect(result.summary?.status).toBe('published')
+        expect(vi.mocked(requireRole)).toHaveBeenCalledWith(['supervisor'])
+    })
+
+    it('returns error when admin attempts approval', async () => {
+        vi.mocked(requireRole).mockRejectedValue(new Error('Unauthorized: Required role(s): supervisor'))
+        const result = await approveSummary({ id: VALID_UUID })
+        expect(result.success).toBe(false)
+        expect(updateDailySummaryStatus).not.toHaveBeenCalled()
     })
 
     it('returns error when not draft (SQL returns null)', async () => {
@@ -88,14 +97,50 @@ describe('approveSummary', () => {
 describe('rejectSummary', () => {
     beforeEach(() => vi.clearAllMocks())
 
-    it('returns success when draft rejected', async () => {
+    it('returns success when draft rejected with valid reason', async () => {
         vi.mocked(requireRole).mockResolvedValue(SUPERVISOR_SESSION as never)
         vi.mocked(updateDailySummaryStatus).mockResolvedValue({
             ...DRAFT_SUMMARY,
             status: 'rejected',
         })
-        const result = await rejectSummary({ id: VALID_UUID })
+        const result = await rejectSummary({ id: VALID_UUID, reason: 'Missing critical data points' })
         expect(result.success).toBe(true)
+        expect(vi.mocked(requireRole)).toHaveBeenCalledWith(['supervisor'])
+    })
+
+    // US-9.4: reason is required — missing reason must fail Zod validation
+    it('returns validation error when reason is missing', async () => {
+        vi.mocked(requireRole).mockResolvedValue(SUPERVISOR_SESSION as never)
+        // Cast to bypass TS since we are testing the runtime validation path
+        const result = await rejectSummary({ id: VALID_UUID, reason: '' } as never)
+        expect(result.success).toBe(false)
+        expect(result.error).toMatch(/reason/i)
+    })
+
+    // US-9.4: reason shorter than 10 characters must be rejected
+    it('returns validation error when reason is fewer than 10 characters', async () => {
+        vi.mocked(requireRole).mockResolvedValue(SUPERVISOR_SESSION as never)
+        const result = await rejectSummary({ id: VALID_UUID, reason: 'Too short' })
+        expect(result.success).toBe(false)
+        expect(result.error).toMatch(/reason/i)
+    })
+
+    // US-9.4: audit log must record supervisor ID and the rejection reason
+    it('logs supervisor ID and reason in audit on successful rejection', async () => {
+        vi.mocked(requireRole).mockResolvedValue(SUPERVISOR_SESSION as never)
+        vi.mocked(updateDailySummaryStatus).mockResolvedValue({
+            ...DRAFT_SUMMARY,
+            status: 'rejected',
+        })
+        await rejectSummary({ id: VALID_UUID, reason: 'Data completeness issues noted by supervisor' })
+        expect(vi.mocked(logAudit)).toHaveBeenCalledWith(
+            expect.objectContaining({
+                performedBy: SUPERVISOR_SESSION.userId,
+                metadata: expect.objectContaining({
+                    reason: 'Data completeness issues noted by supervisor',
+                }),
+            })
+        )
     })
 })
 
@@ -157,6 +202,7 @@ describe('fetchDraftSummariesPendingReview', () => {
         const result = await fetchDraftSummariesPendingReview(10)
         expect(result.success).toBe(true)
         expect(result.summaries).toHaveLength(1)
+        expect(vi.mocked(requireRole)).toHaveBeenCalledWith(['supervisor'])
     })
 })
 

@@ -1,7 +1,8 @@
 'use server'
 
-// Server Actions — EPIC 9 (US-9.2, US-9.3)
+// Server Actions — EPIC 9 (US-9.2, US-9.3, US-9.4)
 // Supervisor review workflow: approve, reject, edit draft, flag insight.
+// US-9.4: rejectSummary requires a non-empty reason from the caller.
 
 import { logger } from '@/shared/config/logger'
 import { requireRole } from '@/shared/lib/auth'
@@ -25,7 +26,7 @@ type ActionResult = { success: boolean; summary?: DailySummary; error?: string }
 
 export async function approveSummary(rawInput: { id: string }): Promise<ActionResult> {
     try {
-        const session = await requireRole(['admin', 'supervisor'])
+        const session = await requireRole(['supervisor'])
         const parsed = approveSummarySchema.safeParse(rawInput)
         if (!parsed.success) {
             return { success: false, error: parsed.error.issues[0]?.message ?? 'Invalid input' }
@@ -48,15 +49,15 @@ export async function approveSummary(rawInput: { id: string }): Promise<ActionRe
     }
 }
 
-export async function rejectSummary(rawInput: { id: string; reason?: string }): Promise<ActionResult> {
+export async function rejectSummary(rawInput: { id: string; reason: string }): Promise<ActionResult> {
     try {
-        const session = await requireRole(['admin', 'supervisor'])
+        const session = await requireRole(['supervisor'])
         const parsed = rejectSummarySchema.safeParse(rawInput)
         if (!parsed.success) {
             return { success: false, error: parsed.error.issues[0]?.message ?? 'Invalid input' }
         }
         const summary = await updateDailySummaryStatus(
-            parsed.data.id, 'rejected', session.userId
+            parsed.data.id, 'rejected', session.userId, parsed.data.reason
         )
         if (!summary) return { success: false, error: 'Summary not found or not draft' }
         await logAudit({
@@ -78,7 +79,7 @@ export async function updateSummaryDraftAction(
     rawInput: { id: string; aiSummary: string; aiInsights: { id: string; text: string; confidence: number; category?: string; flagged?: boolean }[] }
 ): Promise<ActionResult> {
     try {
-        await requireRole(['admin', 'supervisor'])
+        await requireRole(['supervisor'])
         const parsed = updateSummaryDraftSchema.safeParse(rawInput)
         if (!parsed.success) {
             return { success: false, error: parsed.error.issues[0]?.message ?? 'Invalid input' }
@@ -106,7 +107,7 @@ export async function flagInsightAction(
     rawInput: { summaryId: string; insightId: string }
 ): Promise<ActionResult> {
     try {
-        await requireRole(['admin', 'supervisor'])
+        await requireRole(['supervisor'])
         const parsed = flagInsightSchema.safeParse(rawInput)
         if (!parsed.success) {
             return { success: false, error: parsed.error.issues[0]?.message ?? 'Invalid input' }
@@ -142,7 +143,7 @@ export async function fetchDraftSummariesPendingReview(
     limit: number = 30
 ): Promise<{ success: boolean; summaries?: DailySummary[]; error?: string }> {
     try {
-        await requireRole(['admin', 'supervisor', 'auditor'])
+        await requireRole(['supervisor'])
         const summaries = await getDraftSummariesPendingReview(limit)
         return { success: true, summaries }
     } catch (error) {

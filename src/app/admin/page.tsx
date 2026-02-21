@@ -119,13 +119,13 @@ export default async function AdminDashboard() {
                         <div>
                             <CardTitle className="text-xl text-white">Daily AI Summaries</CardTitle>
                             <p className="text-sm text-zinc-400 mt-1">
-                                Automated operational reports and performance metrics
+                                Automated operational reports and performance metrics (read-only)
                             </p>
                         </div>
                         <DailySummaryTrigger />
                     </CardHeader>
                     <CardContent>
-                        <DailySummaryHistory canReview />
+                        <DailySummaryHistory />
                     </CardContent>
                 </Card>
 

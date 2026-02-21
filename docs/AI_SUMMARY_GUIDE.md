@@ -12,8 +12,8 @@ The Daily AI Summary Generator automatically aggregates emergency ward bed data 
     *   Most congested workflow stage.
 2.  **AI Generation**: The aggregated stats are sent to Google Gemini (using the `gemini-1.5-flash` model). The app generates a 200-300 word narrative plus structured insights with confidence scores (US-9.1, US-9.3).
 3.  **Storage**: The resulting stats and generated text are stored in the `daily_summaries` table with status `draft` until approved.
-4.  **Review Workflow** (US-9.2): Supervisors receive an in-app notification when drafts exist. They can edit, approve, or reject summaries. Summaries are only published after approval.
-5.  **Dashboard**: Administrators and Supervisors can view, generate, and review summaries in the Admin and Supervisor dashboards.
+4.  **Review Workflow** (US-9.2): Supervisors receive an in-app notification when drafts exist. Only supervisors can edit, approve, or reject summaries. Summaries are only published after explicit supervisor approval.
+5.  **Dashboard**: Administrators and Supervisors can view and generate summaries. Review actions (edit/approve/reject) are supervisor-only.
 
 ## ⚙️ Configuration
 

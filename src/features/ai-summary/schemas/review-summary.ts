@@ -1,4 +1,4 @@
-// Zod schemas for EPIC 9: Daily AI Summary review workflow (US-9.2, US-9.3)
+// Zod schemas for EPIC 9: Daily AI Summary review workflow (US-9.2, US-9.3, US-9.4)
 // Validates approve, reject, edit, and flag inputs.
 
 import { z } from 'zod'
@@ -17,9 +17,10 @@ export const approveSummarySchema = z.object({
     id: uuidSchema,
 })
 
+// US-9.4: reason is required — rejection without an explanation is not permitted.
 export const rejectSummarySchema = z.object({
     id: uuidSchema,
-    reason: z.string().max(500).optional(),
+    reason: z.string().min(10, 'Rejection reason is required (minimum 10 characters)').max(500),
 })
 
 export const updateSummaryDraftSchema = z.object({
