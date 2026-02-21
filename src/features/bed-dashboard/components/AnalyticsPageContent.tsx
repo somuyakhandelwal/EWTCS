@@ -113,16 +113,16 @@ export function AnalyticsPageContent({
         <div data-export-id="export-los" className="print-section print-no-break">
           <LosView role={role} readOnly={isAuditMode} />
         </div>
-        <div className="print-section print-no-break">
+        <div data-export-id="export-patients" className="print-section print-no-break">
           <PatientCountView shifts={activeShifts} readOnly={isAuditMode} />
         </div>
-        <div className="print-section print-no-break">
+        <div data-export-id="export-delayed" className="print-section print-no-break">
           <DelayedPatientPercentageView shifts={activeShifts} readOnly={isAuditMode} role={role} />
         </div>
-        <div className="print-section print-no-break">
+        <div data-export-id="export-beds" className="print-section print-no-break">
           <BedPerformanceView shifts={activeShifts} readOnly={isAuditMode} />
         </div>
-        <div className="print-section print-no-break">
+        <div data-export-id="export-stages" className="print-section print-no-break">
           <StageDelayView readOnly={isAuditMode} />
         </div>
         {activeShifts.length > 0 && (
