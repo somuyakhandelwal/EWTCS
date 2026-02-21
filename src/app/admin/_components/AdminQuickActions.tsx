@@ -1,6 +1,7 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/shared/components/ui/card"
-import { Bed, BarChart3, Clock, Layers } from "lucide-react"
+import { Bed, BarChart3, Clock, Layers, History } from "lucide-react"
 import Link from "next/link"
+import { ImportDialog } from "@/features/import/components/ImportDialog"
 
 export function AdminQuickActions() {
     return (
@@ -85,6 +86,20 @@ export function AdminQuickActions() {
                             </div>
                         </div>
                     </Link>
+                    <div className="p-4 rounded-lg bg-black/30 border border-zinc-800 hover:border-zinc-700 hover:bg-black/50 transition-all group flex items-start gap-3">
+                        <div className="p-2 bg-amber-900/20 border border-amber-900/50 rounded-lg group-hover:bg-amber-900/30 transition-colors">
+                            <History className="h-5 w-5 text-amber-500" />
+                        </div>
+                        <div className="flex-1">
+                            <h3 className="font-semibold text-white group-hover:text-amber-400 transition-colors">
+                                Import History
+                            </h3>
+                            <p className="text-sm text-zinc-500 mt-1 mb-3">
+                                Upload CSV to backfill historical patient data
+                            </p>
+                            <ImportDialog />
+                        </div>
+                    </div>
                 </div>
             </CardContent>
         </Card>
