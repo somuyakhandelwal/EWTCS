@@ -1,4 +1,0 @@
-src/features/bed-dashboard/types/bed.ts:83:  escalationThresholdMs?: number    // threshold ms before a patient is flagged as escalated
-src/features/bed-dashboard/types/bed.ts:84:  escalationCount?: number          // count of currently escalated beds
-src/features/bed-dashboard/__tests__/execute-stage-update.reliability.test.ts:57:    escalationThresholdMs: 2000,
-src/features/bed-dashboard/__tests__/execute-stage-update.reliability.test.ts:59:    escalationCount: 0,
