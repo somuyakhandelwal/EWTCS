@@ -1,0 +1,11 @@
+src/features/bed-dashboard/types/bed.ts:59:  isEscalated?: boolean             // flagged when elapsed time exceeds escalation threshold
+src/features/bed-dashboard/__tests__/BedCard-display-ac-validation.test.ts:116:      const isEscalated = false
+src/features/bed-dashboard/__tests__/BedCard-display-ac-validation.test.ts:119:      expect(isEscalated).toBe(false)
+src/features/bed-dashboard/__tests__/BedCard-display-ac-validation.test.ts:125:      const isEscalated = true
+src/features/bed-dashboard/__tests__/BedCard-display-ac-validation.test.ts:128:      expect(isEscalated).toBe(true)
+src/features/bed-dashboard/__tests__/BedCard.display.test.ts:74:      const isEscalated = true
+src/features/bed-dashboard/__tests__/BedCard.display.test.ts:77:      const ringClass = isEscalated ? 'ring-fuchsia-500' : (isDelayed ? 'ring-red-500' : '')
+src/features/bed-dashboard/__tests__/bug-fixes.test.ts:36:    isEscalated: false,
+src/features/bed-dashboard/__tests__/execute-stage-update.reliability.test.ts:46:    isEscalated: false,
+src/features/bed-dashboard/__tests__/useBedFilter-state.test.ts:33:    isEscalated: false,
+src/features/bed-dashboard/__tests__/useBedFilter.test.ts:33:    isEscalated: false,
