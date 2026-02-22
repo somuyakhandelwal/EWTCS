@@ -23,7 +23,10 @@ function SubmitButton() {
  * Rendered on /change-password when a user logs in with a temp password.
  */
 export default function ChangePasswordForm() {
-    const [state, action] = useActionState(changePasswordAction, undefined)
+    const [state, action] = useActionState<
+        { success?: boolean; message?: string; errors?: Record<string, string[]> } | undefined,
+        FormData
+    >(changePasswordAction, undefined)
 
     return (
         <div className="flex min-h-screen items-center justify-center bg-black px-4 py-12 relative overflow-hidden">

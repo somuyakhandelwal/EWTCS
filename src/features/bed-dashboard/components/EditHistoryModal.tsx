@@ -36,14 +36,14 @@ interface EditHistoryModalProps {
 export function EditHistoryModal({ isOpen, onClose, record, onCorrectionSaved }: EditHistoryModalProps) {
   const originalTime = toDatetimeLocalValue(record.transitionTime)
 
-  const [stages, setStages]                     = useState<StageOption[]>([])
-  const [toStageId, setToStageId]               = useState('')
-  const [notes, setNotes]                       = useState(record.notes ?? '')
-  const [transitionTime, setTransitionTime]     = useState(originalTime)
+  const [stages, setStages] = useState<StageOption[]>([])
+  const [toStageId, setToStageId] = useState('')
+  const [notes, setNotes] = useState(record.notes ?? '')
+  const [transitionTime, setTransitionTime] = useState(originalTime)
   const [correctionReason, setCorrectionReason] = useState('')
-  const [submitting, setSubmitting]             = useState(false)
-  const [formError, setFormError]               = useState<string | null>(null)
-  const [success, setSuccess]                   = useState(false)
+  const [submitting, setSubmitting] = useState(false)
+  const [formError, setFormError] = useState<string | null>(null)
+  const [success, setSuccess] = useState(false)
 
   // Load stages and seed toStageId to the record's current "to" stage
   useEffect(() => {
@@ -68,18 +68,18 @@ export function EditHistoryModal({ isOpen, onClose, record, onCorrectionSaved }:
   async function handleSubmit() {
     setFormError(null)
     if (!correctionReason.trim()) { setFormError('A correction reason is required.'); return }
-    if (!hasChanges)              { setFormError('No fields have been changed.'); return }
+    if (!hasChanges) { setFormError('No fields have been changed.'); return }
 
     const correctedFields: { notes?: string; transition_time?: string; to_stage_id?: string } = {}
-    if (notes !== (record.notes ?? ''))       correctedFields.notes = notes
-    if (transitionTime !== originalTime)      correctedFields.transition_time = new Date(transitionTime).toISOString()
-    if (toStageId !== originalStageId)        correctedFields.to_stage_id = toStageId
+    if (notes !== (record.notes ?? '')) correctedFields.notes = notes
+    if (transitionTime !== originalTime) correctedFields.transition_time = new Date(transitionTime).toISOString()
+    if (toStageId !== originalStageId) correctedFields.to_stage_id = toStageId
 
     setSubmitting(true)
     const result = await submitHistoryCorrection({ bedStageLogId: record.id, correctionReason, correctedFields })
     setSubmitting(false)
 
-    if (!result.success) { setFormError(result.error ?? 'An unexpected error occurred.'); return }
+    if (result.success === false) { setFormError(result.error ?? 'An unexpected error occurred.'); return }
     setSuccess(true)
     onCorrectionSaved(result.data!.correctionId)
   }

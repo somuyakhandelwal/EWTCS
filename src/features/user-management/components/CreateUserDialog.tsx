@@ -14,7 +14,10 @@ interface Ward {
 
 export default function CreateUserDialog({ wards = [] }: { wards?: Ward[] }) {
   const [isOpen, setIsOpen] = useState(false)
-  const [state, action] = useActionState(createUser, undefined)
+  const [state, action] = useActionState<
+    { success: boolean; message?: string; errors?: Record<string, string[]>; user?: unknown } | undefined,
+    FormData
+  >(createUser, undefined)
   const [username, setUsername] = useState('')
   const [password, setPassword] = useState('')
   const [role, setRole] = useState('')

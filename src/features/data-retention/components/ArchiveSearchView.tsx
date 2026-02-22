@@ -12,12 +12,13 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/sha
 import { Button } from '@/shared/components/ui/button'
 import { cn } from '@/shared/lib/utils'
 import { searchArchive } from '../actions/archive-search-actions'
-import type { ArchivedAdmission, ArchivedAuditLog } from '../lib/data-retention-types'
 import { AdmissionsTable, AuditLogsTable } from './ArchiveResultTables'
+import type { ArchivedAdmission, ArchivedAuditLog } from '../lib/data-retention-types'
 
-type TableChoice = 'patient_admissions' | 'audit_logs'
 
-// ── Main component ──────────────────────────────────────────────────────────
+export type TableChoice = 'patient_admissions' | 'audit_logs'
+
+// ── Main component ─────────────────────────────────────────────────────────
 
 interface ArchiveSearchViewProps {
   className?: string

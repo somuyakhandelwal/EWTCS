@@ -75,7 +75,8 @@ export async function processHistoricalImport(
                 ])
 
                 result.successCount++
-            } catch (error) {
+                // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            } catch (error: any) {
                 result.failureCount++
                 const errorMessage = (error as Error).message || 'Unknown processing error'
                 result.errors.push({
@@ -90,8 +91,9 @@ export async function processHistoricalImport(
         logger.info(`[import] Completed: ${result.successCount} success, ${result.failureCount} failed`)
         return result
 
-    } catch (error) {
-        logger.error('[import] Fatal error during import process', error as Error)
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    } catch (error: any) {
+        logger.error('[import] Fatal error during import process', error)
         throw new Error('Import process failed at a systemic level')
     }
 }

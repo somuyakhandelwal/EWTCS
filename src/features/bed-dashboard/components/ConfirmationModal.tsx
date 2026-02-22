@@ -53,22 +53,29 @@ export const ConfirmationModal = memo(function ConfirmationModal({
 
     return (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 animate-in fade-in duration-200">
-            <div className="bg-white dark:bg-zinc-900 rounded-lg shadow-lg max-w-md w-full mx-4 p-6 space-y-4 animate-in zoom-in-95 duration-200">
+            <div
+                className="bg-white dark:bg-zinc-900 rounded-lg shadow-lg max-w-md w-full mx-4 p-6 space-y-4 animate-in zoom-in-95 duration-200"
+                role="dialog"
+                aria-modal="true"
+                aria-labelledby="confirm-title"
+                aria-describedby="confirm-desc"
+            >
                 <div className="flex items-center justify-between">
                     <div className="flex items-center gap-2 text-amber-600 dark:text-amber-500">
-                        <AlertTriangle className="h-5 w-5" />
-                        <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100">Confirm Critical Update</h2>
+                        <AlertTriangle className="h-5 w-5" aria-hidden="true" />
+                        <h2 id="confirm-title" className="text-lg font-semibold text-gray-900 dark:text-gray-100">Confirm Critical Update</h2>
                     </div>
                     <button
                         onClick={onCancel}
-                        className="text-gray-400 hover:text-gray-500 dark:hover:text-gray-300"
+                        className="text-gray-400 hover:text-gray-500 dark:hover:text-gray-300 focus:outline-none focus:ring-2 focus:ring-amber-500 rounded"
                         disabled={isUpdating}
+                        aria-label="Close confirmation"
                     >
-                        <X className="h-5 w-5" />
+                        <X className="h-5 w-5" aria-hidden="true" />
                     </button>
                 </div>
 
-                <div className="space-y-4">
+                <div className="space-y-4" id="confirm-desc">
                     <p className="text-gray-600 dark:text-gray-300">
                         Are you sure you want to update Bed <span className="font-semibold text-gray-900 dark:text-gray-100">{bedNumber}</span>?
                     </p>
@@ -93,7 +100,7 @@ export const ConfirmationModal = memo(function ConfirmationModal({
                         </div>
                     </div>
 
-                    <div className="bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 text-amber-800 dark:text-amber-200 text-xs p-3 rounded-md">
+                    <div className="bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 text-amber-800 dark:text-amber-200 text-xs p-3 rounded-md" role="status">
                         This is a critical stage change. Please verify the patient status before proceeding.
                     </div>
                 </div>
@@ -103,6 +110,7 @@ export const ConfirmationModal = memo(function ConfirmationModal({
                         variant="outline"
                         onClick={onCancel}
                         disabled={isUpdating}
+                        className="focus:ring-2 focus:ring-zinc-400"
                     >
                         Cancel
                     </Button>
@@ -110,11 +118,12 @@ export const ConfirmationModal = memo(function ConfirmationModal({
                         variant="destructive"
                         onClick={onConfirm}
                         disabled={isUpdating}
+                        className="focus:ring-2 focus:ring-red-400"
                     >
                         {isUpdating ? (
                             <>
-                                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                                Updating...
+                                <Loader2 className="mr-2 h-4 w-4 animate-spin" aria-hidden="true" />
+                                <span>Updating...</span>
                             </>
                         ) : (
                             'Confirm Update'

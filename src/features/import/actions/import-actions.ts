@@ -11,7 +11,8 @@ import { HistoricalAdmissionSchema, type ImportResult } from '../types/import.ty
  * Expects an array of parsed CSV rows.
  */
 export async function importHistoricalDataAction(
-    rows: Record<string, unknown>[]
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    rows: any[]
 ): Promise<{ success: boolean; result?: ImportResult; error?: string }> {
     try {
         // 1. Auth Guard
@@ -59,8 +60,9 @@ export async function importHistoricalDataAction(
 
         return { success: true, result: results }
 
-    } catch (error) {
-        logger.error('[import] Action failed', error as Error)
-        return { success: false, error: (error as Error).message || 'Import failed' }
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    } catch (error: any) {
+        logger.error('[import] Action failed', error)
+        return { success: false, error: error.message || 'Import failed' }
     }
 }

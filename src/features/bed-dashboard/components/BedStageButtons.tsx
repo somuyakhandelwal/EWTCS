@@ -46,7 +46,7 @@ export const BedStageButtons = memo(function BedStageButtons({
           }
 
           const label = requiresOverride
-            ? `⚠️ ${stage.name}`
+            ? stage.name
             : stage.name
 
           return (
@@ -58,14 +58,14 @@ export const BedStageButtons = memo(function BedStageButtons({
               disabled={isUpdating || isCurrentStage || isInvalid}
               onClick={() => onStageSelect(bed.id, stage.id)}
               className={cn(
-                'justify-start text-xs h-9 px-2 border',
+                'justify-start text-xs h-9 px-2 border focus:ring-2',
                 colorClasses.border,
                 colorClasses.text,
                 isCurrentStage && colorClasses.bg,
                 isInvalid && 'opacity-50'
               )}
               aria-pressed={isCurrentStage}
-              aria-label={`Update ${bed.bedNumber} to ${stage.name}`}
+              aria-label={`Update ${bed.bedNumber} to ${stage.name}${requiresOverride ? ' (Requires supervisor approval)' : ''}${isInvalid ? ' (Not allowed)' : ''}${isCurrentStage ? ' (Current stage)' : ''}`}
               title={
                 isInvalid
                   ? 'This transition is not allowed'
@@ -74,7 +74,18 @@ export const BedStageButtons = memo(function BedStageButtons({
                     : undefined
               }
             >
-              {isStageUpdating && <Loader2 className="h-4 w-4 animate-spin" />}
+              {isStageUpdating && (
+                <>
+                  <Loader2 className="h-4 w-4 animate-spin" aria-hidden="true" />
+                  <span className="sr-only">Updating to {stage.name}...</span>
+                </>
+              )}
+              {!isStageUpdating && requiresOverride && (
+                <>
+                  <span aria-hidden="true">⚠️ </span>
+                  <span className="sr-only">Override Required: </span>
+                </>
+              )}
               <span className="truncate">{label}</span>
             </Button>
           )
