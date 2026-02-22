@@ -1,0 +1,21 @@
+
+>>>>>>> 45dfda6 (feat: [US-7.3] Refactor correction audit trail and optimize dashboard queries)
+    const result = await query<CorrectionAuditRecord>(
+      `SELECT
+         c.id,
+         c.bed_stage_log_id       AS "bedStageLogId",
+         c.corrected_by_user_id   AS "correctedByUserId",
+         u.username               AS "correctedByUsername",
+         c.correction_reason      AS "correctionReason",
+         c.corrected_fields       AS "correctedFields",
+         c.corrected_at           AS "correctedAt",
+         b.bed_number             AS "bedNumber",
+         bsl.notes                AS "originalNotes",
+         bsl.transition_time      AS "originalTransitionTime",
+         bsl.to_stage_id          AS "originalToStageId",
+         s.name                   AS "originalToStageName",
+         st_new.name              AS "correctedToStageName"
+       FROM bed_stage_log_corrections c
+       JOIN users u ON u.id = c.corrected_by_user_id
+       JOIN bed_stage_logs bsl ON bsl.id = c.bed_stage_log_id
+       JOIN beds b ON b.id = bsl.bed_id
