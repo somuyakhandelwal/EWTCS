@@ -8,6 +8,7 @@ import Link from "next/link"
 import { verifyActiveSession } from "@/shared/lib/active-session"
 import { getBedGridData } from "@/features/bed-dashboard/actions/bed-grid-actions"
 import { SupervisorClientShell } from "./SupervisorClientShell"
+import { SupervisorSummarySection } from "@/features/ai-summary/components/SupervisorSummarySection"
 
 export default async function SupervisorDashboard() {
     const session = await verifyActiveSession()
@@ -55,6 +56,15 @@ export default async function SupervisorDashboard() {
                         <p className="text-zinc-400 text-sm">{bedGridResult.error}</p>
                     </div>
                 )}
+
+                {/* EPIC 9: Daily AI Summaries — Supervisor review */}
+                <section className="space-y-4">
+                    <h2 className="text-lg font-semibold text-white">Daily AI Summaries</h2>
+                    <p className="text-sm text-zinc-400">
+                        Review and approve draft summaries before they are published.
+                    </p>
+                    <SupervisorSummarySection />
+                </section>
             </div>
         </div>
     )

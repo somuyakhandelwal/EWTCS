@@ -127,6 +127,7 @@ export function CreateUserDialogContent({
             >
               <option value="">Select a role</option>
               <option value="nurse">Nurse</option>
+              <option value="housekeeping">Housekeeping</option>
               <option value="supervisor">Supervisor</option>
               <option value="admin">Admin</option>
               <option value="auditor">Auditor</option>

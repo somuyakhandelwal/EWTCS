@@ -26,7 +26,10 @@ function SubmitButton() {
 }
 
 export default function ResetPasswordDialog({ user, isOpen, onClose }: ResetPasswordDialogProps) {
-    const [state, action] = useActionState(adminResetPassword, undefined)
+    const [state, action] = useActionState<
+        { success: boolean; message: string; tempPassword?: string } | undefined,
+        FormData
+    >(adminResetPassword, undefined)
     const [copied, setCopied] = useState(false)
     const formRef = useRef<HTMLFormElement>(null)
 

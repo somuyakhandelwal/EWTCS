@@ -1,6 +1,7 @@
 // Supervisor Bed Overview Component
 // Epic 1: Nurse Desk Bed Dashboard (US-1.7)
 // Epic 6: Surge Capacity (US-6.5)
+// Epic 15: Notifications & Alerts (US-15.x)
 // Purpose: Read-only bed status view for supervisors — shows delays,
 //   bottleneck beds, and recorded reasons for delay.
 //   Supervisors can also add and remove temporary beds.
@@ -12,12 +13,14 @@ import { BedGridStats } from './BedGridStats'
 import { BedStatusLegend } from './BedStatusLegend'
 import { BottleneckPanel } from './BottleneckPanel'
 import { BedCard } from './BedCard'
+import { DelayedBedCountBanner } from './DelayedBedCountBanner'
 import { Button } from '@/shared/components/ui/button'
-import { RefreshCw, Zap, Trash2 } from 'lucide-react'
+import { RefreshCw } from 'lucide-react'
 import type { BedGridData } from '../types/bed'
 import { getBedGridData } from '../actions/bed-grid-actions'
 import { getBedStatistics } from '../lib/utils'
 import { VirtualBedsSection } from './VirtualBedsSection'
+import { SurgeBedsSection } from './SurgeBedsSection'
 
 interface SupervisorBedOverviewProps {
   initialData: BedGridData
@@ -41,6 +44,7 @@ export function SupervisorBedOverview({
 }: SupervisorBedOverviewProps) {
   const [data, setData] = useState<BedGridData>(initialData)
   const [isRefreshing, setIsRefreshing] = useState(false)
+  const [showDelayedOnly, setShowDelayedOnly] = useState(false)
   const [, startTransition] = useTransition()
 
   // US-6.5: when the shell re-fetches and passes new initialData, sync local state
@@ -81,6 +85,14 @@ export function SupervisorBedOverview({
 
   return (
     <div className="space-y-6">
+
+      {/* US-15.x: Prominent delayed bed count banner with color coding + click-to-filter */}
+      <DelayedBedCountBanner
+        delayedCount={delayedBeds.length}
+        onFilterDelayed={() => setShowDelayedOnly(prev => !prev)}
+        isFiltered={showDelayedOnly}
+      />
+
       {/* Stats */}
       <BedGridStats
         total={stats.total}
@@ -88,62 +100,23 @@ export function SupervisorBedOverview({
         available={stats.available}
         delayed={stats.delayed}
         bottleneckCount={data.bottleneckCount}
+        escalationCount={data.escalationCount}
       />
 
       {/* Legend */}
-      <BedStatusLegend stages={data.stages} />
+      <BedStatusLegend
+        stages={data.stages}
+        delayThresholdMs={data.delayThresholdMs}
+        escalationThresholdMs={data.escalationThresholdMs}
+      />
 
       {/* US-6.5: Surge / Temporary Beds section */}
-      <div className="rounded-lg border border-orange-900/50 bg-orange-950/20 p-4 space-y-3">
-        <div className="flex items-center justify-between">
-          <h2 className="flex items-center gap-2 text-sm font-semibold text-orange-300 uppercase tracking-wider">
-            <Zap className="h-4 w-4 text-orange-400" />
-            Surge Capacity
-            {temporaryBeds.length > 0 && (
-              <span className="ml-1 rounded-full bg-orange-800/60 px-2 py-0.5 text-[10px] font-bold text-orange-200">
-                {temporaryBeds.length} active
-              </span>
-            )}
-          </h2>
-          {onAddTempBed && (
-            <Button
-              size="sm"
-              onClick={onAddTempBed}
-              className="bg-orange-700 hover:bg-orange-600 text-white border-none h-8 text-xs"
-            >
-              <Zap className="h-3.5 w-3.5 mr-1.5" />
-              Add Temporary Bed
-            </Button>
-          )}
-        </div>
-
-        {temporaryBeds.length === 0 ? (
-          <p className="text-sm text-zinc-500">
-            No temporary beds active. Use &ldquo;Add Temporary Bed&rdquo; during surge.
-          </p>
-        ) : (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
-            {temporaryBeds.map(bed => (
-              <div key={bed.id} className="relative">
-                <BedCard bed={bed} />
-                {/* Remove button — only when bed is empty */}
-                {!bed.isOccupied && onRemoveTempBed && (
-                  <button
-                    type="button"
-                    disabled={isRemovingId === bed.id}
-                    onClick={() => onRemoveTempBed(bed.id)}
-                    className="absolute top-2 right-2 flex items-center gap-1 rounded bg-red-900/60 border border-red-700/50 px-1.5 py-0.5 text-[10px] font-semibold text-red-300 hover:bg-red-800/80 transition-colors disabled:opacity-50"
-                    title="Remove temporary bed"
-                  >
-                    <Trash2 className="h-3 w-3" />
-                    Remove
-                  </button>
-                )}
-              </div>
-            ))}
-          </div>
-        )}
-      </div>
+      <SurgeBedsSection
+        temporaryBeds={temporaryBeds}
+        onAddTempBed={onAddTempBed}
+        onRemoveTempBed={onRemoveTempBed}
+        isRemovingId={isRemovingId}
+      />
 
       {/* US-6.6: Virtual / Hallway Beds section */}
       <VirtualBedsSection
@@ -155,8 +128,8 @@ export function SupervisorBedOverview({
       {/* Bottleneck panel — supervisor can see + trigger refresh after update */}
       <BottleneckPanel beds={data.beds} onReasonRecorded={handleRefresh} />
 
-      {/* Delayed / bottleneck bed cards (read-only — no stage update controls) */}
-      {delayedBeds.length > 0 && (
+      {/* US-15.x: Delayed / bottleneck bed cards — shown when filter is active */}
+      {showDelayedOnly && delayedBeds.length > 0 && (
         <div className="space-y-3">
           <div className="flex items-center justify-between">
             <h2 className="text-sm font-semibold text-zinc-300 uppercase tracking-wider">
@@ -180,7 +153,7 @@ export function SupervisorBedOverview({
         </div>
       )}
 
-      {delayedBeds.length === 0 && (
+      {showDelayedOnly && delayedBeds.length === 0 && (
         <div className="rounded-lg border border-zinc-800 bg-zinc-900/30 py-10 text-center">
           <p className="text-zinc-400">🎉 No delayed beds — all patients are on track.</p>
         </div>

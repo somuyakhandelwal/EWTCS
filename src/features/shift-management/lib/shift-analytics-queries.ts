@@ -9,7 +9,7 @@
 import 'server-only'
 
 import { query } from '@/shared/lib/db'
-import type { ShiftPerformanceRow, ShiftComparisonReport } from '@/features/management-report/types/report.types'
+import type { ShiftPerformanceRow, ShiftComparisonReport } from '@/shared/types/report.types'
 
 // 3 hours in milliseconds — matches the existing dashboard delay threshold
 const DELAY_THRESHOLD_MS = 3 * 60 * 60 * 1000 // 10_800_000

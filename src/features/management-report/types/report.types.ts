@@ -1,86 +1,84 @@
-// Management Report Types (US-10.1)
+// Management Report Types (US-10.1, US-10.3, US-10.4, US-10.5)
 // Epic 10: Management Report Dashboard
 
-export type DateRangePreset = '24h' | '7d' | '30d' | 'custom'
+// Re-exports shared report types — keeps the original path working
+export * from '@/shared/types/report.types'
 
-export interface DateRange {
-  startDate: Date
-  endDate: Date
-}
+// ---------------------------------------------------------------------------
+// US-10.3 — Percentage of Delayed Patients
+// ---------------------------------------------------------------------------
 
-/**
- * Aggregate patient count summary for a given date range,
- * optionally scoped to a single shift.
- */
-export interface PatientCountSummary {
-  /** Total discharged patients in the period */
+/** One data point in the delay % trend (one day). */
+export interface DelayTrendPoint {
+  /** ISO date string YYYY-MM-DD */
+  date: string
   totalPatients: number
-  /** Average stay duration across all patients (ms) */
-  avgDurationMs: number | null
-  /** Date/time range actually queried */
-  rangeStart: Date
-  rangeEnd: Date
-  /** Shift name if filtered, null = all shifts */
-  shiftName: string | null
+  delayedPatients: number
+  delayPct: number
 }
 
-/**
- * Per-shift aggregate row used by US-8.3 / US-8.4.
- */
-export interface ShiftPerformanceRow {
-  shiftId: string
-  shiftName: string
-  startTime: string
-  endTime: string
-  crossesMidnight: boolean
+export interface DelayedPatientsSummary {
+  totalPatients: number
+  delayedPatients: number
+  /** 0-100 rounded to 1 dp */
+  delayPct: number
+  /** Configured target % — null if not set */
+  targetPct: number | null
+  /** Threshold used to classify a patient as delayed (ms) */
+  thresholdMs: number
+  rangeStart: Date
+  rangeEnd: Date
+  trend: DelayTrendPoint[]
+}
+
+// ---------------------------------------------------------------------------
+// US-10.4 — Bed-Wise Performance
+// ---------------------------------------------------------------------------
+
+export interface BedPerformanceRow {
+  bedId: string
+  bedNumber: string
   patientsTreated: number
-  avgTatMs: number | null
-  /** Stage transitions that exceeded the 3-hour delay threshold */
-  delayCount: number
+  avgDurationMs: number | null
+  minDurationMs: number | null
+  maxDurationMs: number | null
+  /** Patients whose total stay exceeded the threshold */
+  delayedCount: number
+  /** 0-100 */
+  delayRate: number
+  /** true when this bed is flagged as an outlier */
+  isOutlier: boolean
 }
 
-/** Full comparison result containing all active shifts for a date range. */
-export interface ShiftComparisonReport {
-  rows: ShiftPerformanceRow[]
+export interface BedPerformanceReport {
+  rows: BedPerformanceRow[]
+  /** Overall avg duration across all beds — used for outlier calculation */
+  overallAvgMs: number | null
+  /** 3-hour threshold used for delay classification (ms) */
+  thresholdMs: number
   rangeStart: Date
   rangeEnd: Date
-  /** shiftId of the best-performing shift (most patients + fewest delays) */
-  bestShiftId: string | null
-  /** shiftId of the worst-performing shift */
-  worstShiftId: string | null
 }
 
 // ---------------------------------------------------------------------------
-// Sign-Off Types (EPIC 12: Audit & Compliance)
+// US-10.5 — Stage-Wise Delays
 // ---------------------------------------------------------------------------
 
-/** Status of a single sign-off record (approved = active, superseded = replaced). */
-export type SignOffStatus = 'approved' | 'superseded'
-
-/**
- * A supervisor sign-off record for a daily report.
- * Maps 1:1 to a row in the `report_signoffs` table.
- * Sign-offs are immutable — the `superseded_by` field links to newer records.
- */
-export interface ReportSignOff {
-  id: string
-  /** ISO date string YYYY-MM-DD of the report being signed off */
-  reportDate: string
-  /** Report category, e.g. 'daily' */
-  reportType: string
-  status: SignOffStatus
-  signedOffBy: string
-  signedOffByUsername: string | null
-  signedOffAt: Date
-  notes: string | null
-  /** ID of the sign-off that superseded this record (null if still active) */
-  supersededBy: string | null
-  createdAt: Date
+export interface StageDelayRow {
+  stageId: string
+  stageName: string
+  totalTransitions: number
+  avgDurationMs: number
+  medianDurationMs: number | null
+  p90DurationMs: number | null
+  /** true when this stage is flagged as the main bottleneck */
+  isBottleneck: boolean
 }
 
-/** Standard result envelope for sign-off server actions. */
-export interface SignOffResult {
-  success: boolean
-  data?: ReportSignOff
-  error?: string
+export interface StageDelayReport {
+  rows: StageDelayRow[]
+  /** Overall mean across all stages — used to flag bottlenecks */
+  overallMeanMs: number
+  rangeStart: Date | null
+  rangeEnd: Date | null
 }

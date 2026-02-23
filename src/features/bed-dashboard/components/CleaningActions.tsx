@@ -33,10 +33,10 @@ export const CleaningActions = memo(function CleaningActions({
   return (
     <div className="pt-2 border-t border-zinc-700/50">
       <div className="flex items-center gap-2">
-        <Timer className="h-4 w-4 text-pink-400" />
+        <Timer className="h-4 w-4 text-pink-400" aria-hidden="true" />
         <div className="flex-1">
           <p className="text-[10px] text-zinc-500 uppercase">Cleaning Duration</p>
-          <p className={cn('text-sm font-bold text-pink-300')}>
+          <p className={cn('text-sm font-bold text-pink-300')} aria-label={`Cleaning duration: ${formatElapsedTime(cleaningDurationMs)}`}>
             {formatElapsedTime(cleaningDurationMs)}
           </p>
         </div>

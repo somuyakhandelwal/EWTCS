@@ -14,3 +14,8 @@ jobs:
     name: Quality Validation
     uses: ./.github/workflows/pre-merge-checks-quality.yml
     secrets: inherit
+
+  code-quality:
+    name: Code Quality
+    uses: ./.github/workflows/code-quality.yml
+    secrets: inherit

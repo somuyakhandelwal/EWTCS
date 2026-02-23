@@ -29,7 +29,7 @@ export async function updateBedStage(input: UpdateBedStageInput): Promise<{
   errors?: Record<string, string[]>
 }> {
   try {
-    const session = await requireWriteRole(['nurse', 'supervisor', 'admin'], {
+    const session = await requireWriteRole(['nurse', 'supervisor', 'admin', 'housekeeping'], {
       actionType: 'UPDATE',
       entityType: 'bed',
       entityId: input.bedId,
@@ -65,7 +65,7 @@ export async function updateBedStage(input: UpdateBedStageInput): Promise<{
     const validationResult = await validateTransition(
       bed.currentStageId,
       result.data.toStageId,
-      session.role as 'nurse' | 'supervisor' | 'admin'
+      session.role as 'nurse' | 'supervisor' | 'admin' | 'housekeeping'
     )
 
     // NEW: If transition is invalid, return error with reason

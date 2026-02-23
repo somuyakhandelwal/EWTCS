@@ -43,6 +43,7 @@ function makeBed(overrides: Partial<BedWithElapsedTime> = {}): BedWithElapsedTim
     dispositionElapsedMs: null,
     dispositionDelayReason: null,
     dispositionDelayLogId: null,
+    isEscalated: false,
     ...overrides,
   }
 }
@@ -53,7 +54,9 @@ function buildArgs() {
     beds: [makeBed()],
     stages: [nextStage],
     delayThresholdMs: 1000,
+    escalationThresholdMs: 2000,
     bottleneckCount: 0,
+    escalationCount: 0,
   }
   let currentData = data
 
@@ -85,9 +88,13 @@ describe('executeStageUpdate reliability', () => {
     vi.mocked(updateBedStage).mockResolvedValue({
       success: true,
       data: {
-        patientStartTime: new Date().toISOString(),
-        lastStageChange: new Date().toISOString(),
+        bedId: 'bed-1',
+        fromStageId: 'stage-1',
+        toStageId: 'stage-2',
+        durationInPreviousStageMs: 1000,
         isOccupied: true,
+        patientStartTime: new Date(),
+        lastStageChange: new Date(),
       } as unknown as Awaited<ReturnType<typeof updateBedStage>>['data'],
     })
 
@@ -100,9 +107,8 @@ describe('executeStageUpdate reliability', () => {
     expect(args.routerRefresh).toHaveBeenCalled()
   })
 
-  it('retries failed saves and alerts after retries are exhausted', async () => {
+  it('retries failed saves and shows error via setTemporaryError after retries are exhausted', async () => {
     vi.mocked(updateBedStage).mockResolvedValue({ success: false, error: 'Save failed' })
-    const alertSpy = vi.spyOn(window, 'alert').mockImplementation(() => undefined)
 
     const { args } = buildArgs()
     const result = await executeStageUpdate(args)
@@ -110,7 +116,6 @@ describe('executeStageUpdate reliability', () => {
     expect(result).toBe(false)
     expect(updateBedStage).toHaveBeenCalledTimes(3)
     expect(args.setTemporaryError).toHaveBeenCalledWith('bed-1', 'Save failed')
-    expect(alertSpy).toHaveBeenCalledWith('Stage update failed after retries. Please try again.')
   })
 
   it('does not retry or alert on non-transient validation errors', async () => {

@@ -19,6 +19,7 @@ const CSV_HEADERS = [
   'Transition Time',
   'Duration in Previous Stage (ms)',
   'Duration in Current Stage (ms)',
+  'Changed By User ID',
   'Changed By',
   'Notes',
 ]
@@ -32,6 +33,7 @@ function transitionToRow(t: StageTransitionRecord): string[] {
     t.transitionTime.toISOString(),
     t.durationInPreviousStageMs?.toString() || 'N/A',
     t.durationInCurrentStageMs?.toString() || 'N/A',
+    t.changedByUserId,
     t.changedByUsername,
     t.notes || '',
   ]

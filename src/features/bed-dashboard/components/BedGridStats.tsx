@@ -10,6 +10,7 @@ interface BedGridStatsProps {
   available: number
   delayed: number
   bottleneckCount: number
+  escalationCount: number
   cleaningCount?: number
   avgTatMs?: number | null
 }
@@ -20,11 +21,12 @@ export const BedGridStats = memo(function BedGridStats({
   available,
   delayed,
   bottleneckCount,
+  escalationCount,
   cleaningCount = 0,
   avgTatMs = null,
 }: BedGridStatsProps) {
   return (
-    <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-7 gap-4 p-4 bg-zinc-900/50 rounded-lg border border-zinc-800">
+    <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-8 gap-4 p-4 bg-zinc-900/50 rounded-lg border border-zinc-800">
       <div>
         <p className="text-xs text-zinc-500 uppercase">Total Beds</p>
         <p className="text-xl sm:text-2xl font-bold text-white">{total}</p>
@@ -40,6 +42,12 @@ export const BedGridStats = memo(function BedGridStats({
       <div>
         <p className="text-xs text-zinc-500 uppercase">Delayed</p>
         <p className="text-xl sm:text-2xl font-bold text-red-400">{delayed}</p>
+      </div>
+      <div>
+        <p className="text-xs text-zinc-500 uppercase">Escalated</p>
+        <p className={`text-xl sm:text-2xl font-bold ${escalationCount > 0 ? 'text-fuchsia-400' : 'text-zinc-500'}`}>
+          {escalationCount}
+        </p>
       </div>
       {/* US-1.6: Disposition bottleneck count — spans both columns on mobile to avoid orphan */}
       <div className="col-span-2 sm:col-span-1">

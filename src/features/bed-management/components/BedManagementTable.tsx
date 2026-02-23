@@ -69,7 +69,6 @@ export function BedManagementTable({
                     {showInactive ? 'Show Active Only' : 'Show All'}
                 </Button>
             </div>
-
             {/* Statistics */}
             <BedStatisticsBar
                 activeCount={activeCount}
@@ -193,7 +192,7 @@ export function BedManagementTable({
                         </tbody>
                     </table>
                 </div>
-            </div>
-        </div>
+            </div >
+        </div >
     )
 }

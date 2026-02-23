@@ -10,9 +10,11 @@ const DISPOSITION_BOTTLENECK_THRESHOLD_MS = 30 * 60 * 1000
 /**
  * Get all active beds with elapsed time, delay status, and
  * disposition bottleneck fields (US-1.6).
+ * Updated (US-15.3) to compute escalation status.
  */
 export async function getBedsWithElapsedTime(
-  delayThresholdMs: number
+  delayThresholdMs: number,
+  escalationThresholdMs: number
 ): Promise<BedWithElapsedTime[]> {
   try {
     const result = await query<BedWithElapsedTime>(
@@ -57,6 +59,13 @@ export async function getBedsWithElapsedTime(
           THEN true
           ELSE false
         END                                   AS "isDelayed",
+        -- Flag escalation delay (> global escalation threshold - US-15.3)
+        CASE
+          WHEN b.is_occupied AND b.patient_start_time IS NOT NULL
+            AND EXTRACT(EPOCH FROM (CURRENT_TIMESTAMP - b.patient_start_time)) * 1000 > $2
+          THEN true
+          ELSE false
+        END                                   AS "isEscalated",
         -- US-1.6: Time spent in Decision Made stage (from last_stage_change)
         CASE
           WHEN b.is_occupied AND s.name = 'Decision Made'
@@ -68,7 +77,7 @@ export async function getBedsWithElapsedTime(
         CASE
           WHEN b.is_occupied AND s.name = 'Decision Made'
             AND b.last_stage_change IS NOT NULL
-            AND EXTRACT(EPOCH FROM (CURRENT_TIMESTAMP - b.last_stage_change)) * 1000 > $2
+            AND EXTRACT(EPOCH FROM (CURRENT_TIMESTAMP - b.last_stage_change)) * 1000 > $3
           THEN true
           ELSE false
         END                                   AS "isDispositionBottleneck",
@@ -87,7 +96,7 @@ export async function getBedsWithElapsedTime(
       WHERE b.is_active = true
       ORDER BY b.bed_number ASC
       `,
-      [delayThresholdMs, DISPOSITION_BOTTLENECK_THRESHOLD_MS]
+      [delayThresholdMs, escalationThresholdMs, DISPOSITION_BOTTLENECK_THRESHOLD_MS]
     )
     return result.rows
   } catch (error) {

@@ -30,6 +30,7 @@ Start here if you're new to the project:
 - **[Analytics System](../src/features/bed-dashboard/ANALYTICS_README.md)** - Stage analytics and reporting documentation
 - **[Autosave Reliability (EPIC 13)](AUTOSAVE_RELIABILITY_EPIC13.md)** - Acceptance-criteria traceability for autosave, retry, alerts, and test coverage
 - **[EPIC 13 Verification Checklist](EPIC13_VERIFICATION_CHECKLIST.md)** - Manual, staging, and release handoff checklist for autosave reliability
+- **[AI Summary Generator Guide](AI_SUMMARY_GUIDE.md)** - Configuration and details for the Daily AI Summary feature (EPIC 9)
 - **Auditor Bed History (EPIC 12)** - Read-only stage transition history with filtering, sorting, pagination, and CSV export in [AuditorHistoryView](../src/features/bed-dashboard/components/AuditorHistoryView.tsx)
 - **Auditor Read-Only Enforcement (EPIC 12)** - Centralized write guard for auditor role in [auth.ts](../src/shared/lib/auth.ts) (`requireWriteRole` / `requireAdminWrite`) with deny logging, analytics audit-mode banner, and full read-only analytics exploration controls
 - **[PROJECT_STATUS.md](../PROJECT_STATUS.md)** - Current project status, completed features, roadmap

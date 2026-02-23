@@ -18,7 +18,7 @@ interface TableSpec {
   /** Column used to compare against the cutoff date */
   dateColumn: string
   /** Key into the RetentionConfig — used to look up the per-table cutoff. */
-  configKey: 'patientAdmissions' | 'auditLogs'
+  configKey: 'patientAdmissions' | 'auditLogs' | 'bedStageLogs'
 }
 
 const ARCHIVAL_TABLES: TableSpec[] = [
@@ -33,6 +33,12 @@ const ARCHIVAL_TABLES: TableSpec[] = [
     archive: 'audit_logs_archive',
     dateColumn: 'created_at',
     configKey: 'auditLogs',
+  },
+  {
+    source: 'bed_stage_logs',
+    archive: 'bed_stage_logs_archive',
+    dateColumn: 'transition_time',
+    configKey: 'bedStageLogs',
   },
 ]
 
@@ -82,6 +88,7 @@ export interface ArchiveTableResult {
 export interface ArchivalCutoffs {
   patientAdmissions: Date
   auditLogs: Date
+  bedStageLogs: Date
 }
 
 /**
@@ -102,12 +109,21 @@ export async function archiveTables(
     let totalMoved = 0
 
     try {
-      // Keep moving batches until none remain
       let batchCount = 0
       do {
-        await client.query('BEGIN')
-        batchCount = await archiveBatch(client, spec, cutoffDate)
-        await client.query('COMMIT')
+        let inTransaction = false
+        try {
+          await client.query('BEGIN')
+          inTransaction = true
+          batchCount = await archiveBatch(client, spec, cutoffDate)
+          await client.query('COMMIT')
+          inTransaction = false
+        } catch (batchErr) {
+          if (inTransaction) {
+            await client.query('ROLLBACK').catch(() => undefined)
+          }
+          throw batchErr
+        }
         totalMoved += batchCount
       } while (batchCount === BATCH_SIZE)
 
@@ -118,7 +134,6 @@ export async function archiveTables(
       })
       results.push({ table: spec.source, rowsMoved: totalMoved })
     } catch (err) {
-      await client.query('ROLLBACK').catch(() => undefined)
       const message = err instanceof Error ? err.message : 'Unknown error'
       logger.error('Archival failed for table', err as Error, { table: spec.source })
       results.push({ table: spec.source, rowsMoved: totalMoved, error: message })

@@ -111,13 +111,17 @@ All Phase 2 core features are now complete:
 
 ---
 
-## ⏳ Planned (Future Phases)
+## ⏳ Phase 3 — In Progress 🔄
 
-### Phase 3: AI & Reporting
-- [ ] Daily AI-powered summary reports
+### Daily AI Summary & Reporting (EPIC 9) ✅
+- [x] Daily data aggregation layer (`daily_summaries` table, migration 023)
+- [x] Core aggregation queries (patients, stage time, delays, TAT)
+- [x] Server actions: `generateDailySummary`, `fetchDailySummaryByDate`, `fetchRecentDailySummaries`
+- [x] API route: `POST /api/daily-summary/generate` (manual + cron trigger)
+- [x] Midnight auto-run via GitHub Actions (18:30 UTC = 00:00 IST)
+- [x] AI model integration (Google Gemini) for human-readable reports
 - [ ] Management KPI dashboard
-- [ ] Predictive analytics for bed allocation
-- [ ] Automated PDF/Excel reports
+- [ ] Automated PDF/email export
 - [ ] Historical trend analysis
 
 ### Phase 4: Integration & Expansion

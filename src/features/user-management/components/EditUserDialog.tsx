@@ -28,7 +28,10 @@ interface EditUserDialogProps {
 }
 
 export default function EditUserDialog({ user, isOpen, onClose, wards = [] }: EditUserDialogProps) {
-  const [state, action] = useActionState(updateUser, undefined)
+  const [state, action] = useActionState<
+    { success: boolean; message?: string; errors?: Record<string, string[]> } | undefined,
+    FormData
+  >(updateUser, undefined)
   const [username, setUsername] = useState(user.username)
   const [role, setRole] = useState(user.role)
   const [wardId, setWardId] = useState(user.ward_id ?? '')
