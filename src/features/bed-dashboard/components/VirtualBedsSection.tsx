@@ -49,7 +49,7 @@ export function VirtualBedsSection({
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
                     {virtualBeds.map(bed => (
                         <div key={bed.id} className="relative">
-                            <BedCard bed={bed} />
+                            <BedCard bed={bed} viewMode="supervisor" />
                             {!bed.isOccupied && onRemoveVirtualBed && (
                                 <button
                                     type="button"

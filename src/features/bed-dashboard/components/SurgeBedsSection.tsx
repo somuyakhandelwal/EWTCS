@@ -48,7 +48,7 @@ export function SurgeBedsSection({
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
                     {temporaryBeds.map(bed => (
                         <div key={bed.id} className="relative">
-                            <BedCard bed={bed} />
+                            <BedCard bed={bed} viewMode="nurse" />
                             {/* Remove button — only when bed is empty */}
                             {!bed.isOccupied && onRemoveTempBed && (
                                 <button

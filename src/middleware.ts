@@ -59,7 +59,7 @@ export async function middleware(request: NextRequest) {
     }
 
     if (pathname.startsWith('/supervisor')) {
-        if (!session || session.role !== 'supervisor') {
+        if (!session || (session.role !== 'supervisor' && session.role !== 'admin')) {
             return NextResponse.redirect(new URL('/login', request.url))
         }
     }

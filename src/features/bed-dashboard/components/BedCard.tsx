@@ -18,6 +18,12 @@ import { StageIcon } from './StageIcon'
 
 const ACKNOWLEDGE_PAUSE_MS = 30_000
 
+/** Controls which time information is shown on the bed card.
+ * - 'nurse'      → "In Stage" (time in current stage, from lastStageChange). Resets on every stage change.
+ * - 'supervisor' → Both "In Stage" AND "Patient Total" (total time since admission, from patientStartTime).
+ */
+export type BedCardViewMode = 'nurse' | 'supervisor'
+
 interface BedCardProps {
   bed: BedWithElapsedTime
   onClick?: (bed: BedWithElapsedTime) => void
@@ -33,6 +39,8 @@ interface BedCardProps {
   undoTimerSeconds?: number
   /** US-4.3: Disable animation globally (accessibility setting) */
   animationEnabled?: boolean
+  /** Controls which timers are shown. Defaults to 'nurse'. */
+  viewMode?: BedCardViewMode
 }
 
 export const BedCard = memo(function BedCard({
@@ -40,12 +48,16 @@ export const BedCard = memo(function BedCard({
   showUpdated = false, errorMessage = null,
   searchQuery = '', showUndo = false, onUndo, undoTimerSeconds = 0,
   animationEnabled = true,
+  viewMode = 'nurse',
 }: BedCardProps) {
   const rawStageName = bed.currentStage?.name || 'Empty'
   const stageName = rawStageName === 'Cleaning' ? 'In Cleaning' : rawStageName
   const stageColor = bed.currentStage?.colorCode || 'gray'
   const colorClasses = bed.isDelayed ? getDelayColorClasses(true) : getStageColorClasses(stageColor)
-  const elapsedTime = useElapsedTime(bed.patientStartTime)
+  // Nurse: time in current stage (resets every stage change incl. Empty → Triage)
+  const stageTime = useElapsedTime(bed.lastStageChange)
+  // Total patient time since admission — shown for all roles
+  const patientTotalTime = useElapsedTime(bed.patientStartTime)
   const { isOccupied, isDelayed, isDispositionBottleneck: isBottleneck, isEscalated } = bed
   const isCleaning = isCleaningStage(bed.currentStage?.name)
   const isTemporary = bed.isTemporary
@@ -141,15 +153,38 @@ export const BedCard = memo(function BedCard({
           )}
         </div>
 
-        {isOccupied && bed.patientStartTime && (
-          <div className="flex items-center gap-2 pt-2 border-t border-zinc-700/50">
-            <Clock className="h-4 w-4 text-zinc-500" aria-hidden="true" />
-            <div className="flex-1">
-              <p className="text-xs text-zinc-500">Elapsed Time</p>
-              <p className={cn('text-lg font-bold', isDelayed ? 'text-red-400' : 'text-zinc-300')} aria-label={`Elapsed time: ${elapsedTime}`}>
-                {elapsedTime}
-              </p>
+        {isOccupied && bed.lastStageChange && (
+          <div className="pt-2 border-t border-zinc-700/50 space-y-2">
+            {/* In Stage timer — shown for both nurse and supervisor */}
+            <div className="flex items-center gap-2">
+              <Clock className="h-4 w-4 text-zinc-500" aria-hidden="true" />
+              <div className="flex-1">
+                <p className="text-xs text-zinc-500">In Stage</p>
+                <p
+                  className={cn('text-lg font-bold', isDelayed ? 'text-red-400' : 'text-zinc-300')}
+                  aria-label={`Time in current stage: ${stageTime}`}
+                  suppressHydrationWarning
+                >
+                  {stageTime}
+                </p>
+              </div>
             </div>
+            {/* Patient Total — shown for all roles */}
+            {bed.patientStartTime && (
+              <div className="flex items-center gap-2">
+                <Clock className="h-4 w-4 text-zinc-400" aria-hidden="true" />
+                <div className="flex-1">
+                  <p className="text-xs text-zinc-400">Patient Total</p>
+                  <p
+                    className={cn('text-sm font-semibold', isDelayed ? 'text-red-300' : 'text-zinc-400')}
+                    aria-label={`Total patient time: ${patientTotalTime}`}
+                    suppressHydrationWarning
+                  >
+                    {patientTotalTime}
+                  </p>
+                </div>
+              </div>
+            )}
           </div>
         )}
         {isCleaning && (
