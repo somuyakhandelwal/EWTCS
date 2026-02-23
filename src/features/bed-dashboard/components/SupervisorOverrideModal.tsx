@@ -4,6 +4,8 @@ import { useState, useCallback } from "react"
 import { Button } from "@/shared/components/ui/button"
 import type { Stage } from "../types/bed"
 import { getStageColorClasses } from '@/shared/utils/stage-colors'
+import { usePiiGuard } from '@/shared/hooks/usePiiGuard'
+import { PiiWarning } from '@/shared/components/ui/PiiWarning'
 
 interface SupervisorOverrideModalProps {
   isOpen: boolean
@@ -28,7 +30,10 @@ export function SupervisorOverrideModal({
 }: SupervisorOverrideModalProps) {
   const [overrideReason, setOverrideReason] = useState("")
   const [error, setError] = useState<string | null>(null)
+  const [piiOverrideConfirmed, setPiiOverrideConfirmed] = useState(false)
   const colorClasses = getStageColorClasses(toStage?.colorCode)
+
+  const { hasPii, warningLabels } = usePiiGuard(overrideReason)
 
   const handleApprove = useCallback(() => {
     if (!overrideReason.trim()) {
@@ -41,14 +46,22 @@ export function SupervisorOverrideModal({
       return
     }
 
+    // US-17.6: Block submission if PII detected and override not confirmed
+    if (hasPii && !piiOverrideConfirmed) {
+      setError("Remove patient information before submitting, or use the supervisor override option.")
+      return
+    }
+
     setError(null)
     onApprove(overrideReason.trim())
     setOverrideReason("")
-  }, [overrideReason, onApprove])
+    setPiiOverrideConfirmed(false)
+  }, [overrideReason, onApprove, hasPii, piiOverrideConfirmed])
 
   const handleCancel = useCallback(() => {
     setOverrideReason("")
     setError(null)
+    setPiiOverrideConfirmed(false)
     onCancel()
   }, [onCancel])
 
@@ -103,12 +116,20 @@ export function SupervisorOverrideModal({
             onChange={(e) => {
               setOverrideReason(e.target.value)
               if (error) setError(null)
+              setPiiOverrideConfirmed(false)
             }}
             placeholder="Enter reason for transition override..."
             maxLength={500}
             disabled={isLoading}
             className="w-full px-3 py-2 border border-input bg-background rounded-md focus:outline-none focus:ring-2 focus:ring-ring text-sm text-foreground resize-none disabled:opacity-50 placeholder:text-muted-foreground"
             rows={3}
+          />
+          <PiiWarning
+            warningLabels={warningLabels}
+            allowOverride={true}
+            overrideConfirmed={piiOverrideConfirmed}
+            onOverride={() => setPiiOverrideConfirmed(true)}
+            className="mt-1"
           />
           <div className="flex justify-between mt-1">
             <div className="text-xs text-muted-foreground">
@@ -138,8 +159,7 @@ export function SupervisorOverrideModal({
           </Button>
           <Button
             onClick={handleApprove}
-            loading={isLoading}
-            disabled={!overrideReason.trim()}
+            disabled={isLoading || !overrideReason.trim() || (hasPii && !piiOverrideConfirmed)}
             className="flex-1"
           >
             Approve
