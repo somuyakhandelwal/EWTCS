@@ -128,10 +128,25 @@ export async function middleware(request: NextRequest) {
         }
     }
 
+    // API routes — require an authenticated session.
+    // Exceptions: /api/auth/* (login/logout), /api/health, /api/cron/*
+    // (cron uses its own CRON_SECRET Bearer-token auth).
+    if (pathname.startsWith('/api/')) {
+        const isPublicApi =
+            pathname.startsWith('/api/auth/') ||
+            pathname.startsWith('/api/health') ||
+            pathname.startsWith('/api/cron/')
+        if (!isPublicApi && !session) {
+            return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+        }
+    }
+
     return NextResponse.next()
 }
 
 export const config = {
+    // Matches all routes except Next.js internals and static assets.
+    // Route-level auth checks (pages + /api/*) are handled inside the middleware function.
     matcher: [
         '/((?!_next/static|_next/image|favicon.ico|robots.txt|sitemap.xml).*)',
     ],
