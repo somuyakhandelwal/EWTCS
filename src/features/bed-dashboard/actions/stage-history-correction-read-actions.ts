@@ -21,7 +21,7 @@ import {
 } from '../types/corrections'
 import { generateCorrectionAuditCSV } from '../lib/csv-generators'
 
-type ReadResult<T> = { success: true; data: T } | { success: false; error: string }
+export type ReadResult<T> = { success: true; data: T } | { success: false; error: string }
 
 /**
  * Return the full correction trail for a single bed_stage_log record.

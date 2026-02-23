@@ -7,7 +7,10 @@
 // Pure SVG — no external chart library required.
 
 import { memo, useMemo } from 'react'
+import { Button } from '@/shared/components/ui/button'
+import { Download } from 'lucide-react'
 import { formatDuration } from '@/features/bed-dashboard/lib/duration-formatters'
+import { exportChartAsPng } from '../lib/chart-export-utils'
 import type { StageDelayRow } from '../types/report.types'
 
 interface StageDelayBarChartProps {
@@ -29,10 +32,13 @@ function getBarColor(row: StageDelayRow): string {
 export const StageDelayBarChart = memo(function StageDelayBarChart({
   rows,
 }: StageDelayBarChartProps) {
+  const chartId = 'stage-delay-chart-svg'
   const displayRows = useMemo(
     () => rows.filter((r) => r.totalTransitions > 0),
     [rows]
   )
+
+  const handleExport = () => exportChartAsPng(chartId, 'stage-delays')
 
   if (displayRows.length === 0) {
     return (
@@ -48,85 +54,101 @@ export const StageDelayBarChart = memo(function StageDelayBarChart({
   const barW = BAR_W
 
   return (
-    <svg
-      viewBox={`0 0 ${totalW} ${SVG_H}`}
-      width="100%"
-      aria-label="Stage average duration bar chart"
-      role="img"
-      style={{ minHeight: SVG_H }}
-    >
-      {displayRows.map((row, i) => {
-        const x = BAR_GAP + i * (barW + BAR_GAP)
-        const barH = Math.max(4, (row.avgDurationMs / maxMs) * CHART_H)
-        const y = PADDING_TOP + (CHART_H - barH)
-        const color = getBarColor(row)
+    <div className="space-y-4">
+      <div className="flex justify-end px-1">
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={handleExport}
+          className="text-zinc-400 border-zinc-800"
+        >
+          <Download className="h-3.5 w-3.5 mr-1.5" />
+          Export PNG
+        </Button>
+      </div>
 
-        // Truncate long stage names
-        const label =
-          row.stageName.length > 8
-            ? row.stageName.slice(0, 7) + '…'
-            : row.stageName
+      <div id={chartId}>
+        <svg
+          viewBox={`0 0 ${totalW} ${SVG_H}`}
+          width="100%"
+          aria-label="Stage average duration bar chart"
+          role="img"
+          style={{ minHeight: SVG_H }}
+        >
+          {displayRows.map((row, i) => {
+            const x = BAR_GAP + i * (barW + BAR_GAP)
+            const barH = Math.max(4, (row.avgDurationMs / maxMs) * CHART_H)
+            const y = PADDING_TOP + (CHART_H - barH)
+            const color = getBarColor(row)
 
-        return (
-          <g key={row.stageId}>
-            {/* Background track */}
-            <rect
-              x={x}
-              y={PADDING_TOP}
-              width={barW}
-              height={CHART_H}
-              rx={3}
-              fill="#18181b"
-            />
+            // Truncate long stage names
+            const label =
+              row.stageName.length > 8
+                ? row.stageName.slice(0, 7) + '…'
+                : row.stageName
 
-            {/* Value bar */}
-            <rect
-              x={x}
-              y={y}
-              width={barW}
-              height={barH}
-              rx={3}
-              fill={color}
-              opacity={0.85}
-            />
+            return (
+              <g key={row.stageId}>
+                {/* Background track */}
+                <rect
+                  x={x}
+                  y={PADDING_TOP}
+                  width={barW}
+                  height={CHART_H}
+                  rx={3}
+                  fill="#18181b"
+                />
 
-            {/* Duration label above bar */}
-            <text
-              x={x + barW / 2}
-              y={Math.max(12, y - 4)}
-              textAnchor="middle"
-              style={{
-                fontSize: 9,
-                fill: color,
-                fontFamily: 'inherit',
-                fontWeight: 600,
-              }}
-            >
-              {formatDuration(row.avgDurationMs)}
-            </text>
+                {/* Value bar */}
+                <rect
+                  x={x}
+                  y={y}
+                  width={barW}
+                  height={barH}
+                  rx={3}
+                  fill={color}
+                  opacity={0.85}
+                />
 
-            {/* Stage name label below bar */}
-            <text
-              x={x + barW / 2}
-              y={PADDING_TOP + CHART_H + 16}
-              textAnchor="middle"
-              style={{
-                fontSize: 9,
-                fill: row.isBottleneck ? color : '#71717a',
-                fontFamily: 'inherit',
-                fontWeight: row.isBottleneck ? 700 : 400,
-              }}
-            >
-              {label}
-            </text>
+                {/* Duration label above bar */}
+                <text
+                  x={x + barW / 2}
+                  y={Math.max(12, y - 4)}
+                  textAnchor="middle"
+                  style={{
+                    fontSize: 9,
+                    fill: color,
+                    fontFamily: 'inherit',
+                    fontWeight: 600,
+                  }}
+                >
+                  {formatDuration(row.avgDurationMs)}
+                </text>
 
-            {/* Bottleneck indicator dot */}
-            {row.isBottleneck && (
-              <circle cx={x + barW / 2} cy={PADDING_TOP + CHART_H + 32} r={3} fill={color} />
-            )}
-          </g>
-        )
-      })}
-    </svg>
+                {/* Stage name label below bar */}
+                <text
+                  x={x + barW / 2}
+                  y={PADDING_TOP + CHART_H + 16}
+                  textAnchor="middle"
+                  style={{
+                    fontSize: 9,
+                    fill: row.isBottleneck ? color : '#71717a',
+                    fontFamily: 'inherit',
+                    fontWeight: row.isBottleneck ? 700 : 400,
+                  }}
+                >
+                  {label}
+                </text>
+
+                {/* Bottleneck indicator dot */}
+                {row.isBottleneck && (
+                  <circle cx={x + barW / 2} cy={PADDING_TOP + CHART_H + 32} r={3} fill={color} />
+                )}
+              </g>
+            )
+          })}
+        </svg>
+      </div>
+    </div>
   )
 })

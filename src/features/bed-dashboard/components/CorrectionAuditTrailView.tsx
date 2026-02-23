@@ -26,11 +26,12 @@ export function CorrectionAuditTrailView({ }: Props) {
         setLoading(true)
         setError(null)
         try {
-            const result = await searchCorrectionAuditTrail(currentFilters)
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            const result = await searchCorrectionAuditTrail(currentFilters) as any
             if (result.success) {
                 setRecords(result.data)
             } else {
-                setError(result.error)
+                setError(result.error || 'Failed to fetch audit trail')
             }
         } catch {
             setError('An unexpected error occurred while fetching audit trail.')
