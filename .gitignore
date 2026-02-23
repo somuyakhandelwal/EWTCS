@@ -25,8 +25,13 @@
 *.pem
 Thumbs.db
 
-# AI tool artifacts (Antigravity / Gemini)
+# AI tool artifacts (Antigravity / Gemini / BMAD)
 .gemini/
+.agent/
+_bmad/
+.github/agents/
+.github/prompts/
+.github/copilot-instructions.md
 
 # debug
 npm-debug.log*
