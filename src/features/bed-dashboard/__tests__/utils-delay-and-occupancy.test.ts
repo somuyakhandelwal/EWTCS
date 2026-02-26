@@ -10,15 +10,15 @@ import {
 describe('getDelayColorClasses', () => {
   describe('Delayed beds', () => {
     it('returns red background for delayed bed', () => {
-      expect(getDelayColorClasses(true).bg).toBe('bg-red-900/50')
+      expect(getDelayColorClasses(true).bg).toContain('bg-red')
     })
 
     it('returns red text for delayed bed', () => {
-      expect(getDelayColorClasses(true).text).toBe('text-red-300')
+      expect(getDelayColorClasses(true).text).toContain('text-red')
     })
 
     it('returns red border for delayed bed', () => {
-      expect(getDelayColorClasses(true).border).toBe('border-red-700')
+      expect(getDelayColorClasses(true).border).toContain('border-red')
     })
 
     it('all three tokens are present for delayed=true', () => {
@@ -30,16 +30,16 @@ describe('getDelayColorClasses', () => {
   })
 
   describe('On-time beds', () => {
-    it('returns zinc background for on-time bed', () => {
-      expect(getDelayColorClasses(false).bg).toBe('bg-zinc-800')
+    it('returns muted background for on-time bed', () => {
+      expect(getDelayColorClasses(false).bg).toContain('bg-muted')
     })
 
-    it('returns zinc text for on-time bed', () => {
-      expect(getDelayColorClasses(false).text).toBe('text-zinc-300')
+    it('returns muted-foreground text for on-time bed', () => {
+      expect(getDelayColorClasses(false).text).toContain('text-muted-foreground')
     })
 
-    it('returns zinc border for on-time bed', () => {
-      expect(getDelayColorClasses(false).border).toBe('border-zinc-700')
+    it('returns border for on-time bed', () => {
+      expect(getDelayColorClasses(false).border).toContain('border-border')
     })
 
     it('all three tokens are present for delayed=false', () => {

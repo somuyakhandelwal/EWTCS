@@ -47,7 +47,7 @@ export function SummaryHistoryToolbar({
     }
 
     return (
-        <div className="flex flex-col gap-3 rounded-xl border border-zinc-800 bg-zinc-900/50 p-4">
+        <div className="flex flex-col gap-3 rounded-xl border border-border bg-card p-4">
             {/* Row 1: date range + search */}
             <div className="flex flex-wrap gap-3 items-end">
                 <label className="flex flex-col gap-1 text-xs text-muted-foreground">
@@ -57,7 +57,7 @@ export function SummaryHistoryToolbar({
                         value={from}
                         max={to || todayString()}
                         onChange={(e) => onFromChange(e.target.value)}
-                        className="rounded-md border border-zinc-700 bg-zinc-800 px-2 py-1.5 text-sm text-foreground focus:outline-none focus:ring-1 focus:ring-primary"
+                        className="rounded-md border border-border bg-muted px-2 py-1.5 text-sm text-foreground focus:outline-none focus:ring-1 focus:ring-primary"
                     />
                 </label>
                 <label className="flex flex-col gap-1 text-xs text-muted-foreground">
@@ -68,7 +68,7 @@ export function SummaryHistoryToolbar({
                         min={from}
                         max={todayString()}
                         onChange={(e) => onToChange(e.target.value)}
-                        className="rounded-md border border-zinc-700 bg-zinc-800 px-2 py-1.5 text-sm text-foreground focus:outline-none focus:ring-1 focus:ring-primary"
+                        className="rounded-md border border-border bg-muted px-2 py-1.5 text-sm text-foreground focus:outline-none focus:ring-1 focus:ring-primary"
                     />
                 </label>
                 <label className="flex flex-col gap-1 flex-1 min-w-48 text-xs text-muted-foreground">
@@ -78,7 +78,7 @@ export function SummaryHistoryToolbar({
                         placeholder="e.g. bottleneck, discharge…"
                         value={search}
                         onChange={(e) => onSearchChange(e.target.value)}
-                        className="rounded-md border border-zinc-700 bg-zinc-800 px-3 py-1.5 text-sm text-foreground placeholder:text-zinc-500 focus:outline-none focus:ring-1 focus:ring-primary"
+                        className="rounded-md border border-border bg-muted px-3 py-1.5 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-primary"
                     />
                 </label>
             </div>
@@ -92,7 +92,7 @@ export function SummaryHistoryToolbar({
                             onClick={() => onStatusChange(opt.value)}
                             className={`rounded-full border px-3 py-0.5 text-xs font-medium transition-colors ${status === opt.value
                                     ? 'border-primary bg-primary/20 text-primary'
-                                    : 'border-zinc-700 text-zinc-400 hover:border-zinc-500'
+                                    : 'border-border text-muted-foreground hover:border-zinc-500'
                                 }`}
                         >
                             {opt.label}
@@ -102,7 +102,7 @@ export function SummaryHistoryToolbar({
                 <button
                     onClick={handleExport}
                     disabled={loading || summaries.length === 0}
-                    className="flex items-center gap-1.5 rounded-md border border-zinc-700 bg-zinc-800 px-3 py-1.5 text-xs font-medium text-zinc-300 hover:bg-zinc-700 disabled:cursor-not-allowed disabled:opacity-40 transition-colors"
+                    className="flex items-center gap-1.5 rounded-md border border-border bg-muted px-3 py-1.5 text-xs font-medium text-card-foreground hover:bg-zinc-700 disabled:cursor-not-allowed disabled:opacity-40 transition-colors"
                 >
                     ⬇ Export CSV
                 </button>

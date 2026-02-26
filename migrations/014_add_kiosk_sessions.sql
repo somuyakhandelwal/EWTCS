@@ -1,3 +1,4 @@
+-- Up Migration
 -- Kiosk Sessions Table
 -- Epic 5: Authentication & Role-Based Access (US-5.3)
 -- Purpose: Track active kiosk sessions bound to specific IPs for admin control

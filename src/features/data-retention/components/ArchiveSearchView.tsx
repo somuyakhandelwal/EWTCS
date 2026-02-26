@@ -51,13 +51,13 @@ export function ArchiveSearchView({ className }: ArchiveSearchViewProps) {
   }
 
   return (
-    <Card className={cn('bg-zinc-900 border-zinc-800', className)}>
+    <Card className={cn('bg-card border-border', className)}>
       <CardHeader className="pb-3">
-        <CardTitle className="text-sm text-white flex items-center gap-2">
-          <Search className="h-4 w-4 text-zinc-400" />
+        <CardTitle className="text-sm text-foreground flex items-center gap-2">
+          <Search className="h-4 w-4 text-muted-foreground" />
           Archive Search
         </CardTitle>
-        <CardDescription className="text-xs text-zinc-400">
+        <CardDescription className="text-xs text-muted-foreground">
           Retrieve archived records by date range. Results are read-only.
         </CardDescription>
       </CardHeader>
@@ -67,11 +67,11 @@ export function ArchiveSearchView({ className }: ArchiveSearchViewProps) {
         <div className="flex flex-wrap gap-3 items-end">
           {/* Table selector */}
           <div className="flex flex-col gap-1">
-            <label className="text-[10px] text-zinc-500 uppercase tracking-wide">Dataset</label>
+            <label className="text-[10px] text-muted-foreground uppercase tracking-wide">Dataset</label>
             <select
               value={table}
               onChange={(e) => setTable(e.target.value as TableChoice)}
-              className="h-8 rounded-md border border-zinc-700 bg-zinc-800 px-2 text-xs text-zinc-200 focus:outline-none focus:ring-1 focus:ring-zinc-500"
+              className="h-8 rounded-md border border-border bg-muted px-2 text-xs text-card-foreground focus:outline-none focus:ring-1 focus:ring-zinc-500"
             >
               <option value="patient_admissions">Patient Admissions</option>
               <option value="audit_logs">Audit Logs</option>
@@ -80,26 +80,26 @@ export function ArchiveSearchView({ className }: ArchiveSearchViewProps) {
 
           {/* From date */}
           <div className="flex flex-col gap-1">
-            <label className="text-[10px] text-zinc-500 uppercase tracking-wide">From</label>
+            <label className="text-[10px] text-muted-foreground uppercase tracking-wide">From</label>
             <input
               type="date"
               value={from}
               max={to}
               onChange={(e) => setFrom(e.target.value)}
-              className="h-8 rounded-md border border-zinc-700 bg-zinc-800 px-2 text-xs text-zinc-200 focus:outline-none focus:ring-1 focus:ring-zinc-500"
+              className="h-8 rounded-md border border-border bg-muted px-2 text-xs text-card-foreground focus:outline-none focus:ring-1 focus:ring-zinc-500"
             />
           </div>
 
           {/* To date */}
           <div className="flex flex-col gap-1">
-            <label className="text-[10px] text-zinc-500 uppercase tracking-wide">To</label>
+            <label className="text-[10px] text-muted-foreground uppercase tracking-wide">To</label>
             <input
               type="date"
               value={to}
               min={from}
               max={today}
               onChange={(e) => setTo(e.target.value)}
-              className="h-8 rounded-md border border-zinc-700 bg-zinc-800 px-2 text-xs text-zinc-200 focus:outline-none focus:ring-1 focus:ring-zinc-500"
+              className="h-8 rounded-md border border-border bg-muted px-2 text-xs text-card-foreground focus:outline-none focus:ring-1 focus:ring-zinc-500"
             />
           </div>
 
@@ -107,7 +107,7 @@ export function ArchiveSearchView({ className }: ArchiveSearchViewProps) {
             size="sm"
             onClick={handleSearch}
             disabled={isPending || !from || !to}
-            className="h-8 bg-zinc-700 hover:bg-zinc-600 text-zinc-200 text-xs"
+            className="h-8 bg-zinc-700 hover:bg-zinc-600 text-card-foreground text-xs"
           >
             {isPending
               ? <><Loader2 className="h-3.5 w-3.5 mr-1.5 animate-spin" />Searching…</>
@@ -123,7 +123,7 @@ export function ArchiveSearchView({ className }: ArchiveSearchViewProps) {
         {/* ── Results ── */}
         {results !== null && (
           <div>
-            <p className="text-[10px] text-zinc-500 mb-2">
+            <p className="text-[10px] text-muted-foreground mb-2">
               {results.length === 0
                 ? 'No archived records found for this date range.'
                 : `${results.length.toLocaleString()} record${results.length === 1 ? '' : 's'} found`}

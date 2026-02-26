@@ -1,3 +1,4 @@
+-- Up Migration
 -- Migration 022: Data Retention & Archival tables
 -- EPIC 14 — US-14.1: Automated Data Archival
 --

@@ -14,36 +14,36 @@ interface DelayedPatientStatsCardProps {
 
 export function DelayedPatientStatsCard({ summary, loading }: DelayedPatientStatsCardProps) {
   return (
-    <Card className="border-zinc-800 bg-zinc-900/60">
+    <Card className="border-border bg-card">
       <CardHeader className="pb-2">
-        <CardTitle className="text-sm text-white">Summary</CardTitle>
+        <CardTitle className="text-sm text-foreground">Summary</CardTitle>
       </CardHeader>
       <CardContent className="space-y-3">
         {loading ? (
           <div className="space-y-2">
             {Array.from({ length: 4 }).map((_, i) => (
-              <div key={i} className="h-5 animate-pulse rounded bg-zinc-800" />
+              <div key={i} className="h-5 animate-pulse rounded bg-muted" />
             ))}
           </div>
         ) : summary ? (
           <>
             <div className="flex justify-between items-center">
-              <span className="text-xs text-zinc-400">Total patients</span>
-              <span className="text-sm font-semibold text-white">{summary.totalPatients}</span>
+              <span className="text-xs text-muted-foreground">Total patients</span>
+              <span className="text-sm font-semibold text-foreground">{summary.totalPatients}</span>
             </div>
             <div className="flex justify-between items-center">
-              <span className="text-xs text-zinc-400">Delayed patients</span>
+              <span className="text-xs text-muted-foreground">Delayed patients</span>
               <span className="text-sm font-semibold text-red-400">{summary.delayedPatients}</span>
             </div>
             <div className="flex justify-between items-center">
-              <span className="text-xs text-zinc-400">On-time patients</span>
+              <span className="text-xs text-muted-foreground">On-time patients</span>
               <span className="text-sm font-semibold text-emerald-400">
                 {summary.totalPatients - summary.delayedPatients}
               </span>
             </div>
             {summary.targetPct !== null && (
               <div className="flex justify-between items-center">
-                <span className="text-xs text-zinc-400">vs Target</span>
+                <span className="text-xs text-muted-foreground">vs Target</span>
                 <span className={cn(
                   'text-sm font-semibold flex items-center gap-1',
                   summary.delayPct <= summary.targetPct ? 'text-emerald-400' : 'text-red-400'

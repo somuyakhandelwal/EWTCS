@@ -1,3 +1,4 @@
+-- Up Migration
 -- Migration 007: Create Bed Stage Log Corrections Table
 -- Purpose: Allow corrections to immutable bed stage logs through a separate audit trail
 -- EPIC 3: Time Tracking & Stage Logging

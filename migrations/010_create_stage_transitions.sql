@@ -1,3 +1,4 @@
+-- Up Migration
 -- Migration 010: Create Stage Transitions Table
 -- Purpose: Define valid stage transitions for workflow validation (US-2.2)
 -- Epic: EPIC 2 - One-Click Stage Update System

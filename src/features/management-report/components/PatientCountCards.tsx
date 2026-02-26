@@ -30,7 +30,7 @@ export function PatientCountCards({
       <Card className="md:col-span-1 border-blue-800/40 bg-gradient-to-br from-blue-950/60 to-zinc-900">
         <CardHeader className="pb-2">
           <CardDescription className="text-blue-300">{periodLabel}</CardDescription>
-          <CardTitle className="text-6xl font-extrabold text-white leading-none">
+          <CardTitle className="text-6xl font-extrabold text-foreground leading-none">
             {loading ? (
               <span className="animate-pulse text-zinc-600">—</span>
             ) : (
@@ -39,7 +39,7 @@ export function PatientCountCards({
           </CardTitle>
         </CardHeader>
         <CardContent>
-          <p className="text-xs text-zinc-500">
+          <p className="text-xs text-muted-foreground">
             Includes all discharged &amp; transferred patients
           </p>
           {lastRefreshed && (
@@ -51,43 +51,43 @@ export function PatientCountCards({
       </Card>
 
       {/* Average duration card */}
-      <Card className="border-zinc-800 bg-zinc-900/60">
+      <Card className="border-border bg-card">
         <CardHeader className="pb-2">
-          <CardDescription className="text-xs text-zinc-400">
+          <CardDescription className="text-xs text-muted-foreground">
             Avg. Stay Duration
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <div className="text-3xl font-bold text-white">
+          <div className="text-3xl font-bold text-foreground">
             {loading ? (
               <span className="animate-pulse text-zinc-600">—</span>
             ) : (
               formatDuration(summary?.avgDurationMs ?? null)
             )}
           </div>
-          <p className="text-xs text-zinc-500 mt-1">
+          <p className="text-xs text-muted-foreground mt-1">
             Average time from admission to discharge
           </p>
         </CardContent>
       </Card>
 
       {/* Reporting period card */}
-      <Card className="border-zinc-800 bg-zinc-900/60">
+      <Card className="border-border bg-card">
         <CardHeader className="pb-2">
-          <CardDescription className="text-xs text-zinc-400">
+          <CardDescription className="text-xs text-muted-foreground">
             Reporting Period
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-1">
           {summary && !loading ? (
             <>
-              <div className="text-sm text-zinc-300 font-medium">
+              <div className="text-sm text-card-foreground font-medium">
                 {new Date(summary.rangeStart).toLocaleDateString(undefined, {
                   month: 'short', day: 'numeric', year: 'numeric',
                 })}
               </div>
-              <div className="text-xs text-zinc-500">to</div>
-              <div className="text-sm text-zinc-300 font-medium">
+              <div className="text-xs text-muted-foreground">to</div>
+              <div className="text-sm text-card-foreground font-medium">
                 {new Date(summary.rangeEnd).toLocaleDateString(undefined, {
                   month: 'short', day: 'numeric', year: 'numeric',
                 })}

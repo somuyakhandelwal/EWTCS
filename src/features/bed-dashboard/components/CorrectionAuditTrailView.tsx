@@ -64,11 +64,11 @@ export function CorrectionAuditTrailView({ }: Props) {
     }
 
     return (
-        <Card className="p-6 bg-zinc-900 border-zinc-800 space-y-6">
-            <div className="flex items-center justify-between border-b border-zinc-800 pb-4">
+        <Card className="p-6 bg-card border-border space-y-6">
+            <div className="flex items-center justify-between border-b border-border pb-4">
                 <div className="flex items-center gap-2">
                     <History className="h-5 w-5 text-amber-500" />
-                    <h2 className="text-xl font-bold text-white">Correction Audit Trail</h2>
+                    <h2 className="text-xl font-bold text-foreground">Correction Audit Trail</h2>
                 </div>
                 <Button
                     variant="outline"

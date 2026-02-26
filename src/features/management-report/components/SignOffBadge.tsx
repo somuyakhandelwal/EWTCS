@@ -31,40 +31,40 @@ export function SignOffBadge({ signOff, className }: SignOffBadgeProps) {
                 'flex items-start gap-3 rounded-lg border px-4 py-3',
                 isApproved
                     ? 'border-emerald-800/60 bg-emerald-950/40'
-                    : 'border-zinc-700 bg-zinc-900/40',
+                    : 'border-border bg-card',
                 className
             )}
         >
             {isApproved ? (
                 <CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0 text-emerald-400" />
             ) : (
-                <Clock className="mt-0.5 h-4 w-4 shrink-0 text-zinc-500" />
+                <Clock className="mt-0.5 h-4 w-4 shrink-0 text-muted-foreground" />
             )}
 
             <div className="min-w-0 text-sm leading-snug">
                 <span
                     className={cn(
                         'font-semibold',
-                        isApproved ? 'text-emerald-400' : 'text-zinc-500'
+                        isApproved ? 'text-emerald-400' : 'text-muted-foreground'
                     )}
                 >
                     {isApproved ? 'Approved' : 'Superseded'}
                 </span>
 
-                <span className="mx-1 text-zinc-500">·</span>
+                <span className="mx-1 text-muted-foreground">·</span>
 
-                <span className="text-zinc-300">
+                <span className="text-card-foreground">
                     {signOff.signedOffByUsername ?? 'Unknown supervisor'}
                 </span>
 
-                <span className="mx-1 text-zinc-500">·</span>
+                <span className="mx-1 text-muted-foreground">·</span>
 
-                <span className="text-zinc-500">
+                <span className="text-muted-foreground">
                     {formatSignOffTime(signOff.signedOffAt)}
                 </span>
 
                 {signOff.notes && (
-                    <p className="mt-1 text-zinc-400 italic truncate" title={signOff.notes}>
+                    <p className="mt-1 text-muted-foreground italic truncate" title={signOff.notes}>
                         &ldquo;{signOff.notes}&rdquo;
                     </p>
                 )}

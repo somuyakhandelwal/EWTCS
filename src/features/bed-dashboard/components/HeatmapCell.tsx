@@ -21,7 +21,7 @@ interface HeatmapCellProps {
  * Uses the blue-* palette to match the dark dashboard theme.
  */
 function intensityClass(intensity: number): string {
-  if (intensity === 0)    return 'bg-zinc-900  hover:bg-zinc-800'
+  if (intensity === 0)    return 'bg-card  hover:bg-muted'
   if (intensity <= 0.15)  return 'bg-blue-950  hover:bg-blue-900'
   if (intensity <= 0.30)  return 'bg-blue-900  hover:bg-blue-800'
   if (intensity <= 0.45)  return 'bg-blue-800  hover:bg-blue-700'
@@ -43,7 +43,7 @@ export function HeatmapCell({ count, maxCount, label, onClick }: HeatmapCellProp
         'w-full aspect-square rounded-sm transition-colors text-[9px] font-semibold',
         'flex items-center justify-center leading-none',
         intensityClass(intensity),
-        count > 0 ? 'text-white' : 'text-transparent'
+        count > 0 ? 'text-foreground' : 'text-transparent'
       )}
     >
       {count > 0 ? count : null}

@@ -113,7 +113,7 @@ async function setupAdminUser(databaseUrl) {
       if (process.env.NODE_ENV === 'production') {
         throw new Error('ADMIN_PASSWORD must be set in production');
       }
-      const tempPassword = generateTempPassword();
+      const tempPassword = 'user@123';
       process.env.ADMIN_PASSWORD = tempPassword;
       log.warn(`Temporary password generated: ${tempPassword}`);
       log.warn('⚠️  Change this immediately after first login!');
@@ -127,10 +127,10 @@ async function setupAdminUser(databaseUrl) {
 
     if (existingResult.rows.length > 0) {
       const existingUser = existingResult.rows[0];
-      
+
       if (existingUser.role === 'admin') {
         log.info(`Admin user "${adminUsername}" already exists`);
-        
+
         if (process.env.ADMIN_PASSWORD) {
           const hashedPassword = await bcrypt.hash(password, 10);
           await client.query(
@@ -154,6 +154,32 @@ async function setupAdminUser(databaseUrl) {
       const adminUser = insertResult.rows[0];
       log.success(`Admin user created: ${adminUser.username} (ID: ${adminUser.id})`);
     }
+
+    // --- Developer Testing Enhancement ---
+    // Ensure all non-admin test roles exist with the same password for testing convenience
+    const testRoles = ['nurse', 'supervisor', 'housekeeping', 'auditor'];
+    const testPassword = process.env.ADMIN_PASSWORD || 'user@123';
+    const hashedTestPassword = await bcrypt.hash(testPassword, 10);
+
+    for (const role of testRoles) {
+      const username = role; // username is exactly 'nurse' or 'supervisor'
+      const roleResult = await client.query('SELECT id FROM users WHERE username = $1', [username]);
+
+      if (roleResult.rows.length === 0) {
+        await client.query(
+          `INSERT INTO users (username, password_hash, role, created_at, updated_at)
+           VALUES ($1, $2, $3, NOW(), NOW())`,
+          [username, hashedTestPassword, role]
+        );
+        log.success(`Test ${role} user created: ${username}`);
+      } else {
+        await client.query(
+          `UPDATE users SET password_hash = $1 WHERE username = $2`,
+          [hashedTestPassword, username]
+        );
+      }
+    }
+    // -------------------------------------
 
     log.success('Admin user setup complete');
   } catch (error) {

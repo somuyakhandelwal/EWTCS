@@ -67,12 +67,9 @@ export async function validateTransition(
     }
     // Rule forbids transition but allows supervisor override
     if (!rule.isAllowed && rule.requiresSupervisorOverride) {
-      const canOverride = userRole === 'supervisor' || userRole === 'admin'
-
-      // For supervisors, mark as valid but requiring override
-      // For nurses, mark as invalid
+      // BUG FIX: Mark as valid so bed-actions.ts can process the supervisorOverride flag
       return {
-        isValid: canOverride,
+        isValid: true,
         requiresSupervisorOverride: true,
         reason: `${rule.description || 'This transition requires supervisor approval.'} Supervisor override needed.`,
         validNextStages,
@@ -88,7 +85,7 @@ export async function validateTransition(
       validNextStages,
     }
   } catch (error) {
-    logger.error('Failed to validate transition', error as Error) 
+    logger.error('Failed to validate transition', error as Error)
     // BUG FIX #4: Provide fallback behavior instead of throwing
     // If validation system fails, allow admin to proceed with override
     if (userRole === 'admin') {
@@ -100,8 +97,9 @@ export async function validateTransition(
       }
     }
     // For nurses/supervisors, require supervisor approval as safety measure
+    // BUG FIX: Mark as valid so bed-actions.ts triggers the override flow
     return {
-      isValid: false,
+      isValid: true,
       requiresSupervisorOverride: true,
       reason: 'Unable to validate transition. Supervisor approval required.',
       validNextStages: [],
@@ -170,7 +168,7 @@ export async function categorizeStagesForTransition(
     return { allowed, requiresOverride, invalid }
   } catch (error) {
     logger.error('Failed to categorize stages for transition', error as Error)
-    
+
     // BUG FIX #4: Fallback behavior when categorization fails
     // Mark all stages as requiring override (safe default - prevents unauthorized transitions)
     return {

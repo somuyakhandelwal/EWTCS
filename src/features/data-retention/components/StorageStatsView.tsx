@@ -39,14 +39,14 @@ function TableBar({ info, maxBytes }: TableBarProps) {
   const pct = barWidthPct(info.totalBytes, maxBytes)
   return (
     <div className="grid grid-cols-[160px_1fr_64px] items-center gap-3">
-      <span className="text-xs text-zinc-400 truncate font-mono">{info.tableName}</span>
-      <div className="h-2 rounded bg-zinc-800 overflow-hidden">
+      <span className="text-xs text-muted-foreground truncate font-mono">{info.tableName}</span>
+      <div className="h-2 rounded bg-muted overflow-hidden">
         <div
           className={cn('h-full rounded transition-all duration-500', barColor(pct))}
           style={{ width: `${pct}%` }}
         />
       </div>
-      <span className="text-[10px] text-zinc-500 text-right">{info.prettySize}</span>
+      <span className="text-[10px] text-muted-foreground text-right">{info.prettySize}</span>
     </div>
   )
 }
@@ -92,15 +92,15 @@ export function StorageStatsView({ initialStats, className }: StorageStatsViewPr
     : null
 
   return (
-    <Card className={cn('bg-zinc-900 border-zinc-800', className)}>
+    <Card className={cn('bg-card border-border', className)}>
       <CardHeader className="pb-3">
         <div className="flex items-center justify-between">
           <div>
-            <CardTitle className="text-sm text-white flex items-center gap-2">
-              <HardDrive className="h-4 w-4 text-zinc-400" />
+            <CardTitle className="text-sm text-foreground flex items-center gap-2">
+              <HardDrive className="h-4 w-4 text-muted-foreground" />
               Storage Usage
             </CardTitle>
-            <CardDescription className="text-xs text-zinc-400">
+            <CardDescription className="text-xs text-muted-foreground">
               Live PostgreSQL table sizes (includes indexes &amp; TOAST).
               {sampledLabel && (
                 <span className="ml-1 text-zinc-600">Sampled at {sampledLabel}.</span>
@@ -112,7 +112,7 @@ export function StorageStatsView({ initialStats, className }: StorageStatsViewPr
             size="sm"
             onClick={handleRefresh}
             disabled={isPending}
-            className="text-zinc-500 hover:text-zinc-200 h-7 px-2"
+            className="text-muted-foreground hover:text-card-foreground h-7 px-2"
           >
             <RefreshCw className={cn('h-3.5 w-3.5', isPending && 'animate-spin')} />
           </Button>
@@ -139,12 +139,12 @@ export function StorageStatsView({ initialStats, className }: StorageStatsViewPr
 
         {/* ── Loading placeholder ── */}
         {isPending && !stats && (
-          <p className="text-xs text-zinc-500 py-4 text-center">Loading storage stats…</p>
+          <p className="text-xs text-muted-foreground py-4 text-center">Loading storage stats…</p>
         )}
 
         {/* ── Table bars ── */}
         {stats && stats.tables.length === 0 && (
-          <p className="text-xs text-zinc-500 py-4 text-center">
+          <p className="text-xs text-muted-foreground py-4 text-center">
             No monitored tables found.
           </p>
         )}
@@ -158,11 +158,11 @@ export function StorageStatsView({ initialStats, className }: StorageStatsViewPr
 
         {/* ── Total DB size ── */}
         {stats && (
-          <div className="pt-2 border-t border-zinc-800 flex items-center justify-between">
-            <span className="text-[10px] text-zinc-500">Total database size</span>
+          <div className="pt-2 border-t border-border flex items-center justify-between">
+            <span className="text-[10px] text-muted-foreground">Total database size</span>
             <span className={cn(
               'text-xs font-semibold',
-              stats.isAlertTriggered ? 'text-yellow-400' : 'text-zinc-300',
+              stats.isAlertTriggered ? 'text-yellow-400' : 'text-card-foreground',
             )}>
               {stats.prettyTotal}
             </span>

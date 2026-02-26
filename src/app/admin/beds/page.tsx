@@ -28,8 +28,8 @@ export default async function BedManagementPage() {
     // Handle errors
     if (!bedsResult.success || !wardsResult.success) {
         return (
-            <div className="min-h-screen bg-black text-foreground p-8">
-                <div className="max-w-7xl mx-auto">
+            <div className="min-h-screen bg-background text-foreground p-3 sm:p-8">
+                <div className="max-w-7xl mx-auto space-y-6">
                     <div className="mb-6">
                         <Link href="/admin">
                             <Button variant="outline">← Back to Admin</Button>
@@ -41,7 +41,7 @@ export default async function BedManagementPage() {
                         <p className="text-red-300 font-semibold mb-2">
                             Failed to load bed management data
                         </p>
-                        <p className="text-zinc-400 text-sm">
+                        <p className="text-muted-foreground text-sm">
                             {bedsResult.error || wardsResult.error}
                         </p>
                     </div>
@@ -51,25 +51,25 @@ export default async function BedManagementPage() {
     }
 
     return (
-        <div className="min-h-screen bg-black text-foreground p-8">
+        <div className="min-h-screen bg-background text-foreground p-3 sm:p-8">
             <div className="max-w-7xl mx-auto space-y-6">
                 {/* Navigation */}
-                <div className="flex items-center justify-between">
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                     <Link href="/admin">
                         <Button variant="outline">← Back to Admin</Button>
                     </Link>
                     <div className="text-right">
-                        <p className="text-sm text-zinc-400">
-                            Logged in as <span className="text-white">{session.username}</span>
+                        <p className="text-sm text-muted-foreground">
+                            Logged in as <span className="text-foreground">{session.username}</span>
                         </p>
-                        <p className="text-xs text-zinc-500">Administrator</p>
+                        <p className="text-xs text-muted-foreground">Administrator</p>
                     </div>
                 </div>
 
                 {/* Main Content */}
-                <BedManagementClient 
-                    initialBeds={bedsResult.data as BedManagementData[]} 
-                    wards={wardsResult.data as Ward[]} 
+                <BedManagementClient
+                    initialBeds={bedsResult.data as BedManagementData[]}
+                    wards={wardsResult.data as Ward[]}
                 />
             </div>
         </div>

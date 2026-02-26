@@ -118,17 +118,24 @@ export async function verifySession() {
  * Resets both the JWT expiry and the inactivity timer.
  */
 async function renewSession(sessionData: SessionPayload) {
-    const expiresAt = new Date(Date.now() + SESSION_MAX_AGE_MS)
+    const isKiosk = sessionData.isKiosk
+    const maxAgeMs = isKiosk ? 365 * 24 * 60 * 60 * 1000 : SESSION_MAX_AGE_MS
+    const expiresAt = new Date(Date.now() + maxAgeMs)
 
     const newSession = await new SignJWT({
         userId: sessionData.userId,
         username: sessionData.username,
         role: sessionData.role,
         lastActivity: Date.now(),  // reset inactivity timer
+        ...(isKiosk && {
+            isKiosk: true,
+            kioskIp: sessionData.kioskIp,
+            kioskSessionId: sessionData.kioskSessionId
+        }),
     })
         .setProtectedHeader({ alg: 'HS256' })
         .setIssuedAt()
-        .setExpirationTime('12h')
+        .setExpirationTime(isKiosk ? '1y' : '12h')
         .sign(encodedKey)
 
     const cookieStore = await cookies()
@@ -136,7 +143,7 @@ async function renewSession(sessionData: SessionPayload) {
         httpOnly: true,
         secure: process.env.NODE_ENV === 'production',
         expires: expiresAt,
-        maxAge: SESSION_MAX_AGE_MS / 1000,
+        maxAge: maxAgeMs / 1000,
         sameSite: 'lax',
         path: '/',
     })

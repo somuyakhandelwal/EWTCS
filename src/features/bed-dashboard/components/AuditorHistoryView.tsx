@@ -156,10 +156,10 @@ export function AuditorHistoryView({ readOnly = false, canEdit = false, showCorr
             onSort={onSort} onEdit={setEditingRecord}
           />
           <div className="flex items-center justify-between">
-            <p className="text-xs text-zinc-500">Total: {totalCount}</p>
+            <p className="text-xs text-muted-foreground">Total: {totalCount}</p>
             <div className="flex items-center gap-2">
               <Button size="sm" variant="outline" onClick={() => setPage(p => Math.max(1, p - 1))} disabled={page === 1}>Previous</Button>
-              <span className="text-xs text-zinc-500">Page {page} / {totalPages}</span>
+              <span className="text-xs text-muted-foreground">Page {page} / {totalPages}</span>
               <Button size="sm" variant="outline" onClick={() => setPage(p => Math.min(totalPages, p + 1))} disabled={page >= totalPages}>Next</Button>
             </div>
           </div>

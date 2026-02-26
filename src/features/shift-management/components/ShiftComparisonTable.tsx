@@ -27,7 +27,7 @@ interface ShiftComparisonTableProps {
 
 export function ShiftComparisonTable({ report, loading }: ShiftComparisonTableProps) {
   return (
-    <Card className="border-zinc-800">
+    <Card className="border-border">
       <CardHeader>
         <CardTitle className="text-base">All Shifts</CardTitle>
       </CardHeader>
@@ -35,14 +35,14 @@ export function ShiftComparisonTable({ report, loading }: ShiftComparisonTablePr
         {loading ? (
           <div className="p-6 space-y-3">
             {[0, 1, 2].map(i => (
-              <div key={i} className="h-10 rounded bg-zinc-800 animate-pulse" />
+              <div key={i} className="h-10 rounded bg-muted animate-pulse" />
             ))}
           </div>
         ) : report && report.rows.length > 0 ? (
           <div className="overflow-x-auto">
             <table className="w-full text-sm">
               <thead>
-                <tr className="border-b border-zinc-800 text-zinc-400 text-xs uppercase tracking-wide">
+                <tr className="border-b border-border text-muted-foreground text-xs uppercase tracking-wide">
                   <th className="px-4 py-3 text-left">Shift</th>
                   <th className="px-4 py-3 text-left">Time Range</th>
                   <th className="px-4 py-3 text-right">Patients</th>
@@ -59,22 +59,22 @@ export function ShiftComparisonTable({ report, loading }: ShiftComparisonTablePr
                     <tr
                       key={row.shiftId}
                       className={cn(
-                        'border-b border-zinc-800/50 hover:bg-zinc-800/30 transition-colors',
+                        'border-b border-border hover:bg-muted transition-colors',
                         isBest && 'bg-green-950/20',
                         isWorst && !isBest && 'bg-red-950/20'
                       )}
                     >
-                      <td className="px-4 py-3 font-medium text-zinc-100">{row.shiftName}</td>
-                      <td className="px-4 py-3 text-zinc-400">
+                      <td className="px-4 py-3 font-medium text-foreground">{row.shiftName}</td>
+                      <td className="px-4 py-3 text-muted-foreground">
                         {formatShiftTime(row.startTime, row.endTime)}
                         {row.crossesMidnight && (
                           <span className="ml-1 text-xs text-amber-400">↺</span>
                         )}
                       </td>
-                      <td className="px-4 py-3 text-right font-semibold text-white">
+                      <td className="px-4 py-3 text-right font-semibold text-foreground">
                         {row.patientsTreated}
                       </td>
-                      <td className="px-4 py-3 text-right text-zinc-300">
+                      <td className="px-4 py-3 text-right text-card-foreground">
                         {formatDuration(row.avgTatMs)}
                       </td>
                       <td className={cn(
@@ -96,7 +96,7 @@ export function ShiftComparisonTable({ report, loading }: ShiftComparisonTablePr
             </table>
           </div>
         ) : (
-          <div className="p-6 text-center text-zinc-500 text-sm">
+          <div className="p-6 text-center text-muted-foreground text-sm">
             No shift data available for the selected period.
           </div>
         )}

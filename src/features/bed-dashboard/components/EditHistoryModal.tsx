@@ -92,21 +92,21 @@ export function EditHistoryModal({ isOpen, onClose, record, onCorrectionSaved }:
   }
 
   return (
-    <div className="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center z-50 p-4" onClick={handleClose}>
-      <div className="bg-zinc-900 border border-zinc-700 rounded-xl shadow-2xl max-w-xl w-full flex flex-col overflow-hidden" onClick={e => e.stopPropagation()}>
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-background/80 backdrop-blur-sm p-4" onClick={handleClose}>
+      <div className="bg-card border border-border rounded-xl shadow-2xl max-w-xl w-full flex flex-col overflow-hidden" onClick={e => e.stopPropagation()}>
         {/* Header */}
-        <div className="p-5 border-b border-zinc-800 flex items-center justify-between">
+        <div className="p-5 border-b border-border flex items-center justify-between">
           <div className="flex items-center gap-3">
             <div className="p-2 bg-amber-500/10 rounded-lg"><ShieldCheck className="h-5 w-5 text-amber-400" /></div>
             <div>
-              <h2 className="text-lg font-bold text-white">Edit Stage History</h2>
-              <p className="text-xs text-zinc-400">
-                Bed <span className="text-zinc-200 font-medium">{record.bedNumber}</span>
-                {' · '}<span className="font-mono text-zinc-500">{record.id.slice(0, 8)}…</span>
+              <h2 className="text-lg font-bold text-foreground">Edit Stage History</h2>
+              <p className="text-xs text-muted-foreground">
+                Bed <span className="text-card-foreground font-medium">{record.bedNumber}</span>
+                {' · '}<span className="font-mono text-muted-foreground">{record.id.slice(0, 8)}…</span>
               </p>
             </div>
           </div>
-          <button onClick={handleClose} disabled={submitting} className="text-zinc-500 hover:text-white p-2 hover:bg-zinc-800 rounded-full disabled:opacity-40">
+          <button onClick={handleClose} disabled={submitting} className="text-muted-foreground hover:text-foreground p-2 hover:bg-muted rounded-full disabled:opacity-40">
             <X className="h-5 w-5" />
           </button>
         </div>
@@ -114,8 +114,8 @@ export function EditHistoryModal({ isOpen, onClose, record, onCorrectionSaved }:
         {success ? (
           <div className="p-10 flex flex-col items-center gap-4 text-center">
             <div className="p-3 bg-green-500/10 rounded-full"><CheckCircle className="h-9 w-9 text-green-400" /></div>
-            <p className="text-white font-semibold text-lg">Correction saved</p>
-            <p className="text-sm text-zinc-400 max-w-xs">
+            <p className="text-foreground font-semibold text-lg">Correction saved</p>
+            <p className="text-sm text-muted-foreground max-w-xs">
               The original record is preserved. Your correction has been logged with your supervisor ID.
             </p>
             <Button onClick={handleClose} className="mt-2 bg-zinc-700 hover:bg-zinc-600">Close</Button>
@@ -129,13 +129,13 @@ export function EditHistoryModal({ isOpen, onClose, record, onCorrectionSaved }:
               onStageChange={setToStageId} onNotesChange={setNotes}
               onTimeChange={setTransitionTime} onReasonChange={setCorrectionReason}
             />
-            <div className="p-4 border-t border-zinc-800 flex items-center justify-between gap-3 bg-zinc-950/30">
-              <p className="text-xs text-zinc-500 hidden sm:block">Original data is always preserved.</p>
+            <div className="p-4 border-t border-border flex items-center justify-between gap-3 bg-card">
+              <p className="text-xs text-muted-foreground hidden sm:block">Original data is always preserved.</p>
               <div className="flex gap-2 ml-auto">
                 <Button variant="outline" onClick={handleClose} disabled={submitting}>Cancel</Button>
                 <Button onClick={handleSubmit}
                   disabled={submitting || !correctionReason.trim() || !hasChanges}
-                  className="bg-amber-600 hover:bg-amber-500 text-white disabled:opacity-40">
+                  className="bg-amber-600 hover:bg-amber-500 text-foreground disabled:opacity-40">
                   {submitting ? 'Saving…' : 'Save Correction'}
                 </Button>
               </div>

@@ -100,10 +100,15 @@ export function SupervisorBedOverview({
         available={stats.available}
         delayed={stats.delayed}
         bottleneckCount={data.bottleneckCount}
+        escalationCount={data.escalationCount}
       />
 
       {/* Legend */}
-      <BedStatusLegend stages={data.stages} />
+      <BedStatusLegend
+        stages={data.stages}
+        delayThresholdMs={data.delayThresholdMs}
+        escalationThresholdMs={data.escalationThresholdMs}
+      />
 
       {/* US-6.5: Surge / Temporary Beds section */}
       <SupervisorTemporaryBeds
@@ -127,7 +132,7 @@ export function SupervisorBedOverview({
       {showDelayedOnly && delayedBeds.length > 0 && (
         <div className="space-y-3">
           <div className="flex items-center justify-between">
-            <h2 className="text-sm font-semibold text-zinc-300 uppercase tracking-wider">
+            <h2 className="text-sm font-semibold text-card-foreground uppercase tracking-wider">
               Beds Requiring Attention ({delayedBeds.length})
             </h2>
             <Button
@@ -149,8 +154,8 @@ export function SupervisorBedOverview({
       )}
 
       {showDelayedOnly && delayedBeds.length === 0 && (
-        <div className="rounded-lg border border-zinc-800 bg-zinc-900/30 py-10 text-center">
-          <p className="text-zinc-400">🎉 No delayed beds — all patients are on track.</p>
+        <div className="rounded-lg border border-border bg-card py-10 text-center">
+          <p className="text-muted-foreground">🎉 No delayed beds — all patients are on track.</p>
         </div>
       )}
     </div>

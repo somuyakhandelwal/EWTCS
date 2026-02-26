@@ -1,3 +1,4 @@
+-- Up Migration
 -- Migration 018: Per-stage delay thresholds for US-6.3 (advanced AC-3)
 -- Allows individual stages to override the global delay threshold
 

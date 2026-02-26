@@ -61,13 +61,13 @@ export function DataRetentionView({
     <div className={cn('space-y-4', className)}>
       {/* ── Retention configuration (US-14.2) ── */}
       {!readOnly && (
-        <Card className="bg-zinc-900 border-zinc-800">
+        <Card className="bg-card border-border">
           <CardHeader className="pb-3">
-            <CardTitle className="text-sm text-white flex items-center gap-2">
-              <Archive className="h-4 w-4 text-zinc-400" />
+            <CardTitle className="text-sm text-foreground flex items-center gap-2">
+              <Archive className="h-4 w-4 text-muted-foreground" />
               Data Retention Settings
             </CardTitle>
-            <CardDescription className="text-xs text-zinc-400">
+            <CardDescription className="text-xs text-muted-foreground">
               Set how long each data type is kept before being moved to the archive.
             </CardDescription>
           </CardHeader>
@@ -78,27 +78,27 @@ export function DataRetentionView({
       )}
 
       {/* ── Archival history + manual trigger (US-14.1) ── */}
-      <Card className="bg-zinc-900 border-zinc-800">
+      <Card className="bg-card border-border">
         <CardHeader className="pb-3">
           <div className="flex items-center justify-between">
             <div>
-              <CardTitle className="text-sm text-white flex items-center gap-2">
-                <Archive className="h-4 w-4 text-zinc-400" />
+              <CardTitle className="text-sm text-foreground flex items-center gap-2">
+                <Archive className="h-4 w-4 text-muted-foreground" />
                 Archival History
               </CardTitle>
-              <CardDescription className="text-xs text-zinc-400">
+              <CardDescription className="text-xs text-muted-foreground">
                 Runs automatically on the 1st of each month.
               </CardDescription>
             </div>
             <div className="flex items-center gap-2">
               <Button variant="ghost" size="sm" onClick={handleRefresh}
                 disabled={isRefreshPending}
-                className="text-zinc-500 hover:text-zinc-200 h-7 px-2">
+                className="text-muted-foreground hover:text-card-foreground h-7 px-2">
                 <RefreshCw className={cn('h-3.5 w-3.5', isRefreshPending && 'animate-spin')} />
               </Button>
               {!readOnly && (
                 <Button size="sm" onClick={handleTrigger} disabled={isTriggerPending}
-                  className="h-7 bg-zinc-700 hover:bg-zinc-600 text-zinc-200 text-xs">
+                  className="h-7 bg-zinc-700 hover:bg-zinc-600 text-card-foreground text-xs">
                   {isTriggerPending ? 'Running…' : 'Run Now'}
                 </Button>
               )}

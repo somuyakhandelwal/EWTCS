@@ -21,7 +21,7 @@ function TrendBar({ pct, targetPct }: TrendBarProps) {
           ? 'bg-amber-500'
           : 'bg-red-500'
   return (
-    <div className="w-full bg-zinc-800 rounded-full h-1.5 overflow-hidden">
+    <div className="w-full bg-muted rounded-full h-1.5 overflow-hidden">
       <div
         className={cn('h-1.5 rounded-full transition-all', color)}
         style={{ width: `${Math.min(100, pct)}%` }}
@@ -45,11 +45,11 @@ export function DelayedPatientTrendCard({
   const handleExport = () => exportChartAsPng(chartId, 'delay-trend')
 
   return (
-    <Card className="border-zinc-800 bg-zinc-900/60">
+    <Card className="border-border bg-card">
       <CardHeader className="pb-2 flex-row items-start justify-between space-y-0">
         <div className="space-y-1">
-          <CardTitle className="text-sm text-white">Daily Trend</CardTitle>
-          <CardDescription className="text-xs text-zinc-400">
+          <CardTitle className="text-sm text-foreground">Daily Trend</CardTitle>
+          <CardDescription className="text-xs text-muted-foreground">
             Delay % per day {targetPct !== null && `• Target < ${targetPct}%`}
           </CardDescription>
         </div>
@@ -58,7 +58,7 @@ export function DelayedPatientTrendCard({
             variant="ghost"
             size="sm"
             onClick={handleExport}
-            className="h-8 text-zinc-500 hover:text-zinc-300 hover:bg-zinc-800 px-2"
+            className="h-8 text-muted-foreground hover:text-card-foreground hover:bg-muted px-2"
           >
             <Download className="h-3.5 w-3.5 mr-1.5" />
             <span className="text-xs">Export PNG</span>
@@ -67,19 +67,19 @@ export function DelayedPatientTrendCard({
       </CardHeader>
       <CardContent>
         {loading ? (
-          <div className="h-36 animate-pulse rounded bg-zinc-800" />
+          <div className="h-36 animate-pulse rounded bg-muted" />
         ) : trend.length > 0 ? (
-          <div id={chartId} className="space-y-1.5 bg-zinc-900/0">
+          <div id={chartId} className="space-y-1.5 bg-card">
             {trend.slice(-10).map((point) => (
               <div key={point.date} className="space-y-0.5">
                 <div className="flex justify-between items-center">
-                  <span className="text-[10px] text-zinc-500">
+                  <span className="text-[10px] text-muted-foreground">
                     {new Date(point.date + 'T00:00:00').toLocaleDateString(undefined, {
                       month: 'short',
                       day: 'numeric',
                     })}
                   </span>
-                  <span className="text-[10px] text-zinc-400">
+                  <span className="text-[10px] text-muted-foreground">
                     {point.delayPct}%
                     <span className="text-zinc-600 ml-1">
                       ({point.delayedPatients}/{point.totalPatients})

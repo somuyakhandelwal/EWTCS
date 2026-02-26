@@ -17,16 +17,16 @@ interface CreateUserDialogContentProps {
   wards: Ward[]
   action: (payload: FormData) => void
   state:
-    | {
-        success?: boolean
-        message?: string
-        errors?: {
-          username?: string[]
-          password?: string[]
-          role?: string[]
-        }
-      }
-    | undefined
+  | {
+    success?: boolean
+    message?: string
+    errors?: {
+      username?: string[]
+      password?: string[]
+      role?: string[]
+    }
+  }
+  | undefined
   restoredNotice: boolean
   username: string
   password: string
@@ -59,7 +59,7 @@ export function CreateUserDialogContent({
 }: CreateUserDialogContentProps) {
   if (!isOpen) {
     return (
-      <Button onClick={() => setIsOpen(true)} className="bg-emerald-600 hover:bg-emerald-700 text-white">
+      <Button onClick={() => setIsOpen(true)}>
         <UserPlus className="h-4 w-4 mr-2" />
         Create New User
       </Button>
@@ -67,27 +67,27 @@ export function CreateUserDialogContent({
   }
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm">
-      <div className="bg-zinc-900 border border-zinc-800 rounded-lg shadow-xl w-full max-w-md p-6">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-background/80 backdrop-blur-sm p-4">
+      <div className="bg-card border border-border rounded-lg shadow-xl w-full max-w-md p-6">
         <div className="flex items-center justify-between mb-6">
           <div>
-            <h2 className="text-xl font-bold text-white">Create New User</h2>
-            <p className="text-sm text-zinc-400 mt-1">Add a new user to the system</p>
+            <h2 className="text-xl font-bold text-foreground">Create New User</h2>
+            <p className="text-sm text-muted-foreground mt-1">Add a new user to the system</p>
           </div>
-          <button onClick={onCancel} className="text-zinc-400 hover:text-white transition-colors">
+          <button onClick={onCancel} className="text-muted-foreground hover:text-foreground transition-colors">
             <X className="h-5 w-5" />
           </button>
         </div>
 
         <form action={action} className="space-y-4">
           {restoredNotice && (
-            <div className="p-3 rounded-md text-sm bg-emerald-900/20 text-emerald-400 border border-emerald-900/50">
+            <div className="p-3 rounded-md text-sm bg-muted text-muted-foreground border border-border">
               Recovered unsaved user form data from previous session.
             </div>
           )}
 
           <div className="space-y-2">
-            <Label htmlFor="username" className="text-zinc-200">Username</Label>
+            <Label htmlFor="username" className="text-card-foreground">Username</Label>
             <Input
               id="username"
               name="username"
@@ -95,13 +95,13 @@ export function CreateUserDialogContent({
               onChange={(event) => setUsername(event.target.value)}
               placeholder="Enter username"
               required
-              className="bg-black/50 border-zinc-700 text-white"
+              className="bg-background border-border text-foreground"
             />
             {state?.errors?.username && <p className="text-sm text-red-500">{state.errors.username[0]}</p>}
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="password" className="text-zinc-200">Password</Label>
+            <Label htmlFor="password" className="text-card-foreground">Password</Label>
             <Input
               id="password"
               name="password"
@@ -110,20 +110,20 @@ export function CreateUserDialogContent({
               onChange={(event) => setPassword(event.target.value)}
               placeholder="Enter password"
               required
-              className="bg-black/50 border-zinc-700 text-white"
+              className="bg-background border-border text-foreground"
             />
             {state?.errors?.password && <p className="text-sm text-red-500">{state.errors.password[0]}</p>}
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="role" className="text-zinc-200">Role</Label>
+            <Label htmlFor="role" className="text-card-foreground">Role</Label>
             <select
               id="role"
               name="role"
               value={role}
               onChange={(event) => setRole(event.target.value)}
               required
-              className="w-full px-3 py-2 bg-black/50 border border-zinc-700 rounded-md text-white focus:outline-none focus:ring-2 focus:ring-emerald-500"
+              className="w-full px-3 py-2 bg-background border border-border rounded-md text-foreground focus:outline-none focus:ring-2 focus:ring-ring"
             >
               <option value="">Select a role</option>
               <option value="nurse">Nurse</option>
@@ -137,15 +137,15 @@ export function CreateUserDialogContent({
 
           {wards.length > 0 && (
             <div className="space-y-2">
-              <Label htmlFor="wardId" className="text-zinc-200">
-                Ward Assignment <span className="text-zinc-500 font-normal">(Optional)</span>
+              <Label htmlFor="wardId" className="text-card-foreground">
+                Ward Assignment <span className="text-muted-foreground font-normal">(Optional)</span>
               </Label>
               <select
                 id="wardId"
                 name="wardId"
                 value={wardId}
                 onChange={(event) => setWardId(event.target.value)}
-                className="w-full px-3 py-2 bg-black/50 border border-zinc-700 rounded-md text-white focus:outline-none focus:ring-2 focus:ring-emerald-500"
+                className="w-full px-3 py-2 bg-background border border-border rounded-md text-foreground focus:outline-none focus:ring-2 focus:ring-ring"
               >
                 <option value="">No ward assigned</option>
                 {wards.map(w => (
@@ -156,11 +156,10 @@ export function CreateUserDialogContent({
           )}
 
           {state?.message && (
-            <div className={`p-3 rounded-md text-sm ${
-              state.success
-                ? 'bg-emerald-900/20 text-emerald-400 border border-emerald-900/50'
-                : 'bg-red-900/20 text-red-400 border border-red-900/50'
-            }`}>
+            <div className={`p-3 rounded-md text-sm ${state.success
+              ? 'bg-primary/10 text-primary border border-primary/20'
+              : 'bg-destructive/10 text-destructive border border-destructive/20'
+              }`}>
               {state.message}
             </div>
           )}
@@ -170,12 +169,11 @@ export function CreateUserDialogContent({
               type="button"
               variant="outline"
               onClick={onCancel}
-              className="text-zinc-400 border-zinc-700 hover:bg-zinc-800"
+              className="text-muted-foreground border-border hover:bg-muted"
             >
               Cancel
             </Button>
             <UserFormSubmitButton
-              className="bg-emerald-600 hover:bg-emerald-700 text-white"
               idleLabel="Create User"
               pendingLabel="Creating..."
             />

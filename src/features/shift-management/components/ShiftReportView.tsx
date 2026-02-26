@@ -60,7 +60,7 @@ export function ShiftReportView({ shifts, readOnly = false, className }: ShiftRe
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
         <div>
           <h2 className="text-2xl font-bold tracking-tight">Shift Performance Report</h2>
-          <p className="text-sm text-zinc-400 mt-0.5">
+          <p className="text-sm text-muted-foreground mt-0.5">
             Metrics for a selected shift — patients, avg stay, and delays
           </p>
         </div>
@@ -68,7 +68,7 @@ export function ShiftReportView({ shifts, readOnly = false, className }: ShiftRe
           <select
             value={selectedShiftId}
             onChange={e => setSelectedShiftId(e.target.value)}
-            className="h-9 rounded-md border border-zinc-700 bg-zinc-900 px-3 py-1 text-sm text-zinc-100 focus:outline-none focus:ring-2 focus:ring-blue-500"
+            className="h-9 rounded-md border border-border bg-card px-3 py-1 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-blue-500"
           >
             {shifts.map(s => (
               <option key={s.id} value={s.id}>
@@ -91,8 +91,8 @@ export function ShiftReportView({ shifts, readOnly = false, className }: ShiftRe
       </div>
 
       {selectedShift && (
-        <div className="text-sm text-zinc-400">
-          Showing: <span className="font-medium text-zinc-200">{selectedShift.name}</span>{' '}
+        <div className="text-sm text-muted-foreground">
+          Showing: <span className="font-medium text-card-foreground">{selectedShift.name}</span>{' '}
           shift ({formatShiftTime(selectedShift.start_time, selectedShift.end_time)})
           {selectedShift.crosses_midnight && (
             <span className="ml-1 text-xs text-amber-400">(crosses midnight)</span>
@@ -110,7 +110,7 @@ export function ShiftReportView({ shifts, readOnly = false, className }: ShiftRe
 
       {loading ? (
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          {[0, 1, 2].map(i => <div key={i} className="h-28 rounded-lg bg-zinc-800 animate-pulse" />)}
+          {[0, 1, 2].map(i => <div key={i} className="h-28 rounded-lg bg-muted animate-pulse" />)}
         </div>
       ) : report ? (
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">

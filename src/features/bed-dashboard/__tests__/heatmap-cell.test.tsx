@@ -12,7 +12,7 @@ describe('HeatmapCell — AC2: Color intensity', () => {
   it('renders with zero-volume class when count is 0', () => {
     render(<HeatmapCell count={0} maxCount={10} label="Mon 08:00" onClick={vi.fn()} />)
     const btn = screen.getByRole('button')
-    expect(btn.className).toContain('bg-zinc-900')
+    expect(btn.className).toContain('bg-card')
   })
 
   it('renders with high-intensity class when count equals maxCount', () => {
@@ -75,7 +75,7 @@ describe('HeatmapCell — AC3: Interactive', () => {
 
 describe('HeatmapCell — intensity scale boundaries', () => {
   const cases: Array<{ count: number; max: number; expected: string }> = [
-    { count: 0,  max: 100, expected: 'bg-zinc-900' },
+    { count: 0,  max: 100, expected: 'bg-card' },
     { count: 10, max: 100, expected: 'bg-blue-950' },  // 0.10 ≤ 0.15
     { count: 20, max: 100, expected: 'bg-blue-900' },  // 0.20 ≤ 0.30
     { count: 40, max: 100, expected: 'bg-blue-800' },  // 0.40 ≤ 0.45

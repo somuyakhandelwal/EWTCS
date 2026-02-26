@@ -60,9 +60,9 @@ export const ATTRIBUTION_COLORS: Record<
     bar: 'bg-blue-500',
   },
   unattributed: {
-    bg: 'bg-zinc-900/40',
-    text: 'text-zinc-400',
-    border: 'border-zinc-700/50',
+    bg: 'bg-card',
+    text: 'text-muted-foreground',
+    border: 'border-border',
     bar: 'bg-zinc-500',
   },
 }

@@ -50,8 +50,8 @@ describe('BedCard Elapsed Time Display - AC-4: Prominent Display', () => {
     })
 
     it('should have adequate contrast', () => {
-      const normalBg = 'bg-zinc-800'
-      const normalText = 'text-zinc-300'
+      const normalBg = 'bg-muted'
+      const normalText = 'text-card-foreground'
       const delayedBg = 'bg-red-900/50'
       const delayedText = 'text-red-400'
 

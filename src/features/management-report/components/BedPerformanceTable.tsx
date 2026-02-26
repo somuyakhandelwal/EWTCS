@@ -65,16 +65,16 @@ export const BedPerformanceTable = memo(function BedPerformanceTable({
         </Button>
       </div>
 
-      <div className="overflow-x-auto rounded-md border border-zinc-800">
+      <div className="overflow-x-auto rounded-md border border-border">
         <table className="w-full text-sm">
-          <thead className="bg-zinc-900/80 border-b border-zinc-800">
+          <thead className="bg-card border-b border-border">
             <tr>
               <ColHeader field="bedNumber" label="Bed" sortField={sortField} sortDir={sortDir} onSort={onSort} />
               <ColHeader field="patientsTreated" label="Patients" sortField={sortField} sortDir={sortDir} onSort={onSort} />
               <ColHeader field="avgDurationMs" label="Avg Stay" sortField={sortField} sortDir={sortDir} onSort={onSort} />
-              <th className="px-3 py-2.5 text-left text-xs font-medium text-zinc-400 uppercase tracking-wide">Min / Max</th>
+              <th className="px-3 py-2.5 text-left text-xs font-medium text-muted-foreground uppercase tracking-wide">Min / Max</th>
               <ColHeader field="delayRate" label="Delay Rate" sortField={sortField} sortDir={sortDir} onSort={onSort} />
-              <th className="px-3 py-2.5 text-left text-xs font-medium text-zinc-400 uppercase tracking-wide">Outlier</th>
+              <th className="px-3 py-2.5 text-left text-xs font-medium text-muted-foreground uppercase tracking-wide">Outlier</th>
             </tr>
           </thead>
           <tbody className="divide-y divide-zinc-800/60">
@@ -83,19 +83,19 @@ export const BedPerformanceTable = memo(function BedPerformanceTable({
                 key={row.bedId}
                 className={cn(
                   'transition-colors',
-                  row.isOutlier ? 'bg-amber-950/20 hover:bg-amber-950/30' : 'hover:bg-zinc-800/40'
+                  row.isOutlier ? 'bg-amber-950/20 hover:bg-amber-950/30' : 'hover:bg-muted'
                 )}
               >
-                <td className={cn('px-3 py-2 font-mono text-xs font-semibold', row.isOutlier ? 'text-amber-300' : 'text-zinc-200')}>
+                <td className={cn('px-3 py-2 font-mono text-xs font-semibold', row.isOutlier ? 'text-amber-300' : 'text-card-foreground')}>
                   {row.bedNumber}
                 </td>
-                <td className="px-3 py-2 text-zinc-300 tabular-nums">
+                <td className="px-3 py-2 text-card-foreground tabular-nums">
                   {row.patientsTreated === 0 ? <span className="text-zinc-600">—</span> : row.patientsTreated}
                 </td>
-                <td className="px-3 py-2 font-mono text-zinc-300 tabular-nums">
+                <td className="px-3 py-2 font-mono text-card-foreground tabular-nums">
                   {row.avgDurationMs !== null ? formatDuration(row.avgDurationMs) : <span className="text-zinc-600">—</span>}
                 </td>
-                <td className="px-3 py-2 text-zinc-500 tabular-nums text-xs">
+                <td className="px-3 py-2 text-muted-foreground tabular-nums text-xs">
                   {row.minDurationMs !== null
                     ? `${formatDuration(row.minDurationMs)} / ${formatDuration(row.maxDurationMs)}`
                     : <span className="text-zinc-600">—</span>}
@@ -103,7 +103,7 @@ export const BedPerformanceTable = memo(function BedPerformanceTable({
                 <td className="px-3 py-2 tabular-nums">
                   <span className={cn(
                     'text-xs font-semibold',
-                    row.delayRate > 50 ? 'text-red-400' : row.delayRate > 30 ? 'text-amber-400' : 'text-zinc-400'
+                    row.delayRate > 50 ? 'text-red-400' : row.delayRate > 30 ? 'text-amber-400' : 'text-muted-foreground'
                   )}>
                     {row.patientsTreated > 0 ? `${row.delayRate}%` : '—'}
                   </span>

@@ -56,28 +56,28 @@ export function SupervisorOverrideModal({
   }
 
   return (
-    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-      <div className="bg-white rounded-lg shadow-lg max-w-md w-full mx-4 p-6 space-y-4">
+    <div className="fixed inset-0 bg-background/80 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+      <div className="bg-card border border-border rounded-lg shadow-lg max-w-md w-full p-6 space-y-4">
         {/* Header */}
         <div>
-          <h2 className="text-lg font-semibold text-gray-900">Supervisor Approval Required</h2>
-          <p className="text-sm text-gray-600 mt-1">
-            This stage transition requires supervisor approval
+          <h2 className="text-lg font-semibold text-foreground">Transition Override Required</h2>
+          <p className="text-sm text-muted-foreground mt-1">
+            This stage transition is irregular and requires a recorded reason.
           </p>
         </div>
 
         {/* Transition Details */}
-        <div className="bg-gray-50 rounded p-4 space-y-2 text-sm">
+        <div className="bg-muted rounded p-4 space-y-2 text-sm border border-border">
           <div className="flex justify-between">
-            <span className="text-gray-600">Bed:</span>
-            <span className="font-medium text-gray-900">{bedNumber}</span>
+            <span className="text-muted-foreground">Bed:</span>
+            <span className="font-medium text-foreground">{bedNumber}</span>
           </div>
           <div className="flex justify-between">
-            <span className="text-gray-600">From:</span>
-            <span className="font-medium text-gray-900">{fromStageName || "Empty"}</span>
+            <span className="text-muted-foreground">From:</span>
+            <span className="font-medium text-foreground">{fromStageName || "Empty"}</span>
           </div>
           <div className="flex justify-between">
-            <span className="text-gray-600">To:</span>
+            <span className="text-muted-foreground">To:</span>
             <span className={`font-medium ${colorClasses.text}`}>
               {toStage?.name}
             </span>
@@ -85,16 +85,16 @@ export function SupervisorOverrideModal({
         </div>
 
         {reason && (
-          <div className="bg-blue-50 border border-blue-200 rounded p-3 text-xs text-blue-800">
-            <p className="font-medium mb-1">Reason</p>
+          <div className="bg-muted border border-border rounded p-3 text-xs text-muted-foreground">
+            <p className="font-medium mb-1 text-foreground">Reason</p>
             <p>{reason}</p>
           </div>
         )}
 
         {/* Reason Input */}
         <div>
-          <label htmlFor="override-reason" className="block text-sm font-medium text-gray-700 mb-2">
-            Reason for Override <span className="text-red-600">*</span>
+          <label htmlFor="override-reason" className="block text-sm font-medium text-foreground mb-2">
+            Reason for Override <span className="text-destructive">*</span>
           </label>
           <textarea
             id="override-reason"
@@ -103,25 +103,25 @@ export function SupervisorOverrideModal({
               setOverrideReason(e.target.value)
               if (error) setError(null)
             }}
-            placeholder="Enter reason for supervisor approval..."
+            placeholder="Enter reason for transition override..."
             maxLength={500}
             disabled={isLoading}
-            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm resize-none disabled:bg-gray-50 disabled:text-gray-500"
+            className="w-full px-3 py-2 border border-input bg-background rounded-md focus:outline-none focus:ring-2 focus:ring-ring text-sm text-foreground resize-none disabled:opacity-50 placeholder:text-muted-foreground"
             rows={3}
           />
           <div className="flex justify-between mt-1">
-            <div className="text-xs text-gray-500">
-              {error && <span className="text-red-600">{error}</span>}
+            <div className="text-xs text-muted-foreground">
+              {error && <span className="text-destructive">{error}</span>}
             </div>
-            <div className="text-xs text-gray-500">
+            <div className="text-xs text-muted-foreground">
               {overrideReason.length}/500
             </div>
           </div>
         </div>
 
         {/* Notice */}
-        <div className="bg-amber-50 border border-amber-200 rounded p-3 text-xs text-amber-800">
-          <p className="font-medium mb-1">⚠️ Important</p>
+        <div className="bg-muted/50 border border-border rounded p-3 text-xs text-muted-foreground">
+          <p className="font-medium mb-1 text-foreground">⚠️ Important</p>
           <p>This action will be logged and audited. Approvals require valid justification.</p>
         </div>
 
@@ -130,14 +130,14 @@ export function SupervisorOverrideModal({
           <button
             onClick={handleCancel}
             disabled={isLoading}
-            className="flex-1 px-4 py-2 border border-gray-300 rounded-md text-gray-700 hover:bg-gray-50 disabled:bg-gray-50 disabled:text-gray-500 font-medium text-sm"
+            className="flex-1 px-4 py-2 border border-border rounded-md text-foreground bg-muted hover:bg-muted/70 disabled:opacity-50 font-medium text-sm transition-colors"
           >
             Cancel
           </button>
           <button
             onClick={handleApprove}
             disabled={isLoading || !overrideReason.trim()}
-            className="flex-1 px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 disabled:bg-gray-300 disabled:text-gray-500 font-medium text-sm"
+            className="flex-1 px-4 py-2 bg-primary text-primary-foreground rounded-md hover:opacity-90 disabled:opacity-50 font-medium text-sm transition-colors"
           >
             {isLoading ? "Approving..." : "Approve"}
           </button>

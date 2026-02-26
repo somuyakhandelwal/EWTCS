@@ -52,7 +52,7 @@ export const ConnectionStatus = React.memo(function ConnectionStatus({
       case 'paused':
         return {
           icon: Pause,
-          color: 'text-zinc-500',
+          color: 'text-muted-foreground',
           bgColor: 'bg-zinc-500/10',
           label: 'Paused',
           showPulse: false,
@@ -98,7 +98,7 @@ export const ConnectionStatus = React.memo(function ConnectionStatus({
       </div>
 
       {/* Last update time */}
-      <div className="text-xs text-zinc-500">
+      <div className="text-xs text-muted-foreground">
         Updated {formatLastUpdate(status.lastUpdate)}
       </div>
 

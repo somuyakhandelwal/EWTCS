@@ -28,64 +28,64 @@ export default async function AdminDashboard() {
     const recentLogs = logsResult.success ? logsResult.logs.slice(0, 5) : []
 
     return (
-        <div className="min-h-screen bg-black text-foreground p-8">
-            <div className="max-w-7xl mx-auto space-y-8">
-                <div className="flex items-center justify-between">
+        <div className="min-h-screen bg-background text-foreground p-3 sm:p-8">
+            <div className="max-w-7xl mx-auto space-y-6 sm:space-y-8">
+                <div className="flex flex-col gap-4 sm:flex-row sm:items-center justify-between">
                     <div>
-                        <h1 className="text-3xl font-bold tracking-tight text-white">
+                        <h1 className="text-3xl font-bold tracking-tight text-foreground">
                             Admin {session?.username ? session.username : 'Console'}
                         </h1>
-                        <p className="text-zinc-400">System configuration and user management</p>
+                        <p className="text-muted-foreground">System configuration and user management</p>
                     </div>
                     <div className="flex items-center gap-6">
-                        <div className="p-2 bg-red-900/20 border border-red-900/50 rounded-full">
-                            <Shield className="h-6 w-6 text-red-500" />
+                        <div className="p-2 bg-destructive/10 border border-destructive/20 rounded-full">
+                            <Shield className="h-6 w-6 text-destructive" />
                         </div>
                         <LogoutButton />
                     </div>
                 </div>
 
                 <div className="grid gap-4 md:grid-cols-4">
-                    <Card className="bg-zinc-900 border-zinc-800">
+                    <Card className="bg-card border-border">
                         <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                            <CardTitle className="text-sm font-medium text-zinc-200">Total Users</CardTitle>
-                            <Users className="h-4 w-4 text-zinc-400" />
+                            <CardTitle className="text-sm font-medium text-card-foreground">Total Users</CardTitle>
+                            <Users className="h-4 w-4 text-muted-foreground" />
                         </CardHeader>
                         <CardContent>
-                            <div className="text-2xl font-bold text-white">{users.length}</div>
-                            <p className="text-xs text-zinc-500">System accounts</p>
+                            <div className="text-2xl font-bold text-foreground">{users.length}</div>
+                            <p className="text-xs text-muted-foreground">System accounts</p>
                         </CardContent>
                     </Card>
-                    <Card className="bg-zinc-900 border-zinc-800">
+                    <Card className="bg-card border-border">
                         <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                            <CardTitle className="text-sm font-medium text-zinc-200">Active Users</CardTitle>
-                            <Activity className="h-4 w-4 text-emerald-400" />
+                            <CardTitle className="text-sm font-medium text-card-foreground">Active Users</CardTitle>
+                            <Activity className="h-4 w-4 text-primary" />
                         </CardHeader>
                         <CardContent>
-                            <div className="text-2xl font-bold text-white">
+                            <div className="text-2xl font-bold text-foreground">
                                 {users.filter((u: { is_active: boolean }) => u.is_active).length}
                             </div>
-                            <p className="text-xs text-emerald-500">Can access system</p>
+                            <p className="text-xs text-muted-foreground">Can access system</p>
                         </CardContent>
                     </Card>
-                    <Card className="bg-zinc-900 border-zinc-800">
+                    <Card className="bg-card border-border">
                         <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                            <CardTitle className="text-sm font-medium text-zinc-200">System Status</CardTitle>
-                            <Settings className="h-4 w-4 text-zinc-400" />
+                            <CardTitle className="text-sm font-medium text-card-foreground">System Status</CardTitle>
+                            <Settings className="h-4 w-4 text-muted-foreground" />
                         </CardHeader>
                         <CardContent>
-                            <div className="text-2xl font-bold text-emerald-500">Operational</div>
-                            <p className="text-xs text-zinc-500">All services running</p>
+                            <div className="text-2xl font-bold text-foreground">Operational</div>
+                            <p className="text-xs text-muted-foreground">All services running</p>
                         </CardContent>
                     </Card>
-                    <Card className="bg-zinc-900 border-zinc-800">
+                    <Card className="bg-card border-border">
                         <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                            <CardTitle className="text-sm font-medium text-zinc-200">Recent Actions</CardTitle>
-                            <Activity className="h-4 w-4 text-blue-400" />
+                            <CardTitle className="text-sm font-medium text-card-foreground">Recent Actions</CardTitle>
+                            <Activity className="h-4 w-4 text-muted-foreground" />
                         </CardHeader>
                         <CardContent>
-                            <div className="text-2xl font-bold text-white">{recentLogs.length}</div>
-                            <p className="text-xs text-zinc-500">Last 5 activities</p>
+                            <div className="text-2xl font-bold text-foreground">{recentLogs.length}</div>
+                            <p className="text-xs text-muted-foreground">Last 5 activities</p>
                         </CardContent>
                     </Card>
                 </div>
@@ -93,12 +93,12 @@ export default async function AdminDashboard() {
                 <AdminQuickActions />
 
                 {/* User Management Section */}
-                <Card className="bg-zinc-900 border-zinc-800">
+                <Card className="bg-card border-border">
                     <CardHeader>
-                        <div className="flex items-center justify-between">
+                        <div className="flex flex-col gap-4 sm:flex-row sm:items-center justify-between">
                             <div>
-                                <CardTitle className="text-xl text-white">User Management</CardTitle>
-                                <p className="text-sm text-zinc-400 mt-1">
+                                <CardTitle className="text-xl text-foreground">User Management</CardTitle>
+                                <p className="text-sm text-muted-foreground mt-1">
                                     Create, edit, and manage system users
                                 </p>
                             </div>
@@ -114,11 +114,11 @@ export default async function AdminDashboard() {
                 <KioskSessionsPanel />
 
                 {/* AI Daily Summaries — EPIC 9 */}
-                <Card className="bg-zinc-900 border-zinc-800">
-                    <CardHeader className="flex flex-row items-center justify-between">
+                <Card className="bg-card border-border">
+                    <CardHeader className="flex flex-col gap-4 sm:flex-row sm:items-center justify-between">
                         <div>
-                            <CardTitle className="text-xl text-white">Daily AI Summaries</CardTitle>
-                            <p className="text-sm text-zinc-400 mt-1">
+                            <CardTitle className="text-xl text-foreground">Daily AI Summaries</CardTitle>
+                            <p className="text-sm text-muted-foreground mt-1">
                                 Automated operational reports and performance metrics (read-only)
                             </p>
                         </div>

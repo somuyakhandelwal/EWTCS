@@ -1,3 +1,4 @@
+-- Up Migration
 -- Migration 032: Enforce stage-log retention config and delete immutability
 -- Purpose: Ensure stage logs are never deleted and retention cutoff is DB-configurable
 -- Epic: EPIC 3 - Time Tracking & Stage Logging (US-3.6)

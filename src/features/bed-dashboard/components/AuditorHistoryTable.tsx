@@ -40,14 +40,14 @@ export function AuditorHistoryTable({
   )
 
   return (
-    <div className="overflow-x-auto border border-zinc-800 rounded-md">
-      <table className="w-full text-sm">
-        <thead className="bg-zinc-900">
-          <tr className="text-left text-zinc-300">
-            <SortTh col="transitionTime"    label="Timestamp" />
-            <SortTh col="bedNumber"         label="Bed" />
+    <div className="overflow-x-auto border border-border rounded-md">
+      <table className="w-full text-sm whitespace-nowrap">
+        <thead className="bg-card">
+          <tr className="text-left text-card-foreground">
+            <SortTh col="transitionTime" label="Timestamp" />
+            <SortTh col="bedNumber" label="Bed" />
             <th className="p-2">From</th>
-            <SortTh col="toStageName"       label="To" />
+            <SortTh col="toStageName" label="To" />
             <th className="p-2">User ID</th>
             <SortTh col="changedByUsername" label="Username" />
             {canEdit && <th className="p-2 text-amber-400">Actions</th>}
@@ -56,7 +56,7 @@ export function AuditorHistoryTable({
         <tbody>
           {!loading && rows.length === 0 && (
             <tr>
-              <td className="p-3 text-zinc-500" colSpan={canEdit ? 7 : 6}>
+              <td className="p-3 text-muted-foreground" colSpan={canEdit ? 7 : 6}>
                 No history records found.
               </td>
             </tr>
@@ -67,7 +67,7 @@ export function AuditorHistoryTable({
             const displayStageName = correctedStage ?? row.toStageName
 
             return (
-              <tr key={row.id} className="border-t border-zinc-800">
+              <tr key={row.id} className="border-t border-border">
                 <td className="p-2">{new Date(row.transitionTime).toLocaleString()}</td>
                 <td className="p-2">{row.bedNumber}</td>
                 <td className="p-2">{row.fromStageName ?? 'Admission'}</td>

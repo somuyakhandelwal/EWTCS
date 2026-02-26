@@ -66,7 +66,7 @@ export function ReportSignOffButton({
                 {!readOnly && (
                     <button
                         onClick={handleOpenConfirm}
-                        className="text-xs text-zinc-500 hover:text-zinc-300 underline underline-offset-2 transition-colors"
+                        className="text-xs text-muted-foreground hover:text-card-foreground underline underline-offset-2 transition-colors"
                     >
                         Sign off again (supersede)
                     </button>
@@ -82,7 +82,7 @@ export function ReportSignOffButton({
                 <p className="text-sm font-medium text-amber-300">
                     Confirm sign-off for report: <span className="font-mono">{reportDate}</span>
                 </p>
-                <p className="text-xs text-zinc-400">
+                <p className="text-xs text-muted-foreground">
                     This action will be permanently recorded in the audit trail.
                 </p>
                 <textarea
@@ -90,7 +90,7 @@ export function ReportSignOffButton({
                     value={notes}
                     onChange={e => setNotes(e.target.value)}
                     rows={2}
-                    className="w-full rounded-md border border-zinc-700 bg-zinc-900 px-3 py-2 text-sm text-zinc-100 placeholder:text-zinc-600 focus:outline-none focus:ring-2 focus:ring-amber-600 resize-none"
+                    className="w-full rounded-md border border-border bg-card px-3 py-2 text-sm text-foreground placeholder:text-zinc-600 focus:outline-none focus:ring-2 focus:ring-amber-600 resize-none"
                 />
                 {error && (
                     <div className="flex items-center gap-2 text-red-400 text-xs">
@@ -103,7 +103,7 @@ export function ReportSignOffButton({
                         size="sm"
                         onClick={handleSubmit}
                         disabled={isPending}
-                        className="bg-emerald-700 hover:bg-emerald-600 text-white"
+                        className="bg-emerald-700 hover:bg-emerald-600 text-foreground"
                     >
                         {isPending ? (
                             <><Loader2 className="h-3.5 w-3.5 mr-1.5 animate-spin" /> Signing off…</>

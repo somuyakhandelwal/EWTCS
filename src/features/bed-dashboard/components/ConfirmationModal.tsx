@@ -52,22 +52,22 @@ export const ConfirmationModal = memo(function ConfirmationModal({
     if (!isOpen) return null
 
     return (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 animate-in fade-in duration-200">
+        <div className="fixed inset-0 bg-background/80 backdrop-blur-sm flex items-center justify-center z-50 p-4 animate-in fade-in duration-200">
             <div
-                className="bg-white dark:bg-zinc-900 rounded-lg shadow-lg max-w-md w-full mx-4 p-6 space-y-4 animate-in zoom-in-95 duration-200"
+                className="bg-card border border-border rounded-lg shadow-lg max-w-md w-full p-6 space-y-4 animate-in zoom-in-95 duration-200"
                 role="dialog"
                 aria-modal="true"
                 aria-labelledby="confirm-title"
                 aria-describedby="confirm-desc"
             >
                 <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-2 text-amber-600 dark:text-amber-500">
-                        <AlertTriangle className="h-5 w-5" aria-hidden="true" />
-                        <h2 id="confirm-title" className="text-lg font-semibold text-gray-900 dark:text-gray-100">Confirm Critical Update</h2>
+                    <div className="flex items-center gap-2 text-foreground">
+                        <AlertTriangle className="h-5 w-5 text-destructive" aria-hidden="true" />
+                        <h2 id="confirm-title" className="text-lg font-semibold text-foreground">Confirm Critical Update</h2>
                     </div>
                     <button
                         onClick={onCancel}
-                        className="text-gray-400 hover:text-gray-500 dark:hover:text-gray-300 focus:outline-none focus:ring-2 focus:ring-amber-500 rounded"
+                        className="text-muted-foreground hover:text-foreground focus:outline-none focus:ring-2 focus:ring-ring rounded"
                         disabled={isUpdating}
                         aria-label="Close confirmation"
                     >
@@ -76,17 +76,17 @@ export const ConfirmationModal = memo(function ConfirmationModal({
                 </div>
 
                 <div className="space-y-4" id="confirm-desc">
-                    <p className="text-gray-600 dark:text-gray-300">
-                        Are you sure you want to update Bed <span className="font-semibold text-gray-900 dark:text-gray-100">{bedNumber}</span>?
+                    <p className="text-muted-foreground">
+                        Are you sure you want to update Bed <span className="font-semibold text-foreground">{bedNumber}</span>?
                     </p>
 
-                    <div className="bg-gray-50 dark:bg-zinc-800/50 rounded-md p-3 space-y-2 text-sm border border-gray-200 dark:border-zinc-700">
+                    <div className="bg-muted rounded-md p-3 space-y-2 text-sm border border-border">
                         <div className="flex justify-between items-center">
-                            <span className="text-gray-500 dark:text-gray-400">From Stage:</span>
-                            <span className="font-medium text-gray-900 dark:text-gray-100">{fromStageName}</span>
+                            <span className="text-muted-foreground">From Stage:</span>
+                            <span className="font-medium text-foreground">{fromStageName}</span>
                         </div>
-                        <div className="flex justify-between items-center border-t border-gray-200 dark:border-zinc-700 pt-2">
-                            <span className="text-gray-500 dark:text-gray-400">To Stage:</span>
+                        <div className="flex justify-between items-center border-t border-border pt-2">
+                            <span className="text-muted-foreground">To Stage:</span>
                             <span
                                 className={cn(
                                     'font-bold px-2 py-0.5 rounded text-xs uppercase tracking-wider border',
@@ -100,7 +100,7 @@ export const ConfirmationModal = memo(function ConfirmationModal({
                         </div>
                     </div>
 
-                    <div className="bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 text-amber-800 dark:text-amber-200 text-xs p-3 rounded-md" role="status">
+                    <div className="bg-muted/50 border border-border text-muted-foreground text-xs p-3 rounded-md" role="status">
                         This is a critical stage change. Please verify the patient status before proceeding.
                     </div>
                 </div>

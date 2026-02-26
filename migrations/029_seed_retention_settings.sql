@@ -1,3 +1,4 @@
+-- Up Migration
 -- Migration 023: Seed default retention configuration into system_settings
 -- EPIC 14 — US-14.2: Configurable Data Retention
 --

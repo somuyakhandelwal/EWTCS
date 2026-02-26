@@ -44,21 +44,21 @@ export function RecoveryLogPanel() {
   }
 
   return (
-    <div className='p-4 rounded-lg border border-gray-200 bg-white mb-6'>
+    <div className='p-4 rounded-lg border border-border bg-card mb-6'>
       <div className='flex items-center justify-between mb-3'>
-        <h2 className='text-lg font-bold text-gray-900'>Recovery Logs</h2>
+        <h2 className='text-lg font-bold text-foreground'>Recovery Logs</h2>
         <div className='flex items-center gap-2'>
           <button
             type='button'
             onClick={loadLogs}
-            className='text-sm px-3 py-1 border border-gray-300 rounded-md hover:bg-gray-50 text-gray-700'
+            className='text-sm px-3 py-1 border border-border rounded-md hover:bg-muted text-foreground transition-colors'
           >
             Refresh
           </button>
           <button
             type='button'
             onClick={handleClearLogs}
-            className='text-sm px-3 py-1 border border-red-300 rounded-md hover:bg-red-50 text-red-700'
+            className='text-sm px-3 py-1 border border-red-900/50 rounded-md hover:bg-red-900/20 text-red-400 transition-colors'
           >
             Clear Logs
           </button>
@@ -66,13 +66,13 @@ export function RecoveryLogPanel() {
       </div>
 
       {logs.length === 0 ? (
-        <p className='text-sm text-gray-500'>No recovery events recorded yet.</p>
+        <p className='text-sm text-muted-foreground'>No recovery events recorded yet.</p>
       ) : (
         <ul className='space-y-2'>
           {logs.map((log, index) => (
-            <li key={`${log.timestamp}-${log.event}-${index}`} className='text-sm text-gray-700'>
+            <li key={`${log.timestamp}-${log.event}-${index}`} className='text-sm text-foreground'>
               <span className='font-medium'>{formatEvent(log.event)}</span>
-              <span className='text-gray-500'> — {formatTimestamp(log.timestamp)}</span>
+              <span className='text-muted-foreground'> — {formatTimestamp(log.timestamp)}</span>
             </li>
           ))}
         </ul>

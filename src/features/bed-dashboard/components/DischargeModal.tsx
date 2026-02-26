@@ -51,20 +51,20 @@ export const DischargeModal = memo(function DischargeModal({
   const elapsedFormatted = formatElapsedTime(elapsedTimeMs)
 
   return (
-    <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4 animate-in fade-in duration-200">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-background/80 backdrop-blur-sm p-4 animate-in fade-in duration-200">
       <div
-        className="bg-zinc-900 border border-red-800/60 rounded-xl shadow-2xl max-w-md w-full animate-in zoom-in-95 duration-200"
+        className="bg-card border border-destructive/40 rounded-xl shadow-2xl max-w-md w-full animate-in zoom-in-95 duration-200"
         onClick={(e) => e.stopPropagation()}
       >
         {/* Header */}
-        <div className="flex items-start justify-between p-6 border-b border-zinc-800">
+        <div className="flex items-start justify-between p-6 border-b border-border">
           <div className="flex items-center gap-3">
-            <div className="p-2 rounded-lg bg-red-900/30 border border-red-800/50">
-              <LogOut className="h-5 w-5 text-red-400" />
+            <div className="p-2 rounded-lg bg-destructive/10 border border-destructive/30">
+              <LogOut className="h-5 w-5 text-destructive" />
             </div>
             <div>
-              <h2 className="text-lg font-bold text-white">Confirm Patient Discharge</h2>
-              <p className="text-sm text-zinc-400 mt-0.5">
+              <h2 className="text-lg font-bold text-foreground">Confirm Patient Discharge</h2>
+              <p className="text-sm text-muted-foreground mt-0.5">
                 This will archive the patient record and reset the bed.
               </p>
             </div>
@@ -72,7 +72,7 @@ export const DischargeModal = memo(function DischargeModal({
           <button
             onClick={onCancel}
             disabled={isSubmitting}
-            className="text-zinc-500 hover:text-zinc-300 transition-colors disabled:opacity-50"
+            className="text-muted-foreground hover:text-card-foreground transition-colors disabled:opacity-50"
             aria-label="Close"
           >
             <X className="h-5 w-5" />
@@ -81,25 +81,25 @@ export const DischargeModal = memo(function DischargeModal({
 
         {/* Details */}
         <div className="p-6 space-y-4">
-          <div className="rounded-lg bg-zinc-800/60 border border-zinc-700/50 divide-y divide-zinc-700/50 text-sm">
+          <div className="rounded-lg bg-muted border border-border divide-y divide-zinc-700/50 text-sm">
             <div className="flex justify-between items-center px-4 py-3">
-              <span className="text-zinc-400">Bed</span>
-              <span className="font-semibold text-white">{bedNumber}</span>
+              <span className="text-muted-foreground">Bed</span>
+              <span className="font-semibold text-foreground">{bedNumber}</span>
             </div>
             <div className="flex justify-between items-center px-4 py-3">
-              <span className="text-zinc-400">Current Stage</span>
-              <span className="font-medium text-zinc-200">{fromStageName ?? 'Unknown'}</span>
+              <span className="text-muted-foreground">Current Stage</span>
+              <span className="font-medium text-card-foreground">{fromStageName ?? 'Unknown'}</span>
             </div>
             <div className="flex justify-between items-center px-4 py-3">
-              <span className="text-zinc-400">Total Patient Time</span>
+              <span className="text-muted-foreground">Total Patient Time</span>
               <div className="flex items-center gap-1.5">
-                <Clock className="h-3.5 w-3.5 text-zinc-400" />
+                <Clock className="h-3.5 w-3.5 text-muted-foreground" />
                 <span
                   className={cn(
                     'font-bold',
                     elapsedTimeMs && elapsedTimeMs > 10_800_000
-                      ? 'text-red-400'
-                      : 'text-zinc-200'
+                      ? 'text-destructive'
+                      : 'text-card-foreground'
                   )}
                 >
                   {elapsedFormatted}
@@ -109,25 +109,25 @@ export const DischargeModal = memo(function DischargeModal({
           </div>
 
           {/* What will happen */}
-          <div className="rounded-lg bg-amber-950/30 border border-amber-800/40 p-4 space-y-1.5">
-            <p className="text-xs font-semibold text-amber-300 uppercase tracking-wider">
+          <div className="rounded-lg bg-muted/50 border border-border p-4 space-y-1.5">
+            <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
               What happens on confirm
             </p>
-            <ul className="space-y-1 text-xs text-amber-200/80">
+            <ul className="space-y-1 text-xs text-muted-foreground">
               <li className="flex items-start gap-1.5">
-                <span className="mt-0.5 text-amber-400">✓</span>
+                <span className="mt-0.5 text-primary">✓</span>
                 Patient record archived to history
               </li>
               <li className="flex items-start gap-1.5">
-                <span className="mt-0.5 text-amber-400">✓</span>
-                Bed moved to <span className="font-semibold text-amber-200">Cleaning</span>
+                <span className="mt-0.5 text-primary">✓</span>
+                Bed moved to <span className="font-semibold text-foreground">Cleaning</span>
               </li>
               <li className="flex items-start gap-1.5">
-                <span className="mt-0.5 text-amber-400">✓</span>
+                <span className="mt-0.5 text-primary">✓</span>
                 Timer reset — ready for next patient
               </li>
               <li className="flex items-start gap-1.5">
-                <span className="mt-0.5 text-amber-400">✓</span>
+                <span className="mt-0.5 text-primary">✓</span>
                 Action logged in audit trail
               </li>
             </ul>
@@ -138,14 +138,15 @@ export const DischargeModal = memo(function DischargeModal({
         <div className="flex gap-3 px-6 pb-6">
           <Button
             variant="outline"
-            className="flex-1 border-zinc-700 text-zinc-300 hover:bg-zinc-800"
+            className="flex-1 border-border text-card-foreground hover:bg-muted"
             onClick={onCancel}
             disabled={isSubmitting}
           >
             Cancel
           </Button>
           <Button
-            className="flex-1 bg-red-700 hover:bg-red-600 text-white border-red-600"
+            variant="destructive"
+            className="flex-1"
             onClick={onConfirm}
             disabled={isSubmitting}
           >

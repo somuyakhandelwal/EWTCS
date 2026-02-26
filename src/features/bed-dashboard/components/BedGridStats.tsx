@@ -10,6 +10,7 @@ interface BedGridStatsProps {
   available: number
   delayed: number
   bottleneckCount: number
+  escalationCount: number
   cleaningCount?: number
   avgTatMs?: number | null
 }
@@ -20,46 +21,54 @@ export const BedGridStats = memo(function BedGridStats({
   available,
   delayed,
   bottleneckCount,
+  escalationCount,
   cleaningCount = 0,
   avgTatMs = null,
 }: BedGridStatsProps) {
   return (
-    <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-7 gap-4 p-4 bg-zinc-900/50 rounded-lg border border-zinc-800">
+    <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-8 gap-4 p-4 bg-muted/20 rounded-lg border border-border">
       <div>
-        <p className="text-xs text-zinc-500 uppercase">Total Beds</p>
-        <p className="text-xl sm:text-2xl font-bold text-white">{total}</p>
+        <p className="text-xs text-muted-foreground uppercase">Total Beds</p>
+        <p className="text-xl sm:text-2xl font-bold text-foreground">{total}</p>
       </div>
       <div>
-        <p className="text-xs text-zinc-500 uppercase">Occupied</p>
-        <p className="text-xl sm:text-2xl font-bold text-green-400">{occupied}</p>
+        <p className="text-xs text-muted-foreground uppercase">Occupied</p>
+        <p className="text-xl sm:text-2xl font-bold text-status-occupied">{occupied}</p>
       </div>
       <div>
-        <p className="text-xs text-zinc-500 uppercase">Available</p>
-        <p className="text-xl sm:text-2xl font-bold text-blue-400">{available}</p>
+        <p className="text-xs text-muted-foreground uppercase">Available</p>
+        <p className="text-xl sm:text-2xl font-bold text-status-empty">{available}</p>
       </div>
       <div>
-        <p className="text-xs text-zinc-500 uppercase">Delayed</p>
-        <p className="text-xl sm:text-2xl font-bold text-red-400">{delayed}</p>
+        <p className="text-xs text-muted-foreground uppercase">Delayed</p>
+        <p className="text-xl sm:text-2xl font-bold text-status-delayed">{delayed}</p>
+      </div>
+      {/* US-15.3: Critical Escalation count */}
+      <div>
+        <p className="text-xs text-muted-foreground uppercase">Escalated</p>
+        <p className={`text-xl sm:text-2xl font-bold ${escalationCount > 0 ? 'text-status-escalated' : 'text-muted-foreground'}`}>
+          {escalationCount}
+        </p>
       </div>
       {/* US-1.6: Disposition bottleneck count — spans both columns on mobile to avoid orphan */}
       <div className="col-span-2 sm:col-span-1">
-        <p className="text-xs text-zinc-500 uppercase">Disposition Hold</p>
-        <p className={`text-xl sm:text-2xl font-bold ${bottleneckCount > 0 ? 'text-amber-400' : 'text-zinc-500'}`}>
+        <p className="text-xs text-muted-foreground uppercase">Disposition Hold</p>
+        <p className={`text-xl sm:text-2xl font-bold ${bottleneckCount > 0 ? 'text-destructive' : 'text-muted-foreground'}`}>
           {bottleneckCount}
         </p>
       </div>
       {/* US-2.4: Cleaning count */}
       <div>
-        <p className="text-xs text-zinc-500 uppercase">Cleaning</p>
-        <p className={`text-2xl font-bold ${cleaningCount > 0 ? 'text-pink-400' : 'text-zinc-500'}`}>
+        <p className="text-xs text-muted-foreground uppercase">Cleaning</p>
+        <p className={`text-2xl font-bold ${cleaningCount > 0 ? 'text-status-cleaning' : 'text-muted-foreground'}`}>
           {cleaningCount}
         </p>
       </div>
       {/* US-2.4: Average turnaround time */}
       {avgTatMs !== null && avgTatMs > 0 && (
-        <div>
-          <p className="text-xs text-zinc-500 uppercase">Avg TAT (24h)</p>
-          <p className="text-2xl font-bold text-amber-400">
+        <div className="col-span-2 sm:col-span-1">
+          <p className="text-xs text-muted-foreground uppercase">Avg TAT (24h)</p>
+          <p className="text-2xl font-bold text-foreground">
             {formatElapsedTime(avgTatMs)}
           </p>
         </div>

@@ -32,10 +32,10 @@ export const LosTrendChart = memo(function LosTrendChart({
 
   if (trend.length === 0) {
     return (
-      <Card className={cn('bg-zinc-900 border-zinc-800', className)}>
+      <Card className={cn('bg-card border-border', className)}>
         <CardHeader>
-          <CardTitle className="text-sm text-white">Average LoS Trend</CardTitle>
-          <CardDescription className="text-xs text-zinc-400">
+          <CardTitle className="text-sm text-foreground">Average LoS Trend</CardTitle>
+          <CardDescription className="text-xs text-muted-foreground">
             No discharge data for the selected period
           </CardDescription>
         </CardHeader>
@@ -49,17 +49,17 @@ export const LosTrendChart = memo(function LosTrendChart({
   }
 
   return (
-    <Card className={cn('bg-zinc-900 border-zinc-800', className)}>
+    <Card className={cn('bg-card border-border', className)}>
       <CardHeader className="pb-2">
         <div className="flex items-center justify-between">
           <div>
-            <CardTitle className="text-sm text-white">Average LoS Trend</CardTitle>
-            <CardDescription className="text-xs text-zinc-400">
+            <CardTitle className="text-sm text-foreground">Average LoS Trend</CardTitle>
+            <CardDescription className="text-xs text-muted-foreground">
               Daily average length of stay · {trend.length} day{trend.length !== 1 ? 's' : ''}
             </CardDescription>
           </div>
           {/* Legend */}
-          <div className="flex items-center gap-4 text-[10px] text-zinc-400">
+          <div className="flex items-center gap-4 text-[10px] text-muted-foreground">
             <span className="flex items-center gap-1">
               <span className="inline-block w-4 h-0.5 bg-blue-500 rounded" /> Avg LoS
             </span>

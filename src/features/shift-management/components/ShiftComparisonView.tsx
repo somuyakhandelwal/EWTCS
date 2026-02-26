@@ -59,7 +59,7 @@ export function ShiftComparisonView({ readOnly = false, className }: ShiftCompar
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
         <div>
           <h2 className="text-2xl font-bold tracking-tight">Shift Performance Comparison</h2>
-          <p className="text-sm text-zinc-400 mt-0.5">
+          <p className="text-sm text-muted-foreground mt-0.5">
             Side-by-side throughput, timing, and delay metrics for all shifts
           </p>
         </div>
@@ -95,7 +95,7 @@ export function ShiftComparisonView({ readOnly = false, className }: ShiftCompar
 
       {/* Legend */}
       {report && !loading && (
-        <p className="text-xs text-zinc-500">
+        <p className="text-xs text-muted-foreground">
           Delays = stage transitions exceeding 3 hours.{' '}
           <span className="text-green-400">Best</span> = highest throughput with fewest delays.{' '}
           <span className="text-red-400">Worst</span> = lowest throughput among active shifts with patients.
