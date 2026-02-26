@@ -1,4 +1,3 @@
--- Up Migration
 -- Migration 031: Archive bed stage logs for long-term retention
 -- Purpose: Ensure historical stage transitions are permanently retained for audit
 -- Epic: EPIC 3 - Time Tracking & Stage Logging (US-3.6)

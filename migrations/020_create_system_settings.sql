@@ -1,4 +1,3 @@
--- Up Migration
 -- Migration 017: System Settings table for US-6.3 (Set Time Thresholds)
 -- Stores global key-value configuration including delay_threshold_minutes
 

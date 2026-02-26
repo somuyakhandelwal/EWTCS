@@ -1,7 +1,4 @@
-// Bed Card Component
-// Epic 1: Nurse Desk Bed Dashboard
-// Epic 6: US-6.5 — temporary (surge) beds shown with orange badge + border
-//          US-6.6 — virtual (hallway/stretcher) beds shown with purple badge + border
+// Epic 6: US-6.5 temporary (orange) / US-6.6 virtual (purple) beds
 // US-4.3: Blinking animation with acknowledge support
 import { memo, useState, useEffect, useCallback, type MouseEvent } from 'react'
 import { Card, CardContent } from '@/shared/components/ui/card'
@@ -44,10 +41,8 @@ interface BedCardProps {
 }
 
 export const BedCard = memo(function BedCard({
-  bed, onClick, onContextMenu, onReasonSelect,
-  showUpdated = false, errorMessage = null,
-  searchQuery = '', showUndo = false, onUndo, undoTimerSeconds = 0,
-  animationEnabled = true,
+  bed, onClick, onContextMenu, onReasonSelect, showUpdated = false, errorMessage = null,
+  searchQuery = '', showUndo = false, onUndo, undoTimerSeconds = 0, animationEnabled = true,
 }: BedCardProps) {
   const rawStageName = bed.currentStage?.name || 'Empty'
   const stageName = rawStageName === 'Cleaning' ? 'In Cleaning' : rawStageName
@@ -187,10 +182,7 @@ export const BedCard = memo(function BedCard({
             )}
           </div>
         )}
-        {isCleaning && (
-          <CleaningActions
-            lastStageChange={bed.lastStageChange} />
-        )}
+        {isCleaning && <CleaningActions lastStageChange={bed.lastStageChange} />}
         {!isOccupied && !isCleaning && (
           <div className="pt-2 border-t border-border">
             <p className="text-xs text-muted-foreground">Status</p>

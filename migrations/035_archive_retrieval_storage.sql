@@ -1,4 +1,3 @@
--- Up Migration
 -- Migration 024: Archive retrieval indexes + storage alert threshold
 -- EPIC 14 — US-14.3: Auditor Archive Retrieval
 --           US-14.4: Storage Optimization & Monitoring

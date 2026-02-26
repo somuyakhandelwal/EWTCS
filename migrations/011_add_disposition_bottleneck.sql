@@ -1,4 +1,3 @@
--- Up Migration
 -- Migration 011: Add Disposition Bottleneck Tracking
 -- Purpose: Track patients stuck in "Decision Made" stage waiting for beds upstairs
 -- Epic: EPIC 1 - Nurse Desk Bed Dashboard (US-1.6)

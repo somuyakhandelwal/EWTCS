@@ -1,4 +1,3 @@
--- Up Migration
 -- Migration 030: Create report_signoffs table
 -- Epic 12: Audit Logs & Compliance
 -- US: Supervisor Sign-Off on Daily Reports

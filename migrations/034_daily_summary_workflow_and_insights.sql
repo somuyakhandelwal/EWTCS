@@ -1,4 +1,3 @@
--- Up Migration
 -- Migration 034: Daily summary workflow (US-9.2) and insights with confidence (US-9.3)
 -- Epic 9: Daily AI Summary Generator
 --

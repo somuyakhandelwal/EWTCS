@@ -1,4 +1,3 @@
--- Up Migration
 -- Migration 006: Add Bed Stage Log Immutability
 -- Purpose: Make bed stage logs immutable for audit trail integrity
 -- EPIC 3: Time Tracking & Stage Logging

@@ -1,4 +1,3 @@
--- Up Migration
 -- Migration 033: Add ai_summary column to daily_summaries
 -- Stores the LLM-generated text summary for the day.
 
