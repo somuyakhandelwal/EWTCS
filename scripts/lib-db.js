@@ -1,16 +1,10 @@
-/**
- * Database operations for system initialization
- */
-
+/** Database operations for system initialization */
 const { Client } = require('pg');
 const { log } = require('./lib-logger');
 
-/**
- * Validate environment variables
- */
+/** Validate environment variables */
 async function validateEnvironment() {
   log.step(1, 'Validating environment variables...');
-
   try {
     const { resolveDatabaseUrl } = require('./lib-env');
     const databaseUrl = resolveDatabaseUrl();
@@ -22,14 +16,10 @@ async function validateEnvironment() {
   }
 }
 
-/**
- * Test database connection
- */
+/** Test database connection */
 async function testConnection(databaseUrl) {
   log.step(2, 'Testing database connection...');
-
   const client = new Client({ connectionString: databaseUrl });
-
   try {
     await client.connect();
     // simple lightweight check
@@ -44,19 +34,13 @@ async function testConnection(databaseUrl) {
   }
 }
 
-/**
- * Check and run migrations if needed
- */
+/** Check and run migrations if needed */
 const { checkAndRunMigrations } = require('./db-migrations');
 
-/**
- * Verify users table exists
- */
+/** Verify users table exists */
 async function verifyUsersTable(databaseUrl) {
   log.step(4, 'Verifying users table structure...');
-
   const client = new Client({ connectionString: databaseUrl });
-
   try {
     await client.connect();
 
@@ -93,18 +77,13 @@ async function verifyUsersTable(databaseUrl) {
   }
 }
 
-/**
- * Setup admin user (idempotent)
- */
+/** Setup admin user (idempotent) */
 async function setupAdminUser(databaseUrl) {
   log.step(5, 'Setting up admin user...');
-
   const client = new Client({ connectionString: databaseUrl });
   const bcrypt = require('bcrypt');
-
   try {
     await client.connect();
-
     const adminUsername = process.env.ADMIN_USERNAME || 'admin';
     const adminPassword = process.env.ADMIN_PASSWORD;
 
@@ -156,13 +135,11 @@ async function setupAdminUser(databaseUrl) {
     }
 
     // --- Developer Testing Enhancement ---
-    // Ensure all non-admin test roles exist with the same password for testing convenience
     const testRoles = ['nurse', 'supervisor', 'housekeeping', 'auditor'];
     const testPassword = process.env.ADMIN_PASSWORD || 'user@123';
     const hashedTestPassword = await bcrypt.hash(testPassword, 10);
-
     for (const role of testRoles) {
-      const username = role; // username is exactly 'nurse' or 'supervisor'
+      const username = role;
       const roleResult = await client.query('SELECT id FROM users WHERE username = $1', [username]);
 
       if (roleResult.rows.length === 0) {
@@ -190,9 +167,7 @@ async function setupAdminUser(databaseUrl) {
   }
 }
 
-/**
- * Generate temporary password
- */
+/** Generate temporary password */
 function generateTempPassword() {
   const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789!@#$';
   let password = '';
