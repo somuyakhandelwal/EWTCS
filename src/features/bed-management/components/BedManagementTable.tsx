@@ -6,7 +6,7 @@ import { Badge } from '@/shared/components/ui/badge'
 import { Button } from '@/shared/components/ui/button'
 import { Input } from '@/shared/components/ui/input'
 import { BedStatisticsBar } from './BedStatisticsBar'
-import { Edit, Power, PowerOff, Search } from 'lucide-react'
+import { Edit, Power, Search } from 'lucide-react'
 
 interface BedManagementTableProps {
     beds: BedManagementData[]
@@ -165,15 +165,14 @@ export function BedManagementTable({
                                                     <Edit className="h-4 w-4" />
                                                 </Button>
                                                 {bed.isActive ? (
-                                                    <Button
-                                                        variant="ghost"
-                                                        size="sm"
+                                                    <button
                                                         onClick={() => onDeactivate(bed)}
                                                         disabled={bed.isOccupied}
-                                                        className="text-red-400 hover:text-red-300"
+                                                        title="Deactivate bed"
+                                                        className="px-2 py-0.5 text-xs font-medium rounded border border-red-700 text-red-400 hover:bg-red-900/30 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
                                                     >
-                                                        <PowerOff className="h-4 w-4" />
-                                                    </Button>
+                                                        Deactivate
+                                                    </button>
                                                 ) : (
                                                     <Button
                                                         variant="ghost"

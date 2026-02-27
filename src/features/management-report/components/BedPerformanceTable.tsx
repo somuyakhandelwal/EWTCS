@@ -8,7 +8,7 @@
 import { memo, useMemo, useCallback } from 'react'
 import { AlertTriangle, Download } from 'lucide-react'
 import { Button } from '@/shared/components/ui/button'
-import { formatDuration } from '@/features/bed-dashboard/lib/duration-formatters'
+import { formatDuration } from '@/shared/lib/duration-formatters'
 import { cn } from '@/shared/lib/utils'
 import type { BedPerformanceRow } from '../types/report.types'
 import type { SortField, SortDir } from '../hooks/useBedPerformanceData'

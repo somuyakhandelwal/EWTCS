@@ -14,7 +14,7 @@ import {
 import { Button } from '@/shared/components/ui/button'
 import { AlertCircle, RefreshCw } from 'lucide-react'
 import { cn } from '@/shared/lib/utils'
-import { formatDuration } from '@/features/bed-dashboard/lib/duration-formatters'
+import { formatDuration } from '@/shared/lib/duration-formatters'
 import {
   useDelayedPatientsData,
   PRESETS,

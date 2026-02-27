@@ -6,10 +6,10 @@
 // Bottleneck stages highlighted in red/amber.
 // Pure SVG — no external chart library required.
 
-import { memo, useMemo } from 'react'
+import { memo, useMemo, useState } from 'react'
 import { Button } from '@/shared/components/ui/button'
 import { Download } from 'lucide-react'
-import { formatDuration } from '@/features/bed-dashboard/lib/duration-formatters'
+import { formatDuration } from '@/shared/lib/duration-formatters'
 import { exportChartAsPng } from '../lib/chart-export-utils'
 import type { StageDelayRow } from '../types/report.types'
 
@@ -33,6 +33,7 @@ export const StageDelayBarChart = memo(function StageDelayBarChart({
   rows,
 }: StageDelayBarChartProps) {
   const chartId = 'stage-delay-chart-svg'
+  const [tooltip, setTooltip] = useState<{ row: StageDelayRow; x: number; y: number } | null>(null)
   const displayRows = useMemo(
     () => rows.filter((r) => r.totalTransitions > 0),
     [rows]
@@ -88,7 +89,12 @@ export const StageDelayBarChart = memo(function StageDelayBarChart({
                 : row.stageName
 
             return (
-              <g key={row.stageId}>
+              <g
+                key={row.stageId}
+                style={{ cursor: 'pointer' }}
+                onMouseEnter={(e) => setTooltip({ row, x: e.clientX, y: e.clientY })}
+                onMouseLeave={() => setTooltip(null)}
+              >
                 {/* Background track */}
                 <rect
                   x={x}
@@ -149,6 +155,20 @@ export const StageDelayBarChart = memo(function StageDelayBarChart({
           })}
         </svg>
       </div>
+
+      {tooltip && (
+        <div
+          className="fixed z-50 bg-zinc-800 border border-zinc-700 rounded-lg px-3 py-2 text-xs text-foreground shadow-lg pointer-events-none"
+          style={{ left: tooltip.x + 14, top: tooltip.y - 56 }}
+        >
+          <p className="font-semibold mb-1 text-foreground">{tooltip.row.stageName}</p>
+          <p className="text-zinc-300">Avg duration: <span className="text-white">{formatDuration(tooltip.row.avgDurationMs)}</span></p>
+          <p className="text-zinc-300">Total transitions: <span className="text-white">{tooltip.row.totalTransitions}</span></p>
+          {tooltip.row.isBottleneck && (
+            <p className="text-red-400 mt-1 font-medium">🔴 Bottleneck stage</p>
+          )}
+        </div>
+      )}
     </div>
   )
 })
