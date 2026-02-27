@@ -14,7 +14,7 @@ export function highlightMatch(text: string, query?: string) {
   return (
     <Fragment>
       {before}
-      <span className="bg-yellow-300 text-black px-1 rounded">{match}</span>
+      <span className="bg-yellow-300 text-background px-1 rounded">{match}</span>
       {after}
     </Fragment>
   )

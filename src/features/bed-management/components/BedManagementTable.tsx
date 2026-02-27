@@ -77,30 +77,30 @@ export function BedManagementTable({
             />
 
             {/* Table */}
-            <div className="border border-zinc-800 rounded-lg overflow-hidden">
+            <div className="border border-border rounded-lg overflow-hidden">
                 <div className="overflow-x-auto">
                     <table className="w-full">
-                        <thead className="bg-zinc-900 border-b border-zinc-800">
+                        <thead className="bg-card border-b border-border">
                             <tr>
-                                <th className="text-left px-4 py-3 text-sm font-medium text-zinc-300">
+                                <th className="text-left px-4 py-3 text-sm font-medium text-card-foreground">
                                     Bed Number
                                 </th>
-                                <th className="text-left px-4 py-3 text-sm font-medium text-zinc-300">
+                                <th className="text-left px-4 py-3 text-sm font-medium text-card-foreground">
                                     Ward
                                 </th>
-                                <th className="text-left px-4 py-3 text-sm font-medium text-zinc-300">
+                                <th className="text-left px-4 py-3 text-sm font-medium text-card-foreground">
                                     Location
                                 </th>
-                                <th className="text-left px-4 py-3 text-sm font-medium text-zinc-300">
+                                <th className="text-left px-4 py-3 text-sm font-medium text-card-foreground">
                                     Status
                                 </th>
-                                <th className="text-left px-4 py-3 text-sm font-medium text-zinc-300">
+                                <th className="text-left px-4 py-3 text-sm font-medium text-card-foreground">
                                     Current Stage
                                 </th>
-                                <th className="text-left px-4 py-3 text-sm font-medium text-zinc-300">
+                                <th className="text-left px-4 py-3 text-sm font-medium text-card-foreground">
                                     Occupied
                                 </th>
-                                <th className="text-right px-4 py-3 text-sm font-medium text-zinc-300">
+                                <th className="text-right px-4 py-3 text-sm font-medium text-card-foreground">
                                     Actions
                                 </th>
                             </tr>
@@ -108,7 +108,7 @@ export function BedManagementTable({
                         <tbody className="divide-y divide-zinc-800">
                             {filteredBeds.length === 0 ? (
                                 <tr>
-                                    <td colSpan={7} className="px-4 py-8 text-center text-zinc-500">
+                                    <td colSpan={7} className="px-4 py-8 text-center text-muted-foreground">
                                         No beds found
                                     </td>
                                 </tr>
@@ -116,15 +116,15 @@ export function BedManagementTable({
                                 filteredBeds.map((bed) => (
                                     <tr
                                         key={bed.id}
-                                        className="hover:bg-zinc-900/50 transition-colors"
+                                        className="hover:bg-card transition-colors"
                                     >
-                                        <td className="px-4 py-3 font-medium text-white">
+                                        <td className="px-4 py-3 font-medium text-foreground">
                                             {bed.bedNumber}
                                         </td>
-                                        <td className="px-4 py-3 text-zinc-300">
+                                        <td className="px-4 py-3 text-card-foreground">
                                             {bed.wardName || 'Unknown'}
                                         </td>
-                                        <td className="px-4 py-3 text-zinc-400 text-sm">
+                                        <td className="px-4 py-3 text-muted-foreground text-sm">
                                             {bed.location || '—'}
                                         </td>
                                         <td className="px-4 py-3">
@@ -139,7 +139,7 @@ export function BedManagementTable({
                                                 {bed.isActive ? 'Active' : 'Inactive'}
                                             </Badge>
                                         </td>
-                                        <td className="px-4 py-3 text-zinc-300 text-sm">
+                                        <td className="px-4 py-3 text-card-foreground text-sm">
                                             {bed.currentStageName || 'Unknown'}
                                         </td>
                                         <td className="px-4 py-3">
@@ -148,7 +148,7 @@ export function BedManagementTable({
                                                 className={
                                                     bed.isOccupied
                                                         ? 'bg-orange-900/50 text-orange-400 border-orange-800'
-                                                        : 'bg-zinc-900/50 text-zinc-400 border-zinc-700'
+                                                        : 'bg-card text-muted-foreground border-border'
                                                 }
                                             >
                                                 {bed.isOccupied ? 'Occupied' : 'Available'}

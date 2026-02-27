@@ -47,7 +47,7 @@ export function InsightWithConfidence({
                 <button
                     type="button"
                     onClick={() => onFlag(summaryId, insight.id)}
-                    className={`shrink-0 p-1 rounded hover:bg-white/10 ${insight.flagged ? 'text-amber-400' : 'text-muted-foreground'}`}
+                    className={`shrink-0 p-1 rounded hover:bg-foreground ${insight.flagged ? 'text-amber-400' : 'text-muted-foreground'}`}
                     title={insight.flagged ? 'Unflag' : 'Flag for review'}
                     aria-label={insight.flagged ? 'Unflag insight' : 'Flag insight for review'}
                 >

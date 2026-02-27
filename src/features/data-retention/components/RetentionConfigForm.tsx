@@ -51,8 +51,8 @@ const FIELDS: FieldConfig[] = [
 ]
 
 const inputClass = cn(
-  'w-20 bg-zinc-800 border border-zinc-700 rounded px-2 py-1',
-  'text-sm text-zinc-200 text-right',
+  'w-20 bg-muted border border-border rounded px-2 py-1',
+  'text-sm text-card-foreground text-right',
   'focus:outline-none focus:ring-1 focus:ring-blue-500',
   'disabled:opacity-50 disabled:cursor-not-allowed',
 )
@@ -89,8 +89,8 @@ export function RetentionConfigForm({ initialConfig }: RetentionConfigFormProps)
         {FIELDS.map(({ key, label, description, min, max, unit }) => (
           <div key={key} className="flex items-center justify-between gap-4">
             <div>
-              <p className="text-sm text-zinc-200">{label}</p>
-              <p className="text-xs text-zinc-500">{description}</p>
+              <p className="text-sm text-card-foreground">{label}</p>
+              <p className="text-xs text-muted-foreground">{description}</p>
             </div>
             <div className="flex items-center gap-2 shrink-0">
               <input
@@ -103,7 +103,7 @@ export function RetentionConfigForm({ initialConfig }: RetentionConfigFormProps)
                 aria-label={`${label} retention ${unit === 'yr' ? 'years' : 'days'}`}
                 className={inputClass}
               />
-              <span className="text-xs text-zinc-500 w-8">{unit === 'yr' ? 'yr' : 'day'}</span>
+              <span className="text-xs text-muted-foreground w-8">{unit === 'yr' ? 'yr' : 'day'}</span>
             </div>
           </div>
         ))}
@@ -119,8 +119,8 @@ export function RetentionConfigForm({ initialConfig }: RetentionConfigFormProps)
           className="w-4 h-4 accent-blue-500"
         />
         <div>
-          <p className="text-sm text-zinc-200">Require admin approval before deletion</p>
-          <p className="text-xs text-zinc-500">
+          <p className="text-sm text-card-foreground">Require admin approval before deletion</p>
+          <p className="text-xs text-muted-foreground">
             Cron runs create a pending job; an admin must approve before data is moved.
           </p>
         </div>
@@ -131,7 +131,7 @@ export function RetentionConfigForm({ initialConfig }: RetentionConfigFormProps)
           onClick={handleSubmit}
           disabled={isPending}
           size="sm"
-          className="bg-blue-600 hover:bg-blue-700 text-white"
+          className="bg-blue-600 hover:bg-blue-700 text-foreground"
         >
           <Save className="h-3.5 w-3.5 mr-1.5" />
           {isPending ? 'Saving…' : 'Save Settings'}

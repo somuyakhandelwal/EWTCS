@@ -55,39 +55,39 @@ export default function LoginPage() {
     }
 
     return (
-        <div className="flex min-h-screen items-center justify-center bg-black px-4 py-12 sm:px-6 lg:px-8 relative overflow-hidden">
+        <div className="flex min-h-screen items-center justify-center bg-background px-4 py-12 sm:px-6 lg:px-8 relative overflow-hidden">
 
             {/* Background decoration */}
             <div className="absolute top-0 left-0 w-full h-full overflow-hidden pointer-events-none">
-                <div className="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] bg-zinc-800/20 rounded-full blur-[100px]" />
-                <div className="absolute bottom-[-10%] right-[-10%] w-[40%] h-[40%] bg-zinc-800/20 rounded-full blur-[100px]" />
+                <div className="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] bg-muted/50 rounded-full blur-[100px]" />
+                <div className="absolute bottom-[-10%] right-[-10%] w-[40%] h-[40%] bg-muted/50 rounded-full blur-[100px]" />
             </div>
 
-            <Card className="w-full max-w-sm shadow-xl bg-zinc-950/50 border-white/10 backdrop-blur-xl relative z-10 text-white">
+            <Card className="w-full max-w-sm shadow-xl bg-card/50 border-border backdrop-blur-xl relative z-10 text-foreground">
                 <CardHeader>
-                    <CardTitle className="text-2xl font-bold text-center text-white">Sign In</CardTitle>
-                    <CardDescription className="text-center text-zinc-400">
+                    <CardTitle className="text-2xl font-bold text-center text-foreground">Sign In</CardTitle>
+                    <CardDescription className="text-center text-muted-foreground">
                         Enter your credentials to access the nurse dashboard
                     </CardDescription>
                 </CardHeader>
                 <form onSubmit={handleSubmit}>
                     <CardContent className="space-y-4">
                         <div className="space-y-2">
-                            <Label htmlFor="username" className="text-zinc-200">Username</Label>
+                            <Label htmlFor="username" className="text-foreground">Username</Label>
                             <Input
                                 id="username"
                                 name="username"
                                 placeholder="Enter your username"
                                 required
                                 autoComplete="username"
-                                className="bg-black/50 border-white/10 text-white placeholder:text-zinc-600 focus:ring-white/20 focus:border-white/20"
+                                className="bg-background/50 border-border text-foreground placeholder:text-muted-foreground focus:ring-ring focus:border-ring"
                             />
                             {state?.errors?.username && (
                                 <p className="text-sm text-red-500">{state.errors.username}</p>
                             )}
                         </div>
                         <div className="space-y-2">
-                            <Label htmlFor="password" className="text-zinc-200">Password</Label>
+                            <Label htmlFor="password" className="text-foreground">Password</Label>
                             <Input
                                 id="password"
                                 type="password"
@@ -95,14 +95,14 @@ export default function LoginPage() {
                                 placeholder="••••••••"
                                 required
                                 autoComplete="current-password"
-                                className="bg-black/50 border-white/10 text-white placeholder:text-zinc-600 focus:ring-white/20 focus:border-white/20"
+                                className="bg-background/50 border-border text-foreground placeholder:text-muted-foreground focus:ring-ring focus:border-ring"
                             />
                             {state?.errors?.password && (
                                 <p className="text-sm text-red-500">{state.errors.password}</p>
                             )}
                         </div>
                         {state?.message && (
-                            <div className="p-3 bg-red-900/20 text-red-400 border border-red-900/50 text-sm rounded-md text-center">
+                            <div className="p-3 bg-destructive/20 text-destructive border border-destructive/50 text-sm rounded-md text-center">
                                 {state.message}
                             </div>
                         )}
@@ -113,13 +113,13 @@ export default function LoginPage() {
                                 id="kioskMode"
                                 name="kioskMode"
                                 type="checkbox"
-                                className="mt-0.5 h-4 w-4 rounded border-white/20 bg-black/50 accent-emerald-500 cursor-pointer"
+                                className="mt-0.5 h-4 w-4 rounded border-border bg-background/50 accent-primary cursor-pointer"
                             />
                             <div>
-                                <Label htmlFor="kioskMode" className="text-zinc-300 font-normal cursor-pointer">
+                                <Label htmlFor="kioskMode" className="text-foreground font-normal cursor-pointer">
                                     Enable Kiosk Mode
                                 </Label>
-                                <p className="text-[11px] text-zinc-500 mt-0.5">
+                                <p className="text-[11px] text-muted-foreground mt-0.5">
                                     Session never expires — for dedicated nurse workstations only
                                 </p>
                             </div>
@@ -136,7 +136,7 @@ export default function LoginPage() {
                 </form>
             </Card>
 
-            <div className="absolute bottom-4 text-zinc-600 text-xs text-center w-full">
+            <div className="absolute bottom-4 text-muted-foreground text-xs text-center w-full">
                 &copy; 2026 EWTCS Project
             </div>
         </div>

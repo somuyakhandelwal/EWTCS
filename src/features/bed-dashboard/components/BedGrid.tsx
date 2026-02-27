@@ -106,6 +106,7 @@ export function BedGrid({
         available={stats.available}
         delayed={stats.delayed}
         bottleneckCount={data.bottleneckCount}
+        escalationCount={data.escalationCount}
         cleaningCount={cleaningCount}
         avgTatMs={tatSummary?.averageTatMs}
       />
@@ -122,8 +123,8 @@ export function BedGrid({
 
       {/* Bed Grid */}
       {displayedBeds.length === 0 ? (
-        <div className="text-center py-12 bg-zinc-900/30 rounded-lg border border-zinc-800">
-          <p className="text-zinc-400">
+        <div className="text-center py-12 bg-muted/30 rounded-lg border border-border">
+          <p className="text-muted-foreground">
             {showDelayedOnly
               ? '🎉 No delayed beds! All patients are on track.'
               : 'No beds configured in the system.'}

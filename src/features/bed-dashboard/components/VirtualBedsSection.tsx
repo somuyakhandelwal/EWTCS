@@ -33,7 +33,7 @@ export function VirtualBedsSection({
                     <Button
                         size="sm"
                         onClick={onAddVirtualBed}
-                        className="bg-purple-700 hover:bg-purple-600 text-white border-none h-8 text-xs"
+                        className="bg-purple-700 hover:bg-purple-600 text-foreground border-none h-8 text-xs"
                     >
                         <MapPin className="h-3.5 w-3.5 mr-1.5" />
                         Add Virtual Bed
@@ -42,7 +42,7 @@ export function VirtualBedsSection({
             </div>
 
             {virtualBeds.length === 0 ? (
-                <p className="text-sm text-zinc-500">
+                <p className="text-sm text-muted-foreground">
                     No virtual beds active. Use &ldquo;Add Virtual Bed&rdquo; to track hallway patients.
                 </p>
             ) : (

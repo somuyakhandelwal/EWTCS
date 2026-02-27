@@ -99,7 +99,7 @@ export async function logAudit(entry: AuditLogEntry): Promise<void> {
                 resolvedIpAddress,
             ]
         )
-        
+
         logger.info(`Audit log created: ${entry.actionType} ${entry.entityType}`, {
             actionType: entry.actionType,
             entityType: entry.entityType,

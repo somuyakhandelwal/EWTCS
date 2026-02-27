@@ -46,11 +46,11 @@ export function KioskSessionsPanel() {
   }
 
   return (
-    <div className="rounded-lg border border-zinc-800 bg-zinc-900">
-      <div className="flex items-center justify-between px-4 py-3 border-b border-zinc-800">
+    <div className="rounded-lg border border-border bg-card">
+      <div className="flex items-center justify-between px-4 py-3 border-b border-border">
         <div className="flex items-center gap-2">
           <Monitor className="h-4 w-4 text-emerald-400" />
-          <span className="text-sm font-semibold text-zinc-200">Active Kiosk Sessions</span>
+          <span className="text-sm font-semibold text-card-foreground">Active Kiosk Sessions</span>
           {sessions.length > 0 && (
             <span className="rounded-full bg-emerald-900/40 border border-emerald-700/50 px-2 py-0.5 text-xs text-emerald-300">
               {sessions.length}
@@ -65,7 +65,7 @@ export function KioskSessionsPanel() {
       {error && <p className="px-4 py-2 text-xs text-red-400">{error}</p>}
 
       {sessions.length === 0 ? (
-        <p className="px-4 py-6 text-center text-sm text-zinc-500">
+        <p className="px-4 py-6 text-center text-sm text-muted-foreground">
           {isLoading ? 'Loading…' : 'No active kiosk sessions'}
         </p>
       ) : (
@@ -73,8 +73,8 @@ export function KioskSessionsPanel() {
           {sessions.map(s => (
             <div key={s.id} className="flex items-center justify-between px-4 py-3 gap-4">
               <div className="min-w-0">
-                <p className="text-sm font-medium text-zinc-200">{s.username}</p>
-                <p className="text-xs text-zinc-500 font-mono">{s.boundIp}</p>
+                <p className="text-sm font-medium text-card-foreground">{s.username}</p>
+                <p className="text-xs text-muted-foreground font-mono">{s.boundIp}</p>
                 <p className="text-[10px] text-zinc-600">
                   Since {new Date(s.createdAt).toLocaleString()}
                 </p>

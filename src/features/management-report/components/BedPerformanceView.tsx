@@ -63,15 +63,15 @@ export function BedPerformanceView({
       {/* Header + toolbar */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
         <div>
-          <h2 className="text-2xl font-bold tracking-tight flex items-center gap-2 text-white">
+          <h2 className="text-2xl font-bold tracking-tight flex items-center gap-2 text-foreground">
             <BedDouble className="h-6 w-6 text-blue-400" />
             Bed-Wise Performance
           </h2>
-          <p className="text-sm text-zinc-400 mt-0.5">
+          <p className="text-sm text-muted-foreground mt-0.5">
             Patients treated, average stay, and delay rate per bed
             {report && (
               <> ·{' '}
-                <span className="text-zinc-500">
+                <span className="text-muted-foreground">
                   threshold {formatDuration(report.thresholdMs)}
                 </span>
               </>
@@ -126,16 +126,16 @@ export function BedPerformanceView({
       {/* Chart + Table */}
       {loading ? (
         <div className="space-y-4">
-          <div className="h-56 animate-pulse rounded-lg bg-zinc-800" />
-          <div className="h-72 animate-pulse rounded-lg bg-zinc-800" />
+          <div className="h-56 animate-pulse rounded-lg bg-muted" />
+          <div className="h-72 animate-pulse rounded-lg bg-muted" />
         </div>
       ) : report && report.rows.length > 0 ? (
         <div className="space-y-6">
           {/* Bar chart */}
-          <Card className="border-zinc-800 bg-zinc-900/60">
+          <Card className="border-border bg-card">
             <CardHeader className="pb-2">
-              <CardTitle className="text-sm text-white">Average Stay Duration per Bed</CardTitle>
-              <CardDescription className="text-xs text-zinc-400">
+              <CardTitle className="text-sm text-foreground">Average Stay Duration per Bed</CardTitle>
+              <CardDescription className="text-xs text-muted-foreground">
                 {selectedPreset.label} range ·{' '}
                 {report.overallAvgMs !== null
                   ? `Overall avg: ${formatDuration(report.overallAvgMs)}`
@@ -143,7 +143,7 @@ export function BedPerformanceView({
               </CardDescription>
             </CardHeader>
             <CardContent className="pt-0">
-              <div className="flex gap-3 items-center mb-2 text-[10px] text-zinc-500">
+              <div className="flex gap-3 items-center mb-2 text-[10px] text-muted-foreground">
                 <span className="flex items-center gap-1">
                   <span className="inline-block w-3 h-3 rounded-sm bg-blue-500 opacity-85" /> Normal
                 </span>
@@ -159,10 +159,10 @@ export function BedPerformanceView({
           </Card>
 
           {/* Sortable table */}
-          <Card className="border-zinc-800 bg-zinc-900/60">
+          <Card className="border-border bg-card">
             <CardHeader className="pb-2">
-              <CardTitle className="text-sm text-white">Full Bed Breakdown</CardTitle>
-              <CardDescription className="text-xs text-zinc-400">
+              <CardTitle className="text-sm text-foreground">Full Bed Breakdown</CardTitle>
+              <CardDescription className="text-xs text-muted-foreground">
                 Click column headers to sort · {report.rows.length} beds
                 {lastRefreshed && ` · Updated ${lastRefreshed.toLocaleTimeString()}`}
               </CardDescription>
@@ -179,9 +179,9 @@ export function BedPerformanceView({
           </Card>
         </div>
       ) : (
-        <Card className="border-zinc-800 bg-zinc-900/60">
+        <Card className="border-border bg-card">
           <CardContent className="pt-8 pb-8 flex items-center justify-center">
-            <p className="text-zinc-500 text-sm">No beds found for the selected period</p>
+            <p className="text-muted-foreground text-sm">No beds found for the selected period</p>
           </CardContent>
         </Card>
       )}

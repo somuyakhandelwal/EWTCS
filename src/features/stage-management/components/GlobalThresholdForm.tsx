@@ -35,8 +35,8 @@ export function GlobalThresholdForm({ initialMinutes }: GlobalThresholdFormProps
     hours > 0 && minutes > 0
       ? `${hours}h ${minutes}min`
       : hours > 0
-      ? `${hours} hour${hours !== 1 ? 's' : ''}`
-      : `${minutes} minutes`
+        ? `${hours} hour${hours !== 1 ? 's' : ''}`
+        : `${minutes} minutes`
 
   const handleSave = useCallback(async () => {
     if (totalMinutes < 30) {
@@ -121,48 +121,48 @@ export function GlobalThresholdForm({ initialMinutes }: GlobalThresholdFormProps
   }, [])
 
   return (
-    <div className='p-4 rounded-lg border-2 border-blue-200 bg-blue-50 mb-6'>
-      <h2 className='text-lg font-bold text-gray-900 mb-1'>Global Delay Threshold</h2>
-      <p className='text-sm text-gray-500 mb-4'>
+    <div className='p-4 rounded-lg border-2 border-blue-900/30 bg-blue-950/20 mb-6'>
+      <h2 className='text-lg font-bold text-foreground mb-1'>Global Delay Threshold</h2>
+      <p className='text-sm text-muted-foreground mb-4'>
         Beds exceeding this time are flagged as delayed. Individual stages can override this.
       </p>
 
       <div className='flex items-end gap-4 flex-wrap'>
         <div>
-          <label className='block text-xs font-semibold text-gray-700 mb-1'>Hours</label>
+          <label className='block text-xs font-semibold text-muted-foreground mb-1'>Hours</label>
           <input
             type='number'
             min={0}
             max={24}
             value={hours}
             onChange={e => { setHours(Math.max(0, Math.min(24, Number(e.target.value)))); setSaved(false); setSaveState('idle') }}
-            className='w-20 border border-gray-300 rounded-lg px-3 py-2 text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500'
+            className='w-20 border border-border bg-background rounded-lg px-3 py-2 text-foreground focus:outline-none focus:ring-2 focus:ring-blue-500'
           />
         </div>
         <div>
-          <label className='block text-xs font-semibold text-gray-700 mb-1'>Minutes</label>
+          <label className='block text-xs font-semibold text-muted-foreground mb-1'>Minutes</label>
           <input
             type='number'
             min={0}
             max={59}
             value={minutes}
             onChange={e => { setMinutes(Math.max(0, Math.min(59, Number(e.target.value)))); setSaved(false); setSaveState('idle') }}
-            className='w-20 border border-gray-300 rounded-lg px-3 py-2 text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500'
+            className='w-20 border border-border bg-background rounded-lg px-3 py-2 text-foreground focus:outline-none focus:ring-2 focus:ring-blue-500'
           />
         </div>
         <div className='flex-1 min-w-[120px]'>
-          <p className='text-xs text-gray-500 mb-1'>Preview</p>
-          <p className={`font-semibold ${totalMinutes < 30 ? 'text-red-600' : 'text-blue-700'}`}>
+          <p className='text-xs text-muted-foreground mb-1'>Preview</p>
+          <p className={`font-semibold ${totalMinutes < 30 ? 'text-red-400' : 'text-blue-400'}`}>
             {preview}
           </p>
         </div>
-        {saveState === 'saving' && <p className='text-xs text-blue-700'>Saving…</p>}
-        {saveState === 'retrying' && <p className='text-xs text-amber-700'>Retrying save…</p>}
+        {saveState === 'saving' && <p className='text-xs text-blue-400'>Saving…</p>}
+        {saveState === 'retrying' && <p className='text-xs text-amber-400'>Retrying save…</p>}
       </div>
 
-      {error && <p className='text-red-600 text-sm mt-2'>{error}</p>}
-      {restoredNotice && <p className='text-emerald-700 text-sm mt-2'>Recovered unsaved changes from previous session.</p>}
-      {saved && <p className='text-green-600 text-sm mt-2'>✓ Threshold updated — applies immediately</p>}
+      {error && <p className='text-red-400 text-sm mt-2'>{error}</p>}
+      {restoredNotice && <p className='text-emerald-400 text-sm mt-2'>Recovered unsaved changes from previous session.</p>}
+      {saved && <p className='text-green-400 text-sm mt-2'>✓ Threshold updated — applies immediately</p>}
     </div>
   )
 }

@@ -36,7 +36,7 @@ export async function getAllBeds(): Promise<Bed[]> {
       WHERE b.is_active = true
       ORDER BY b.bed_number ASC
     `)
-    
+
     return result.rows
   } catch (error) {
     logger.error('Failed to fetch beds', error as Error)
@@ -77,7 +77,7 @@ export async function getBedById(bedId: string): Promise<Bed | null> {
       `,
       [bedId]
     )
-    
+
     return result.rows[0] || null
   } catch (error) {
     logger.error('Failed to fetch bed', error as Error, { bedId })
@@ -111,7 +111,7 @@ export async function getBedByNumber(bedNumber: string): Promise<Bed | null> {
       `,
       [bedNumber]
     )
-    
+
     return result.rows[0] || null
   } catch (error) {
     logger.error('Failed to fetch bed by number', error as Error, { bedNumber })
@@ -131,7 +131,7 @@ export async function getBedWard(bedId: string): Promise<string | null> {
       `,
       [bedId]
     )
-    
+
     return result.rows[0]?.ward_id || null
   } catch (error) {
     logger.error('Failed to fetch bed ward', error as Error, { bedId })
@@ -151,7 +151,7 @@ export async function getUserWard(userId: string): Promise<string | null> {
       `,
       [userId]
     )
-    
+
     return result.rows[0]?.ward_id || null
   } catch (error) {
     logger.error('Failed to fetch user ward', error as Error, { userId })

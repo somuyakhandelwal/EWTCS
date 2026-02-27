@@ -140,7 +140,7 @@ export function DailySummaryReviewCard({ summary, onUpdate }: DailySummaryReview
                             </ul>
                         </div>
                     )}
-                    <div className="flex flex-wrap gap-2 pt-2 border-t border-zinc-800">
+                    <div className="flex flex-wrap gap-2 pt-2 border-t border-border">
                         <button
                             type="button"
                             onClick={() => setEditing(true)}

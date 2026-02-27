@@ -46,17 +46,17 @@ export const StageAnalyticsAttribution = memo(function StageAnalyticsAttribution
   const hasAnyDelay = stats.some((s) => s.totalDelayedMs > 0)
 
   return (
-    <Card className="bg-zinc-900 border-zinc-800 p-6 space-y-5">
+    <Card className="bg-card border-border p-6 space-y-5">
       {/* Section header */}
       <div>
-        <h3 className="text-base font-semibold text-white">Delay Root-Cause Attribution</h3>
-        <p className="text-xs text-zinc-400 mt-0.5">
+        <h3 className="text-base font-semibold text-foreground">Delay Root-Cause Attribution</h3>
+        <p className="text-xs text-muted-foreground mt-0.5">
           Classifies delayed patient time into operational categories
         </p>
       </div>
 
       {!hasAnyDelay ? (
-        <p className="text-sm text-zinc-500 py-4 text-center">
+        <p className="text-sm text-muted-foreground py-4 text-center">
           No delays recorded in the selected period.
         </p>
       ) : (
@@ -103,12 +103,12 @@ export const StageAnalyticsAttribution = memo(function StageAnalyticsAttribution
                     <span className={cn('text-sm font-medium truncate', colors.text)}>
                       {stat.label}
                     </span>
-                    <span className="text-xs text-zinc-500 hidden sm:block truncate">
+                    <span className="text-xs text-muted-foreground hidden sm:block truncate">
                       — {DESCRIPTIONS[stat.attribution]}
                     </span>
                   </div>
                   <div className="flex items-center gap-3 shrink-0">
-                    <span className="text-xs text-zinc-400">
+                    <span className="text-xs text-muted-foreground">
                       {stat.incidentCount} incident{stat.incidentCount !== 1 ? 's' : ''}
                     </span>
                     <span className={cn('text-sm font-bold tabular-nums', colors.text)}>
@@ -129,7 +129,7 @@ export const StageAnalyticsAttribution = memo(function StageAnalyticsAttribution
                 </div>
 
                 {/* Progress bar */}
-                <div className="h-2 w-full rounded-full bg-zinc-800 overflow-hidden">
+                <div className="h-2 w-full rounded-full bg-muted overflow-hidden">
                   <div
                     className={cn('h-full rounded-full transition-all duration-500', colors.bar)}
                     style={{ width: `${stat.percentage}%` }}
@@ -140,7 +140,7 @@ export const StageAnalyticsAttribution = memo(function StageAnalyticsAttribution
           })}
 
           {/* Summary totals row */}
-          <div className="pt-3 border-t border-zinc-800 flex flex-wrap gap-4">
+          <div className="pt-3 border-t border-border flex flex-wrap gap-4">
             {stats
               .filter((s) => s.totalDelayedMs > 0)
               .map((stat) => {
@@ -158,7 +158,7 @@ export const StageAnalyticsAttribution = memo(function StageAnalyticsAttribution
                     <p className={cn('text-xl font-bold mt-0.5', colors.text)}>
                       {formatHours(stat.totalDelayedMs)}
                     </p>
-                    <p className="text-xs text-zinc-500">{stat.percentage}% of total delays</p>
+                    <p className="text-xs text-muted-foreground">{stat.percentage}% of total delays</p>
                   </div>
                 )
               })}

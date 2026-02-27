@@ -15,7 +15,7 @@ import type { ExportDialogProps } from '../types/export.types'
 import { buildFilename } from '../lib/pdf-generator'
 import { SCOPE_LABELS } from '../lib/export-utils'
 import { ExportFormatCard } from './ExportFormatCard'
-import { useExportLogic } from '../hooks/useExportLogic'
+import { useExportLogic } from '../hooks/use-export-logic'
 
 export function ExportDialog({
   scope,
@@ -43,14 +43,14 @@ export function ExportDialog({
 
   return (
     <div
-      className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm"
+      className="fixed inset-0 z-50 flex items-center justify-center bg-background/80 backdrop-blur-sm p-4"
       role="dialog"
       aria-modal="true"
       aria-label={`Export ${SCOPE_LABELS[scope]}`}
     >
-      <Card className="w-full max-w-lg border-zinc-700 bg-zinc-900 shadow-2xl">
+      <Card className="w-full max-w-lg border-border bg-card shadow-2xl">
         <CardHeader className="flex flex-row items-center justify-between pb-3">
-          <CardTitle className="flex items-center gap-2 text-lg text-white">
+          <CardTitle className="flex items-center gap-2 text-lg text-foreground">
             <Download className="h-5 w-5 text-blue-400" />
             Export — {SCOPE_LABELS[scope]}
           </CardTitle>
@@ -68,7 +68,7 @@ export function ExportDialog({
 
         <CardContent className="space-y-5">
           <div>
-            <p className="mb-2 text-sm font-medium text-zinc-300">Format</p>
+            <p className="mb-2 text-sm font-medium text-card-foreground">Format</p>
             <div className="grid grid-cols-2 gap-3">
               <ExportFormatCard format="csv" selected={format === 'csv'} onClick={() => setFormat('csv')} disabled={isLoading} />
               <ExportFormatCard format="pdf" selected={format === 'pdf'} onClick={() => setFormat('pdf')} disabled={isLoading} />
@@ -76,7 +76,7 @@ export function ExportDialog({
           </div>
 
           <div>
-            <p className="mb-2 text-sm font-medium text-zinc-300">Date Range</p>
+            <p className="mb-2 text-sm font-medium text-card-foreground">Date Range</p>
             <DateRangePicker
               onChange={setRange}
               defaultPreset="30d"
@@ -85,9 +85,9 @@ export function ExportDialog({
           </div>
 
           {range && (
-            <div className="rounded-md border border-zinc-800 bg-zinc-950 px-3 py-2">
-              <p className="text-xs text-zinc-500">File will be saved as:</p>
-              <p className="mt-0.5 text-xs font-mono text-zinc-300 truncate">{filenamePreview}</p>
+            <div className="rounded-md border border-border bg-card px-3 py-2">
+              <p className="text-xs text-muted-foreground">File will be saved as:</p>
+              <p className="mt-0.5 text-xs font-mono text-card-foreground truncate">{filenamePreview}</p>
             </div>
           )}
 

@@ -43,7 +43,7 @@ export const BedFilterBar = memo(function BedFilterBar({
         <Filter className="h-4 w-4 mr-2" aria-hidden="true" />
         {showDelayedOnly ? 'Delayed Only' : 'Show Delayed Only'}
         {delayedCount > 0 && (
-          <span className="ml-2 px-2 py-0.5 text-xs bg-red-500 text-white rounded-full">
+          <span className="ml-2 px-2 py-0.5 text-xs bg-red-500 text-foreground rounded-full">
             {delayedCount}
             <span className="sr-only"> active delays</span>
           </span>
@@ -73,7 +73,7 @@ export const BedFilterBar = memo(function BedFilterBar({
             variant="ghost"
             size="sm"
             onClick={onClear}
-            className="text-zinc-400 hover:text-white"
+            className="text-muted-foreground hover:text-foreground"
             title="Clear all filters and sorting"
             aria-label="Clear all filters and sorting"
           >

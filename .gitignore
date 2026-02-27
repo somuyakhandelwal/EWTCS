@@ -27,6 +27,7 @@ Thumbs.db
 
 # AI tool artifacts (Antigravity / Gemini / BMAD)
 .gemini/
+_bmad-output
 .agent/
 _bmad/
 .github/agents/

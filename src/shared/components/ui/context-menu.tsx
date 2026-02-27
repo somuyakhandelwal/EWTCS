@@ -132,8 +132,8 @@ export function ContextMenu({
       <div
         className={cn(
           isMobile
-            ? 'w-full rounded-t-2xl border-t border-zinc-800 bg-zinc-950 px-4 pb-10 shadow-2xl'
-            : 'absolute min-w-48 rounded-md border border-zinc-800 bg-zinc-950/95 p-2 shadow-lg backdrop-blur'
+            ? 'w-full rounded-t-2xl border-t border-border bg-card px-4 pb-10 shadow-2xl'
+            : 'absolute min-w-48 rounded-md border border-border bg-card p-2 shadow-lg backdrop-blur'
         )}
         style={!isMobile ? { top: clampedPosition.y, left: clampedPosition.x } : undefined}
         onMouseDown={!isMobile ? (event) => event.stopPropagation() : undefined}
@@ -142,7 +142,7 @@ export function ContextMenu({
       >
         {isMobile && <div className="mx-auto my-3 h-1.5 w-12 rounded-full bg-zinc-600" />}
         {header && (
-          <div className={cn('py-1', isMobile ? 'pb-2 text-sm font-semibold text-zinc-200' : 'px-2 text-xs text-zinc-500')}>
+          <div className={cn('py-1', isMobile ? 'pb-2 text-sm font-semibold text-card-foreground' : 'px-2 text-xs text-muted-foreground')}>
             {header}
           </div>
         )}
@@ -152,8 +152,8 @@ export function ContextMenu({
               key={item.id}
               type="button"
               className={cn(
-                'flex w-full items-center gap-2 rounded text-left text-zinc-200 disabled:cursor-not-allowed disabled:opacity-50',
-                isMobile ? 'px-0 py-3 text-base active:bg-zinc-800/50' : 'px-2 py-1.5 text-sm hover:bg-zinc-800/70',
+                'flex w-full items-center gap-2 rounded text-left text-card-foreground disabled:cursor-not-allowed disabled:opacity-50',
+                isMobile ? 'px-0 py-3 text-base active:bg-muted' : 'px-2 py-1.5 text-sm hover:bg-muted',
                 item.className
               )}
               disabled={item.disabled}

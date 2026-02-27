@@ -34,7 +34,7 @@ export function SupervisorTemporaryBeds({
                     <Button
                         size="sm"
                         onClick={onAddTempBed}
-                        className="bg-orange-700 hover:bg-orange-600 text-white border-none h-8 text-xs"
+                        className="bg-orange-700 hover:bg-orange-600 text-foreground border-none h-8 text-xs"
                     >
                         <Zap className="h-3.5 w-3.5 mr-1.5" />
                         Add Temporary Bed
@@ -43,7 +43,7 @@ export function SupervisorTemporaryBeds({
             </div>
 
             {temporaryBeds.length === 0 ? (
-                <p className="text-sm text-zinc-500">
+                <p className="text-sm text-muted-foreground">
                     No temporary beds active. Use &ldquo;Add Temporary Bed&rdquo; during surge.
                 </p>
             ) : (

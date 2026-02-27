@@ -12,7 +12,7 @@ export function ImportDialog() {
 
     if (!isOpen) {
         return (
-            <Button variant="outline" onClick={() => setIsOpen(true)} className="flex items-center gap-2 border-zinc-700 hover:bg-zinc-800 text-zinc-300">
+            <Button variant="outline" onClick={() => setIsOpen(true)} className="flex items-center gap-2 border-border hover:bg-muted text-card-foreground">
                 <FileUp className="h-4 w-4" />
                 Import History
             </Button>
@@ -20,30 +20,30 @@ export function ImportDialog() {
     }
 
     return (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm p-4">
-            <div className="bg-zinc-900 border border-zinc-800 rounded-lg shadow-xl w-full max-w-[600px] flex flex-col max-h-[90vh]">
-                <div className="p-6 border-b border-zinc-800 flex items-center justify-between">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-background/80 backdrop-blur-sm p-4">
+            <div className="bg-card border border-border rounded-lg shadow-xl w-full max-w-[600px] flex flex-col max-h-[90vh]">
+                <div className="p-6 border-b border-border flex items-center justify-between">
                     <div>
-                        <h2 className="text-xl font-bold text-white">Import Historical Data</h2>
-                        <p className="text-sm text-zinc-400 mt-1">Required: bed_number, admitted_at, discharged_at, discharged_by_username</p>
+                        <h2 className="text-xl font-bold text-foreground">Import Historical Data</h2>
+                        <p className="text-sm text-muted-foreground mt-1">Required: bed_number, admitted_at, discharged_at, discharged_by_username</p>
                     </div>
-                    <button onClick={() => setIsOpen(false)} disabled={isUploading} className="text-zinc-400 hover:text-white"><X className="h-5 w-5" /></button>
+                    <button onClick={() => setIsOpen(false)} disabled={isUploading} className="text-muted-foreground hover:text-foreground"><X className="h-5 w-5" /></button>
                 </div>
 
                 <div className="p-6 space-y-4 overflow-y-auto">
-                    <div className="flex flex-col items-center border-2 border-dashed border-zinc-800 rounded-lg p-12 hover:border-zinc-700 bg-black/20">
+                    <div className="flex flex-col items-center border-2 border-dashed border-border rounded-lg p-12 hover:border-border bg-background">
                         <input type="file" accept=".csv" className="hidden" id="csv-upload" onChange={handleFileChange} disabled={isUploading} />
                         <label htmlFor="csv-upload" className="flex flex-col items-center gap-2 cursor-pointer">
-                            <Upload className="h-10 w-10 text-zinc-500" />
-                            <span className="text-sm font-medium text-zinc-300">{file ? file.name : "Select or drag CSV"}</span>
-                            <span className="text-xs text-zinc-500">Max: 10MB</span>
+                            <Upload className="h-10 w-10 text-muted-foreground" />
+                            <span className="text-sm font-medium text-card-foreground">{file ? file.name : "Select or drag CSV"}</span>
+                            <span className="text-xs text-muted-foreground">Max: 10MB</span>
                         </label>
                     </div>
 
                     {isUploading && (
                         <div className="space-y-2">
-                            <div className="flex justify-between text-xs text-zinc-400"><span>Processing...</span><span>{progress}%</span></div>
-                            <div className="h-1.5 w-full bg-zinc-800 rounded-full overflow-hidden">
+                            <div className="flex justify-between text-xs text-muted-foreground"><span>Processing...</span><span>{progress}%</span></div>
+                            <div className="h-1.5 w-full bg-muted rounded-full overflow-hidden">
                                 <div className="h-full bg-emerald-500 transition-all duration-300" style={{ width: `${progress}%` }} />
                             </div>
                         </div>
@@ -59,9 +59,9 @@ export function ImportDialog() {
                     {result && <ImportResultDisplay result={result} />}
                 </div>
 
-                <div className="p-6 border-t border-zinc-800 flex justify-end gap-3">
-                    <Button variant="ghost" onClick={() => setIsOpen(false)} disabled={isUploading} className="text-zinc-400 hover:bg-zinc-800">Cancel</Button>
-                    <Button onClick={handleImport} disabled={!file || isUploading} className="bg-emerald-600 hover:bg-emerald-700 text-white flex items-center gap-2">
+                <div className="p-6 border-t border-border flex justify-end gap-3">
+                    <Button variant="ghost" onClick={() => setIsOpen(false)} disabled={isUploading} className="text-muted-foreground hover:bg-muted">Cancel</Button>
+                    <Button onClick={handleImport} disabled={!file || isUploading} className="bg-emerald-600 hover:bg-emerald-700 text-foreground flex items-center gap-2">
                         {isUploading && <Loader2 className="h-4 w-4 animate-spin" />}
                         {isUploading ? "Importing" : "Start Import"}
                     </Button>

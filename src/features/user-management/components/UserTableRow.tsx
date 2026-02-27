@@ -4,6 +4,7 @@
 // US-5.5: includes Reset Password action button
 
 import { Button } from '@/shared/components/ui/button'
+import { Badge } from '@/shared/components/ui/badge'
 import { Pencil, Ban, CheckCircle, KeyRound } from 'lucide-react'
 
 export interface UserRow {
@@ -26,57 +27,46 @@ interface UserTableRowProps {
     actionLoading: string | null
 }
 
-function getRoleBadgeColor(role: string): string {
-    switch (role) {
-        case 'admin':      return 'bg-purple-900/30 text-purple-400 border-purple-900/50'
-        case 'supervisor': return 'bg-blue-900/30 text-blue-400 border-blue-900/50'
-        case 'nurse':      return 'bg-green-900/30 text-green-400 border-green-900/50'
-        case 'housekeeping': return 'bg-amber-900/30 text-amber-400 border-amber-900/50'
-        case 'auditor':    return 'bg-cyan-900/30 text-cyan-400 border-cyan-900/50'
-        default:           return 'bg-zinc-800 text-zinc-400 border-zinc-700'
-    }
-}
+// Removed legacy hardcoded rainbow badges
 
 export function UserTableRow({ user, wards, onEdit, onReset, onToggleActive, actionLoading }: UserTableRowProps) {
     return (
-        <tr key={user.id} className="hover:bg-zinc-900/50 transition-colors">
+        <tr key={user.id} className="hover:bg-card transition-colors">
             <td className="px-4 py-3 whitespace-nowrap">
-                <div className="text-sm font-medium text-white">{user.username}</div>
+                <div className="text-sm font-medium text-foreground">{user.username}</div>
             </td>
             <td className="px-4 py-3 whitespace-nowrap">
-                <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium border ${getRoleBadgeColor(user.role)}`}>
+                <Badge variant="outline" className="capitalize">
                     {user.role}
-                </span>
+                </Badge>
             </td>
-            <td className="px-4 py-3 whitespace-nowrap text-sm text-zinc-400">
+            <td className="px-4 py-3 whitespace-nowrap text-sm text-muted-foreground">
                 {user.ward_id
                     ? (wards.find(w => w.id === user.ward_id)?.name ?? '—')
-                    : <span className="text-amber-500/70 text-xs">Unassigned</span>}
+                    : <span className="text-muted-foreground text-xs italic">Unassigned</span>}
             </td>
             <td className="px-4 py-3 whitespace-nowrap">
-                <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${user.is_active ? 'bg-emerald-900/30 text-emerald-400' : 'bg-red-900/30 text-red-400'}`}>
+                <Badge variant={user.is_active ? 'default' : 'secondary'}>
                     {user.is_active ? 'Active' : 'Inactive'}
-                </span>
+                </Badge>
             </td>
-            <td className="px-4 py-3 whitespace-nowrap text-sm text-zinc-400">
+            <td className="px-4 py-3 whitespace-nowrap text-sm text-muted-foreground">
                 {new Date(user.created_at).toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' })}
             </td>
             <td className="px-4 py-3 whitespace-nowrap text-right text-sm font-medium">
                 <div className="flex items-center justify-end gap-2">
-                    <Button variant="outline" size="sm" onClick={() => onEdit(user)}
-                        className="text-blue-400 border-blue-900/50 hover:bg-blue-900/20">
+                    <Button variant="outline" size="sm" onClick={() => onEdit(user)}>
                         <Pencil className="h-3 w-3 mr-1" />Edit
                     </Button>
-                    <Button variant="outline" size="sm" onClick={() => onReset(user)}
-                        className="text-amber-400 border-amber-900/50 hover:bg-amber-900/20">
+                    <Button variant="outline" size="sm" onClick={() => onReset(user)}>
                         <KeyRound className="h-3 w-3 mr-1" />Reset Password
                     </Button>
-                    <Button variant="outline" size="sm"
+                    <Button
+                        variant={user.is_active ? "destructive" : "default"}
+                        size="sm"
                         onClick={() => onToggleActive(user.id, user.is_active)}
                         disabled={actionLoading === user.id}
-                        className={user.is_active
-                            ? 'text-red-400 border-red-900/50 hover:bg-red-900/20'
-                            : 'text-green-400 border-green-900/50 hover:bg-green-900/20'}>
+                    >
                         {actionLoading === user.id ? 'Loading...' : user.is_active
                             ? <><Ban className="h-3 w-3 mr-1" />Deactivate</>
                             : <><CheckCircle className="h-3 w-3 mr-1" />Activate</>}

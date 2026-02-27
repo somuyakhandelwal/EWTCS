@@ -52,6 +52,13 @@ const config = {
                     DEFAULT: "hsl(var(--card))",
                     foreground: "hsl(var(--card-foreground))",
                 },
+                status: {
+                    empty: "hsl(var(--status-empty))",
+                    cleaning: "hsl(var(--status-cleaning))",
+                    occupied: "hsl(var(--status-occupied))",
+                    delayed: "hsl(var(--status-delayed))",
+                    escalated: "hsl(var(--status-escalated))",
+                },
             },
             borderRadius: {
                 lg: "var(--radius)",
@@ -67,10 +74,20 @@ const config = {
                     from: { height: "var(--radix-accordion-content-height)" },
                     to: { height: "0" },
                 },
+                "pulse-slow": {
+                    "0%, 100%": { opacity: "1" },
+                    "50%": { opacity: "0.7" },
+                },
+                "glow-escalated": {
+                    "0%, 100%": { boxShadow: "0 0 10px hsl(var(--status-escalated) / 0.5)" },
+                    "50%": { boxShadow: "0 0 20px hsl(var(--status-escalated) / 0.8)" },
+                },
             },
             animation: {
                 "accordion-down": "accordion-down 0.2s ease-out",
                 "accordion-up": "accordion-up 0.2s ease-out",
+                "pulse-slow": "pulse-slow 3s ease-in-out infinite",
+                "glow-escalated": "glow-escalated 2s ease-in-out infinite",
             },
         },
     },

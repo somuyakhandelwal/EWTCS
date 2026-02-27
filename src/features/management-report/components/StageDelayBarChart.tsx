@@ -42,7 +42,7 @@ export const StageDelayBarChart = memo(function StageDelayBarChart({
 
   if (displayRows.length === 0) {
     return (
-      <div className="flex items-center justify-center h-40 text-zinc-500 text-sm">
+      <div className="flex items-center justify-center h-40 text-muted-foreground text-sm">
         No transition data for selected period
       </div>
     )
@@ -60,7 +60,7 @@ export const StageDelayBarChart = memo(function StageDelayBarChart({
           variant="outline"
           size="sm"
           onClick={handleExport}
-          className="text-zinc-400 border-zinc-800"
+          className="text-muted-foreground border-border"
         >
           <Download className="h-3.5 w-3.5 mr-1.5" />
           Export PNG

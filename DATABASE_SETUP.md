@@ -282,6 +282,7 @@ The `system_settings` table is a key-value store for global runtime configuratio
 |-----|------|---------|-------------|
 | `los_target_minutes` | integer | — | Target length-of-stay in minutes for the LOS trend chart |
 | `delay_threshold_minutes` | integer | 180 | Minutes after which a patient stay is considered delayed |
+| `escalation_threshold_minutes` | integer | 360 | Minutes after which a delayed patient is escalated |
 | `delay_target_pct` | decimal | — | Target % of delayed patients (displayed on the Delayed Patients gauge) |
 
 **Priority chain for delay threshold resolution:**

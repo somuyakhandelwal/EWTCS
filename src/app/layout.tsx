@@ -29,18 +29,29 @@ if (typeof window === "undefined") {
   void initializeSystem();
 }
 
+import { ThemeProvider } from "@/shared/components/ThemeProvider"
+import { GlobalThemeToggle } from "@/shared/components/GlobalThemeToggle"
+
 export default function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" className="dark" suppressHydrationWarning>
+    <html lang="en" suppressHydrationWarning>
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
-        <DatabaseStatusBanner />
-        {children}
+        <ThemeProvider
+          attribute="class"
+          defaultTheme="system"
+          enableSystem
+          disableTransitionOnChange
+        >
+          <DatabaseStatusBanner />
+          {children}
+          <GlobalThemeToggle />
+        </ThemeProvider>
       </body>
     </html>
   );

@@ -60,10 +60,10 @@ export function DelayedPatientPercentageView({
       {/* Section header + toolbar */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
         <div>
-          <h2 className="text-2xl font-bold tracking-tight flex items-center gap-2 text-white">
+          <h2 className="text-2xl font-bold tracking-tight flex items-center gap-2 text-foreground">
             Delayed Patients %
           </h2>
-          <p className="text-sm text-zinc-400 mt-0.5">
+          <p className="text-sm text-muted-foreground mt-0.5">
             Patients exceeding the configured stay threshold ·{' '}
             {summary ? formatDuration(summary.thresholdMs) + ' threshold' : '…'}
           </p>
@@ -88,8 +88,8 @@ export function DelayedPatientPercentageView({
               value={selectedShiftId}
               onChange={(e) => setSelectedShiftId(e.target.value)}
               className={cn(
-                'h-9 rounded-md border border-zinc-700 bg-zinc-900 px-3 py-1',
-                'text-sm text-zinc-100 focus:outline-none focus:ring-2 focus:ring-blue-500'
+                'h-9 rounded-md border border-border bg-card px-3 py-1',
+                'text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-blue-500'
               )}
             >
               <option value="all">All Shifts</option>
@@ -134,15 +134,15 @@ export function DelayedPatientPercentageView({
       {/* Main content */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
         {/* Gauge card */}
-        <Card className="border-zinc-800 bg-zinc-900/60 flex flex-col items-center justify-center py-6">
+        <Card className="border-border bg-card flex flex-col items-center justify-center py-6">
           <CardHeader className="pb-2 text-center">
-            <CardDescription className="text-xs text-zinc-400 uppercase">
+            <CardDescription className="text-xs text-muted-foreground uppercase">
               {selectedPreset.label} · {shiftLabel}
             </CardDescription>
           </CardHeader>
           <CardContent className="flex flex-col items-center gap-2">
             {loading ? (
-              <div className="h-28 w-48 animate-pulse rounded bg-zinc-800" />
+              <div className="h-28 w-48 animate-pulse rounded bg-muted" />
             ) : (
               <DelayedPatientGauge
                 pct={summary?.delayPct ?? 0}

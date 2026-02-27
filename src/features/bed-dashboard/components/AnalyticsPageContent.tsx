@@ -64,8 +64,8 @@ export function AnalyticsPageContent({
   const isRetentionVisible = role === 'admin' || role === 'auditor'
 
   return (
-    <div className="min-h-screen bg-black text-foreground p-8">
-      <div className="max-w-7xl mx-auto space-y-8">
+    <div className="min-h-screen bg-background text-foreground p-3 sm:p-8">
+      <div className="max-w-7xl mx-auto space-y-6 sm:space-y-8">
 
         {/* US-11.4: Print-only header */}
         <div className="print-header hidden">
@@ -74,7 +74,7 @@ export function AnalyticsPageContent({
         </div>
 
         {/* Header */}
-        <div className="flex items-center gap-4">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           {isAuditMode ? <LogoutButton /> : (
             <Link href={backHref}>
               <Button variant="ghost" size="sm" className="gap-2">
@@ -83,8 +83,8 @@ export function AnalyticsPageContent({
             </Link>
           )}
           <div className="flex-1">
-            <h1 className="text-3xl font-bold tracking-tight text-white">Emergency Ward Analytics</h1>
-            <p className="text-zinc-400">Analyze patient flow through treatment stages</p>
+            <h1 className="text-3xl font-bold tracking-tight text-foreground">Emergency Ward Analytics</h1>
+            <p className="text-muted-foreground">Analyze patient flow through treatment stages</p>
             {isAuditMode && (
               <div className="mt-2 inline-flex items-center rounded-md border border-amber-500/40 bg-amber-500/10 px-3 py-1 text-xs font-medium text-amber-200">
                 Audit Mode: Read-Only Access

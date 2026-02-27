@@ -75,7 +75,7 @@ export function TatAnalyticsView({ className, readOnly = false }: TatAnalyticsVi
       <div className="flex items-center justify-between">
         <div>
           <h2 className="text-2xl font-bold tracking-tight">Full-Cycle Bed Turnaround</h2>
-          <p className="text-sm text-zinc-500 mt-1">
+          <p className="text-sm text-muted-foreground mt-1">
             Discharge → Cleaning → Empty → Idle Wait → Next Admission
           </p>
         </div>

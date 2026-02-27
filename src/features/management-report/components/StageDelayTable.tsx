@@ -16,22 +16,22 @@ const HEADERS = ['Stage', 'Transitions', 'Avg Duration', 'Median', 'p90', 'Statu
 
 export function StageDelayTable({ rows }: StageDelayTableProps) {
   return (
-    <Card className="border-zinc-800 bg-zinc-900/60">
+    <Card className="border-border bg-card">
       <CardHeader className="pb-2">
-        <CardTitle className="text-sm text-white">Stage Detail</CardTitle>
-        <CardDescription className="text-xs text-zinc-400">
+        <CardTitle className="text-sm text-foreground">Stage Detail</CardTitle>
+        <CardDescription className="text-xs text-muted-foreground">
           Sorted by average duration — longest first
         </CardDescription>
       </CardHeader>
       <CardContent className="pt-0">
-        <div className="overflow-x-auto rounded-md border border-zinc-800">
+        <div className="overflow-x-auto rounded-md border border-border">
           <table className="w-full text-sm">
-            <thead className="bg-zinc-900/80 border-b border-zinc-800">
+            <thead className="bg-card border-b border-border">
               <tr>
                 {HEADERS.map((h) => (
                   <th
                     key={h}
-                    className="px-3 py-2.5 text-left text-xs font-medium text-zinc-400 uppercase tracking-wide"
+                    className="px-3 py-2.5 text-left text-xs font-medium text-muted-foreground uppercase tracking-wide"
                   >
                     {h}
                   </th>
@@ -44,28 +44,28 @@ export function StageDelayTable({ rows }: StageDelayTableProps) {
                   key={row.stageId}
                   className={cn(
                     'transition-colors',
-                    row.isBottleneck ? 'bg-red-950/20 hover:bg-red-950/30' : 'hover:bg-zinc-800/40'
+                    row.isBottleneck ? 'bg-red-950/20 hover:bg-red-950/30' : 'hover:bg-muted'
                   )}
                 >
                   <td className={cn(
                     'px-3 py-2 font-semibold text-xs',
-                    row.isBottleneck ? 'text-red-300' : 'text-zinc-200'
+                    row.isBottleneck ? 'text-red-300' : 'text-card-foreground'
                   )}>
                     {row.stageName}
                   </td>
-                  <td className="px-3 py-2 text-zinc-400 tabular-nums">{row.totalTransitions}</td>
+                  <td className="px-3 py-2 text-muted-foreground tabular-nums">{row.totalTransitions}</td>
                   <td className={cn(
                     'px-3 py-2 font-mono tabular-nums font-semibold',
-                    row.isBottleneck ? 'text-red-300' : 'text-zinc-300'
+                    row.isBottleneck ? 'text-red-300' : 'text-card-foreground'
                   )}>
                     {row.totalTransitions > 0
                       ? formatDuration(row.avgDurationMs)
                       : <span className="text-zinc-600">—</span>}
                   </td>
-                  <td className="px-3 py-2 text-zinc-400 tabular-nums text-xs font-mono">
+                  <td className="px-3 py-2 text-muted-foreground tabular-nums text-xs font-mono">
                     {row.medianDurationMs !== null ? formatDuration(row.medianDurationMs) : '—'}
                   </td>
-                  <td className="px-3 py-2 text-zinc-400 tabular-nums text-xs font-mono">
+                  <td className="px-3 py-2 text-muted-foreground tabular-nums text-xs font-mono">
                     {row.p90DurationMs !== null ? formatDuration(row.p90DurationMs) : '—'}
                   </td>
                   <td className="px-3 py-2">

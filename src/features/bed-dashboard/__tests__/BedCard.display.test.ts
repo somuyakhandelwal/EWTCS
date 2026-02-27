@@ -60,13 +60,13 @@ describe('BedCard Elapsed Time Display - AC-4: Prominent Display', () => {
   describe('Color Coding - AC-4: Easy to Read', () => {
     it('should display in normal color for on-time beds', () => {
       const isDelayed = false
-      const colorClass = isDelayed ? 'text-red-400' : 'text-zinc-300'
-      expect(colorClass).toBe('text-zinc-300')
+      const colorClass = isDelayed ? 'text-red-400' : 'text-card-foreground'
+      expect(colorClass).toBe('text-card-foreground')
     })
 
     it('should display in red color for delayed beds', () => {
       const isDelayed = true
-      const colorClass = isDelayed ? 'text-red-400' : 'text-zinc-300'
+      const colorClass = isDelayed ? 'text-red-400' : 'text-card-foreground'
       expect(colorClass).toBe('text-red-400')
     })
 

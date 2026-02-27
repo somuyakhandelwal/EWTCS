@@ -53,7 +53,7 @@ export function ArchivalRunsTable({ runs, onApproved }: ArchivalRunsTableProps) 
 
   if (runs.length === 0) {
     return (
-      <p className="text-sm text-zinc-500 py-4 text-center">
+      <p className="text-sm text-muted-foreground py-4 text-center">
         No archival runs yet.
       </p>
     )
@@ -63,7 +63,7 @@ export function ArchivalRunsTable({ runs, onApproved }: ArchivalRunsTableProps) 
     <div className="overflow-x-auto">
       <table className="w-full text-xs">
         <thead>
-          <tr className="text-zinc-500 border-b border-zinc-800">
+          <tr className="text-muted-foreground border-b border-border">
             <th className="pb-2 text-left font-medium">Started</th>
             <th className="pb-2 text-left font-medium">Cutoff date</th>
             <th className="pb-2 text-left font-medium">Status</th>
@@ -74,7 +74,7 @@ export function ArchivalRunsTable({ runs, onApproved }: ArchivalRunsTableProps) 
         </thead>
         <tbody className="divide-y divide-zinc-800/60">
           {runs.map((run) => (
-            <tr key={run.id} className="text-zinc-300">
+            <tr key={run.id} className="text-card-foreground">
               <td className="py-2 pr-4 whitespace-nowrap">{formatDate(run.startedAt)}</td>
               <td className="py-2 pr-4 whitespace-nowrap">{formatDate(run.cutoffDate)}</td>
               <td className="py-2 pr-4">
@@ -96,7 +96,7 @@ export function ArchivalRunsTable({ runs, onApproved }: ArchivalRunsTableProps) 
               <td className="py-2 pr-4 text-right tabular-nums">
                 {run.status === 'completed' ? totalRowsArchived(run.rowsArchived).toLocaleString() : '—'}
               </td>
-              <td className="py-2 pr-4 text-zinc-500 truncate max-w-[120px]">
+              <td className="py-2 pr-4 text-muted-foreground truncate max-w-[120px]">
                 {run.triggeredBy === 'cron' ? 'Cron' : `Admin`}
               </td>
               <td className="py-2 text-right">
@@ -105,7 +105,7 @@ export function ArchivalRunsTable({ runs, onApproved }: ArchivalRunsTableProps) 
                     size="sm"
                     disabled={isPending}
                     onClick={() => handleApprove(run.id)}
-                    className="h-6 px-2 text-[10px] bg-yellow-600 hover:bg-yellow-500 text-white"
+                    className="h-6 px-2 text-[10px] bg-yellow-600 hover:bg-yellow-500 text-foreground"
                   >
                     <ShieldCheck className="h-3 w-3 mr-1" />
                     Approve

@@ -1,7 +1,4 @@
-// Bed Card Component
-// Epic 1: Nurse Desk Bed Dashboard
-// Epic 6: US-6.5 — temporary (surge) beds shown with orange badge + border
-//          US-6.6 — virtual (hallway/stretcher) beds shown with purple badge + border
+// Epic 6: US-6.5 temporary (orange) / US-6.6 virtual (purple) beds
 // US-4.3: Blinking animation with acknowledge support
 import { memo, useState, useEffect, useCallback, type MouseEvent } from 'react'
 import { Card, CardContent } from '@/shared/components/ui/card'
@@ -44,11 +41,8 @@ interface BedCardProps {
 }
 
 export const BedCard = memo(function BedCard({
-  bed, onClick, onContextMenu, onReasonSelect,
-  showUpdated = false, errorMessage = null,
-  searchQuery = '', showUndo = false, onUndo, undoTimerSeconds = 0,
-  animationEnabled = true,
-  viewMode = 'nurse',
+  bed, onClick, onContextMenu, onReasonSelect, showUpdated = false, errorMessage = null,
+  searchQuery = '', showUndo = false, onUndo, undoTimerSeconds = 0, animationEnabled = true,
 }: BedCardProps) {
   const rawStageName = bed.currentStage?.name || 'Empty'
   const stageName = rawStageName === 'Cleaning' ? 'In Cleaning' : rawStageName
@@ -84,16 +78,17 @@ export const BedCard = memo(function BedCard({
       tabIndex={0}
       aria-label={`Bed ${bed.bedNumber}, ${stageName}${isOccupied ? ', Occupied' : ', Available'}${isDelayed ? ', Delayed' : ''}${isEscalated ? ', Escalated' : ''}${isBottleneck ? ', Disposition Bottleneck' : ''}`}
       className={cn(
-        'relative overflow-hidden transition-all cursor-pointer sm:hover:scale-105 sm:hover:shadow-lg active:scale-[0.97] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500',
+        'relative overflow-hidden transition-all cursor-pointer sm:hover:scale-105 sm:hover:shadow-lg active:scale-[0.97] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary',
         colorClasses.bg,
         colorClasses.border,
         'border-2',
-        isVirtual && 'ring-2 ring-purple-500 border-purple-700',
-        isTemporary && !isVirtual && 'ring-2 ring-orange-500 border-orange-700',
-        isDelayed && 'ring-2 ring-red-500',
-        isDelayed && showPulse && 'motion-safe:animate-pulse',
-        isBottleneck && !isDelayed && 'ring-2 ring-amber-500',
-        isBottleneck && !isDelayed && showPulse && 'motion-safe:animate-pulse',
+        isVirtual && 'ring-2 ring-purple-500 dark:ring-purple-400 border-purple-500 dark:border-purple-400',
+        isTemporary && !isVirtual && 'ring-2 ring-orange-500 dark:ring-orange-400 border-orange-500 dark:border-orange-400',
+        isDelayed && !isEscalated && 'ring-2 ring-destructive',
+        isDelayed && !isEscalated && showPulse && 'animate-pulse-slow',
+        isEscalated && 'ring-2 ring-status-escalated animate-glow-escalated',
+        isBottleneck && !isDelayed && !isEscalated && 'ring-2 ring-status-cleaning',
+        isBottleneck && !isDelayed && !isEscalated && showPulse && 'animate-pulse-slow',
       )}
       onClick={handleClick}
       onKeyDown={(e) => {
@@ -119,28 +114,28 @@ export const BedCard = memo(function BedCard({
           </h3>
           {isOccupied && !isDelayed && (
             <div className="flex h-2 w-2" role="status" aria-label="Occupied active indicator">
-              <span className="animate-ping absolute inline-flex h-2 w-2 rounded-full bg-emerald-400 opacity-75" />
-              <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500" />
+              <span className="animate-ping absolute inline-flex h-2 w-2 rounded-full bg-primary opacity-75" />
+              <span className="relative inline-flex rounded-full h-2 w-2 bg-primary" />
             </div>
           )}
         </div>
         <div className="space-y-1">
-          <p className="text-xs text-zinc-500 uppercase tracking-wider">Current Stage</p>
+          <p className="text-xs text-muted-foreground uppercase tracking-wider">Current Stage</p>
           <div className="flex items-center gap-1.5">
             <StageIcon colorCode={stageColor} className={cn('h-4 w-4', colorClasses.text)} />
             <p className={cn('text-sm font-semibold', colorClasses.text)}>{highlightMatch(stageName, searchQuery)}</p>
           </div>
-          {onContextMenu && <p className="text-[10px] text-zinc-500">Tap or right-click to update stage</p>}
-          {showUpdated && <p className="text-[10px] text-emerald-400" role="status">Updated</p>}
-          {errorMessage && <p className="text-[10px] text-red-400" role="alert">{errorMessage}</p>}
+          {onContextMenu && <p className="text-[10px] text-muted-foreground">Tap or right-click to update stage</p>}
+          {showUpdated && <p className="text-[10px] text-status-occupied" role="status">Updated</p>}
+          {errorMessage && <p className="text-[10px] text-destructive" role="alert">{errorMessage}</p>}
           {showUndo && onUndo && (
             <div className="mt-2 flex items-center gap-2">
               <button
-                className="px-3 py-1 bg-blue-600 hover:bg-blue-700 text-white text-xs rounded transition-colors font-semibold shadow focus:ring-2 focus:ring-blue-400 focus:outline-none"
+                className="px-3 py-1 bg-primary hover:opacity-90 text-primary-foreground text-xs rounded transition-colors font-semibold shadow focus:ring-2 focus:ring-ring focus:outline-none"
                 onClick={e => { e.stopPropagation(); onUndo(); }}
                 aria-label={`Undo last action (expires in ${undoTimerSeconds} seconds)`}
               >Undo</button>
-              <span className="text-xs text-zinc-400" aria-hidden="true">({undoTimerSeconds}s)</span>
+              <span className="text-xs text-muted-foreground" aria-hidden="true">({undoTimerSeconds}s)</span>
             </div>
           )}
           {isBottleneck && (
@@ -154,14 +149,14 @@ export const BedCard = memo(function BedCard({
         </div>
 
         {isOccupied && bed.lastStageChange && (
-          <div className="pt-2 border-t border-zinc-700/50 space-y-2">
+          <div className="pt-2 border-t border-border space-y-2">
             {/* In Stage timer — shown for both nurse and supervisor */}
             <div className="flex items-center gap-2">
-              <Clock className="h-4 w-4 text-zinc-500" aria-hidden="true" />
+              <Clock className="h-4 w-4 text-muted-foreground" aria-hidden="true" />
               <div className="flex-1">
-                <p className="text-xs text-zinc-500">In Stage</p>
+                <p className="text-xs text-muted-foreground">In Stage</p>
                 <p
-                  className={cn('text-lg font-bold', isDelayed ? 'text-red-400' : 'text-zinc-300')}
+                  className={cn('text-lg font-bold', isDelayed ? 'text-destructive' : 'text-foreground')}
                   aria-label={`Time in current stage: ${stageTime}`}
                   suppressHydrationWarning
                 >
@@ -172,11 +167,11 @@ export const BedCard = memo(function BedCard({
             {/* Patient Total — shown for all roles */}
             {bed.patientStartTime && (
               <div className="flex items-center gap-2">
-                <Clock className="h-4 w-4 text-zinc-400" aria-hidden="true" />
+                <Clock className="h-4 w-4 text-muted-foreground" aria-hidden="true" />
                 <div className="flex-1">
-                  <p className="text-xs text-zinc-400">Patient Total</p>
+                  <p className="text-xs text-muted-foreground">Patient Total</p>
                   <p
-                    className={cn('text-sm font-semibold', isDelayed ? 'text-red-300' : 'text-zinc-400')}
+                    className={cn('text-sm font-semibold', isDelayed ? 'text-destructive' : 'text-muted-foreground')}
                     aria-label={`Total patient time: ${patientTotalTime}`}
                     suppressHydrationWarning
                   >
@@ -187,14 +182,11 @@ export const BedCard = memo(function BedCard({
             )}
           </div>
         )}
-        {isCleaning && (
-          <CleaningActions
-            lastStageChange={bed.lastStageChange} />
-        )}
+        {isCleaning && <CleaningActions lastStageChange={bed.lastStageChange} />}
         {!isOccupied && !isCleaning && (
-          <div className="pt-2 border-t border-zinc-700/50">
-            <p className="text-xs text-zinc-500">Status</p>
-            <p className="text-sm font-medium text-zinc-400">Available</p>
+          <div className="pt-2 border-t border-border">
+            <p className="text-xs text-muted-foreground">Status</p>
+            <p className="text-sm font-medium text-muted-foreground">Available</p>
           </div>
         )}
       </CardContent>

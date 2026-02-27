@@ -64,14 +64,14 @@ export const LosFilterBar = memo(function LosFilterBar({
   const endValue   = filters.endDate   ? toDateInput(new Date(filters.endDate))   : ''
   const isFiltered = !!filters.startDate || !!filters.endDate || filters.shiftStartTime !== undefined
   const inputClass = cn(
-    'bg-zinc-800 border border-zinc-700 rounded px-2 py-1 text-xs text-zinc-200',
+    'bg-muted border border-border rounded px-2 py-1 text-xs text-card-foreground',
     'focus:outline-none focus:ring-1 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed',
   )
 
   return (
     <div className={cn('flex items-center gap-3 flex-wrap', className)}>
-      <div className="flex items-center gap-1.5 text-zinc-300">
-        <CalendarDays className="h-4 w-4 text-zinc-500 shrink-0" />
+      <div className="flex items-center gap-1.5 text-card-foreground">
+        <CalendarDays className="h-4 w-4 text-muted-foreground shrink-0" />
         <input type="date" value={startValue} onChange={handleStartDate}
           disabled={readOnly} max={endValue || undefined} aria-label="Start date" className={inputClass} />
         <span className="text-zinc-600 text-xs">to</span>
@@ -79,8 +79,8 @@ export const LosFilterBar = memo(function LosFilterBar({
           disabled={readOnly} min={startValue || undefined} aria-label="End date" className={inputClass} />
       </div>
 
-      <div className="flex items-center gap-1.5 text-zinc-300">
-        <Clock className="h-4 w-4 text-zinc-500 shrink-0" />
+      <div className="flex items-center gap-1.5 text-card-foreground">
+        <Clock className="h-4 w-4 text-muted-foreground shrink-0" />
         <select value={shiftValue} onChange={handleShiftChange} disabled={readOnly}
           aria-label="Shift filter" className={inputClass}>
           <option value="all">All Shifts</option>
@@ -95,7 +95,7 @@ export const LosFilterBar = memo(function LosFilterBar({
           {DATE_RANGE_PRESETS.map(({ label, days }) => (
             <button key={label} onClick={() => applyPreset(days)}
               className={cn('px-2 py-1 rounded text-[10px] border transition-colors',
-                'border-zinc-700 bg-zinc-800 text-zinc-400 hover:text-zinc-200 hover:border-zinc-500')}>
+                'border-border bg-muted text-muted-foreground hover:text-card-foreground hover:border-zinc-500')}>
               {label}
             </button>
           ))}
@@ -104,7 +104,7 @@ export const LosFilterBar = memo(function LosFilterBar({
 
       {isFiltered && !readOnly && (
         <Button variant="ghost" size="sm" onClick={handleReset}
-          className="text-zinc-500 hover:text-zinc-200 h-7 px-2" title="Reset to last 30 days">
+          className="text-muted-foreground hover:text-card-foreground h-7 px-2" title="Reset to last 30 days">
           <RotateCcw className="h-3.5 w-3.5 mr-1" />
           <span className="text-[10px]">Reset</span>
         </Button>

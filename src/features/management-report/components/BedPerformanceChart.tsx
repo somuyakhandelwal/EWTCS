@@ -63,7 +63,7 @@ export const BedPerformanceChart = memo(function BedPerformanceChart({
             Outliers only
           </Button>
         </div>
-        <div className="flex items-center justify-center h-32 text-zinc-500 text-sm">
+        <div className="flex items-center justify-center h-32 text-muted-foreground text-sm">
           {outliersOnly ? 'No outlier beds in this period' : 'No data for selected period'}
         </div>
       </div>
@@ -80,7 +80,7 @@ export const BedPerformanceChart = memo(function BedPerformanceChart({
           variant="outline"
           size="sm"
           onClick={() => setOutliersOnly(!outliersOnly)}
-          className={outliersOnly ? 'bg-amber-900/20 border-amber-800 text-amber-400' : 'text-zinc-400 border-zinc-800'}
+          className={outliersOnly ? 'bg-amber-900/20 border-amber-800 text-amber-400' : 'text-muted-foreground border-border'}
         >
           <Filter className="h-3.5 w-3.5 mr-1.5" />
           Outliers only
@@ -89,7 +89,7 @@ export const BedPerformanceChart = memo(function BedPerformanceChart({
           variant="outline"
           size="sm"
           onClick={handleExport}
-          className="text-zinc-400 border-zinc-800"
+          className="text-muted-foreground border-border"
         >
           <Download className="h-3.5 w-3.5 mr-1.5" />
           Export PNG

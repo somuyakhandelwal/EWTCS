@@ -37,26 +37,25 @@ export default function UserManagementTable({ users, wards = [] }: UserManagemen
         }
     }
 
-    const handleEdit  = (user: UserRow) => { setSelectedUser(user); setIsEditing(true) }
+    const handleEdit = (user: UserRow) => { setSelectedUser(user); setIsEditing(true) }
     const handleReset = (user: UserRow) => { setSelectedUser(user); setIsResetting(true) }
-    const handleCloseEdit  = () => { setIsEditing(false);  setSelectedUser(null); router.refresh() }
+    const handleCloseEdit = () => { setIsEditing(false); setSelectedUser(null); router.refresh() }
     const handleCloseReset = () => { setIsResetting(false); setSelectedUser(null) }
 
     return (
         <>
             {error && (
-                <div className="mb-4 p-4 bg-red-900/20 border border-red-900/50 rounded-lg text-red-400 text-sm">
+                <div className="mb-4 p-4 bg-destructive/10 border border-destructive/20 rounded-lg text-destructive text-sm">
                     {error}
                 </div>
             )}
-            <div className="rounded-lg border border-zinc-800 overflow-hidden">
-                <table className="w-full">
-                    <thead className="bg-black/50">
-                        <tr className="border-b border-zinc-800">
-                            {['Username','Role','Ward','Status','Created','Actions'].map((h, i) => (
-                                <th key={h} className={`px-4 py-3 text-xs font-medium text-zinc-400 uppercase tracking-wider ${
-                                    i === 5 ? 'text-right' : 'text-left'
-                                }`}>{h}</th>
+            <div className="rounded-lg border border-border overflow-x-auto">
+                <table className="w-full whitespace-nowrap">
+                    <thead className="bg-background">
+                        <tr className="border-b border-border">
+                            {['Username', 'Role', 'Ward', 'Status', 'Created', 'Actions'].map((h, i) => (
+                                <th key={h} className={`px-4 py-3 text-xs font-medium text-muted-foreground uppercase tracking-wider ${i === 5 ? 'text-right' : 'text-left'
+                                    }`}>{h}</th>
                             ))}
                         </tr>
                     </thead>

@@ -15,18 +15,18 @@ interface ShiftMetricCardProps {
 
 export function ShiftMetricCard({ icon, label, value, sub, accent }: ShiftMetricCardProps) {
   return (
-    <Card className="border-zinc-800 bg-zinc-900/60">
+    <Card className="border-border bg-card">
       <CardHeader className="pb-2">
-        <CardDescription className="flex items-center gap-1.5 text-xs text-zinc-400">
+        <CardDescription className="flex items-center gap-1.5 text-xs text-muted-foreground">
           {icon}
           {label}
         </CardDescription>
       </CardHeader>
       <CardContent>
-        <div className={cn('text-3xl font-bold', accent ?? 'text-white')}>
+        <div className={cn('text-3xl font-bold', accent ?? 'text-foreground')}>
           {value}
         </div>
-        {sub && <p className="text-xs text-zinc-500 mt-1">{sub}</p>}
+        {sub && <p className="text-xs text-muted-foreground mt-1">{sub}</p>}
       </CardContent>
     </Card>
   )
