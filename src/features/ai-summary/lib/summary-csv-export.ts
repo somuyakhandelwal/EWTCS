@@ -60,17 +60,6 @@ export function formatSummariesAsCsv(summaries: DailySummary[]): string {
     return rows.join('\r\n')
 }
 
-/**
- * Triggers a browser file download for the given CSV string.
- * No-op in non-browser environments.
- */
-export function downloadCsv(filename: string, csv: string): void {
-    if (typeof window === 'undefined') return
-    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' })
-    const url = URL.createObjectURL(blob)
-    const a = document.createElement('a')
-    a.href = url
-    a.download = filename
-    a.click()
-    URL.revokeObjectURL(url)
-}
+// Re-export shared download utility: DOM-safe (appends to body), Firefox-compatible.
+// NOTE: shared signature is (csv, filename) — callers must use this order.
+export { downloadCsv } from '@/shared/lib/csv-download'

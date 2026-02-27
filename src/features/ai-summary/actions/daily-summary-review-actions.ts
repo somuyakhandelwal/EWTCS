@@ -2,6 +2,10 @@
 
 // Server Actions — EPIC 9 (US-9.2, US-9.3)
 // Supervisor review workflow: approve, reject, edit draft, flag insight.
+//
+// NOTE: approveSummary() also calls createSignOff() from management-report to
+// keep the two approval systems in sync (Conflict-2 fix). This cross-feature
+// import is intentional and documented — see feature_conflicts.md §Conflict 2.
 
 import { logger } from '@/shared/config/logger'
 import { requireRole } from '@/shared/lib/auth'
@@ -19,6 +23,9 @@ import {
     flagInsight,
     getDraftSummariesPendingReview,
 } from '../lib/daily-summary-review-store'
+// Cross-feature import (ai-summary → management-report): required to sync sign-off
+// records when an AI summary is approved. Sign-off creation is non-fatal.
+import { createSignOff } from '@/features/management-report/lib/signoff-queries'
 import type { DailySummary } from '../types/daily-summary'
 
 type ActionResult = { success: boolean; summary?: DailySummary; error?: string }
@@ -40,6 +47,24 @@ export async function approveSummary(rawInput: { id: string }): Promise<ActionRe
             entityId: summary.id,
             performedBy: session.userId,
         })
+
+        // Sync: auto-create a report sign-off so management-report and ai-summary
+        // approval statuses stay consistent. Non-fatal — approval already succeeded.
+        try {
+            await createSignOff({
+                reportDate: summary.summaryDate,
+                reportType: 'daily',
+                userId: session.userId,
+                notes: 'Auto-created when AI summary was approved',
+            })
+        } catch (signOffError) {
+            logger.warn('[ai-summary] approveSummary: sign-off sync failed (non-fatal)', {
+                summaryId: summary.id,
+                date: summary.summaryDate,
+                error: signOffError instanceof Error ? signOffError.message : String(signOffError),
+            })
+        }
+
         return { success: true, summary }
     } catch (error) {
         const msg = error instanceof Error ? error.message : 'Approve failed'

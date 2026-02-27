@@ -30,6 +30,8 @@ interface BedGridProps {
   isRefreshing?: boolean
   undoState?: { bedId: string; timer: number } | null
   onUndo?: () => void
+  /** True while the undo API call is in-flight */
+  isUndoing?: boolean
 }
 
 export function BedGrid({
@@ -48,6 +50,7 @@ export function BedGrid({
   isRefreshing = false,
   undoState,
   onUndo,
+  isUndoing = false,
 }: BedGridProps) {
   const {
     menuState,
@@ -145,6 +148,7 @@ export function BedGrid({
               showUndo={undoState?.bedId === bed.id}
               undoTimerSeconds={undoState?.bedId === bed.id ? undoState.timer : 0}
               onUndo={undoState?.bedId === bed.id ? onUndo : undefined}
+              isUndoing={undoState?.bedId === bed.id ? isUndoing : false}
             />
           ))}
         </div>

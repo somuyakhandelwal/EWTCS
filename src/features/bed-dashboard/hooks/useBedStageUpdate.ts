@@ -3,7 +3,7 @@
 
 'use client'
 
-import { useCallback, useMemo, useState } from 'react'
+import { useCallback, useEffect, useMemo, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import type { BedGridData, BedWithElapsedTime, Stage, OverrideState, ConfirmationState, DischargeState } from '../types/bed'
 import { useErrorTimers, useSuccessFeedback } from './useBedUpdateState'
@@ -54,6 +54,15 @@ export function useBedStageUpdate(initialData: BedGridData): UseBedStageUpdateRe
   const { lastUpdatedBedId, lastUpdatedStageId, showSuccessFeedback } =
     useSuccessFeedback(SUCCESS_FEEDBACK_MS)
   const { settings, toggleConfirmation } = useDashboardSettings()
+
+  // Sync displayed data when realtimeData changes (polling or manual realtimeRefresh after undo).
+  // Guard: skip while an update is in-flight to preserve optimistic state.
+  // This fix ensures stage colours and transition options reflect the true server state.
+  useEffect(() => {
+    if (!updatingBedId) {
+      setData(initialData)
+    }
+  }, [initialData, updatingBedId])
 
   const stageById = useMemo(() => {
     const map = new Map<string, Stage>()

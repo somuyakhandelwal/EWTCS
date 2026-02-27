@@ -15,9 +15,6 @@ export function useUndoManager(
   } | null>(null)
   const undoTimerRef = useRef<NodeJS.Timeout | null>(null)
 
-  // Track the last bed+stage pair we actually started a timer for.
-  // This prevents the effect from restarting the timer when lastUpdatedBedId
-  // auto-clears back to null (the 3s success-feedback expiry).
   const lastSeenUpdateRef = useRef<string | null>(null)
 
   useEffect(() => {
@@ -47,44 +44,61 @@ export function useUndoManager(
       })
     }, 1000)
 
+    // NOTE: No cleanup return here — the interval manages its own lifecycle.
+    // Returning a cleanup would kill the interval when lastUpdatedBedId/StageId
+    // auto-clear to null (after 3s success feedback), breaking the 30s undo window.
+  }, [lastUpdatedBedId, lastUpdatedStageId])
+
+  // Separate unmount-only cleanup — avoids premature interval cancellation on dep changes
+  useEffect(() => {
     return () => {
       if (undoTimerRef.current) {
         clearInterval(undoTimerRef.current)
         undoTimerRef.current = null
       }
     }
-  }, [lastUpdatedBedId, lastUpdatedStageId])
+  }, [])
 
   const [undoError, setUndoError] = useState<string | null>(null)
+  // Bug 1 fix: track in-flight undo to prevent double-click and show loading state
+  const [isUndoing, setIsUndoing] = useState(false)
 
   const handleUndo = useCallback(async () => {
-    if (!undoState) return
+    if (!undoState || isUndoing) return
     setUndoError(null)
+    setIsUndoing(true)
 
-    // Clear the countdown immediately so the button disappears
-    setUndoState(null)
-    if (undoTimerRef.current) {
-      clearInterval(undoTimerRef.current)
-      undoTimerRef.current = null
-    }
-    lastSeenUpdateRef.current = null
+    // Capture before any state change — state will still be set during the fetch
+    const { bedId } = undoState
 
     try {
       const res = await fetch('/api/bed-dashboard/undo', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ bedId: undoState.bedId }),
+        body: JSON.stringify({ bedId }),
       })
       const data = await res.json()
+
       if (!data.success) {
+        // Bug 1 fix: keep button visible; show error — do NOT clear undoState on failure
         setUndoError(data.error || 'Undo failed')
+      } else {
+        // Only clear button + refresh on confirmed success
+        setUndoState(null)
+        if (undoTimerRef.current) {
+          clearInterval(undoTimerRef.current)
+          undoTimerRef.current = null
+        }
+        lastSeenUpdateRef.current = null
+        // Bug 2 fix: only refresh when undo actually succeeded
+        await handleRefresh()
       }
     } catch {
       setUndoError('Undo failed — please try again')
+    } finally {
+      setIsUndoing(false)
     }
+  }, [undoState, isUndoing, handleRefresh])
 
-    await handleRefresh()
-  }, [undoState, handleRefresh])
-
-  return { undoState, undoError, handleUndo }
+  return { undoState, undoError, handleUndo, isUndoing }
 }
