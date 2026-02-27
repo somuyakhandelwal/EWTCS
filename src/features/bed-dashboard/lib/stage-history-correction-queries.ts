@@ -171,14 +171,17 @@ export async function fetchCorrectionAuditTrail(filters: CorrectionAuditFilters)
        LEFT JOIN stages st_new ON st_new.id = (
          CASE 
            WHEN c.corrected_fields ? 'to_stage_id' THEN
-             CASE 
-               WHEN jsonb_typeof(c.corrected_fields -> 'to_stage_id' -> 'to') = 'object' 
-               THEN (c.corrected_fields -> 'to_stage_id' -> 'to' ->> 'id')
-               ELSE (c.corrected_fields -> 'to_stage_id' ->> 'to')
-             END
+             NULLIF(
+               CASE 
+                 WHEN jsonb_typeof(c.corrected_fields -> 'to_stage_id' -> 'to') = 'object' 
+                 THEN (c.corrected_fields -> 'to_stage_id' -> 'to' ->> 'id')
+                 ELSE (c.corrected_fields -> 'to_stage_id' ->> 'to')
+               END,
+               ''
+             )::uuid
            ELSE NULL
          END
-       )::uuid
+       )
        ${whereSql}
        ORDER BY c.corrected_at DESC`,
       params

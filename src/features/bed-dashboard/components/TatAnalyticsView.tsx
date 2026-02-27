@@ -20,11 +20,7 @@ interface TatAnalyticsViewProps {
   readOnly?: boolean
 }
 
-<<<<<<< HEAD
 export function TatAnalyticsView({ className, readOnly = false }: TatAnalyticsViewProps) {
-=======
-export function TatAnalyticsView({ className }: TatAnalyticsViewProps) {
->>>>>>> upstream/issue-24
   const [fullCycleSummary, setFullCycleSummary] = useState<FullCycleTatSummary | null>(null)
   const [fullCycleRecords, setFullCycleRecords] = useState<FullCycleTatRecord[]>([])
   const [loading, setLoading] = useState(true)

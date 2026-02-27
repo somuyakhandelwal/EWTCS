@@ -98,17 +98,17 @@ export function EditHistoryForm({
       </div>
 
       {/* AC 2: Mandatory correction reason */}
-      <div className="space-y-1.5">
-        <Label className="flex items-center gap-1.5 text-sm text-amber-400">
+      <div className="space-y-1.5 p-3 rounded-lg bg-amber-500/5 border border-amber-500/10">
+        <Label className="flex items-center gap-1.5 text-sm font-semibold text-amber-500">
           <ShieldCheck className="h-3.5 w-3.5" />
           Correction Reason
-          <span className="text-red-400 ml-0.5" aria-label="required">*</span>
+          <span className="text-red-500 ml-0.5" aria-label="required" title="Required">*</span>
         </Label>
         <textarea value={correctionReason} onChange={(e) => onReasonChange(e.target.value)} rows={2}
-          placeholder="Required — explain why this correction is necessary…"
-          className="w-full rounded-md bg-zinc-800 border border-amber-700/40 text-white text-sm px-3 py-2 placeholder:text-zinc-600 focus:outline-none focus:ring-2 focus:ring-amber-500/40 resize-none" />
-        <p className="text-xs text-zinc-500">
-          Your supervisor ID and this reason are stored in the audit trail alongside the original data.
+          placeholder="Please explain why this correction is necessary (Required)…"
+          className="w-full rounded-md bg-zinc-800 border-zinc-700 focus:border-amber-500/50 text-white text-sm px-3 py-2 placeholder:text-zinc-500 focus:outline-none focus:ring-1 focus:ring-amber-500/30 resize-none transition-all" />
+        <p className="text-[10px] text-zinc-500">
+          Your supervisor ID and this reason are stored in the audit trail.
         </p>
       </div>
 
