@@ -96,14 +96,12 @@ export function StageFormModal({ stage, onClose, onSaved }:
             className='px-4 py-2 border border-border rounded-lg text-foreground font-medium hover:bg-muted transition-colors'>
             Cancel
           </button>
-          {!stage && (
-            <button
-              onClick={() => void saveStage(false)}
-              disabled={loading}
-              className='px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-lg transition-colors disabled:opacity-50'>
-              {loading ? 'Saving...' : 'Save Stage'}
-            </button>
-          )}
+          <button
+            onClick={() => void saveStage()}
+            disabled={loading}
+            className='px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-lg transition-colors disabled:opacity-50'>
+            {loading ? 'Saving...' : 'Save Stage'}
+          </button>
         </div>
       </div>
     </div>
