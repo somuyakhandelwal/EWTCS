@@ -92,11 +92,10 @@ export function StageList({ initialStages }: { initialStages: Stage[] }) {
         <StageFormModal
           stage={editing ?? undefined}
           onClose={() => { setShowAdd(false); setEditing(null); }}
-          onSaved={(s, fromAutosave) => {
+          onSaved={(s) => {
             if (editing) setStages(stages.map(x => x.id === s.id ? s : x));
             else setStages([...stages, s]);
-            // Only close the modal on a manual save — autosave keeps it open
-            if (!fromAutosave) { setShowAdd(false); setEditing(null); }
+            setShowAdd(false); setEditing(null);
           }}
         />
       )}

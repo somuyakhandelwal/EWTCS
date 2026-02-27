@@ -11,8 +11,7 @@ import {
   saveRecoveryDraft,
 } from '@/shared/lib/recovery-draft'
 
-const AUTOSAVE_DEBOUNCE_MS = 500
-const AUTOSAVE_RETRIES = 2
+const SAVE_RETRIES = 2
 const DRAFT_VERSION = 1
 
 const normalizeStageColor = (value?: string) =>
@@ -44,11 +43,10 @@ export interface StageFormLogic {
   loading: boolean
   saveState: SaveState
   restoredNotice: boolean
-  saveStage: (fromAutosave?: boolean) => Promise<void>
+  saveStage: () => Promise<void>
 }
 
-// onSaved receives fromAutosave so callers can decide whether to close the modal
-export type OnSavedCallback = (s: Stage, fromAutosave: boolean) => void
+export type OnSavedCallback = (s: Stage) => void
 
 export function useStageFormLogic({
   stage,
@@ -71,7 +69,6 @@ export function useStageFormLogic({
   const [loading, setLoading] = useState(false)
   const [saveState, setSaveState] = useState<SaveState>('idle')
   const [restoredNotice, setRestoredNotice] = useState(false)
-  const isInitialized = useRef(false)
   const savedTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
   const draftKey = stage ? `ewtcs:stage-form-draft:${stage.id}` : 'ewtcs:stage-form-draft:new'
 
@@ -91,7 +88,7 @@ export function useStageFormLogic({
     return hasThreshold ? Number(thresholdHours) * 60 + Number(thresholdMins) : null
   }, [thresholdHours, thresholdMins])
 
-  const saveStage = useCallback(async (fromAutosave = false) => {
+  const saveStage = useCallback(async () => {
     const validationError = validateInput()
     if (validationError) { setError(validationError); setSaveState('failed'); return }
 
@@ -104,10 +101,10 @@ export function useStageFormLogic({
           setSaveState(attempt > 1 ? 'retrying' : 'saving')
           await updateStage({ id: stage.id, name, color_code: color, description: desc,
             threshold_minutes: totalThresholdMins })
-        }, { retries: AUTOSAVE_RETRIES, shouldRetry: isTransientError })
+        }, { retries: SAVE_RETRIES, shouldRetry: isTransientError })
 
         onSaved({ ...stage, name, color_code: color, description: desc,
-          threshold_minutes: totalThresholdMins }, fromAutosave)
+          threshold_minutes: totalThresholdMins })
         clearRecoveryDraft(draftKey)
         appendRecoveryLog('stage_form_saved', { stageId: stage.id })
         setSaveState('saved')
@@ -117,7 +114,7 @@ export function useStageFormLogic({
         await createStage({ name, color_code: color, description: desc })
         onSaved({ id: Date.now().toString(), name, color_code: color, description: desc,
           display_order: 99, is_default: false, is_active: true,
-          threshold_minutes: null, created_at: '', updated_at: '' }, false)
+          threshold_minutes: null, created_at: '', updated_at: '' })
         clearRecoveryDraft(draftKey)
         appendRecoveryLog('stage_form_saved', { stageId: 'new' })
         setSaveState('saved')
@@ -125,10 +122,7 @@ export function useStageFormLogic({
     } catch (e: unknown) {
       setSaveState('failed')
       setError(e instanceof Error ? e.message : 'Something went wrong')
-      appendRecoveryLog('stage_form_save_failed', { stageId: stage?.id ?? 'new', fromAutosave })
-      if (fromAutosave && typeof window !== 'undefined' && isTransientError(e)) {
-        window.alert('Auto-save failed after retries. Please try again.')
-      }
+      appendRecoveryLog('stage_form_save_failed', { stageId: stage?.id ?? 'new' })
     } finally { setLoading(false) }
   }, [color, desc, draftKey, getThresholdMinutes, name, onSaved, stage, validateInput])
 
@@ -165,14 +159,6 @@ export function useStageFormLogic({
     }
   }, [color, desc, draftKey, name, stage?.color_code, stage?.description,
       stage?.name, stageThresholdMins, thresholdHours, thresholdMins])
-
-  // Autosave debounce for edits
-  useEffect(() => {
-    if (!stage) return
-    if (!isInitialized.current) { isInitialized.current = true; return }
-    const timer = setTimeout(() => { void saveStage(true) }, AUTOSAVE_DEBOUNCE_MS)
-    return () => clearTimeout(timer)
-  }, [stage, name, color, desc, thresholdHours, thresholdMins, saveStage])
 
   // Cleanup timers on unmount
   useEffect(() => () => { if (savedTimerRef.current) clearTimeout(savedTimerRef.current) }, [])
