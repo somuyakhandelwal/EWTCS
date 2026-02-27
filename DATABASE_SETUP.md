@@ -313,6 +313,19 @@ Migration 022 adds database indexes supporting the Dashboard (<2s) and Reports (
 
 ---
 
+## Additional Dashboard Performance Indexes (Migration 1740649700000)
+
+Migration `1740649700000_add-performance-indexes.js` adds supplementary indexes targeting the main bed dashboard query (Epic 1 / Epic 13). These are applied via `node-postgres-migrate` and run alongside the numbered SQL migrations.
+
+| Index | Table | Columns | Purpose |
+|-------|-------|---------|---------|
+| `idx_beds_active_number` | `beds` | `is_active, bed_number` (partial) | Dashboard active-beds filtering |
+| `idx_beds_current_stage` | `beds` | `current_stage_id` | Speed up JOIN with stages table |
+| `idx_disposition_unresolved` | `disposition_delay_reasons` | `bed_id, resolved_at` (partial, unresolved) | LATERAL JOIN in `getBedsWithElapsedTime` |
+| `idx_stage_thresholds_lookup` | `stage_delay_thresholds` | `stage_id` | Per-stage delay threshold lookups |
+
+---
+
 ## Ward Access Control Setup
 
 **Migration 006** adds ward-level access control to prevent IDOR (Insecure Direct Object Reference) attacks. Nurses can only update beds in their assigned ward.
