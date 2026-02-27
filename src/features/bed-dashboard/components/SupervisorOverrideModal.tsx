@@ -1,6 +1,7 @@
 "use client"
 
 import { useState, useCallback } from "react"
+import { Button } from "@/shared/components/ui/button"
 import type { Stage } from "../types/bed"
 import { getStageColorClasses } from '@/shared/utils/stage-colors'
 
@@ -127,20 +128,22 @@ export function SupervisorOverrideModal({
 
         {/* Buttons */}
         <div className="flex gap-3 pt-2">
-          <button
+          <Button
+            variant="outline"
             onClick={handleCancel}
             disabled={isLoading}
-            className="flex-1 px-4 py-2 border border-border rounded-md text-foreground bg-muted hover:bg-muted/70 disabled:opacity-50 font-medium text-sm transition-colors"
+            className="flex-1"
           >
             Cancel
-          </button>
-          <button
+          </Button>
+          <Button
             onClick={handleApprove}
-            disabled={isLoading || !overrideReason.trim()}
-            className="flex-1 px-4 py-2 bg-primary text-primary-foreground rounded-md hover:opacity-90 disabled:opacity-50 font-medium text-sm transition-colors"
+            loading={isLoading}
+            disabled={!overrideReason.trim()}
+            className="flex-1"
           >
-            {isLoading ? "Approving..." : "Approve"}
-          </button>
+            Approve
+          </Button>
         </div>
       </div>
     </div>

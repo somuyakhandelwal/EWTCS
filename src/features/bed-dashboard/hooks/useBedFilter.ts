@@ -29,10 +29,12 @@ function loadFromSession(): PersistedState {
 export interface UseBedFilterResult {
   showDelayedOnly: boolean
   sortOrder: SortOrder
+  searchQuery: string
   displayedBeds: BedWithElapsedTime[]
   isFilterActive: boolean
   toggleDelayedFilter: () => void
   toggleSortOrder: () => void
+  setSearchQuery: (query: string) => void
   clearFilter: () => void
 }
 
@@ -40,7 +42,7 @@ export interface UseBedFilterResult {
  * Manages bed filter and sort state for the dashboard.
  * State persists for the duration of the browser session via sessionStorage.
  *
- * AC: Show Delayed Only filter, Sort by delay duration, Session persistence, Clear filter
+ * AC: Search by bed/status, Show Delayed Only filter, Sort by delay duration, Session persistence, Clear filter
  */
 export function useBedFilter(beds: BedWithElapsedTime[]): UseBedFilterResult {
   const [showDelayedOnly, setShowDelayedOnly] = useState<boolean>(
@@ -49,31 +51,43 @@ export function useBedFilter(beds: BedWithElapsedTime[]): UseBedFilterResult {
   const [sortOrder, setSortOrder] = useState<SortOrder>(
     () => loadFromSession().sortOrder
   )
+  const [searchQuery, setSearchQuery] = useState('')
 
   // Persist to sessionStorage whenever filter/sort state changes
   useEffect(() => {
     try {
       sessionStorage.setItem(SESSION_KEY, JSON.stringify({ showDelayedOnly, sortOrder }))
     } catch {
-      // sessionStorage unavailable (e.g., incognito with storage blocked) — degrade gracefully
+      // sessionStorage unavailable — degrade gracefully
     }
   }, [showDelayedOnly, sortOrder])
 
   const displayedBeds = useMemo(() => {
-    const filtered = showDelayedOnly ? beds.filter((b) => b.isDelayed) : beds
+    // 1. Initial filter (Delayed Only)
+    let filtered = showDelayedOnly ? beds.filter((b) => b.isDelayed) : beds
 
+    // 2. Search filter
+    if (searchQuery.trim()) {
+      const q = searchQuery.toLowerCase()
+      filtered = filtered.filter(bed =>
+        bed.bedNumber.toLowerCase().includes(q) ||
+        bed.currentStage?.name.toLowerCase().includes(q)
+      )
+    }
+
+    // 3. Sorting
     if (sortOrder === 'desc') {
       return [...filtered].sort((a, b) => {
         const aMs = a.elapsedTimeMs ?? 0
         const bMs = b.elapsedTimeMs ?? 0
-        return bMs - aMs // longest delay (highest ms) first
+        return bMs - aMs
       })
     }
 
     return filtered
-  }, [beds, showDelayedOnly, sortOrder])
+  }, [beds, showDelayedOnly, sortOrder, searchQuery])
 
-  const isFilterActive = showDelayedOnly || sortOrder !== 'none'
+  const isFilterActive = showDelayedOnly || sortOrder !== 'none' || searchQuery !== ''
 
   const toggleDelayedFilter = useCallback(() => setShowDelayedOnly((prev) => !prev), [])
 
@@ -85,15 +99,18 @@ export function useBedFilter(beds: BedWithElapsedTime[]): UseBedFilterResult {
   const clearFilter = useCallback(() => {
     setShowDelayedOnly(false)
     setSortOrder('none')
+    setSearchQuery('')
   }, [])
 
   return {
     showDelayedOnly,
     sortOrder,
+    searchQuery,
     displayedBeds,
     isFilterActive,
     toggleDelayedFilter,
     toggleSortOrder,
+    setSearchQuery,
     clearFilter,
   }
 }

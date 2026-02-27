@@ -147,35 +147,42 @@ export function ContextMenu({
           </div>
         )}
         <div className="space-y-1">
-          {items.map((item) => (
-            <button
-              key={item.id}
-              type="button"
-              className={cn(
-                'flex w-full items-center gap-2 rounded text-left text-card-foreground disabled:cursor-not-allowed disabled:opacity-50',
-                isMobile ? 'px-0 py-3 text-base active:bg-muted' : 'px-2 py-1.5 text-sm hover:bg-muted',
-                item.className
-              )}
-              disabled={item.disabled}
-              onClick={(e) => {
-                // FIX for Issue #4 (Double-Click): Check e.detail to allow only single clicks
-                // e.detail > 1 indicates a double-click or higher
-                if (e.detail > 1) {
-                  return
-                }
+          {items.length === 0 && !error ? (
+            <div className="flex items-center gap-2 px-2 py-3 text-xs text-muted-foreground animate-pulse">
+              <div className="h-2 w-2 rounded-full bg-muted-foreground animate-bounce" />
+              Loading transitions...
+            </div>
+          ) : (
+            items.map((item) => (
+              <button
+                key={item.id}
+                type="button"
+                className={cn(
+                  'flex w-full items-center gap-2 rounded text-left text-card-foreground disabled:cursor-not-allowed disabled:opacity-50',
+                  isMobile ? 'px-0 py-3 text-base active:bg-muted' : 'px-2 py-1.5 text-sm hover:bg-muted',
+                  item.className
+                )}
+                disabled={item.disabled}
+                onClick={(e) => {
+                  // FIX for Issue #4 (Double-Click): Check e.detail to allow only single clicks
+                  // e.detail > 1 indicates a double-click or higher
+                  if (e.detail > 1) {
+                    return
+                  }
 
-                if (item.disabled) {
-                  return
-                }
-                item.onSelect()
-                onClose()
-              }}
-              role="menuitem"
-            >
-              {item.icon && <span className="flex-shrink-0">{item.icon}</span>}
-              <span>{item.label}</span>
-            </button>
-          ))}
+                  if (item.disabled) {
+                    return
+                  }
+                  item.onSelect()
+                  onClose()
+                }}
+                role="menuitem"
+              >
+                {item.icon && <span className="flex-shrink-0">{item.icon}</span>}
+                <span>{item.label}</span>
+              </button>
+            ))
+          )}
         </div>
       </div>
     </div>

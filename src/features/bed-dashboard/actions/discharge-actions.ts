@@ -9,7 +9,7 @@ import { requireWriteRole } from '@/shared/lib/auth'
 import { logAudit } from '@/shared/lib/audit'
 import { logger } from '@/shared/config/logger'
 import pool from '@/shared/lib/db'
-import { getUserWard, getBedWard } from '../lib/bed-queries'
+import { checkWardAccess } from '../lib/bed-queries'
 import {
   fetchBedForDischarge,
   fetchDischargeStages,
@@ -48,20 +48,15 @@ export async function dischargeAndResetBed(input: {
       entityId: input.bedId,
     })
 
-    // Ward-level access check (same IDOR pattern as updateBedStage)
-    const userWard = await getUserWard(session.userId)
-    const bedWard = await getBedWard(input.bedId)
-    const hasWardAccess =
-      (!userWard && !bedWard) ||
-      (userWard && bedWard && userWard === bedWard) ||
-      session.role === 'admin'
-
-    if (!hasWardAccess) {
+    // Ward-level access check (centralized in checkWardAccess)
+    const wardError = await checkWardAccess(session.userId, input.bedId, session.role)
+    if (wardError) {
       logger.warn('Unauthorized discharge attempt', {
         userId: session.userId,
         bedId: input.bedId,
+        error: wardError
       })
-      return { success: false, error: 'Access denied to this bed.' }
+      return { success: false, error: wardError }
     }
 
     const client = await pool.connect()

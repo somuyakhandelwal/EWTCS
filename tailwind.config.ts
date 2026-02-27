@@ -58,7 +58,12 @@ const config = {
                     occupied: "hsl(var(--status-occupied))",
                     delayed: "hsl(var(--status-delayed))",
                     escalated: "hsl(var(--status-escalated))",
+                    success: "hsl(var(--status-success))",
+                    virtual: "hsl(var(--status-virtual))",
+                    temporary: "hsl(var(--status-temporary))",
+                    audit: "hsl(var(--status-audit))",
                 },
+                retention: "hsl(var(--retention-blue))",
             },
             borderRadius: {
                 lg: "var(--radius)",

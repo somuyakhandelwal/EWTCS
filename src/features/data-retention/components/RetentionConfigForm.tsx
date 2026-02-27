@@ -53,7 +53,7 @@ const FIELDS: FieldConfig[] = [
 const inputClass = cn(
   'w-20 bg-muted border border-border rounded px-2 py-1',
   'text-sm text-card-foreground text-right',
-  'focus:outline-none focus:ring-1 focus:ring-blue-500',
+  'focus:outline-none focus:ring-1 focus:ring-primary',
   'disabled:opacity-50 disabled:cursor-not-allowed',
 )
 
@@ -116,7 +116,7 @@ export function RetentionConfigForm({ initialConfig }: RetentionConfigFormProps)
           checked={config.requiresApproval}
           onChange={handleApprovalToggle}
           disabled={isPending}
-          className="w-4 h-4 accent-blue-500"
+          className="w-4 h-4 accent-retention"
         />
         <div>
           <p className="text-sm text-card-foreground">Require admin approval before deletion</p>
@@ -131,7 +131,8 @@ export function RetentionConfigForm({ initialConfig }: RetentionConfigFormProps)
           onClick={handleSubmit}
           disabled={isPending}
           size="sm"
-          className="bg-blue-600 hover:bg-blue-700 text-foreground"
+          variant="default"
+          className="min-w-[120px] bg-retention hover:bg-retention/90 text-primary-foreground"
         >
           <Save className="h-3.5 w-3.5 mr-1.5" />
           {isPending ? 'Saving…' : 'Save Settings'}

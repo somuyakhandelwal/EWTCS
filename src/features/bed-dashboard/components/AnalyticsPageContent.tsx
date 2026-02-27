@@ -2,25 +2,20 @@ import { StageAnalyticsView } from '@/features/bed-dashboard/components/StageAna
 import { AuditorHistoryView } from '@/features/bed-dashboard/components/AuditorHistoryView'
 import { TatAnalyticsView } from '@/features/bed-dashboard/components/TatAnalyticsView'
 import { LosView } from '@/features/bed-dashboard/components/LosView'
-import { PatientCountView } from '@/features/management-report/components/PatientCountView'
-import { DelayedPatientPercentageView } from '@/features/management-report/components/DelayedPatientPercentageView'
-import { BedPerformanceView } from '@/features/management-report/components/BedPerformanceView'
 import { StageDelayView } from '@/features/management-report/components/StageDelayView'
-import { ShiftReportView } from '@/features/shift-management/components/ShiftReportView'
 import { ShiftComparisonView } from '@/features/shift-management/components/ShiftComparisonView'
-import { DataRetentionView } from '@/features/data-retention/components/DataRetentionView'
 import { StaffingHeatmap } from '@/features/bed-dashboard/components/StaffingHeatmap'
 import { ExportReportButton } from '@/features/export/components/ExportReportButton'
 import { LogoutButton } from '@/features/auth/components/LogoutButton'
 import { CorrectionAuditTrailView } from '@/features/bed-dashboard/components/CorrectionAuditTrailView'
 import { PrintButton } from '@/features/bed-dashboard/components/PrintButton'
 import { Button } from '@/shared/components/ui/button'
-import { ArrowLeft } from 'lucide-react'
+import { ArrowLeft, Loader2 } from 'lucide-react'
 import Link from 'next/link'
+import { Suspense } from 'react'
 import type { PdfSection } from '@/features/export/types/export.types'
-import type { getShifts } from '@/features/shift-management/lib/shift-queries'
-import type { getRetentionConfig } from '@/features/data-retention/lib/retention-config-queries'
-import type { getRecentArchivalRuns } from '@/features/data-retention/lib/archival-queries'
+import { AnalyticsShiftsContainer } from '@/features/management-report/components/AnalyticsShiftsContainer'
+import { DataRetentionContainer } from '@/features/data-retention/components/DataRetentionContainer'
 
 const FULL_REPORT_SECTIONS: PdfSection[] = [
   { exportId: 'export-stage-analytics', title: 'Stage Analytics' },
@@ -42,9 +37,14 @@ interface Props {
   backHref: string
   username: string
   role: string
-  activeShifts: Awaited<ReturnType<typeof getShifts>>
-  retentionConfig: Awaited<ReturnType<typeof getRetentionConfig>> | null
-  archivalRuns: Awaited<ReturnType<typeof getRecentArchivalRuns>>
+}
+
+function SectionSkeleton() {
+  return (
+    <div className="w-full h-48 rounded-xl border border-border bg-card/50 flex items-center justify-center animate-pulse">
+      <Loader2 className="h-6 w-6 text-muted-foreground animate-spin" />
+    </div>
+  )
 }
 
 export function AnalyticsPageContent({
@@ -52,9 +52,6 @@ export function AnalyticsPageContent({
   backHref,
   username,
   role,
-  activeShifts,
-  retentionConfig,
-  archivalRuns,
 }: Props) {
   const printDate = new Date().toLocaleDateString('en-IN', {
     day: '2-digit', month: 'long', year: 'numeric',
@@ -86,7 +83,7 @@ export function AnalyticsPageContent({
             <h1 className="text-3xl font-bold tracking-tight text-foreground">Emergency Ward Analytics</h1>
             <p className="text-muted-foreground">Analyze patient flow through treatment stages</p>
             {isAuditMode && (
-              <div className="mt-2 inline-flex items-center rounded-md border border-amber-500/40 bg-amber-500/10 px-3 py-1 text-xs font-medium text-amber-200">
+              <div className="mt-2 inline-flex items-center rounded-md border border-status-audit/40 bg-status-audit/10 px-3 py-1 text-xs font-medium text-status-audit">
                 Audit Mode: Read-Only Access
               </div>
             )}
@@ -99,50 +96,60 @@ export function AnalyticsPageContent({
             exportedBy={username}
             label="Export Full Report"
             size="sm"
-            variant="outline"
           />
         </div>
 
         <div data-export-id="export-stage-analytics" className="print-no-break">
-          <StageAnalyticsView readOnly={isAuditMode} />
+          <Suspense fallback={<SectionSkeleton />}>
+            <StageAnalyticsView readOnly={isAuditMode} />
+          </Suspense>
         </div>
         <div data-export-id="export-auditor-history" className="print-section print-no-break">
-          <AuditorHistoryView readOnly={isAuditMode} showCorrections />
+          <Suspense fallback={<SectionSkeleton />}>
+            <AuditorHistoryView readOnly={isAuditMode} showCorrections />
+          </Suspense>
         </div>
         <div data-export-id="export-tat" className="print-section print-no-break">
-          <TatAnalyticsView readOnly={isAuditMode} />
+          <Suspense fallback={<SectionSkeleton />}>
+            <TatAnalyticsView readOnly={isAuditMode} />
+          </Suspense>
         </div>
         <div data-export-id="export-los" className="print-section print-no-break">
-          <LosView role={role} readOnly={isAuditMode} />
+          <Suspense fallback={<SectionSkeleton />}>
+            <LosView role={role} readOnly={isAuditMode} />
+          </Suspense>
         </div>
+
+        {/* Parallel Streams for Shift-based and Retention data */}
+        <Suspense fallback={<SectionSkeleton />}>
+          <AnalyticsShiftsContainer role={role} isAuditMode={isAuditMode} />
+        </Suspense>
+
         <div className="print-section print-no-break">
-          <PatientCountView shifts={activeShifts} readOnly={isAuditMode} />
+          <Suspense fallback={<SectionSkeleton />}>
+            <StageDelayView readOnly={isAuditMode} />
+          </Suspense>
         </div>
-        <div className="print-section print-no-break">
-          <DelayedPatientPercentageView shifts={activeShifts} readOnly={isAuditMode} role={role} />
-        </div>
-        <div className="print-section print-no-break">
-          <BedPerformanceView shifts={activeShifts} readOnly={isAuditMode} />
-        </div>
-        <div className="print-section print-no-break">
-          <StageDelayView readOnly={isAuditMode} />
-        </div>
-        {activeShifts.length > 0 && (
-          <div data-export-id="export-shift-report" className="print-section print-no-break">
-            <ShiftReportView shifts={activeShifts} readOnly={isAuditMode} />
-          </div>
-        )}
+
         <div data-export-id="export-shift-comparison" className="print-section print-no-break">
-          <ShiftComparisonView readOnly={isAuditMode} />
+          <Suspense fallback={<SectionSkeleton />}>
+            <ShiftComparisonView readOnly={isAuditMode} />
+          </Suspense>
         </div>
         <div data-export-id="export-correction-audit" className="print-section print-no-break">
-          <CorrectionAuditTrailView readOnly={isAuditMode} />
+          <Suspense fallback={<SectionSkeleton />}>
+            <CorrectionAuditTrailView readOnly={isAuditMode} />
+          </Suspense>
         </div>
-        {isRetentionVisible && retentionConfig && (
+
+        {isRetentionVisible && (
           <div className="print-section print-no-break">
-            <DataRetentionView initialConfig={retentionConfig} initialRuns={archivalRuns} readOnly={isAuditMode} />
+            <Suspense fallback={<SectionSkeleton />}>
+              <DataRetentionContainer readOnly={isAuditMode} />
+            </Suspense>
           </div>
         )}
+
         <div data-export-id="export-heatmap" className="print-section print-no-break">
           <StaffingHeatmap />
         </div>

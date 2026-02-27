@@ -61,11 +61,11 @@ export const LosFilterBar = memo(function LosFilterBar({
   )
   const shiftValue = currentShiftIndex === -1 ? 'all' : String(currentShiftIndex)
   const startValue = filters.startDate ? toDateInput(new Date(filters.startDate)) : ''
-  const endValue   = filters.endDate   ? toDateInput(new Date(filters.endDate))   : ''
+  const endValue = filters.endDate ? toDateInput(new Date(filters.endDate)) : ''
   const isFiltered = !!filters.startDate || !!filters.endDate || filters.shiftStartTime !== undefined
   const inputClass = cn(
     'bg-muted border border-border rounded px-2 py-1 text-xs text-card-foreground',
-    'focus:outline-none focus:ring-1 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed',
+    'focus:outline-none focus:ring-1 focus:ring-primary disabled:opacity-50 disabled:cursor-not-allowed',
   )
 
   return (
@@ -95,7 +95,7 @@ export const LosFilterBar = memo(function LosFilterBar({
           {DATE_RANGE_PRESETS.map(({ label, days }) => (
             <button key={label} onClick={() => applyPreset(days)}
               className={cn('px-2 py-1 rounded text-[10px] border transition-colors',
-                'border-border bg-muted text-muted-foreground hover:text-card-foreground hover:border-zinc-500')}>
+                'border-border bg-muted text-muted-foreground hover:text-card-foreground hover:border-primary')}>
               {label}
             </button>
           ))}
