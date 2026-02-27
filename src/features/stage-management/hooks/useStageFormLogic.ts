@@ -47,12 +47,15 @@ export interface StageFormLogic {
   saveStage: (fromAutosave?: boolean) => Promise<void>
 }
 
+// onSaved receives fromAutosave so callers can decide whether to close the modal
+export type OnSavedCallback = (s: Stage, fromAutosave: boolean) => void
+
 export function useStageFormLogic({
   stage,
   onSaved,
 }: {
   stage?: Stage
-  onSaved: (s: Stage) => void
+  onSaved: OnSavedCallback
 }): StageFormLogic {
   const stageThresholdMins = stage?.threshold_minutes ?? null
   const [name, setName] = useState(stage?.name ?? '')
@@ -104,7 +107,7 @@ export function useStageFormLogic({
         }, { retries: AUTOSAVE_RETRIES, shouldRetry: isTransientError })
 
         onSaved({ ...stage, name, color_code: color, description: desc,
-          threshold_minutes: totalThresholdMins })
+          threshold_minutes: totalThresholdMins }, fromAutosave)
         clearRecoveryDraft(draftKey)
         appendRecoveryLog('stage_form_saved', { stageId: stage.id })
         setSaveState('saved')
@@ -114,7 +117,7 @@ export function useStageFormLogic({
         await createStage({ name, color_code: color, description: desc })
         onSaved({ id: Date.now().toString(), name, color_code: color, description: desc,
           display_order: 99, is_default: false, is_active: true,
-          threshold_minutes: null, created_at: '', updated_at: '' })
+          threshold_minutes: null, created_at: '', updated_at: '' }, false)
         clearRecoveryDraft(draftKey)
         appendRecoveryLog('stage_form_saved', { stageId: 'new' })
         setSaveState('saved')

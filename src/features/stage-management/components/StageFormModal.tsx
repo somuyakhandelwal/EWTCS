@@ -5,8 +5,10 @@ import { useStageFormLogic } from '../hooks/useStageFormLogic';
 
 const COLORS = getSupportedStageColors();
 
+import type { OnSavedCallback } from '../hooks/useStageFormLogic';
+
 export function StageFormModal({ stage, onClose, onSaved }:
-  { stage?: Stage; onClose: () => void; onSaved: (s: Stage) => void }) {
+  { stage?: Stage; onClose: () => void; onSaved: OnSavedCallback }) {
   const {
     name, setName, color, setColor, desc, setDesc,
     thresholdHours, setThresholdHours, thresholdMins, setThresholdMins,
