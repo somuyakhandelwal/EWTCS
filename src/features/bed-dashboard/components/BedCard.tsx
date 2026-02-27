@@ -34,6 +34,8 @@ interface BedCardProps {
   showUndo?: boolean
   onUndo?: () => void
   undoTimerSeconds?: number
+  /** True while the undo API call is in-flight — disables button and shows loading label */
+  isUndoing?: boolean
   /** US-4.3: Disable animation globally (accessibility setting) */
   animationEnabled?: boolean
   /** Controls which timers are shown. Defaults to 'nurse'. */
@@ -43,6 +45,7 @@ interface BedCardProps {
 export const BedCard = memo(function BedCard({
   bed, onClick, onContextMenu, onReasonSelect, showUpdated = false, errorMessage = null,
   searchQuery = '', showUndo = false, onUndo, undoTimerSeconds = 0, animationEnabled = true,
+  isUndoing = false,
 }: BedCardProps) {
   const rawStageName = bed.currentStage?.name || 'Empty'
   const stageName = rawStageName === 'Cleaning' ? 'In Cleaning' : rawStageName
@@ -131,11 +134,14 @@ export const BedCard = memo(function BedCard({
           {showUndo && onUndo && (
             <div className="mt-2 flex items-center gap-2">
               <button
-                className="px-3 py-1 bg-primary hover:opacity-90 text-primary-foreground text-xs rounded transition-colors font-semibold shadow focus:ring-2 focus:ring-ring focus:outline-none"
+                className="px-3 py-1 bg-primary hover:opacity-90 text-primary-foreground text-xs rounded transition-colors font-semibold shadow focus:ring-2 focus:ring-ring focus:outline-none disabled:opacity-50 disabled:cursor-not-allowed"
                 onClick={e => { e.stopPropagation(); onUndo(); }}
-                aria-label={`Undo last action (expires in ${undoTimerSeconds} seconds)`}
-              >Undo</button>
-              <span className="text-xs text-muted-foreground" aria-hidden="true">({undoTimerSeconds}s)</span>
+                disabled={isUndoing}
+                aria-label={isUndoing ? 'Undoing…' : `Undo last action (expires in ${undoTimerSeconds} seconds)`}
+              >{isUndoing ? 'Undoing…' : 'Undo'}</button>
+              {!isUndoing && (
+                <span className="text-xs text-muted-foreground" aria-hidden="true">({undoTimerSeconds}s)</span>
+              )}
             </div>
           )}
           {isBottleneck && (

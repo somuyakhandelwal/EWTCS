@@ -35,6 +35,7 @@ export function BedDashboardClient({
     connectionStatus,
     isLoading,
     reconnect,
+    refresh: realtimeRefresh,
   } = useRealtimeBedUpdates(initialData)
 
   const {
@@ -62,7 +63,10 @@ export function BedDashboardClient({
     closeDischargeModal,
   } = useBedStageUpdate(realtimeData);
 
-  const { undoState, undoError, handleUndo } = useUndoManager(lastUpdatedBedId, lastUpdatedStageId, handleRefresh)
+  // Use realtimeRefresh (calls getBedGridData directly, updates displayed grid state)
+  // NOT handleRefresh (router.refresh) — router.refresh only re-renders the server component
+  // but cannot update useBedStageUpdate's isolated useState after mount.
+  const { undoState, undoError, handleUndo, isUndoing } = useUndoManager(lastUpdatedBedId, lastUpdatedStageId, realtimeRefresh)
 
   const handleBedClick = useCallback((bed: BedWithElapsedTime) => {
     void bed
@@ -127,6 +131,7 @@ export function BedDashboardClient({
         isRefreshing={isLoading}
         undoState={undoState}
         onUndo={handleUndo}
+        isUndoing={isUndoing}
       />
       {undoError && (
         <div className="text-center text-xs text-red-500 font-semibold mt-2">{undoError}</div>

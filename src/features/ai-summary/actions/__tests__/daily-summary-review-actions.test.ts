@@ -5,7 +5,10 @@ import { describe, it, expect, vi, beforeEach } from 'vitest'
 vi.mock('@/shared/lib/auth', () => ({ requireRole: vi.fn() }))
 vi.mock('@/shared/lib/audit', () => ({ logAudit: vi.fn() }))
 vi.mock('@/shared/config/logger', () => ({
-    logger: { info: vi.fn(), error: vi.fn() },
+    logger: { info: vi.fn(), warn: vi.fn(), error: vi.fn() },
+}))
+vi.mock('@/features/management-report/lib/signoff-queries', () => ({
+    createSignOff: vi.fn(),
 }))
 vi.mock('@/features/ai-summary/lib/daily-summary-store', () => ({
     getDailySummaryById: vi.fn(),
@@ -25,6 +28,7 @@ import {
     flagInsight,
     getDraftSummariesPendingReview,
 } from '@/features/ai-summary/lib/daily-summary-review-store'
+import { createSignOff } from '@/features/management-report/lib/signoff-queries'
 import {
     approveSummary,
     rejectSummary,
@@ -82,6 +86,24 @@ describe('approveSummary', () => {
         vi.mocked(requireRole).mockResolvedValue(SUPERVISOR_SESSION as never)
         const result = await approveSummary({ id: 'not-a-uuid' })
         expect(result.success).toBe(false)
+    })
+
+    it('calls createSignOff with the summary date on approval', async () => {
+        vi.mocked(requireRole).mockResolvedValue(SUPERVISOR_SESSION as never)
+        vi.mocked(updateDailySummaryStatus).mockResolvedValue({ ...DRAFT_SUMMARY, status: 'published' })
+        vi.mocked(createSignOff).mockResolvedValue({} as never)
+        await approveSummary({ id: VALID_UUID })
+        expect(createSignOff).toHaveBeenCalledWith(
+            expect.objectContaining({ reportDate: DRAFT_SUMMARY.summaryDate })
+        )
+    })
+
+    it('still returns success if createSignOff throws', async () => {
+        vi.mocked(requireRole).mockResolvedValue(SUPERVISOR_SESSION as never)
+        vi.mocked(updateDailySummaryStatus).mockResolvedValue({ ...DRAFT_SUMMARY, status: 'published' })
+        vi.mocked(createSignOff).mockRejectedValue(new Error('DB down'))
+        const result = await approveSummary({ id: VALID_UUID })
+        expect(result.success).toBe(true)
     })
 })
 

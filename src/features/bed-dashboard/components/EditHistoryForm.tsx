@@ -98,11 +98,11 @@ export function EditHistoryForm({
       </div>
 
       {/* AC 2: Mandatory correction reason */}
-      <div className="space-y-1.5">
-        <Label className="flex items-center gap-1.5 text-sm text-amber-400">
+      <div className="space-y-1.5 p-3 rounded-lg bg-amber-500/5 border border-amber-500/10">
+        <Label className="flex items-center gap-1.5 text-sm font-semibold text-amber-500">
           <ShieldCheck className="h-3.5 w-3.5" />
           Correction Reason
-          <span className="text-red-400 ml-0.5" aria-label="required">*</span>
+          <span className="text-red-500 ml-0.5" aria-label="required" title="Required">*</span>
         </Label>
         <textarea value={correctionReason} onChange={(e) => onReasonChange(e.target.value)} rows={2}
           placeholder="Required — explain why this correction is necessary…"

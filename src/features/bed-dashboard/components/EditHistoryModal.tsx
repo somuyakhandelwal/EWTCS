@@ -59,9 +59,12 @@ export function EditHistoryModal({ isOpen, onClose, record, onCorrectionSaved }:
 
   if (!isOpen) return null
 
-  const originalStageId = stages.find((s) => s.name === record.toStageName)?.id ?? ''
+  // Ensure we match the original stage ID accurately from the loaded stages list
+  const originalStage = stages.find((s) => s.name === record.toStageName)
+  const originalStageId = originalStage?.id ?? ''
+
   const hasChanges =
-    notes !== (record.notes ?? '') ||
+    notes.trim() !== (record.notes ?? '').trim() ||
     transitionTime !== originalTime ||
     (toStageId !== '' && toStageId !== originalStageId)
 
@@ -134,8 +137,8 @@ export function EditHistoryModal({ isOpen, onClose, record, onCorrectionSaved }:
               <div className="flex gap-2 ml-auto">
                 <Button variant="outline" onClick={handleClose} disabled={submitting}>Cancel</Button>
                 <Button onClick={handleSubmit}
-                  disabled={submitting || !correctionReason.trim() || !hasChanges}
-                  className="bg-amber-600 hover:bg-amber-500 text-foreground disabled:opacity-40">
+                  disabled={submitting || !hasChanges}
+                  className="bg-amber-600 hover:bg-amber-500 text-white disabled:opacity-40">
                   {submitting ? 'Saving…' : 'Save Correction'}
                 </Button>
               </div>

@@ -32,8 +32,8 @@ export function CorrectionAuditTrailTable({ records, loading }: Props) {
                         </tr>
                     ) : (
                         records.map(record => {
-                            const stageCorrection = record.correctedFields['to_stage_id'];
-                            const notesCorrection = record.correctedFields['notes'];
+                            const stageCorrection = record.correctedFields?.['to_stage_id'];
+                            const notesCorrection = record.correctedFields?.['notes'];
 
                             return (
                                 <tr key={record.id} className="hover:bg-muted transition-colors">
