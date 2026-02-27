@@ -42,8 +42,7 @@ export function useBedContextMenu(
           setValidNextStages([])
           setOverrideRequiredStages([])
         }
-      } catch (error) {
-        console.error('Failed to fetch valid transitions:', error)
+      } catch {
         setMenuError('Connection error. Please try again.')
         setValidNextStages([])
         setOverrideRequiredStages([])

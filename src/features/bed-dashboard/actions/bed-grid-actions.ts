@@ -3,7 +3,7 @@
 import { getAllStages, getBedsWithElapsedTime, getBedById } from '../lib/queries'
 import { logger } from '@/shared/config/logger'
 import type { BedGridData } from '../types/bed'
-import { getUserWard, getBedWard, getBedAccessInfo } from '../lib/bed-queries'
+import { getUserWard, getBedAccessInfo } from '../lib/bed-queries'
 import { requireRole } from '@/shared/lib/auth'
 import { categorizeStagesForTransition } from '../lib/stage-validation'
 import { getGlobalThresholdMs, getGlobalEscalationThresholdMs } from '@/shared/lib/threshold'

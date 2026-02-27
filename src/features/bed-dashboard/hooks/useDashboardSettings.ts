@@ -22,8 +22,8 @@ export function useDashboardSettings() {
             if (stored) {
                 setSettings({ ...DEFAULT_SETTINGS, ...JSON.parse(stored) })
             }
-        } catch (e) {
-            console.error('Failed to load dashboard settings', e)
+        } catch {
+            // Silently ignore malformed localStorage data
         } finally {
             setIsLoaded(true)
         }

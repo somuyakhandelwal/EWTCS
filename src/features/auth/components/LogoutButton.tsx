@@ -12,8 +12,8 @@ export function LogoutButton({ className }: { className?: string }) {
             await fetch('/api/auth/logout', {
                 method: 'POST',
             })
-        } catch (error) {
-            console.warn('Logout API failed, cleaning up locally', error)
+        } catch {
+            // Logout API failed; proceed with local cleanup
         } finally {
             // Client-side cleanup
             localStorage.clear()

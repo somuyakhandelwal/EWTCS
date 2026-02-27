@@ -1,6 +1,6 @@
 'use client'
 
-import { useCallback, useState, useRef, useEffect, useTransition } from 'react'
+import { useCallback, useState, useEffect, useTransition } from 'react'
 import { MapPin } from 'lucide-react'
 import { Button } from '@/shared/components/ui/button'
 import { BedGrid } from './BedGrid'

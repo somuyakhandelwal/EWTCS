@@ -12,7 +12,7 @@ import { formatDuration } from '@/features/bed-dashboard/lib/duration-formatters
 import { cn } from '@/shared/lib/utils'
 import type { BedPerformanceRow } from '../types/report.types'
 import type { SortField, SortDir } from '../hooks/useBedPerformanceData'
-import { ColHeader, generateCSV } from './bed-performance-table-helpers'
+import { ColHeader, generateCSV } from './BedPerformanceTableHelpers'
 
 interface BedPerformanceTableProps {
   rows: BedPerformanceRow[]
