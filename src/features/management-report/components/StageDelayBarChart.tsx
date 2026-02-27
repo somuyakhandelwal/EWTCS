@@ -50,9 +50,7 @@ export const StageDelayBarChart = memo(function StageDelayBarChart({
   }
 
   const maxMs = Math.max(...displayRows.map((r) => r.avgDurationMs), 1)
-  const barCount = displayRows.length
-  const totalW = Math.max(300, barCount * (BAR_W + BAR_GAP) + BAR_GAP)
-  const barW = BAR_W
+  const totalW = Math.max(300, displayRows.length * (BAR_W + BAR_GAP) + BAR_GAP)
 
   return (
     <div className="space-y-4">
@@ -77,15 +75,15 @@ export const StageDelayBarChart = memo(function StageDelayBarChart({
           style={{ minHeight: SVG_H }}
         >
           {displayRows.map((row, i) => {
-            const x = BAR_GAP + i * (barW + BAR_GAP)
+            const x = BAR_GAP + i * (BAR_W + BAR_GAP)
             const barH = Math.max(4, (row.avgDurationMs / maxMs) * CHART_H)
             const y = PADDING_TOP + (CHART_H - barH)
             const color = getBarColor(row)
 
-            // Truncate long stage names
+            // Truncate long stage names for the axis label
             const label =
-              row.stageName.length > 8
-                ? row.stageName.slice(0, 7) + '…'
+              row.stageName.length > 10
+                ? row.stageName.slice(0, 9) + '…'
                 : row.stageName
 
             return (
@@ -99,7 +97,7 @@ export const StageDelayBarChart = memo(function StageDelayBarChart({
                 <rect
                   x={x}
                   y={PADDING_TOP}
-                  width={barW}
+                  width={BAR_W}
                   height={CHART_H}
                   rx={3}
                   fill="#18181b"
@@ -109,7 +107,7 @@ export const StageDelayBarChart = memo(function StageDelayBarChart({
                 <rect
                   x={x}
                   y={y}
-                  width={barW}
+                  width={BAR_W}
                   height={barH}
                   rx={3}
                   fill={color}
@@ -118,7 +116,7 @@ export const StageDelayBarChart = memo(function StageDelayBarChart({
 
                 {/* Duration label above bar */}
                 <text
-                  x={x + barW / 2}
+                  x={x + BAR_W / 2}
                   y={Math.max(12, y - 4)}
                   textAnchor="middle"
                   style={{
@@ -133,7 +131,7 @@ export const StageDelayBarChart = memo(function StageDelayBarChart({
 
                 {/* Stage name label below bar */}
                 <text
-                  x={x + barW / 2}
+                  x={x + BAR_W / 2}
                   y={PADDING_TOP + CHART_H + 16}
                   textAnchor="middle"
                   style={{
@@ -148,7 +146,7 @@ export const StageDelayBarChart = memo(function StageDelayBarChart({
 
                 {/* Bottleneck indicator dot */}
                 {row.isBottleneck && (
-                  <circle cx={x + barW / 2} cy={PADDING_TOP + CHART_H + 32} r={3} fill={color} />
+                  <circle cx={x + BAR_W / 2} cy={PADDING_TOP + CHART_H + 32} r={3} fill={color} />
                 )}
               </g>
             )
@@ -159,7 +157,10 @@ export const StageDelayBarChart = memo(function StageDelayBarChart({
       {tooltip && (
         <div
           className="fixed z-50 bg-zinc-800 border border-zinc-700 rounded-lg px-3 py-2 text-xs text-foreground shadow-lg pointer-events-none"
-          style={{ left: tooltip.x + 14, top: tooltip.y - 56 }}
+          style={{
+            left: Math.min(tooltip.x + 14, window.innerWidth - 200),
+            top: Math.max(8, tooltip.y - 56),
+          }}
         >
           <p className="font-semibold mb-1 text-foreground">{tooltip.row.stageName}</p>
           <p className="text-zinc-300">Avg duration: <span className="text-white">{formatDuration(tooltip.row.avgDurationMs)}</span></p>
