@@ -10,7 +10,7 @@ export default async function DashboardPage() {
     const session = await verifyActiveSession()
 
     if (!session) {
-        redirect('/login')
+        redirect('/api/auth/force-logout')
     }
 
     return (

@@ -16,7 +16,7 @@ export default async function BedManagementPage() {
     // Verify admin access
     const session = await verifyActiveSession()
     if (!session || session.role !== 'admin') {
-        redirect('/login')
+        redirect('/api/auth/force-logout')
     }
 
     // Fetch beds and wards
