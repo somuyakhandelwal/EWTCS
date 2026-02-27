@@ -64,8 +64,11 @@ export async function middleware(request: NextRequest) {
         }
     }
 
+    // Bed grid: accessible to all operational roles (nurse, housekeeping) and
+    // oversight roles (supervisor, admin) who may need direct grid access.
     if (pathname.startsWith('/dashboard')) {
-        if (!session || (session.role !== 'nurse' && session.role !== 'housekeeping')) {
+        const dashboardRoles = ['nurse', 'housekeeping', 'supervisor', 'admin']
+        if (!session || !dashboardRoles.includes(session.role as string)) {
             return NextResponse.redirect(new URL('/login', request.url))
         }
     }
@@ -83,7 +86,12 @@ export async function middleware(request: NextRequest) {
             if (session.role === 'admin') return NextResponse.redirect(new URL('/admin', request.url))
             if (session.role === 'supervisor') return NextResponse.redirect(new URL('/supervisor', request.url))
             if (session.role === 'auditor') return NextResponse.redirect(new URL('/analytics', request.url))
-            return NextResponse.redirect(new URL('/dashboard', request.url))
+            // nurse and housekeeping both use the bed grid dashboard
+            if (session.role === 'nurse' || session.role === 'housekeeping') {
+                return NextResponse.redirect(new URL('/dashboard', request.url))
+            }
+            // Fallback: unknown future roles go to login (do not silently grant access)
+            return NextResponse.redirect(new URL('/login', request.url))
         }
     }
 
