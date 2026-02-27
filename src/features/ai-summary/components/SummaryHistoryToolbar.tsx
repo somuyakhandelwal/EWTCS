@@ -43,7 +43,7 @@ export function SummaryHistoryToolbar({
     function handleExport() {
         const csv = formatSummariesAsCsv(summaries)
         const name = `ai-summaries-${from ?? 'all'}-to-${to ?? todayString()}.csv`
-        downloadCsv(name, csv)
+        downloadCsv(csv, name)
     }
 
     return (
@@ -91,8 +91,8 @@ export function SummaryHistoryToolbar({
                             key={opt.value}
                             onClick={() => onStatusChange(opt.value)}
                             className={`rounded-full border px-3 py-0.5 text-xs font-medium transition-colors ${status === opt.value
-                                    ? 'border-primary bg-primary/20 text-primary'
-                                    : 'border-border text-muted-foreground hover:border-zinc-500'
+                                ? 'border-primary bg-primary/20 text-primary'
+                                : 'border-border text-muted-foreground hover:border-zinc-500'
                                 }`}
                         >
                             {opt.label}
