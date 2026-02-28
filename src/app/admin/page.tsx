@@ -18,7 +18,7 @@ export default async function AdminDashboard() {
     const session = await verifyActiveSession()
 
     if (!session) {
-        redirect('/login')
+        redirect('/api/auth/force-logout')
     }
     const usersResult = await getAllUsers()
     const logsResult = await getUserLogs()

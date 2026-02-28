@@ -12,7 +12,7 @@ export const dynamic = 'force-dynamic'
 export default async function WardManagementPage() {
     const session = await verifyActiveSession()
     if (!session || session.role !== 'admin') {
-        redirect('/login')
+        redirect('/api/auth/force-logout')
     }
 
     const wardsResult = await getAllWards()

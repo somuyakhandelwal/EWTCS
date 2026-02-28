@@ -4,7 +4,7 @@
 
 import { AlertTriangle } from 'lucide-react'
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/shared/components/ui/card'
-import { formatDuration } from '@/features/bed-dashboard/lib/duration-formatters'
+import { formatDuration } from '@/shared/lib/duration-formatters'
 import { cn } from '@/shared/lib/utils'
 import type { StageDelayRow } from '../types/report.types'
 

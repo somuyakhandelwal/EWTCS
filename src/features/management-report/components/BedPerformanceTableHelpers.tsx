@@ -4,7 +4,7 @@
 
 import { ChevronUp, ChevronDown, ChevronsUpDown } from 'lucide-react'
 import { cn } from '@/shared/lib/utils'
-import { formatDuration } from '@/features/bed-dashboard/lib/duration-formatters'
+import { formatDuration } from '@/shared/lib/duration-formatters'
 import type { BedPerformanceRow } from '../types/report.types'
 import type { SortField, SortDir } from '../hooks/useBedPerformanceData'
 

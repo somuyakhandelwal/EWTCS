@@ -31,7 +31,23 @@ async function getStageDurationStatsImpl(
   endDate?: Date
 ): Promise<StageDurationStats[]> {
   try {
-    let sql = `
+    // Build JOIN conditions for date range — must go on the JOIN, not WHERE,
+    // so that stages with no logs in the period still appear with 0 counts
+    // (WHERE on a LEFT JOIN column silently converts it to an INNER JOIN).
+    const params: unknown[] = []
+    let joinCondition = 's.id = bsl.to_stage_id'
+
+    if (startDate) {
+      params.push(startDate)
+      joinCondition += ` AND bsl.transition_time >= $${params.length}`
+    }
+
+    if (endDate) {
+      params.push(endDate)
+      joinCondition += ` AND bsl.transition_time <= $${params.length}`
+    }
+
+    const sql = `
       SELECT 
         s.name as "stageName",
         s.id as "stageId",
@@ -43,23 +59,7 @@ async function getStageDurationStatsImpl(
         PERCENTILE_CONT(0.9) WITHIN GROUP (ORDER BY bsl.duration_in_previous_stage_ms) as "p90DurationMs",
         PERCENTILE_CONT(0.95) WITHIN GROUP (ORDER BY bsl.duration_in_previous_stage_ms) as "p95DurationMs"
       FROM stages s
-      LEFT JOIN bed_stage_logs bsl ON s.id = bsl.to_stage_id
-      WHERE 1=1
-    `
-
-    const params: unknown[] = []
-
-    if (startDate) {
-      params.push(startDate)
-      sql += ` AND bsl.transition_time >= $${params.length}`
-    }
-
-    if (endDate) {
-      params.push(endDate)
-      sql += ` AND bsl.transition_time <= $${params.length}`
-    }
-
-    sql += `
+      LEFT JOIN bed_stage_logs bsl ON ${joinCondition}
       GROUP BY s.id, s.name
       ORDER BY s.display_order ASC
     `

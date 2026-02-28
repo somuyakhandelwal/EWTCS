@@ -7,7 +7,7 @@ import '@/app/analytics/print.css'
 export default async function AnalyticsPage() {
   const session = await verifyActiveSession()
 
-  if (!session) redirect('/login')
+  if (!session) redirect('/api/auth/force-logout')
 
   if (session.role !== 'supervisor' && session.role !== 'admin' && session.role !== 'auditor') {
     redirect('/dashboard')

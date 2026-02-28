@@ -14,7 +14,7 @@ export default async function SupervisorDashboard() {
     const session = await verifyActiveSession()
 
     if (!session) {
-        redirect('/login')
+        redirect('/api/auth/force-logout')
     }
 
     const bedGridResult = await getBedGridData()

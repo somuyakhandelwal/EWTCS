@@ -9,7 +9,7 @@
 import { memo, useMemo, useState } from 'react'
 import { Button } from '@/shared/components/ui/button'
 import { Download, Filter } from 'lucide-react'
-import { formatDuration } from '@/features/bed-dashboard/lib/duration-formatters'
+import { formatDuration } from '@/shared/lib/duration-formatters'
 import { exportChartAsPng } from '../lib/chart-export-utils'
 import type { BedPerformanceRow } from '../types/report.types'
 
@@ -37,6 +37,7 @@ export const BedPerformanceChart = memo(function BedPerformanceChart({
   maxRows = 12,
 }: BedPerformanceChartProps) {
   const [outliersOnly, setOutliersOnly] = useState(false)
+  const [tooltip, setTooltip] = useState<{ row: BedPerformanceRow; x: number; y: number } | null>(null)
   const chartId = 'bed-perf-chart-svg'
 
   const displayRows = useMemo(
@@ -113,7 +114,12 @@ export const BedPerformanceChart = memo(function BedPerformanceChart({
             const color = getBarColor(row)
 
             return (
-              <g key={row.bedId}>
+              <g
+                key={row.bedId}
+                style={{ cursor: 'pointer' }}
+                onMouseEnter={(e) => setTooltip({ row, x: e.clientX, y: e.clientY })}
+                onMouseLeave={() => setTooltip(null)}
+              >
                 {/* Bed number label */}
                 <text
                   x={LABEL_W - 4}
@@ -167,6 +173,21 @@ export const BedPerformanceChart = memo(function BedPerformanceChart({
           })}
         </svg>
       </div>
+
+      {tooltip && (
+        <div
+          className="fixed z-50 bg-zinc-800 border border-zinc-700 rounded-lg px-3 py-2 text-xs text-foreground shadow-lg pointer-events-none"
+          style={{ left: tooltip.x + 14, top: tooltip.y - 48 }}
+        >
+          <p className="font-semibold mb-1 text-foreground">{tooltip.row.bedNumber}</p>
+          <p className="text-zinc-300">Avg stay: <span className="text-white">{tooltip.row.avgDurationMs !== null ? formatDuration(tooltip.row.avgDurationMs) : '—'}</span></p>
+          <p className="text-zinc-300">Patients treated: <span className="text-white">{tooltip.row.patientsTreated}</span></p>
+          <p className="text-zinc-300">Delay rate: <span className="text-white">{tooltip.row.delayRate.toFixed(1)}%</span></p>
+          {tooltip.row.isOutlier && (
+            <p className="text-amber-400 mt-1 font-medium">⚠ Outlier bed</p>
+          )}
+        </div>
+      )}
     </div>
   )
 })

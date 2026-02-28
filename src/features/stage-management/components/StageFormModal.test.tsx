@@ -32,20 +32,20 @@ describe('StageFormModal autosave', () => {
     vi.useRealTimers()
   })
 
-  it('autosaves stage edits without manual save button', async () => {
+  it('saves stage edits when Save button is clicked', async () => {
     vi.mocked(updateStage).mockResolvedValue(undefined)
     const onSaved = vi.fn()
 
     render(<StageFormModal stage={stage} onClose={() => undefined} onSaved={onSaved} />)
 
-    expect(screen.queryByText('Save Stage')).not.toBeInTheDocument()
+    expect(screen.getByText('Save Stage')).toBeInTheDocument()
 
     fireEvent.change(screen.getByPlaceholderText('e.g. Triage In Progress'), {
       target: { value: 'Triage Updated' },
     })
 
     await act(async () => {
-      await vi.advanceTimersByTimeAsync(500)
+      fireEvent.click(screen.getByText('Save Stage'))
     })
 
     expect(updateStage).toHaveBeenCalledTimes(1)
@@ -59,9 +59,8 @@ describe('StageFormModal autosave', () => {
     expect(onSaved).toHaveBeenCalledTimes(1)
   })
 
-  it('retries autosave failures and alerts after retries are exhausted', async () => {
+  it('retries save failures and shows error after retries are exhausted', async () => {
     vi.mocked(updateStage).mockRejectedValue(new Error('save failed'))
-    const alertSpy = vi.spyOn(window, 'alert').mockImplementation(() => undefined)
 
     render(<StageFormModal stage={stage} onClose={() => undefined} onSaved={() => undefined} />)
 
@@ -69,17 +68,18 @@ describe('StageFormModal autosave', () => {
       target: { value: 'Updated description' },
     })
 
+    // Click Save and advance timers through retry backoff delays (250ms + 500ms)
     await act(async () => {
-      await vi.advanceTimersByTimeAsync(1400)
+      fireEvent.click(screen.getByText('Save Stage'))
+      await vi.advanceTimersByTimeAsync(1000)
     })
 
     expect(updateStage).toHaveBeenCalledTimes(3)
-    expect(alertSpy).toHaveBeenCalledWith('Auto-save failed after retries. Please try again.')
+    expect(screen.getByText('save failed')).toBeInTheDocument()
   })
 
-  it('does not retry or alert on non-transient validation errors', async () => {
+  it('does not retry on non-transient errors and shows error message', async () => {
     vi.mocked(updateStage).mockRejectedValue(new Error('Validation error'))
-    const alertSpy = vi.spyOn(window, 'alert').mockImplementation(() => undefined)
 
     render(<StageFormModal stage={stage} onClose={() => undefined} onSaved={() => undefined} />)
 
@@ -88,11 +88,10 @@ describe('StageFormModal autosave', () => {
     })
 
     await act(async () => {
-      await vi.advanceTimersByTimeAsync(500)
+      fireEvent.click(screen.getByText('Save Stage'))
     })
 
     expect(updateStage).toHaveBeenCalledTimes(1)
-    expect(alertSpy).not.toHaveBeenCalled()
     expect(screen.getByText('Validation error')).toBeInTheDocument()
   })
 

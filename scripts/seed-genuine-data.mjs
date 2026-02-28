@@ -1,140 +1,139 @@
+/**
+ * seed-genuine-data.mjs
+ * Entry point for the EWTCS data seed.
+ * Orchestrates DB setup and delegates history + live-state generation to:
+ *   seed-helpers.mjs  – shared utility functions
+ *   seed-config.mjs   – archetypes, weights, delay reasons, live plan
+ *   seed-history.mjs  – 14-day patient history per bed
+ *   seed-live.mjs     – current live-patient distribution
+ */
+
 import pg from 'pg';
 import dotenv from 'dotenv';
+import { seedHistory }   from './seed-history.mjs';
+import { seedLiveState } from './seed-live.mjs';
 const { Pool } = pg;
-
 dotenv.config({ path: '.env.local' });
 
-const pool = new Pool({
-    connectionString: process.env.DATABASE_URL,
-});
+const pool = new Pool({ connectionString: process.env.DATABASE_URL });
 
-async function generateGenuineEnvironment() {
-    console.log('🌟 Initializing genuine EWTCS environment...');
+async function seed() {
+  console.log('\n🌟  EWTCS — Variety Data Seeder (14-day history, 6 archetypes)');
+  console.log('────────────────────────────────────────────────────────────\n');
 
-    try {
-        // 1. Verify basic setup points
-        const stageResult = await pool.query(`SELECT id, name FROM stages WHERE is_active = true`);
-        if (stageResult.rows.length === 0) throw new Error('No stages found. Run migrations first.');
-        const stages = stageResult.rows;
+  const client = await pool.connect();
+  try {
+    await client.query('BEGIN');
 
-        const emptyStage = stages.find(s => s.name === 'Empty');
-        if (!emptyStage) throw new Error('Empty stage not found.');
+    // 1. Load reference data ──────────────────────────────────────────────────
+    const { rows: stages } = await client.query(
+      `SELECT id, name FROM stages WHERE is_active = true ORDER BY display_order`
+    );
+    if (!stages.length) throw new Error('No stages — run migrations first.');
+    const SM = Object.fromEntries(stages.map(s => [s.name, s.id]));
+    if (!SM['Empty']) throw new Error('"Empty" stage missing from DB.');
 
-        const wardResult = await pool.query(`SELECT id, name FROM wards WHERE is_active = true ORDER BY name ASC`);
-        if (wardResult.rows.length === 0) throw new Error('No wards found. Run migrations first.');
-        const wards = wardResult.rows;
+    const { rows: wards } = await client.query(
+      `SELECT id, name FROM wards WHERE is_active = true ORDER BY name`
+    );
+    if (!wards.length) throw new Error('No wards — run migrations first.');
 
-        // Assign nurse to the first ward, supervisor to the second (or first if only one)
-        // housekeeping also gets the first ward (shared with nurse — both see /dashboard)
-        // auditor has no ward — they access /analytics which is not ward-scoped
-        const nurseWardId = wards[0].id;
-        const supervisorWardId = wards[1]?.id ?? wards[0].id;
+    const { rows: shifts } = await client.query(
+      `SELECT id, name FROM shifts WHERE is_active = true`
+    );
+    if (!shifts.length) throw new Error('No shifts — run migrations first.');
 
-        await pool.query(
-            `UPDATE users SET ward_id = $1, updated_at = NOW() WHERE username = 'nurse'`,
-            [nurseWardId]
-        );
-        await pool.query(
-            `UPDATE users SET ward_id = $1, updated_at = NOW() WHERE username = 'supervisor'`,
-            [supervisorWardId]
-        );
-        await pool.query(
-            `UPDATE users SET ward_id = $1, updated_at = NOW() WHERE username = 'housekeeping'`,
-            [nurseWardId]
-        );
-        console.log(`✅ Nurse assigned to ward: ${wards[0].name}`);
-        console.log(`✅ Housekeeping assigned to ward: ${wards[0].name}`);
-        console.log(`✅ Supervisor assigned to ward: ${wards[1]?.name ?? wards[0].name}`);
-        console.log(`✅ Auditor has no ward (analytics-only role)`);
+    const { rows: users } = await client.query(
+      `SELECT id, username FROM users ORDER BY created_at`
+    );
+    const nurse        = users.find(u => u.username === 'nurse');
+    const supervisor   = users.find(u => u.username === 'supervisor');
+    const housekeeping = users.find(u => u.username === 'housekeeping');
+    const admin        = users.find(u => u.username === 'admin');
+    if (!nurse) throw new Error('"nurse" user not found — run npm run init first.');
 
-        // We assume init-system.js set up admin, nurse, etc. Let's find the nurse user to make logs.
-        const userResult = await pool.query(`SELECT id, ward_id FROM users WHERE username = 'nurse' LIMIT 1`);
-        if (userResult.rows.length === 0) throw new Error('No nurse user found. Did you run npm run init?');
-        const nurseUserId = userResult.rows[0].id;
+    const staff    = [nurse, supervisor, admin].filter(Boolean).map(u => u.id);
+    const allStaff = [nurse, supervisor, admin, housekeeping].filter(Boolean).map(u => u.id);
 
-        // 2. Generate exactly 24 Beds (8 per ward) for a realistic, clean look on UI
-        console.log('🛏️ Creating 24 genuine hospital beds across wards...');
-
-        // Clear old beds
-        await pool.query('TRUNCATE TABLE beds CASCADE');
-
-        const beds = [];
-        let bedIndex = 1;
-        for (const ward of wards) {
-            for (let i = 0; i < 8; i++) {
-                // e.g. EWA-01, EWA-02...
-                const prefix = ward.name.split(' ').map(w => w[0]).join('');
-                const code = String(i + 1).padStart(2, '0');
-
-                const result = await pool.query(
-                    `INSERT INTO beds (bed_number, current_stage_id, ward_id, is_occupied, is_active, metadata)
-           VALUES ($1, $2, $3, false, true, '{}'::jsonb) RETURNING *`,
-                    [`${prefix}-${code}`, emptyStage.id, ward.id]
-                );
-                beds.push(result.rows[0]);
-            }
-        }
-
-        // 3. Populate genuine patient states
-        console.log('🩺 Processing current patient flow...');
-
-        // Scenarios spread across the available wards
-        const realisticPatientDistributions = [
-            { count: 3, stage: 'Triage', minHours: 0.1, maxHours: 0.5 },
-            { count: 2, stage: 'Registration', minHours: 0.2, maxHours: 0.8 },
-            { count: 2, stage: 'Doctor Assessment', minHours: 0.3, maxHours: 1.5 },
-            { count: 3, stage: 'Treatment/Observation', minHours: 1.5, maxHours: 4.0 }, // normal flow
-            { count: 1, stage: 'Treatment/Observation', minHours: 4.0, maxHours: 7.0 }, // slightly delayed
-            { count: 1, stage: 'Decision Made', minHours: 0.1, maxHours: 1.0 },
-            { count: 1, stage: 'Discharge Process', minHours: 0.1, maxHours: 0.8 },
-            { count: 1, stage: 'Cleaning', minHours: 0.2, maxHours: 0.5 },
-            // The remaining 10 beds will stay "Empty" (ready/available)
-        ];
-
-        let currentBedWalker = 0;
-
-        for (const scenario of realisticPatientDistributions) {
-            const stage = stages.find(s => s.name === scenario.stage);
-            if (!stage) continue;
-
-            for (let i = 0; i < scenario.count; i++) {
-                const bed = beds[currentBedWalker++];
-
-                // Random time
-                const hoursAgo = scenario.minHours + Math.random() * (scenario.maxHours - scenario.minHours);
-                const minutesAgo = Math.floor(hoursAgo * 60);
-                const patientStartTime = new Date(Date.now() - minutesAgo * 60 * 1000);
-
-                // Transition the bed
-                await pool.query(
-                    `UPDATE beds
-           SET current_stage_id = $1, is_occupied = true, patient_start_time = $2, last_stage_change = $2, updated_at = CURRENT_TIMESTAMP
-           WHERE id = $3`,
-                    [stage.id, patientStartTime, bed.id]
-                );
-
-                // Log the change
-                await pool.query(
-                    `INSERT INTO bed_stage_logs (bed_id, from_stage_id, to_stage_id, changed_by_user_id, transition_time)
-           VALUES ($1, $2, $3, $4, $5)`,
-                    [bed.id, emptyStage.id, stage.id, nurseUserId, patientStartTime]
-                );
-            }
-        }
-
-        console.log('✨ Genuine environment successfully seeded!');
-
-        const stats = await pool.query('SELECT is_occupied, count(*) FROM beds GROUP BY is_occupied');
-        const occ = stats.rows.find(r => r.is_occupied)?.count || 0;
-        const vac = stats.rows.find(r => !r.is_occupied)?.count || 0;
-        console.log(`\n📊 Status: ${occ} Occupied Patients, ${vac} Available Beds`);
-
-    } catch (error) {
-        console.error('❌ Error generating environment:', error);
-        process.exit(1);
-    } finally {
-        await pool.end();
+    // 2. Assign wards to staff ────────────────────────────────────────────────
+    const w0 = wards[0].id;
+    const w1 = (wards[1] ?? wards[0]).id;
+    await client.query(`UPDATE users SET ward_id=$1, updated_at=NOW() WHERE username='nurse'`,      [w0]);
+    await client.query(`UPDATE users SET ward_id=$1, updated_at=NOW() WHERE username='supervisor'`, [w1]);
+    if (housekeeping) {
+      await client.query(`UPDATE users SET ward_id=$1, updated_at=NOW() WHERE username='housekeeping'`, [w0]);
     }
+    console.log('✅  Ward assignments updated');
+
+    // 3. Clear existing bed data ──────────────────────────────────────────────
+    for (const t of ['disposition_delay_reasons', 'patient_admissions', 'bed_stage_logs', 'beds']) {
+      await client.query(`TRUNCATE TABLE ${t} CASCADE`);
+    }
+    console.log('🗑️   Cleared old bed data');
+
+    // 4. Create 24 beds (8 per ward) ──────────────────────────────────────────
+    const beds = [];
+    const bedsPerWard = Math.ceil(24 / wards.length);
+    for (const ward of wards) {
+      const pfx   = ward.name.split(' ').map(w => w[0].toUpperCase()).join('');
+      const count = Math.min(bedsPerWard, 24 - beds.length);
+      for (let i = 1; i <= count; i++) {
+        const { rows } = await client.query(
+          `INSERT INTO beds (bed_number, current_stage_id, ward_id, is_occupied, is_active, metadata)
+           VALUES ($1,$2,$3,false,true,'{}') RETURNING id, bed_number, ward_id`,
+          [`${pfx}-${String(i).padStart(2, '0')}`, SM['Empty'], ward.id]
+        );
+        beds.push(rows[0]);
+      }
+    }
+    console.log(`🛏️   Created ${beds.length} beds across ${wards.length} ward(s)`);
+
+    // 5. 14-day patient history ───────────────────────────────────────────────
+    const ctx = { beds, wards, SM, shifts, staff, allStaff, nurse, supervisor, admin, housekeeping };
+    const { totalAdmissions, totalDelays } = await seedHistory(client, ctx);
+    console.log(`📋  History: ${totalAdmissions} admissions · ${totalDelays} disposition delays`);
+
+    // 6. Live patient state ───────────────────────────────────────────────────
+    const livePlaced = await seedLiveState(client, { beds, SM, shifts, staff, allStaff, housekeeping });
+
+    await client.query('COMMIT');
+
+    // 7. Summary ──────────────────────────────────────────────────────────────
+    const { rows: bStats }    = await client.query(`SELECT is_occupied, COUNT(*) FROM beds GROUP BY is_occupied`);
+    const { rows: logCount }  = await client.query(`SELECT COUNT(*) FROM bed_stage_logs`);
+    const { rows: admCount }  = await client.query(`SELECT COUNT(*) FROM patient_admissions`);
+    const { rows: delCount }  = await client.query(`SELECT COUNT(*) FROM disposition_delay_reasons`);
+    const { rows: topStages } = await client.query(
+      `SELECT s.name, COUNT(*) as cnt FROM bed_stage_logs l
+       JOIN stages s ON s.id = l.to_stage_id
+       WHERE l.transition_time > NOW() - interval '14 days'
+       GROUP BY s.name ORDER BY cnt DESC`
+    );
+
+    const occupied  = bStats.find(r => String(r.is_occupied) === 'true')?.count  ?? 0;
+    const available = bStats.find(r => String(r.is_occupied) === 'false')?.count ?? 0;
+
+    console.log('\n────────────────────────────────────────────────────────────');
+    console.log('✅  Seed complete!\n');
+    console.log(`   🛏️  Beds:          ${beds.length} total — ${occupied} occupied · ${available} available`);
+    console.log(`   📝  Log entries:   ${logCount[0].count}`);
+    console.log(`   🏥  Admissions:    ${admCount[0].count}`);
+    console.log(`   ⏳  Delays:        ${delCount[0].count}`);
+    console.log(`   🏃  Live patients: ${livePlaced}`);
+    console.log('\n   Top stages (14-day history):');
+    topStages.slice(0, 6).forEach(r => console.log(`      ${r.name.padEnd(26)} ${r.cnt}`));
+    console.log('\n   Archetypes: STANDARD · FAST_TRACK · CRITICAL · COMPLEX · LONG_STAY · QUICK_OUT');
+    console.log('────────────────────────────────────────────────────────────\n');
+
+  } catch (err) {
+    await client.query('ROLLBACK');
+    console.error('\n❌  Seed failed:', err.message);
+    console.error(err.stack);
+    process.exit(1);
+  } finally {
+    client.release();
+    await pool.end();
+  }
 }
 
-generateGenuineEnvironment();
+seed();
