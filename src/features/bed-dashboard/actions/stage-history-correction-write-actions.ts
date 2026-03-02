@@ -8,6 +8,7 @@
 
 import { requireWriteRole } from '@/shared/lib/auth'
 import { logAudit } from '@/shared/lib/audit'
+import { query } from '@/shared/lib/db'
 import { logger } from '@/shared/config/logger'
 import {
   insertHistoryCorrection,
@@ -46,7 +47,7 @@ export async function submitHistoryCorrection(payload: SubmitCorrectionPayload):
     })
 
     if (!payload.correctionReason?.trim()) return { success: false, error: 'A correction reason is required.' }
-    if (!payload.bedStageLogId?.trim())    return { success: false, error: 'Invalid log record ID.' }
+    if (!payload.bedStageLogId?.trim()) return { success: false, error: 'Invalid log record ID.' }
 
     const hasField =
       payload.correctedFields.notes !== undefined ||
@@ -65,7 +66,7 @@ export async function submitHistoryCorrection(payload: SubmitCorrectionPayload):
     }
 
     if (payload.correctedFields.transition_time !== undefined) {
-      const newTime  = new Date(payload.correctedFields.transition_time)
+      const newTime = new Date(payload.correctedFields.transition_time)
       const origTime = new Date(original.transitionTime)
       if (!isNaN(newTime.getTime()) && newTime.toISOString() !== origTime.toISOString()) {
         diff.transition_time = { from: origTime.toISOString(), to: newTime.toISOString() }
@@ -76,9 +77,16 @@ export async function submitHistoryCorrection(payload: SubmitCorrectionPayload):
       payload.correctedFields.to_stage_id !== undefined &&
       payload.correctedFields.to_stage_id !== original.toStageId
     ) {
+      // Fetch new stage name for readability
+      const stageRes = await query<{ name: string }>(
+        'SELECT name FROM stages WHERE id = $1',
+        [payload.correctedFields.to_stage_id]
+      )
+      const newStageName = stageRes.rows[0]?.name ?? 'Unknown'
+
       diff.to_stage_id = {
         from: { id: original.toStageId, name: original.toStageName },
-        to:   { id: payload.correctedFields.to_stage_id },
+        to: { id: payload.correctedFields.to_stage_id, name: newStageName },
       }
     }
 

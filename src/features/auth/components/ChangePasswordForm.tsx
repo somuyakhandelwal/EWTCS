@@ -29,24 +29,24 @@ export default function ChangePasswordForm() {
     >(changePasswordAction, undefined)
 
     return (
-        <div className="flex min-h-screen items-center justify-center bg-black px-4 py-12 relative overflow-hidden">
+        <div className="flex min-h-screen items-center justify-center bg-background px-4 py-12 relative overflow-hidden">
             {/* Background decoration */}
             <div className="absolute inset-0 overflow-hidden pointer-events-none">
-                <div className="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] bg-amber-900/10 rounded-full blur-[100px]" />
-                <div className="absolute bottom-[-10%] right-[-10%] w-[40%] h-[40%] bg-amber-900/10 rounded-full blur-[100px]" />
+                <div className="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] bg-amber-500/10 dark:bg-amber-900/10 rounded-full blur-[100px]" />
+                <div className="absolute bottom-[-10%] right-[-10%] w-[40%] h-[40%] bg-amber-500/10 dark:bg-amber-900/10 rounded-full blur-[100px]" />
             </div>
 
-            <Card className="w-full max-w-sm shadow-xl bg-zinc-950/50 border-white/10 backdrop-blur-xl z-10 text-white">
+            <Card className="w-full max-w-sm shadow-xl bg-card/50 border-border backdrop-blur-xl z-10 text-foreground">
                 <CardHeader>
                     <div className="flex justify-center mb-2">
-                        <span className="inline-flex items-center justify-center rounded-full bg-amber-900/30 border border-amber-900/50 p-2">
-                            <ShieldCheck className="h-5 w-5 text-amber-400" />
+                        <span className="inline-flex items-center justify-center rounded-full bg-amber-100 dark:bg-amber-900/30 border border-amber-200 dark:border-amber-900/50 p-2">
+                            <ShieldCheck className="h-5 w-5 text-amber-600 dark:text-amber-400" />
                         </span>
                     </div>
-                    <CardTitle className="text-xl font-bold text-center text-white">
+                    <CardTitle className="text-xl font-bold text-center text-foreground">
                         Set New Password
                     </CardTitle>
-                    <CardDescription className="text-center text-zinc-400 text-sm">
+                    <CardDescription className="text-center text-muted-foreground text-sm">
                         You are using a temporary password. Please set a new password to continue.
                     </CardDescription>
                 </CardHeader>
@@ -54,7 +54,7 @@ export default function ChangePasswordForm() {
                 <form action={action}>
                     <CardContent className="space-y-4">
                         <div className="space-y-2">
-                            <Label htmlFor="newPassword" className="text-zinc-200">
+                            <Label htmlFor="newPassword" className="text-foreground">
                                 New Password
                             </Label>
                             <Input
@@ -64,15 +64,15 @@ export default function ChangePasswordForm() {
                                 placeholder="Min 8 chars, 1 uppercase, 1 number"
                                 required
                                 autoComplete="new-password"
-                                className="bg-black/50 border-white/10 text-white placeholder:text-zinc-600"
+                                className="bg-background/50 border-border text-foreground placeholder:text-muted-foreground focus:ring-ring focus:border-ring"
                             />
                             {state?.errors?.newPassword && (
-                                <p className="text-xs text-red-400">{state.errors.newPassword[0]}</p>
+                                <p className="text-xs text-destructive">{state.errors.newPassword[0]}</p>
                             )}
                         </div>
 
                         <div className="space-y-2">
-                            <Label htmlFor="confirmPassword" className="text-zinc-200">
+                            <Label htmlFor="confirmPassword" className="text-foreground">
                                 Confirm Password
                             </Label>
                             <Input
@@ -82,20 +82,20 @@ export default function ChangePasswordForm() {
                                 placeholder="Repeat new password"
                                 required
                                 autoComplete="new-password"
-                                className="bg-black/50 border-white/10 text-white placeholder:text-zinc-600"
+                                className="bg-background/50 border-border text-foreground placeholder:text-muted-foreground focus:ring-ring focus:border-ring"
                             />
                             {state?.errors?.confirmPassword && (
-                                <p className="text-xs text-red-400">{state.errors.confirmPassword[0]}</p>
+                                <p className="text-xs text-destructive">{state.errors.confirmPassword[0]}</p>
                             )}
                         </div>
 
                         {state?.message && !state.success && (
-                            <div className="p-3 bg-red-900/20 text-red-400 border border-red-900/50 text-sm rounded-md text-center">
+                            <div className="p-3 bg-destructive/20 text-destructive border border-destructive/50 text-sm rounded-md text-center">
                                 {state.message}
                             </div>
                         )}
 
-                        <ul className="text-xs text-zinc-500 space-y-0.5 list-disc list-inside">
+                        <ul className="text-xs text-muted-foreground space-y-0.5 list-disc list-inside">
                             <li>At least 8 characters</li>
                             <li>At least one uppercase letter (A–Z)</li>
                             <li>At least one number (0–9)</li>

@@ -27,6 +27,7 @@ Thumbs.db
 
 # AI tool artifacts (Antigravity / Gemini / BMAD)
 .gemini/
+_bmad-output
 .agent/
 _bmad/
 .github/agents/
@@ -58,3 +59,16 @@ next-env.d.ts
 # logs
 logs/
 *.log
+*_log.txt
+*_log*.txt
+error_logs.txt
+test_run_results.txt
+test_results_verbose.txt
+*_results*.txt
+*_fail.txt
+reset_test.txt
+perf_check_log.txt
+status_log.txt
+tsc_errors.txt
+*_errors.txt
+test_output.txt

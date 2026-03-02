@@ -12,10 +12,16 @@ import {
   fetchCorrectionsForLog,
   fetchCorrectedLogIds,
   fetchCorrectedStageMap,
-  type HistoryCorrection,
+  fetchCorrectionAuditTrail,
 } from '../lib/stage-history-correction-queries'
+import {
+  type HistoryCorrection,
+  type CorrectionAuditFilters,
+  type CorrectionAuditRecord,
+} from '../types/corrections'
+import { generateCorrectionAuditCSV } from '../lib/csv-generators'
 
-type ReadResult<T> = { success: true; data: T } | { success: false; error: string }
+export type ReadResult<T> = { success: true; data: T } | { success: false; error: string }
 
 /**
  * Return the full correction trail for a single bed_stage_log record.
@@ -65,6 +71,56 @@ export async function getCorrectedStageMap(): Promise<ReadResult<Record<string, 
   } catch (error) {
     const message = error instanceof Error ? error.message : 'Failed to fetch corrected stage map'
     logger.error('getCorrectedStageMap failed', error as Error)
+    return { success: false, error: message }
+  }
+}
+
+/**
+ * Search the global correction audit trail with filters.
+ * Accessible to supervisors, admins, and auditors.
+ */
+export async function searchCorrectionAuditTrail(
+  filters: CorrectionAuditFilters
+): Promise<ReadResult<CorrectionAuditRecord[]>> {
+  try {
+    const session = await requireRole(['supervisor', 'admin', 'auditor'])
+    const data = await fetchCorrectionAuditTrail(filters)
+
+    logger.info('Searched correction audit trail', {
+      userId: session.userId,
+      filterCount: Object.keys(filters).length,
+      resultCount: data.length,
+    })
+
+    return { success: true, data }
+  } catch (error) {
+    const message = error instanceof Error ? error.message : 'Failed to search audit trail'
+    logger.error('searchCorrectionAuditTrail failed', error as Error)
+    return { success: false, error: message }
+  }
+}
+
+/**
+ * Export the filtered global correction audit trail to CSV.
+ * Accessible to supervisors, admins, and auditors.
+ */
+export async function exportCorrectionAuditTrail(
+  filters: CorrectionAuditFilters
+): Promise<ReadResult<string>> {
+  try {
+    const session = await requireRole(['supervisor', 'admin', 'auditor'])
+    const data = await fetchCorrectionAuditTrail(filters)
+
+    logger.info('Exported correction audit trail', {
+      userId: session.userId,
+      resultCount: data.length,
+    })
+
+    const csv = generateCorrectionAuditCSV(data)
+    return { success: true, data: csv }
+  } catch (error) {
+    const message = error instanceof Error ? error.message : 'Failed to export audit trail'
+    logger.error('exportCorrectionAuditTrail failed', error as Error)
     return { success: false, error: message }
   }
 }

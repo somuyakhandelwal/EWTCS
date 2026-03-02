@@ -13,7 +13,7 @@ interface Props {
 }
 
 export function ShiftList({ initialShifts }: Props) {
-  const [shifts, setShifts]   = useState<Shift[]>(initialShifts)
+  const [shifts, setShifts] = useState<Shift[]>(initialShifts)
   const [editing, setEditing] = useState<Shift | null>(null)
   const [showAdd, setShowAdd] = useState(false)
 
@@ -31,7 +31,7 @@ export function ShiftList({ initialShifts }: Props) {
     <div className='space-y-3'>
       <button
         onClick={() => setShowAdd(true)}
-        className='px-4 py-2 bg-blue-600 text-white font-semibold rounded-lg hover:bg-blue-700'>
+        className='px-4 py-2 bg-primary hover:bg-primary/90 text-primary-foreground font-semibold rounded-lg transition-colors'>
         + Add New Shift
       </button>
 
@@ -42,13 +42,13 @@ export function ShiftList({ initialShifts }: Props) {
       {shifts.map(shift => (
         <div
           key={shift.id}
-          className='flex items-center justify-between p-4 rounded-lg border-2 border-zinc-700 bg-zinc-800'>
+          className='flex flex-col sm:flex-row sm:items-center justify-between gap-4 p-4 rounded-lg border-2 border-border bg-card'>
 
           <div className='flex flex-col gap-0.5'>
             <div className='flex items-center gap-3'>
-              <span className='font-semibold text-base text-white'>{shift.name}</span>
+              <span className='font-semibold text-base text-foreground'>{shift.name}</span>
               {shift.is_default && (
-                <span className='text-xs bg-zinc-900/60 px-2 py-0.5 rounded-full text-zinc-300 border border-zinc-600'>
+                <span className='text-xs bg-card px-2 py-0.5 rounded-full text-card-foreground border border-zinc-600'>
                   Default
                 </span>
               )}
@@ -63,7 +63,7 @@ export function ShiftList({ initialShifts }: Props) {
                 </span>
               )}
             </div>
-            <span className='text-sm text-zinc-400 font-mono'>
+            <span className='text-sm text-muted-foreground font-mono'>
               {formatShiftTime(shift.start_time, shift.end_time)}
             </span>
           </div>
@@ -71,13 +71,13 @@ export function ShiftList({ initialShifts }: Props) {
           <div className='flex gap-2'>
             <button
               onClick={() => setEditing(shift)}
-              className='px-3 py-1 bg-white border border-gray-400 rounded text-gray-800 font-medium text-sm hover:bg-gray-100'>
+              className='px-3 py-1 bg-background border border-border rounded text-foreground font-medium text-sm hover:bg-muted transition-colors'>
               Edit
             </button>
             {!shift.is_default && (
               <button
                 onClick={() => handleDelete(shift)}
-                className='px-3 py-1 bg-red-500 border border-red-600 rounded text-white font-medium text-sm hover:bg-red-600'>
+                className='px-3 py-1 bg-destructive hover:bg-destructive/90 text-destructive-foreground rounded font-medium text-sm transition-colors'>
                 Delete
               </button>
             )}

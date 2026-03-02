@@ -12,7 +12,7 @@ interface BedGridFooterProps {
 
 export function BedGridFooter({ displayedCount, totalCount, showDelayedOnly, sortOrder }: BedGridFooterProps) {
   return (
-    <div className="text-center text-xs text-zinc-500">
+    <div className="text-center text-xs text-muted-foreground">
       Showing {displayedCount} of {totalCount} beds
       {showDelayedOnly && ' · delayed only'}
       {sortOrder === 'desc' && ' · sorted by delay'}

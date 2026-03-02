@@ -54,20 +54,20 @@ export function LosView({ readOnly = false, role, className }: LosViewProps) {
   if (loading) {
     return (
       <div className={cn('space-y-4', className)}>
-        <div className="h-8 w-72 rounded bg-zinc-800 animate-pulse" />
+        <div className="h-8 w-72 rounded bg-muted animate-pulse" />
         <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
           {Array.from({ length: 6 }).map((_, i) => (
-            <div key={i} className="h-24 rounded-lg bg-zinc-800 animate-pulse" />
+            <div key={i} className="h-24 rounded-lg bg-muted animate-pulse" />
           ))}
         </div>
-        <div className="h-56 rounded-lg bg-zinc-800 animate-pulse" />
+        <div className="h-56 rounded-lg bg-muted animate-pulse" />
       </div>
     )
   }
 
   if (error) {
     return (
-      <Card className={cn('bg-zinc-900 border-red-900', className)}>
+      <Card className={cn('bg-card border-red-900', className)}>
         <CardHeader>
           <CardTitle className="text-red-400 flex items-center gap-2 text-sm">
             <AlertCircle className="h-4 w-4" />
@@ -86,10 +86,10 @@ export function LosView({ readOnly = false, role, className }: LosViewProps) {
     <div className={cn('space-y-4', className)}>
       <div className="flex items-center justify-between flex-wrap gap-3">
         <div>
-          <h2 className="text-xl font-bold tracking-tight text-white">
+          <h2 className="text-xl font-bold tracking-tight text-foreground">
             Average Length of Stay
           </h2>
-          <p className="text-xs text-zinc-400 mt-0.5">
+          <p className="text-xs text-muted-foreground mt-0.5">
             Total time patients spend in the emergency ward (admission → discharge)
           </p>
         </div>
@@ -105,7 +105,7 @@ export function LosView({ readOnly = false, role, className }: LosViewProps) {
       {summary ? (
         <LosKpiCards summary={summary} />
       ) : (
-        <div className="rounded-lg border border-zinc-800 bg-zinc-900 py-12 text-center text-sm text-zinc-500">
+        <div className="rounded-lg border border-border bg-card py-12 text-center text-sm text-muted-foreground">
           No discharge records found for the selected period.
         </div>
       )}

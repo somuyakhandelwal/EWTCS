@@ -36,6 +36,7 @@ export async function getStageDelayReport(
       : 0
 
   const rows: StageDelayRow[] = stats
+    .filter((s) => s.totalTransitions > 0) // exclude stages with no activity in range
     .map((s) => ({
       stageId: s.stageId,
       stageName: s.stageName,

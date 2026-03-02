@@ -18,7 +18,7 @@ function SubmitButton() {
         <Button
             type="submit"
             disabled={pending}
-            className="bg-amber-600 hover:bg-amber-700 text-white"
+            className="bg-amber-600 hover:bg-amber-700 text-foreground"
         >
             {pending ? 'Generating...' : 'Generate Temporary Password'}
         </Button>
@@ -52,17 +52,17 @@ export default function ResetPasswordDialog({ user, isOpen, onClose }: ResetPass
     }
 
     return (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm p-4">
-            <div className="w-full max-w-md rounded-xl border border-zinc-800 bg-zinc-950 shadow-2xl">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-background/80 backdrop-blur-sm p-4">
+            <div className="w-full max-w-md rounded-xl border border-border bg-card shadow-2xl">
                 {/* Header */}
-                <div className="flex items-center justify-between border-b border-zinc-800 px-5 py-4">
+                <div className="flex items-center justify-between border-b border-border px-5 py-4">
                     <div className="flex items-center gap-2">
                         <KeyRound className="h-4 w-4 text-amber-400" />
-                        <h2 className="text-base font-semibold text-white">Reset Password</h2>
+                        <h2 className="text-base font-semibold text-foreground">Reset Password</h2>
                     </div>
                     <button
                         onClick={onClose}
-                        className="text-zinc-500 hover:text-zinc-200 transition-colors"
+                        className="text-muted-foreground hover:text-card-foreground transition-colors"
                         aria-label="Close"
                     >
                         <X className="h-4 w-4" />
@@ -73,9 +73,9 @@ export default function ResetPasswordDialog({ user, isOpen, onClose }: ResetPass
                 <div className="px-5 py-4 space-y-4">
                     {!state?.success ? (
                         <>
-                            <p className="text-sm text-zinc-300">
+                            <p className="text-sm text-card-foreground">
                                 Generate a temporary password for{' '}
-                                <span className="font-semibold text-white">{user.username}</span>.
+                                <span className="font-semibold text-foreground">{user.username}</span>.
                                 The user will be required to change it on next login.
                             </p>
                             <p className="text-xs text-amber-400/80 bg-amber-900/10 border border-amber-900/30 rounded-md px-3 py-2">
@@ -98,7 +98,7 @@ export default function ResetPasswordDialog({ user, isOpen, onClose }: ResetPass
                                         variant="outline"
                                         size="sm"
                                         onClick={onClose}
-                                        className="border-zinc-700 text-zinc-300 hover:bg-zinc-800"
+                                        className="border-border text-card-foreground hover:bg-muted"
                                     >
                                         Cancel
                                     </Button>
@@ -113,8 +113,8 @@ export default function ResetPasswordDialog({ user, isOpen, onClose }: ResetPass
                                 <CheckCircle2 className="h-4 w-4 shrink-0" />
                                 {state.message}
                             </div>
-                            <div className="rounded-md border border-zinc-700 bg-black/60 p-3">
-                                <p className="text-xs text-zinc-500 mb-1.5">Temporary password (shown once):</p>
+                            <div className="rounded-md border border-border bg-background p-3">
+                                <p className="text-xs text-muted-foreground mb-1.5">Temporary password (shown once):</p>
                                 <div className="flex items-center justify-between gap-3">
                                     <code className="text-base font-mono text-amber-300 tracking-widest">
                                         {state.tempPassword}
@@ -122,7 +122,7 @@ export default function ResetPasswordDialog({ user, isOpen, onClose }: ResetPass
                                     <button
                                         type="button"
                                         onClick={handleCopy}
-                                        className="text-zinc-400 hover:text-white transition-colors shrink-0"
+                                        className="text-muted-foreground hover:text-foreground transition-colors shrink-0"
                                         aria-label="Copy temporary password"
                                     >
                                         {copied ? (
@@ -133,7 +133,7 @@ export default function ResetPasswordDialog({ user, isOpen, onClose }: ResetPass
                                     </button>
                                 </div>
                             </div>
-                            <p className="text-xs text-zinc-500">
+                            <p className="text-xs text-muted-foreground">
                                 This password will not be shown again. Once you close this dialog it cannot be recovered.
                             </p>
                             <div className="flex justify-end pt-1">
@@ -141,7 +141,7 @@ export default function ResetPasswordDialog({ user, isOpen, onClose }: ResetPass
                                     type="button"
                                     size="sm"
                                     onClick={onClose}
-                                    className="bg-zinc-800 hover:bg-zinc-700 text-white"
+                                    className="bg-muted hover:bg-zinc-700 text-foreground"
                                 >
                                     Close
                                 </Button>

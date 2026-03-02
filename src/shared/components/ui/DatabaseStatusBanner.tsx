@@ -10,7 +10,7 @@ export function DatabaseStatusBanner() {
 
   return (
     <div className="fixed top-0 left-0 right-0 z-50 animate-in slide-in-from-top duration-300">
-      <div className="bg-red-600 text-white p-6 shadow-2xl border-b-4 border-red-800">
+      <div className="bg-red-600 text-foreground p-6 shadow-2xl border-b-4 border-red-800">
         <div className="container mx-auto flex flex-col md:flex-row items-center justify-between gap-4">
           <div className="flex items-center gap-4">
             <AlertCircle className="w-12 h-12 animate-pulse" />

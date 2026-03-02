@@ -56,7 +56,7 @@ export interface Bed {
 export interface BedWithElapsedTime extends Bed {
   elapsedTimeMs: number | null
   isDelayed: boolean
-  isEscalated: boolean    // US-15.3: True if elapsed time > escalation threshold
+  isEscalated: boolean               // US-15.3: True if elapsed time > escalation threshold
   // US-1.6: Disposition bottleneck fields
   isDispositionBottleneck: boolean
   dispositionElapsedMs: number | null  // time spent in Decision Made stage specifically
@@ -80,7 +80,7 @@ export interface BedGridData {
   beds: BedWithElapsedTime[]
   stages: Stage[]
   delayThresholdMs: number
-  escalationThresholdMs: number   // US-15.3: threshold above which beds are critically escalated
+  escalationThresholdMs: number    // US-15.3: threshold above which beds are critically escalated
   bottleneckCount: number  // US-1.6: count of active disposition bottlenecks
   escalationCount: number  // US-15.3: count of escalated beds
 }

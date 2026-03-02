@@ -29,18 +29,37 @@ if (typeof window === "undefined") {
   void initializeSystem();
 }
 
+import { Suspense } from "react"
+import { ThemeProvider } from "@/shared/components/ThemeProvider"
+import { GlobalThemeToggle } from "@/shared/components/GlobalThemeToggle"
+import { RouteProgressBar } from "@/shared/components/RouteProgressBar"
+import { PageTransition } from "@/shared/components/PageTransition"
+
 export default function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" className="dark" suppressHydrationWarning>
+    <html lang="en" suppressHydrationWarning>
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
-        <DatabaseStatusBanner />
-        {children}
+        <ThemeProvider
+          attribute="class"
+          defaultTheme="system"
+          enableSystem
+          disableTransitionOnChange
+        >
+          <Suspense fallback={null}>
+            <RouteProgressBar />
+          </Suspense>
+          <DatabaseStatusBanner />
+          <PageTransition>
+            {children}
+          </PageTransition>
+          <GlobalThemeToggle />
+        </ThemeProvider>
       </body>
     </html>
   );

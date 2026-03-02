@@ -1,17 +1,15 @@
 'use client'
-// BedPerformanceChart — Interactive Recharts horizontal bar chart (US-10.7 / #66)
+// BedPerformanceChart — Horizontal SVG bar chart for US-10.4
 // Epic 10: Management Report Dashboard
 //
-// Features: full-metric tooltips, Brush zoom/pan, outlier-only filter,
-// responsive layout, PNG export via html2canvas.
+// Shows avg duration per bed as a horizontal bar.
+// Outlier beds rendered in amber/red.
+// Pure SVG — no external chart library required.
 
-import { memo, useState, useId } from 'react'
-import {
-  BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip,
-  ResponsiveContainer, Brush, Cell,
-} from 'recharts'
+import { memo, useMemo, useState } from 'react'
 import { Button } from '@/shared/components/ui/button'
-import { formatDuration } from '@/features/bed-dashboard/lib/duration-formatters'
+import { Download, Filter } from 'lucide-react'
+import { formatDuration } from '@/shared/lib/duration-formatters'
 import { exportChartAsPng } from '../lib/chart-export-utils'
 import type { BedPerformanceRow } from '../types/report.types'
 
@@ -21,121 +19,175 @@ interface BedPerformanceChartProps {
   maxRows?: number
 }
 
-// ---------- Tooltip (Recharts v3 custom interface) ----------
-interface BedTooltipProps {
-  active?: boolean
-  payload?: ReadonlyArray<{ payload: BedPerformanceRow }>
-}
-function BedTooltip({ active, payload }: BedTooltipProps) {
-  if (!active || !payload?.length) return null
-  const row = payload[0].payload
-  return (
-    <div className="rounded border border-zinc-700 bg-zinc-900 p-2.5 text-xs shadow-lg min-w-[160px]">
-      <p className="font-semibold text-white mb-1">{row.bedNumber}</p>
-      <p className="text-zinc-300">Avg: <span className="text-blue-300">{row.avgDurationMs !== null ? formatDuration(row.avgDurationMs) : '—'}</span></p>
-      <p className="text-zinc-300">Min: {row.minDurationMs !== null ? formatDuration(row.minDurationMs) : '—'}</p>
-      <p className="text-zinc-300">Max: {row.maxDurationMs !== null ? formatDuration(row.maxDurationMs) : '—'}</p>
-      <p className="text-zinc-300">Patients: {row.patientsTreated}</p>
-      <p className={row.delayRate > 50 ? 'text-red-400' : row.isOutlier ? 'text-amber-400' : 'text-zinc-300'}>
-        Delay rate: {row.delayRate.toFixed(1)}%
-      </p>
-      {row.isOutlier && <p className="text-amber-400 mt-1">⚠ Outlier</p>}
-    </div>
-  )
-}
+const BAR_HEIGHT = 22
+const BAR_GAP = 6
+const LABEL_W = 52
+const VALUE_W = 56
+const CHART_W = 320
+const BAR_MAX_W = CHART_W - LABEL_W - VALUE_W - 8
 
-// ---------- Bar colour ----------
-function getBarFill(row: BedPerformanceRow): string {
+function getBarColor(row: BedPerformanceRow): string {
   if (!row.isOutlier) return '#3b82f6'
-  return row.delayRate > 50 ? '#ef4444' : '#f59e0b'
+  if (row.delayRate > 50) return '#ef4444'
+  return '#f59e0b'
 }
 
 export const BedPerformanceChart = memo(function BedPerformanceChart({
   rows,
   maxRows = 12,
 }: BedPerformanceChartProps) {
-  const rawId = useId().replace(/:/g, '')
-  const chartId = `${rawId}-bed-chart`
   const [outliersOnly, setOutliersOnly] = useState(false)
+  const [tooltip, setTooltip] = useState<{ row: BedPerformanceRow; x: number; y: number } | null>(null)
+  const chartId = 'bed-perf-chart-svg'
 
-  const display = rows
-    .filter((r) => r.patientsTreated > 0)
-    .filter((r) => !outliersOnly || r.isOutlier)
-    .slice(0, maxRows)
-    .map((r) => ({ ...r, avgMs: r.avgDurationMs ?? 0 }))
+  const displayRows = useMemo(
+    () => rows
+      .filter((r) => r.patientsTreated > 0)
+      .filter((r) => !outliersOnly || r.isOutlier)
+      .slice(0, maxRows),
+    [rows, maxRows, outliersOnly]
+  )
 
-  if (display.length === 0) {
+  const handleExport = () => exportChartAsPng(chartId, 'bed-performance')
+
+  if (displayRows.length === 0) {
     return (
-      <div className="flex items-center justify-center h-32 text-zinc-500 text-sm">
-        {outliersOnly ? 'No outlier beds in this period' : 'No data for selected period'}
+      <div className="space-y-4">
+        <div className="flex justify-between items-center px-1">
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => setOutliersOnly(!outliersOnly)}
+            className={outliersOnly ? 'bg-amber-900/20 border-amber-800 text-amber-400' : ''}
+          >
+            <Filter className="h-3.5 w-3.5 mr-1.5" />
+            Outliers only
+          </Button>
+        </div>
+        <div className="flex items-center justify-center h-32 text-muted-foreground text-sm">
+          {outliersOnly ? 'No outlier beds in this period' : 'No data for selected period'}
+        </div>
       </div>
     )
   }
 
-  const chartH = Math.max(180, display.length * 34 + 40)
+  const maxMs = Math.max(...displayRows.map((r) => r.avgDurationMs ?? 0), 1)
+  const totalH = displayRows.length * (BAR_HEIGHT + BAR_GAP)
 
   return (
-    <div className="space-y-2">
-      {/* Controls */}
-      <div className="flex items-center justify-between flex-wrap gap-2">
+    <div className="space-y-4">
+      <div className="flex justify-between items-center px-1">
         <Button
+          variant="outline"
           size="sm"
-          variant={outliersOnly ? 'default' : 'outline'}
-          onClick={() => setOutliersOnly((v) => !v)}
-          className="h-7 text-xs"
+          onClick={() => setOutliersOnly(!outliersOnly)}
+          className={outliersOnly ? 'bg-amber-900/20 border-amber-800 text-amber-400' : 'text-muted-foreground border-border'}
         >
+          <Filter className="h-3.5 w-3.5 mr-1.5" />
           Outliers only
         </Button>
         <Button
-          size="sm"
           variant="outline"
-          className="h-7 text-xs"
-          onClick={() => exportChartAsPng(chartId, 'bed-performance')}
+          size="sm"
+          onClick={handleExport}
+          className="text-muted-foreground border-border"
         >
+          <Download className="h-3.5 w-3.5 mr-1.5" />
           Export PNG
         </Button>
       </div>
 
-      {/* Chart */}
-      <div id={chartId} role="img" aria-label="Bed average duration bar chart">
-        <ResponsiveContainer width="100%" height={chartH}>
-          <BarChart
-            data={display}
-            layout="vertical"
-            margin={{ top: 4, right: 60, left: 8, bottom: 24 }}
-          >
-            <CartesianGrid strokeDasharray="3 3" stroke="#27272a" horizontal={false} />
-            <XAxis
-              type="number"
-              tickFormatter={(v: number) => formatDuration(v)}
-              tick={{ fill: '#71717a', fontSize: 10 }}
-              axisLine={{ stroke: '#3f3f46' }}
-              tickLine={false}
-            />
-            <YAxis
-              type="category"
-              dataKey="bedNumber"
-              width={44}
-              tick={{ fill: '#a1a1aa', fontSize: 11 }}
-              axisLine={false}
-              tickLine={false}
-            />
-            <Tooltip content={<BedTooltip />} cursor={{ fill: '#27272a' }} />
-            <Brush
-              dataKey="bedNumber"
-              height={18}
-              travellerWidth={6}
-              fill="#18181b"
-              stroke="#3f3f46"
-            />
-            <Bar dataKey="avgMs" radius={[0, 3, 3, 0]} maxBarSize={22}>
-              {display.map((row) => (
-                <Cell key={row.bedId} fill={getBarFill(row)} opacity={0.88} />
-              ))}
-            </Bar>
-          </BarChart>
-        </ResponsiveContainer>
+      <div id={chartId}>
+        <svg
+          viewBox={`0 0 ${CHART_W} ${totalH}`}
+          width="100%"
+          aria-label="Bed average duration bar chart"
+          role="img"
+          style={{ maxWidth: CHART_W }}
+        >
+          {displayRows.map((row, i) => {
+            const y = i * (BAR_HEIGHT + BAR_GAP)
+            const barW =
+              row.avgDurationMs !== null
+                ? Math.max(2, (row.avgDurationMs / maxMs) * BAR_MAX_W)
+                : 0
+            const color = getBarColor(row)
+
+            return (
+              <g
+                key={row.bedId}
+                style={{ cursor: 'pointer' }}
+                onMouseEnter={(e) => setTooltip({ row, x: e.clientX, y: e.clientY })}
+                onMouseLeave={() => setTooltip(null)}
+              >
+                {/* Bed number label */}
+                <text
+                  x={LABEL_W - 4}
+                  y={y + BAR_HEIGHT / 2 + 1}
+                  textAnchor="end"
+                  dominantBaseline="middle"
+                  style={{
+                    fontSize: 11,
+                    fill: row.isOutlier ? color : '#a1a1aa',
+                    fontFamily: 'inherit',
+                    fontWeight: row.isOutlier ? 700 : 400,
+                  }}
+                >
+                  {row.bedNumber}
+                </text>
+
+                {/* Background track */}
+                <rect
+                  x={LABEL_W}
+                  y={y}
+                  width={BAR_MAX_W}
+                  height={BAR_HEIGHT}
+                  rx={3}
+                  fill="#27272a"
+                />
+
+                {/* Value bar */}
+                <rect
+                  x={LABEL_W}
+                  y={y}
+                  width={barW}
+                  height={BAR_HEIGHT}
+                  rx={3}
+                  fill={color}
+                  opacity={row.patientsTreated === 0 ? 0.3 : 0.85}
+                />
+
+                {/* Duration label */}
+                <text
+                  x={LABEL_W + BAR_MAX_W + 6}
+                  y={y + BAR_HEIGHT / 2 + 1}
+                  dominantBaseline="middle"
+                  style={{ fontSize: 10, fill: '#71717a', fontFamily: 'inherit' }}
+                >
+                  {row.avgDurationMs !== null
+                    ? formatDuration(row.avgDurationMs)
+                    : '—'}
+                </text>
+              </g>
+            )
+          })}
+        </svg>
       </div>
+
+      {tooltip && (
+        <div
+          className="fixed z-50 bg-zinc-800 border border-zinc-700 rounded-lg px-3 py-2 text-xs text-foreground shadow-lg pointer-events-none"
+          style={{ left: tooltip.x + 14, top: tooltip.y - 48 }}
+        >
+          <p className="font-semibold mb-1 text-foreground">{tooltip.row.bedNumber}</p>
+          <p className="text-zinc-300">Avg stay: <span className="text-white">{tooltip.row.avgDurationMs !== null ? formatDuration(tooltip.row.avgDurationMs) : '—'}</span></p>
+          <p className="text-zinc-300">Patients treated: <span className="text-white">{tooltip.row.patientsTreated}</span></p>
+          <p className="text-zinc-300">Delay rate: <span className="text-white">{tooltip.row.delayRate.toFixed(1)}%</span></p>
+          {tooltip.row.isOutlier && (
+            <p className="text-amber-400 mt-1 font-medium">⚠ Outlier bed</p>
+          )}
+        </div>
+      )}
     </div>
   )
 })

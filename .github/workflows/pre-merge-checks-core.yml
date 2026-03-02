@@ -64,7 +64,7 @@ jobs:
       - run: node scripts/validate-migrations.js
       - run: node scripts/validate-db-schema.js
       - name: Seed base data (users, beds, stages) required by perf seed
-        run: npm run db:seed
+        run: npm run init && npm run db:seed
       - name: Seed realistic performance volume
         env:
           PERF_TARGET_BEDS: 120

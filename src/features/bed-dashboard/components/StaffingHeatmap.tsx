@@ -55,7 +55,7 @@ export function StaffingHeatmap({ className }: StaffingHeatmapProps) {
 
   // ── Loading skeleton ────────────────────────────────────────────────────────
   if (loading) {
-    return <div className={cn('h-72 rounded-lg bg-zinc-900 animate-pulse', className)} />
+    return <div className={cn('h-72 rounded-lg bg-card animate-pulse', className)} />
   }
 
   // ── Error state ─────────────────────────────────────────────────────────────
@@ -78,11 +78,11 @@ export function StaffingHeatmap({ className }: StaffingHeatmapProps) {
       {/* ── Title + controls ──────────────────────────────────────────────── */}
       <div className="flex items-start justify-between flex-wrap gap-3">
         <div>
-          <h2 className="text-2xl font-bold tracking-tight text-white">Staffing Heatmap</h2>
-          <p className="text-sm text-zinc-400 mt-1">
+          <h2 className="text-2xl font-bold tracking-tight text-foreground">Staffing Heatmap</h2>
+          <p className="text-sm text-muted-foreground mt-1">
             Patient admissions by day of week and hour of day
             {data && (
-              <span className="ml-2 text-zinc-500">— {data.totalAdmissions} total admissions</span>
+              <span className="ml-2 text-muted-foreground">— {data.totalAdmissions} total admissions</span>
             )}
           </p>
         </div>
@@ -92,34 +92,34 @@ export function StaffingHeatmap({ className }: StaffingHeatmapProps) {
             type="date"
             aria-label="Start date filter"
             onChange={e => handleDateChange('startDate', e.target.value)}
-            className="text-xs bg-zinc-900 border border-zinc-700 text-zinc-300 rounded px-2 py-1.5"
+            className="text-xs bg-card border border-border text-card-foreground rounded px-2 py-1.5"
           />
-          <span className="text-zinc-500 text-xs">to</span>
+          <span className="text-muted-foreground text-xs">to</span>
           <input
             type="date"
             aria-label="End date filter"
             onChange={e => handleDateChange('endDate', e.target.value)}
-            className="text-xs bg-zinc-900 border border-zinc-700 text-zinc-300 rounded px-2 py-1.5"
+            className="text-xs bg-card border border-border text-card-foreground rounded px-2 py-1.5"
           />
           <Button size="sm" variant="outline" onClick={reload}
-            className="text-zinc-300 border-zinc-700 hover:bg-zinc-800">
+            className="text-card-foreground border-border hover:bg-muted">
             <RefreshCw className="h-3 w-3 mr-1" />Apply
           </Button>
           <Button size="sm" variant="outline" onClick={handleExport}
-            className="text-zinc-300 border-zinc-700 hover:bg-zinc-800">
+            className="text-card-foreground border-border hover:bg-muted">
             <Download className="h-3 w-3 mr-1" />Export PNG
           </Button>
         </div>
       </div>
 
       {/* ── Heatmap grid ──────────────────────────────────────────────────── */}
-      <Card className="bg-zinc-950 border-zinc-800">
+      <Card className="bg-card border-border">
         <CardContent className="pt-4 pb-5 overflow-x-auto">
 
           {/* Hour axis labels */}
           <div className="flex gap-0.5 mb-1 ml-10 min-w-max">
             {HOURS.map(h => (
-              <div key={h} className="w-7 text-center text-[9px] text-zinc-500 shrink-0">
+              <div key={h} className="w-7 text-center text-[9px] text-muted-foreground shrink-0">
                 {h % 3 === 0 ? String(h).padStart(2, '0') : ''}
               </div>
             ))}
@@ -129,7 +129,7 @@ export function StaffingHeatmap({ className }: StaffingHeatmapProps) {
           <div className="min-w-max">
             {DAY_ABBR.map((day, dow) => (
               <div key={dow} className="flex items-center gap-0.5 mb-0.5">
-                <div className="w-9 text-[10px] text-zinc-400 text-right pr-2 shrink-0">{day}</div>
+                <div className="w-9 text-[10px] text-muted-foreground text-right pr-2 shrink-0">{day}</div>
                 {HOURS.map(hour => (
                   <div key={hour} className="w-7 shrink-0">
                     <HeatmapCell
@@ -146,7 +146,7 @@ export function StaffingHeatmap({ className }: StaffingHeatmapProps) {
 
           {/* Colour legend */}
           <div className="flex items-center gap-1.5 mt-4">
-            <span className="text-[10px] text-zinc-500 mr-1">Low</span>
+            <span className="text-[10px] text-muted-foreground mr-1">Low</span>
             {[0.08, 0.25, 0.45, 0.65, 0.82, 1].map(v => (
               <div
                 key={v}
@@ -154,7 +154,7 @@ export function StaffingHeatmap({ className }: StaffingHeatmapProps) {
                 style={{ backgroundColor: `rgba(59,130,246,${v})` }}
               />
             ))}
-            <span className="text-[10px] text-zinc-500 ml-1">High</span>
+            <span className="text-[10px] text-muted-foreground ml-1">High</span>
           </div>
 
         </CardContent>

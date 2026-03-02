@@ -10,12 +10,12 @@ const { Client } = require('pg');
 const path = require('path');
 const fs = require('fs');
 const dotenv = require('dotenv');
-const { 
-  EXPECTED_TABLES, 
-  validateTableColumns, 
-  getAllTables, 
-  getForeignKeyConstraints, 
-  getIndexes 
+const {
+  EXPECTED_TABLES,
+  validateTableColumns,
+  getAllTables,
+  getForeignKeyConstraints,
+  getIndexes
 } = require('./lib-db-validation');
 
 // Load environment files
@@ -76,17 +76,17 @@ const validateDatabaseSchema = async () => {
     console.log('\n🔍 Validating table structures...\n');
 
     const validations = [
-      { 
-        table: 'users', 
-        cols: ['id', 'username', 'password_hash', 'role', 'created_at'] 
+      {
+        table: 'users',
+        cols: ['id', 'username', 'password_hash', 'role', 'created_at']
       },
-      { 
-        table: 'beds', 
-        cols: ['id', 'bed_number', 'ward_id'] 
+      {
+        table: 'beds',
+        cols: ['id', 'bed_number', 'ward_id']
       },
-      { 
-        table: 'wards', 
-        cols: ['id', 'code', 'name'] 
+      {
+        table: 'wards',
+        cols: ['id', 'code', 'name']
       }
     ];
 

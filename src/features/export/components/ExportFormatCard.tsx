@@ -26,7 +26,7 @@ export function ExportFormatCard({
                 'focus:outline-none focus:ring-2 focus:ring-blue-500',
                 selected
                     ? 'border-blue-500 bg-blue-500/10 text-blue-300'
-                    : 'border-zinc-700 bg-zinc-900 text-zinc-400 hover:border-zinc-500',
+                    : 'border-border bg-card text-muted-foreground hover:border-zinc-500',
                 disabled && 'opacity-50 pointer-events-none'
             )}
         >
@@ -36,7 +36,7 @@ export function ExportFormatCard({
                 <FileSpreadsheet className="h-8 w-8" />
             )}
             <span className="text-sm font-medium">{isPdf ? 'PDF' : 'CSV'}</span>
-            <span className="text-xs text-zinc-500">
+            <span className="text-xs text-muted-foreground">
                 {isPdf ? 'With charts & tables' : 'Raw data for Excel'}
             </span>
         </button>

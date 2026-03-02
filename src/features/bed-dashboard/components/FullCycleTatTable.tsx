@@ -28,39 +28,39 @@ function formatTimestamp(date: Date | string): string {
 function FullCycleTatTableInner({ records }: FullCycleTatTableProps) {
   if (records.length === 0) {
     return (
-      <p className="text-center text-zinc-400 py-8">
+      <p className="text-center text-muted-foreground py-8">
         No full-cycle turnaround records available.
       </p>
     )
   }
 
   return (
-    <div className="overflow-x-auto rounded-lg border border-zinc-700">
+    <div className="overflow-x-auto rounded-lg border border-border">
       <table className="w-full text-sm">
-        <thead className="bg-zinc-800">
+        <thead className="bg-muted">
           <tr>
-            <th className="px-4 py-2 text-left font-medium text-zinc-300">Bed</th>
-            <th className="px-4 py-2 text-left font-medium text-zinc-300">Prev. Discharge</th>
-            <th className="px-4 py-2 text-left font-medium text-zinc-300">Next Admission</th>
-            <th className="px-4 py-2 text-left font-medium text-zinc-300">TAT</th>
+            <th className="px-4 py-2 text-left font-medium text-card-foreground">Bed</th>
+            <th className="px-4 py-2 text-left font-medium text-card-foreground">Prev. Discharge</th>
+            <th className="px-4 py-2 text-left font-medium text-card-foreground">Next Admission</th>
+            <th className="px-4 py-2 text-left font-medium text-card-foreground">TAT</th>
           </tr>
         </thead>
         <tbody>
           {records.map((record, index) => (
             <tr
               key={`${record.bedId}-${index}`}
-              className="border-t border-zinc-800 hover:bg-zinc-800/50"
+              className="border-t border-border hover:bg-muted"
             >
-              <td className="px-4 py-2 font-medium text-zinc-200">
+              <td className="px-4 py-2 font-medium text-card-foreground">
                 {record.bedNumber}
               </td>
-              <td className="px-4 py-2 text-zinc-400">
+              <td className="px-4 py-2 text-muted-foreground">
                 {formatTimestamp(record.previousDischargedAt)}
               </td>
-              <td className="px-4 py-2 text-zinc-400">
+              <td className="px-4 py-2 text-muted-foreground">
                 {formatTimestamp(record.admittedAt)}
               </td>
-              <td className="px-4 py-2 text-zinc-200 font-mono">
+              <td className="px-4 py-2 text-card-foreground font-mono">
                 {formatDuration(record.tatMs)}
               </td>
             </tr>

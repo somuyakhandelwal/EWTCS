@@ -49,7 +49,7 @@ export function LosTargetConfig({ currentTargetMinutes, onSaved }: LosTargetConf
         variant="ghost"
         size="sm"
         onClick={() => setOpen(true)}
-        className="text-zinc-500 hover:text-zinc-200 h-7 px-2"
+        className="text-muted-foreground hover:text-card-foreground h-7 px-2"
         title="Configure LoS target"
       >
         <Settings className="h-3.5 w-3.5 mr-1" />
@@ -61,8 +61,8 @@ export function LosTargetConfig({ currentTargetMinutes, onSaved }: LosTargetConf
   }
 
   return (
-    <div className="flex items-center gap-2 bg-zinc-800 border border-zinc-700 rounded px-3 py-1.5">
-      <label className="text-[10px] text-zinc-400 whitespace-nowrap">Target (min):</label>
+    <div className="flex items-center gap-2 bg-muted border border-border rounded px-3 py-1.5">
+      <label className="text-[10px] text-muted-foreground whitespace-nowrap">Target (min):</label>
       <input
         type="number"
         min="1"
@@ -70,7 +70,7 @@ export function LosTargetConfig({ currentTargetMinutes, onSaved }: LosTargetConf
         onChange={(e) => setValue(e.target.value)}
         placeholder="e.g. 240"
         className={cn(
-          'w-20 bg-zinc-900 border border-zinc-700 rounded px-2 py-0.5 text-xs text-zinc-200',
+          'w-20 bg-card border border-border rounded px-2 py-0.5 text-xs text-card-foreground',
           'focus:outline-none focus:ring-1 focus:ring-blue-500',
         )}
       />
@@ -83,7 +83,7 @@ export function LosTargetConfig({ currentTargetMinutes, onSaved }: LosTargetConf
         size="sm"
         variant="ghost"
         onClick={() => { setOpen(false); setError(null) }}
-        className="h-6 px-1.5 text-zinc-500 hover:text-zinc-200"
+        className="h-6 px-1.5 text-muted-foreground hover:text-card-foreground"
       >
         <X className="h-3 w-3" />
       </Button>

@@ -6,7 +6,7 @@ import { Button } from '@/shared/components/ui/button'
 interface UserFormSubmitButtonProps {
   idleLabel: string
   pendingLabel: string
-  className: string
+  className?: string
 }
 
 export function UserFormSubmitButton({

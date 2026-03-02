@@ -2,7 +2,7 @@
 // Verifies that the perf-monitor utilities correctly measure, classify,
 // and log latency samples against the Dashboard/Reports SLA targets.
 
-import { vi } from 'vitest'
+import { describe, it, expect, beforeEach, vi } from 'vitest'
 import { measurePerformance, perfStart, perfEnd, logPerf, PERF_SLA } from '@/shared/lib/perf-monitor'
 import { logger } from '@/shared/config/logger'
 

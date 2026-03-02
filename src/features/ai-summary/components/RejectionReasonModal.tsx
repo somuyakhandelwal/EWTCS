@@ -55,7 +55,7 @@ export function RejectionReasonModal({ summaryId, onRejected, onCancel }: Reject
             role="dialog"
             aria-modal="true"
             aria-labelledby="rejection-modal-title"
-            className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4"
+            className="fixed inset-0 z-50 flex items-center justify-center bg-background/80 backdrop-blur-sm p-4"
             onKeyDown={handleKeyDown}
         >
             <div className="w-full max-w-md rounded-xl border border-red-800/60 bg-card shadow-xl p-5 space-y-4">
@@ -132,7 +132,7 @@ export function RejectionReasonModal({ summaryId, onRejected, onCancel }: Reject
                         onClick={handleConfirm}
                         disabled={!isValid || pending}
                         className="flex items-center gap-1.5 rounded bg-red-800 px-4 py-2 text-sm
-                                   font-medium text-white hover:bg-red-700
+                                   font-medium text-foreground hover:bg-red-700
                                    disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
                     >
                         {pending ? 'Rejecting…' : 'Confirm Reject'}

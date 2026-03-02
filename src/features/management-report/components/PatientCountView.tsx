@@ -59,7 +59,7 @@ export function PatientCountView({
             <Users className="h-6 w-6 text-blue-400" />
             Total Patients Treated
           </h2>
-          <p className="text-sm text-zinc-400 mt-0.5">
+          <p className="text-sm text-muted-foreground mt-0.5">
             Completed stays from the patient admissions archive
           </p>
         </div>
@@ -80,8 +80,8 @@ export function PatientCountView({
             value={selectedShiftId}
             onChange={e => setSelectedShiftId(e.target.value)}
             className={cn(
-              'h-9 rounded-md border border-zinc-700 bg-zinc-900 px-3 py-1',
-              'text-sm text-zinc-100 focus:outline-none focus:ring-2 focus:ring-blue-500'
+              'h-9 rounded-md border border-border bg-card px-3 py-1',
+              'text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-blue-500'
             )}
           >
             <option value="all">All Shifts</option>

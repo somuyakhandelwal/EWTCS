@@ -46,8 +46,8 @@ export function BedManagementClient({ initialBeds, wards }: BedManagementClientP
             {/* Header with Add Button */}
             <div className="flex justify-between items-center">
                 <div>
-                    <h2 className="text-2xl font-bold text-white">Bed Management</h2>
-                    <p className="text-zinc-400">
+                    <h2 className="text-2xl font-bold text-foreground">Bed Management</h2>
+                    <p className="text-muted-foreground">
                         Add, edit, or deactivate beds in the system
                     </p>
                 </div>
@@ -56,10 +56,10 @@ export function BedManagementClient({ initialBeds, wards }: BedManagementClientP
 
             {/* Loading Overlay */}
             {isRefreshing && (
-                <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-                    <div className="bg-zinc-900 border border-zinc-800 rounded-lg p-6 flex items-center gap-3">
+                <div className="fixed inset-0 bg-background/80 flex items-center justify-center z-50 p-4">
+                    <div className="bg-card border border-border rounded-lg p-6 flex items-center gap-3">
                         <Loader2 className="h-5 w-5 animate-spin text-blue-400" />
-                        <span className="text-white">Refreshing beds...</span>
+                        <span className="text-foreground">Refreshing beds...</span>
                     </div>
                 </div>
             )}

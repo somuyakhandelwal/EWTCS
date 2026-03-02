@@ -31,7 +31,7 @@ export const BedStageButtons = memo(function BedStageButtons({
 }: BedStageButtonsProps) {
   return (
     <div className="space-y-2">
-      <p className="text-xs text-zinc-500 uppercase tracking-wider">Update Stage</p>
+      <p className="text-xs text-muted-foreground uppercase tracking-wider">Update Stage</p>
       <div className="grid grid-cols-2 gap-2">
         {stages.map((stage) => {
           const isCurrentStage = bed.currentStageId === stage.id

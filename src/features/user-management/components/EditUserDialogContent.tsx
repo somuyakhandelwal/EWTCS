@@ -23,15 +23,15 @@ interface EditUserDialogContentProps {
   wards: Ward[]
   action: (payload: FormData) => void
   state:
-    | {
-        success?: boolean
-        message?: string
-        errors?: {
-          username?: string[]
-          role?: string[]
-        }
-      }
-    | undefined
+  | {
+    success?: boolean
+    message?: string
+    errors?: {
+      username?: string[]
+      role?: string[]
+    }
+  }
+  | undefined
   restoredNotice: boolean
   username: string
   role: string
@@ -57,16 +57,16 @@ export function EditUserDialogContent({
   onClose,
 }: EditUserDialogContentProps) {
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm">
-      <div className="bg-zinc-900 border border-zinc-800 rounded-lg shadow-xl w-full max-w-md p-6">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-background/80 backdrop-blur-sm p-4">
+      <div className="bg-card border border-border rounded-lg shadow-xl w-full max-w-md p-6">
         <div className="flex items-center justify-between mb-6">
           <div>
-            <h2 className="text-xl font-bold text-white">Edit User</h2>
-            <p className="text-sm text-zinc-400 mt-1">
-              Update user details for <span className="text-white font-medium">{user.username}</span>
+            <h2 className="text-xl font-bold text-foreground">Edit User</h2>
+            <p className="text-sm text-muted-foreground mt-1">
+              Update user details for <span className="text-foreground font-medium">{user.username}</span>
             </p>
           </div>
-          <button onClick={onClose} className="text-zinc-400 hover:text-white transition-colors">
+          <button onClick={onClose} className="text-muted-foreground hover:text-foreground transition-colors">
             <X className="h-5 w-5" />
           </button>
         </div>
@@ -81,13 +81,13 @@ export function EditUserDialogContent({
           )}
 
           <div className="space-y-2">
-            <Label htmlFor="username" className="text-zinc-200">Username</Label>
+            <Label htmlFor="username" className="text-card-foreground">Username</Label>
             <Input
               id="username"
               name="username"
               value={username}
               onChange={(event) => setUsername(event.target.value)}
-              className="bg-black/50 border-zinc-700 text-white"
+              className="bg-background border-border text-foreground"
             />
             {state?.errors?.username && (
               <p className="text-sm text-red-500 flex items-center gap-1">
@@ -100,13 +100,13 @@ export function EditUserDialogContent({
           <PasswordResetHint />
 
           <div className="space-y-2">
-            <Label htmlFor="role" className="text-zinc-200">Role</Label>
+            <Label htmlFor="role" className="text-card-foreground">Role</Label>
             <select
               id="role"
               name="role"
               value={role}
               onChange={(event) => setRole(event.target.value)}
-              className="w-full px-3 py-2 bg-black/50 border border-zinc-700 rounded-md text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full px-3 py-2 bg-background border border-border rounded-md text-foreground focus:outline-none focus:ring-2 focus:ring-blue-500"
             >
               <option value="nurse">Nurse</option>
               <option value="housekeeping">Housekeeping</option>
@@ -119,15 +119,15 @@ export function EditUserDialogContent({
 
           {wards.length > 0 && (
             <div className="space-y-2">
-              <Label htmlFor="wardId" className="text-zinc-200">
-                Ward Assignment <span className="text-zinc-500 font-normal">(Optional)</span>
+              <Label htmlFor="wardId" className="text-card-foreground">
+                Ward Assignment <span className="text-muted-foreground font-normal">(Optional)</span>
               </Label>
               <select
                 id="wardId"
                 name="wardId"
                 value={wardId}
                 onChange={(event) => setWardId(event.target.value)}
-                className="w-full px-3 py-2 bg-black/50 border border-zinc-700 rounded-md text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full px-3 py-2 bg-background border border-border rounded-md text-foreground focus:outline-none focus:ring-2 focus:ring-blue-500"
               >
                 <option value="">No ward assigned</option>
                 {wards.map(w => (
@@ -138,11 +138,10 @@ export function EditUserDialogContent({
           )}
 
           {state?.message && (
-            <div className={`p-3 rounded-md text-sm flex items-center gap-2 ${
-              state.success
+            <div className={`p-3 rounded-md text-sm flex items-center gap-2 ${state.success
                 ? 'bg-blue-900/20 text-blue-400 border border-blue-900/50'
                 : 'bg-red-900/20 text-red-400 border border-red-900/50'
-            }`}>
+              }`}>
               {state.success ? (
                 <CheckCircle2 className="h-4 w-4 flex-shrink-0" />
               ) : (
@@ -157,12 +156,12 @@ export function EditUserDialogContent({
               type="button"
               variant="outline"
               onClick={onClose}
-              className="text-zinc-400 border-zinc-700 hover:bg-zinc-800"
+              className="text-muted-foreground border-border hover:bg-muted"
             >
               Cancel
             </Button>
             <UserFormSubmitButton
-              className="bg-blue-600 hover:bg-blue-700 text-white"
+              className="bg-blue-600 hover:bg-blue-700 text-foreground"
               idleLabel="Update User"
               pendingLabel="Updating..."
             />

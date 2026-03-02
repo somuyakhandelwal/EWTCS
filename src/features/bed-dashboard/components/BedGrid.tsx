@@ -16,7 +16,6 @@ import { isCleaningStage } from './CleaningActions'
 
 interface BedGridProps {
   data: BedGridData
-  searchQuery?: string
   onRefresh?: () => void
   onBedClick?: (bed: BedWithElapsedTime) => void
   onStageSelect?: (bedId: string, stageId: string) => void
@@ -30,11 +29,12 @@ interface BedGridProps {
   isRefreshing?: boolean
   undoState?: { bedId: string; timer: number } | null
   onUndo?: () => void
+  /** True while the undo API call is in-flight */
+  isUndoing?: boolean
 }
 
 export function BedGrid({
   data,
-  searchQuery = '',
   onRefresh,
   onBedClick,
   onStageSelect,
@@ -48,6 +48,7 @@ export function BedGrid({
   isRefreshing = false,
   undoState,
   onUndo,
+  isUndoing = false,
 }: BedGridProps) {
   const {
     menuState,
@@ -64,35 +65,29 @@ export function BedGrid({
   const {
     showDelayedOnly,
     sortOrder,
-    displayedBeds: filteredBeds,
+    searchQuery,
+    displayedBeds,
     isFilterActive,
     toggleDelayedFilter,
     toggleSortOrder,
+    setSearchQuery,
     clearFilter,
   } = useBedFilter(data.beds)
-
-  // Further filter by search query
-  const displayedBeds = useMemo(() => {
-    if (!searchQuery.trim()) return filteredBeds
-    const q = searchQuery.toLowerCase()
-    return filteredBeds.filter(bed =>
-      bed.bedNumber.toLowerCase().includes(q) ||
-      bed.currentStage?.name.toLowerCase().includes(q)
-    )
-  }, [filteredBeds, searchQuery])
 
   const stats = useMemo(() => getBedStatistics(data.beds), [data.beds])
   const cleaningCount = useMemo(() => data.beds.filter(b => isCleaningStage(b.currentStage?.name)).length, [data.beds])
 
   return (
     <div className="space-y-6">
-      {/* Header with filters and actions */}
+      {/* Unified Header with Search, filters and actions */}
       <BedGridHeader
+        searchQuery={searchQuery}
         showDelayedOnly={showDelayedOnly}
         sortOrder={sortOrder}
         delayedCount={stats.delayed}
         isFilterActive={isFilterActive}
         isRefreshing={isRefreshing}
+        onSearchChange={setSearchQuery}
         onToggleFilter={toggleDelayedFilter}
         onToggleSortOrder={toggleSortOrder}
         onClearFilter={clearFilter}
@@ -123,8 +118,8 @@ export function BedGrid({
 
       {/* Bed Grid */}
       {displayedBeds.length === 0 ? (
-        <div className="text-center py-12 bg-zinc-900/30 rounded-lg border border-zinc-800">
-          <p className="text-zinc-400">
+        <div className="text-center py-12 bg-muted/30 rounded-lg border border-border">
+          <p className="text-muted-foreground">
             {showDelayedOnly
               ? '🎉 No delayed beds! All patients are on track.'
               : 'No beds configured in the system.'}
@@ -145,6 +140,7 @@ export function BedGrid({
               showUndo={undoState?.bedId === bed.id}
               undoTimerSeconds={undoState?.bedId === bed.id ? undoState.timer : 0}
               onUndo={undoState?.bedId === bed.id ? onUndo : undefined}
+              isUndoing={undoState?.bedId === bed.id ? isUndoing : false}
             />
           ))}
         </div>

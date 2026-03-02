@@ -21,28 +21,44 @@ const SLOW_QUERY_ERROR_MS = 2000;
  * - connectionTimeoutMillis: 5000 (5s timeout instead of 2s)
  * - idleTimeoutMillis: 30000 (30s before idle connection closes)
  */
-const pool = new Pool({
-  connectionString: config.database.url,
-  // Ensure secure connections in production
-  ssl: config.database.ssl ? { rejectUnauthorized: true } : false,
-  // Connection pool settings for reliability
-  max: 50,           // BUG FIX #5: Increased from 20 to handle concurrent load
-  min: 10,           // BUG FIX #5: Maintain warm connections
-  idleTimeoutMillis: 30000,
-  connectionTimeoutMillis: 5000,  // BUG FIX #5: Increased from 2000 to 5000
-  statement_timeout: 10000,        // BUG FIX #5: Kill queries taking >10s
-});
+const globalForPg = global as unknown as { pgPool: Pool | undefined };
 
-/**
- * Handle pool errors
- */
-pool.on('error', (err: Error) => {
-  logger.error('Unexpected error on idle client in pool', err);
-});
+export const poolInit = () => {
+  if (globalForPg.pgPool) {
+    return globalForPg.pgPool;
+  }
 
-pool.on('connect', () => {
-  logger.debug('New client connected to database pool');
-});
+  const newPool = new Pool({
+    connectionString: config.database.url,
+    // Ensure secure connections in production
+    ssl: config.database.ssl ? { rejectUnauthorized: true } : false,
+    // Connection pool settings for reliability
+    max: 50,           // BUG FIX #5: Increased from 20 to handle concurrent load
+    min: 10,           // BUG FIX #5: Maintain warm connections
+    idleTimeoutMillis: 30000,
+    connectionTimeoutMillis: 5000,  // BUG FIX #5: Increased from 2000 to 5000
+    statement_timeout: 10000,        // BUG FIX #5: Kill queries taking >10s
+  });
+
+  /**
+   * Handle pool errors
+   */
+  newPool.on('error', (err: Error) => {
+    logger.error('Unexpected error on idle client in pool', err);
+  });
+
+  newPool.on('connect', () => {
+    logger.debug('New client connected to database pool');
+  });
+
+  // Cache the pool globally in all environments to prevent connection exhaustion
+  // across serverless function invocations and hot-reloads.
+  globalForPg.pgPool = newPool;
+
+  return newPool;
+};
+
+const pool = poolInit();
 
 /**
  * BUG FIX #5: Monitor pool health and warn if exhausted
@@ -53,11 +69,11 @@ const checkPoolHealth = () => {
   const now = Date.now();
   // Only warn once per minute
   if (now - lastPoolWarning < 60000) return;
-  
+
   const idleCount = pool.idleCount;
   const totalCount = pool.totalCount;
   const waitingCount = pool.waitingCount || 0;
-  
+
   // Warn if pool is >80% utilized
   if (idleCount < totalCount * 0.2) {
     logger.warn('Database pool nearing capacity', {
@@ -80,7 +96,7 @@ export const query = async <T extends QueryResultRow = QueryResultRow>(
   params?: unknown[]
 ): Promise<QueryResult<T>> => {
   checkPoolHealth();
-  
+
   try {
     const start = Date.now();
     const result = await pool.query<T>(text, params);

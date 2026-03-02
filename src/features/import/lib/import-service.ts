@@ -78,12 +78,13 @@ export async function processHistoricalImport(
                 // eslint-disable-next-line @typescript-eslint/no-explicit-any
             } catch (error: any) {
                 result.failureCount++
+                const errorMessage = (error as Error).message || 'Unknown processing error'
                 result.errors.push({
                     row: rowIndex,
-                    error: error.message || 'Unknown processing error',
+                    error: errorMessage,
                     data: row
                 })
-                logger.warn(`[import] Failed to process row ${rowIndex}: ${error.message}`)
+                logger.warn(`[import] Failed to process row ${rowIndex}: ${errorMessage}`)
             }
         }
 

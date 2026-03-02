@@ -10,8 +10,8 @@ export function StageList({ initialStages }: { initialStages: Stage[] }) {
   const [editing, setEditing] = useState<Stage | null>(null);
   const [showAdd, setShowAdd] = useState(false);
 
-  const handleDelete = async (id: string) => {
-    if (!confirm('Is stage ko delete karna chahte ho?')) return;
+  const handleDelete = async (id: string, name: string) => {
+    if (!confirm(`Are you sure you want to delete stage "${name}"?`)) return;
     try {
       await deleteStage(id);
       setStages(stages.filter(s => s.id !== id));
@@ -31,7 +31,7 @@ export function StageList({ initialStages }: { initialStages: Stage[] }) {
     <div className='space-y-3'>
       <button
         onClick={() => setShowAdd(true)}
-        className='px-4 py-2 bg-blue-600 text-white font-semibold rounded-lg hover:bg-blue-700'>
+        className='px-4 py-2 bg-primary hover:bg-primary/90 text-primary-foreground font-semibold rounded-lg transition-colors'>
         + Add New Stage
       </button>
 
@@ -39,13 +39,13 @@ export function StageList({ initialStages }: { initialStages: Stage[] }) {
         const colorClasses = getStageColorClasses(stage.color_code);
         return (
           <div key={stage.id}
-            className={`flex items-center justify-between p-4 rounded-lg border-2 ${colorClasses.bg} ${colorClasses.border}`}>
+            className={`flex flex-col sm:flex-row sm:items-center justify-between gap-4 p-4 rounded-lg border-2 ${colorClasses.bg} ${colorClasses.border}`}>
 
             <div className='flex items-center gap-3'>
-              <span className='text-lg font-bold text-zinc-200'>{i + 1}</span>
+              <span className='text-lg font-bold text-card-foreground'>{i + 1}</span>
               <span className={`font-semibold text-base ${colorClasses.text}`}>{stage.name}</span>
               {stage.is_default && (
-                <span className='text-xs bg-zinc-900/60 px-2 py-0.5 rounded-full text-zinc-200 border border-zinc-700'>
+                <span className='text-xs bg-card px-2 py-0.5 rounded-full text-card-foreground border border-border'>
                   Default
                 </span>
               )}
@@ -58,32 +58,32 @@ export function StageList({ initialStages }: { initialStages: Stage[] }) {
               )}
             </div>
 
-          <div className='flex gap-2'>
-            <button
-              onClick={() => move(i, 'up')}
-              disabled={i === 0}
-              className='px-3 py-1 bg-white border border-gray-400 rounded text-gray-700 font-bold disabled:opacity-30 hover:bg-gray-100'>
-              ↑
-            </button>
-            <button
-              onClick={() => move(i, 'down')}
-              disabled={i === stages.length - 1}
-              className='px-3 py-1 bg-white border border-gray-400 rounded text-gray-700 font-bold disabled:opacity-30 hover:bg-gray-100'>
-              ↓
-            </button>
-            <button
-              onClick={() => setEditing(stage)}
-              className='px-3 py-1 bg-white border border-gray-400 rounded text-gray-800 font-medium text-sm hover:bg-gray-100'>
-              Edit
-            </button>
-            {!stage.is_default && (
+            <div className='flex gap-2'>
               <button
-                onClick={() => handleDelete(stage.id)}
-                className='px-3 py-1 bg-red-500 border border-red-600 rounded text-white font-medium text-sm hover:bg-red-600'>
-                Delete
+                onClick={() => move(i, 'up')}
+                disabled={i === 0}
+                className='px-3 py-1 bg-background border border-border rounded text-foreground font-bold disabled:opacity-30 hover:bg-muted transition-colors'>
+                ↑
               </button>
-            )}
-          </div>
+              <button
+                onClick={() => move(i, 'down')}
+                disabled={i === stages.length - 1}
+                className='px-3 py-1 bg-background border border-border rounded text-foreground font-bold disabled:opacity-30 hover:bg-muted transition-colors'>
+                ↓
+              </button>
+              <button
+                onClick={() => setEditing(stage)}
+                className='px-3 py-1 bg-background border border-border rounded text-foreground font-medium text-sm hover:bg-muted transition-colors'>
+                Edit
+              </button>
+              {!stage.is_default && (
+                <button
+                  onClick={() => handleDelete(stage.id, stage.name)}
+                  className='px-3 py-1 bg-destructive hover:bg-destructive/90 text-destructive-foreground rounded font-medium text-sm transition-colors'>
+                  Delete
+                </button>
+              )}
+            </div>
           </div>
         );
       })}

@@ -28,7 +28,7 @@ export function AddVirtualBedModal({ open, onClose, onCreated, onSubmit }: AddVi
         }
         window.addEventListener('keydown', onKeyDown)
         return () => window.removeEventListener('keydown', onKeyDown)
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [open])
 
     function handleClose() {
@@ -60,12 +60,12 @@ export function AddVirtualBedModal({ open, onClose, onCreated, onSubmit }: AddVi
     return (
         /* Backdrop */
         <div
-            className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm"
+            className="fixed inset-0 z-50 flex items-center justify-center bg-background/80 backdrop-blur-sm p-4"
             onClick={handleClose}
         >
             {/* Panel */}
             <div
-                className="relative w-full max-w-md rounded-xl border border-zinc-800 bg-zinc-900 p-6 shadow-2xl"
+                className="relative w-full max-w-md rounded-xl border border-border bg-card p-6 shadow-2xl"
                 onClick={e => e.stopPropagation()}
             >
                 {/* Close button */}
@@ -73,7 +73,7 @@ export function AddVirtualBedModal({ open, onClose, onCreated, onSubmit }: AddVi
                     type="button"
                     onClick={handleClose}
                     disabled={isPending}
-                    className="absolute right-4 top-4 text-zinc-500 hover:text-zinc-200 transition-colors disabled:opacity-40"
+                    className="absolute right-4 top-4 text-muted-foreground hover:text-card-foreground transition-colors disabled:opacity-40"
                     aria-label="Close"
                 >
                     <X className="h-4 w-4" />
@@ -85,7 +85,7 @@ export function AddVirtualBedModal({ open, onClose, onCreated, onSubmit }: AddVi
                         <MapPin className="h-5 w-5 text-purple-400" />
                         Add Virtual Bed
                     </h2>
-                    <p className="mt-1 text-sm text-zinc-400">
+                    <p className="mt-1 text-sm text-muted-foreground">
                         Track a patient on a stretcher or in a hallway. The bed will be marked{' '}
                         <span className="text-purple-300 font-medium">VIRTUAL</span> and can be
                         removed once the patient moves to a real bed or is discharged.
@@ -97,7 +97,7 @@ export function AddVirtualBedModal({ open, onClose, onCreated, onSubmit }: AddVi
                     <div className="space-y-1.5">
                         <label
                             htmlFor="vBedLabel"
-                            className="block text-sm font-medium text-zinc-300"
+                            className="block text-sm font-medium text-card-foreground"
                         >
                             Label <span className="text-red-400">*</span>
                         </label>
@@ -108,9 +108,9 @@ export function AddVirtualBedModal({ open, onClose, onCreated, onSubmit }: AddVi
                             required
                             placeholder="e.g. Hallway Stretcher 3, Corridor B"
                             autoFocus
-                            className="w-full rounded-md border border-zinc-700 bg-zinc-800 px-3 py-2 text-sm text-white placeholder-zinc-500 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                            className="w-full rounded-md border border-border bg-muted px-3 py-2 text-sm text-foreground placeholder-zinc-500 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent"
                         />
-                        <p className="text-[11px] text-zinc-500">
+                        <p className="text-[11px] text-muted-foreground">
                             Letters, numbers, spaces, and . _ ( ) - allowed. 2–100 characters.
                         </p>
                     </div>
@@ -119,17 +119,17 @@ export function AddVirtualBedModal({ open, onClose, onCreated, onSubmit }: AddVi
                     <div className="space-y-1.5">
                         <label
                             htmlFor="vBedLocation"
-                            className="block text-sm font-medium text-zinc-300"
+                            className="block text-sm font-medium text-card-foreground"
                         >
                             Location{' '}
-                            <span className="text-zinc-500 font-normal">(optional)</span>
+                            <span className="text-muted-foreground font-normal">(optional)</span>
                         </label>
                         <input
                             id="vBedLocation"
                             name="location"
                             type="text"
                             placeholder="e.g. Corridor B, Near Nurses Station"
-                            className="w-full rounded-md border border-zinc-700 bg-zinc-800 px-3 py-2 text-sm text-white placeholder-zinc-500 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                            className="w-full rounded-md border border-border bg-muted px-3 py-2 text-sm text-foreground placeholder-zinc-500 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent"
                         />
                     </div>
 
@@ -147,14 +147,14 @@ export function AddVirtualBedModal({ open, onClose, onCreated, onSubmit }: AddVi
                             variant="ghost"
                             onClick={handleClose}
                             disabled={isPending}
-                            className="text-zinc-400 hover:text-white"
+                            className="text-muted-foreground hover:text-foreground"
                         >
                             Cancel
                         </Button>
                         <Button
                             type="submit"
                             disabled={isPending}
-                            className="bg-purple-700 hover:bg-purple-600 text-white border-none"
+                            className="bg-purple-700 hover:bg-purple-600 text-foreground border-none"
                         >
                             {isPending ? (
                                 <>

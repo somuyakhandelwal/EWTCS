@@ -8,10 +8,10 @@ interface AdminRecentActivityProps {
 /** Renders the "Recent Activity" audit-log card on the admin dashboard. */
 export function AdminRecentActivity({ recentLogs }: AdminRecentActivityProps) {
   return (
-    <Card className="bg-zinc-900 border-zinc-800">
+    <Card className="bg-card border-border">
       <CardHeader>
-        <CardTitle className="text-xl text-white">Recent Activity</CardTitle>
-        <p className="text-sm text-zinc-400 mt-1">Latest user management actions</p>
+        <CardTitle className="text-xl text-foreground">Recent Activity</CardTitle>
+        <p className="text-sm text-muted-foreground mt-1">Latest user management actions</p>
       </CardHeader>
       <CardContent>
         {recentLogs.length > 0 ? (
@@ -19,7 +19,7 @@ export function AdminRecentActivity({ recentLogs }: AdminRecentActivityProps) {
             {recentLogs.map((log) => (
               <div
                 key={log.id}
-                className="flex items-center justify-between p-3 rounded-lg bg-black/30 border border-zinc-800"
+                className="flex flex-wrap items-center justify-between gap-y-2 p-3 rounded-lg bg-background border border-border"
               >
                 <div className="flex items-center gap-3">
                   <div
@@ -33,7 +33,7 @@ export function AdminRecentActivity({ recentLogs }: AdminRecentActivityProps) {
                       }`}
                   />
                   <div>
-                    <p className="text-sm text-white">
+                    <p className="text-sm text-foreground">
                       <span className="font-medium">
                         {log.performed_by_username || 'System'}
                       </span>{' '}
@@ -42,7 +42,7 @@ export function AdminRecentActivity({ recentLogs }: AdminRecentActivityProps) {
                         {log.target_username || 'entity'}
                       </span>
                     </p>
-                    <p className="text-xs text-zinc-500">
+                    <p className="text-xs text-muted-foreground">
                       {new Date(log.created_at).toLocaleString('en-US', {
                         year: 'numeric',
                         month: 'short',
@@ -53,12 +53,12 @@ export function AdminRecentActivity({ recentLogs }: AdminRecentActivityProps) {
                     </p>
                   </div>
                 </div>
-                <span className="text-xs text-zinc-500 uppercase">{log.action_type}</span>
+                <span className="text-xs text-muted-foreground uppercase">{log.action_type}</span>
               </div>
             ))}
           </div>
         ) : (
-          <p className="text-zinc-500 text-center py-8">No recent activity</p>
+          <p className="text-muted-foreground text-center py-8">No recent activity</p>
         )}
       </CardContent>
     </Card>

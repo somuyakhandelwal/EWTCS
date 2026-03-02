@@ -27,7 +27,7 @@ export function AddTemporaryBedModal({ open, onClose, onCreated }: AddTemporaryB
         }
         window.addEventListener('keydown', onKeyDown)
         return () => window.removeEventListener('keydown', onKeyDown)
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [open])
 
     function handleClose() {
@@ -59,12 +59,12 @@ export function AddTemporaryBedModal({ open, onClose, onCreated }: AddTemporaryB
     return (
         /* Backdrop */
         <div
-            className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm"
+            className="fixed inset-0 z-50 flex items-center justify-center bg-background/80 backdrop-blur-sm p-4"
             onClick={handleClose}
         >
             {/* Panel */}
             <div
-                className="relative w-full max-w-md rounded-xl border border-zinc-800 bg-zinc-900 p-6 shadow-2xl"
+                className="relative w-full max-w-md rounded-xl border border-border bg-card p-6 shadow-2xl"
                 onClick={e => e.stopPropagation()}
             >
                 {/* Close button */}
@@ -72,7 +72,7 @@ export function AddTemporaryBedModal({ open, onClose, onCreated }: AddTemporaryB
                     type="button"
                     onClick={handleClose}
                     disabled={isPending}
-                    className="absolute right-4 top-4 text-zinc-500 hover:text-zinc-200 transition-colors disabled:opacity-40"
+                    className="absolute right-4 top-4 text-muted-foreground hover:text-card-foreground transition-colors disabled:opacity-40"
                     aria-label="Close"
                 >
                     <X className="h-4 w-4" />
@@ -84,7 +84,7 @@ export function AddTemporaryBedModal({ open, onClose, onCreated }: AddTemporaryB
                         <Zap className="h-5 w-5 text-orange-400" />
                         Add Temporary Bed
                     </h2>
-                    <p className="mt-1 text-sm text-zinc-400">
+                    <p className="mt-1 text-sm text-muted-foreground">
                         Creates a surge-capacity bed in your ward. It will be marked{' '}
                         <span className="text-orange-300 font-medium">TEMP</span> and can be
                         removed once the surge is over.
@@ -96,7 +96,7 @@ export function AddTemporaryBedModal({ open, onClose, onCreated }: AddTemporaryB
                     <div className="space-y-1.5">
                         <label
                             htmlFor="tmpBedNumber"
-                            className="block text-sm font-medium text-zinc-300"
+                            className="block text-sm font-medium text-card-foreground"
                         >
                             Bed Number <span className="text-red-400">*</span>
                         </label>
@@ -107,9 +107,9 @@ export function AddTemporaryBedModal({ open, onClose, onCreated }: AddTemporaryB
                             required
                             placeholder="e.g. T-01, SURGE-A"
                             autoFocus
-                            className="w-full rounded-md border border-zinc-700 bg-zinc-800 px-3 py-2 text-sm text-white placeholder-zinc-500 focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+                            className="w-full rounded-md border border-border bg-muted px-3 py-2 text-sm text-foreground placeholder-zinc-500 focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent"
                         />
-                        <p className="text-[11px] text-zinc-500">
+                        <p className="text-[11px] text-muted-foreground">
                             Letters, numbers, and hyphens only. 2–50 characters.
                         </p>
                     </div>
@@ -118,17 +118,17 @@ export function AddTemporaryBedModal({ open, onClose, onCreated }: AddTemporaryB
                     <div className="space-y-1.5">
                         <label
                             htmlFor="tmpBedLocation"
-                            className="block text-sm font-medium text-zinc-300"
+                            className="block text-sm font-medium text-card-foreground"
                         >
                             Location{' '}
-                            <span className="text-zinc-500 font-normal">(optional)</span>
+                            <span className="text-muted-foreground font-normal">(optional)</span>
                         </label>
                         <input
                             id="tmpBedLocation"
                             name="location"
                             type="text"
                             placeholder="e.g. Corridor 3, Overflow Area"
-                            className="w-full rounded-md border border-zinc-700 bg-zinc-800 px-3 py-2 text-sm text-white placeholder-zinc-500 focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+                            className="w-full rounded-md border border-border bg-muted px-3 py-2 text-sm text-foreground placeholder-zinc-500 focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent"
                         />
                     </div>
 
@@ -146,14 +146,14 @@ export function AddTemporaryBedModal({ open, onClose, onCreated }: AddTemporaryB
                             variant="ghost"
                             onClick={handleClose}
                             disabled={isPending}
-                            className="text-zinc-400 hover:text-white"
+                            className="text-muted-foreground hover:text-foreground"
                         >
                             Cancel
                         </Button>
                         <Button
                             type="submit"
                             disabled={isPending}
-                            className="bg-orange-700 hover:bg-orange-600 text-white border-none"
+                            className="bg-orange-700 hover:bg-orange-600 text-foreground border-none"
                         >
                             {isPending ? (
                                 <>

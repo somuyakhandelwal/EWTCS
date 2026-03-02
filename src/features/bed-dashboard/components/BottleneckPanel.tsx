@@ -51,7 +51,7 @@ export function BottleneckPanel({ beds, onReasonRecorded }: BottleneckPanelProps
   }
 
   return (
-    <div className="rounded-lg border border-amber-700/50 bg-amber-950/30">
+    <div className="rounded-lg border border-amber-500/30 bg-muted/20">
       {/* Header — always visible */}
       <button
         type="button"
@@ -60,10 +60,10 @@ export function BottleneckPanel({ beds, onReasonRecorded }: BottleneckPanelProps
       >
         <div className="flex items-center gap-2">
           <Hourglass className="h-4 w-4 text-amber-400 shrink-0" />
-          <span className="text-sm font-semibold text-amber-300">
+          <span className="text-sm font-semibold text-amber-500">
             Disposition Hold
           </span>
-          <span className="ml-1 rounded-full bg-amber-500 px-2 py-0.5 text-xs font-bold text-black">
+          <span className="ml-1 rounded-full bg-amber-500 px-2 py-0.5 text-xs font-bold text-background">
             {bottleneckBeds.length}
           </span>
           <span className="hidden sm:inline text-xs text-amber-400/70">
@@ -79,19 +79,19 @@ export function BottleneckPanel({ beds, onReasonRecorded }: BottleneckPanelProps
 
       {/* Expanded table */}
       {isExpanded && (
-        <div className="border-t border-amber-700/30 px-4 pb-4">
-          <div className="mt-3 divide-y divide-amber-900/30">
+        <div className="border-t border-border px-4 pb-4">
+          <div className="mt-3 divide-y divide-border">
             {bottleneckBeds.map(bed => (
               <div key={bed.id} className="py-2 flex flex-wrap items-start gap-x-4 gap-y-2 text-sm">
-                <span className="font-bold text-white min-w-[2.5rem]">{bed.bedNumber}</span>
-                <span className="text-amber-300 font-mono min-w-[4.5rem]">
+                <span className="font-bold text-foreground min-w-[2.5rem]">{bed.bedNumber}</span>
+                <span className="text-amber-500 font-mono min-w-[4.5rem]">
                   {formatElapsedTime(bed.dispositionElapsedMs)}
                 </span>
                 <div className="flex-1 min-w-[10rem] flex flex-col gap-1">
                   <select
                     className={cn(
-                      'w-full rounded border border-amber-700/50 bg-zinc-900 px-2 py-1 text-xs text-zinc-200',
-                      'focus:outline-none focus:ring-1 focus:ring-amber-500',
+                      'w-full rounded border border-input bg-background px-2 py-1 text-xs text-foreground',
+                      'focus:outline-none focus:ring-1 focus:ring-ring',
                       'disabled:opacity-50'
                     )}
                     value={bed.dispositionDelayReason ?? ''}
@@ -106,7 +106,7 @@ export function BottleneckPanel({ beds, onReasonRecorded }: BottleneckPanelProps
                     ))}
                   </select>
                   {errorByBedId[bed.id] && (
-                    <p className="text-[10px] text-red-400">{errorByBedId[bed.id]}</p>
+                    <p className="text-[10px] text-destructive">{errorByBedId[bed.id]}</p>
                   )}
                 </div>
               </div>

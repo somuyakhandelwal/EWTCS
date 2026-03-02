@@ -49,7 +49,7 @@
 
   /* Card backgrounds */
   [class*="bg-zinc"],
-  [class*="bg-black"],
+  [class*="bg-background"],
   [class*="bg-gray"] {
     background: #f8f8f8 !important;
     border: 1px solid #dddddd !important;

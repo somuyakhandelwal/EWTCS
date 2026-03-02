@@ -40,7 +40,7 @@ export function StageAnalyticsBedTimeline({ timeline }: StageAnalyticsBedTimelin
             Duration in this stage: <span className="font-mono">{formatDuration(transition.durationInCurrentStageMs)}</span>
           </div>
           {transition.notes && (
-            <p className="text-xs text-zinc-500 mt-1 italic">Note: {transition.notes}</p>
+            <p className="text-xs text-muted-foreground mt-1 italic">Note: {transition.notes}</p>
           )}
         </div>
       </div>

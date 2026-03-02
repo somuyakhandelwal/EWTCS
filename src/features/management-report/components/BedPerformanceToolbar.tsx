@@ -49,8 +49,8 @@ export function BedPerformanceToolbar({
           value={selectedShiftId}
           onChange={(e) => setSelectedShiftId(e.target.value)}
           className={cn(
-            'h-9 rounded-md border border-zinc-700 bg-zinc-900 px-3 py-1',
-            'text-sm text-zinc-100 focus:outline-none focus:ring-2 focus:ring-blue-500'
+            'h-9 rounded-md border border-border bg-card px-3 py-1',
+            'text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-blue-500'
           )}
         >
           <option value="all">All Shifts</option>

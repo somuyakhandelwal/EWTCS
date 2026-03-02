@@ -132,8 +132,8 @@ export function ContextMenu({
       <div
         className={cn(
           isMobile
-            ? 'w-full rounded-t-2xl border-t border-zinc-800 bg-zinc-950 px-4 pb-10 shadow-2xl'
-            : 'absolute min-w-48 rounded-md border border-zinc-800 bg-zinc-950/95 p-2 shadow-lg backdrop-blur'
+            ? 'w-full rounded-t-2xl border-t border-border bg-card px-4 pb-10 shadow-2xl'
+            : 'absolute min-w-48 rounded-md border border-border bg-card p-2 shadow-lg backdrop-blur'
         )}
         style={!isMobile ? { top: clampedPosition.y, left: clampedPosition.x } : undefined}
         onMouseDown={!isMobile ? (event) => event.stopPropagation() : undefined}
@@ -142,40 +142,47 @@ export function ContextMenu({
       >
         {isMobile && <div className="mx-auto my-3 h-1.5 w-12 rounded-full bg-zinc-600" />}
         {header && (
-          <div className={cn('py-1', isMobile ? 'pb-2 text-sm font-semibold text-zinc-200' : 'px-2 text-xs text-zinc-500')}>
+          <div className={cn('py-1', isMobile ? 'pb-2 text-sm font-semibold text-card-foreground' : 'px-2 text-xs text-muted-foreground')}>
             {header}
           </div>
         )}
         <div className="space-y-1">
-          {items.map((item) => (
-            <button
-              key={item.id}
-              type="button"
-              className={cn(
-                'flex w-full items-center gap-2 rounded text-left text-zinc-200 disabled:cursor-not-allowed disabled:opacity-50',
-                isMobile ? 'px-0 py-3 text-base active:bg-zinc-800/50' : 'px-2 py-1.5 text-sm hover:bg-zinc-800/70',
-                item.className
-              )}
-              disabled={item.disabled}
-              onClick={(e) => {
-                // FIX for Issue #4 (Double-Click): Check e.detail to allow only single clicks
-                // e.detail > 1 indicates a double-click or higher
-                if (e.detail > 1) {
-                  return
-                }
+          {items.length === 0 && !error ? (
+            <div className="flex items-center gap-2 px-2 py-3 text-xs text-muted-foreground animate-pulse">
+              <div className="h-2 w-2 rounded-full bg-muted-foreground animate-bounce" />
+              Loading transitions...
+            </div>
+          ) : (
+            items.map((item) => (
+              <button
+                key={item.id}
+                type="button"
+                className={cn(
+                  'flex w-full items-center gap-2 rounded text-left text-card-foreground disabled:cursor-not-allowed disabled:opacity-50',
+                  isMobile ? 'px-0 py-3 text-base active:bg-muted' : 'px-2 py-1.5 text-sm hover:bg-muted',
+                  item.className
+                )}
+                disabled={item.disabled}
+                onClick={(e) => {
+                  // FIX for Issue #4 (Double-Click): Check e.detail to allow only single clicks
+                  // e.detail > 1 indicates a double-click or higher
+                  if (e.detail > 1) {
+                    return
+                  }
 
-                if (item.disabled) {
-                  return
-                }
-                item.onSelect()
-                onClose()
-              }}
-              role="menuitem"
-            >
-              {item.icon && <span className="flex-shrink-0">{item.icon}</span>}
-              <span>{item.label}</span>
-            </button>
-          ))}
+                  if (item.disabled) {
+                    return
+                  }
+                  item.onSelect()
+                  onClose()
+                }}
+                role="menuitem"
+              >
+                {item.icon && <span className="flex-shrink-0">{item.icon}</span>}
+                <span>{item.label}</span>
+              </button>
+            ))
+          )}
         </div>
       </div>
     </div>

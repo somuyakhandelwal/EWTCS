@@ -25,8 +25,12 @@ export function useBedContextMenu(
 
   const openMenuForBed = useCallback(
     async (bedId: string, position: { x: number; y: number }) => {
-      setMenuState({ bedId, position })
+      // Clear previous data immediately to prevent "flash" of old bed's transitions
+      setValidNextStages([])
+      setOverrideRequiredStages([])
       setMenuError(null)
+
+      setMenuState({ bedId, position })
       setIsLoadingTransitions(true)
       try {
         const result = await getValidTransitionsForBed(bedId)
@@ -38,8 +42,7 @@ export function useBedContextMenu(
           setValidNextStages([])
           setOverrideRequiredStages([])
         }
-      } catch (error) {
-        console.error('Failed to fetch valid transitions:', error)
+      } catch {
         setMenuError('Connection error. Please try again.')
         setValidNextStages([])
         setOverrideRequiredStages([])

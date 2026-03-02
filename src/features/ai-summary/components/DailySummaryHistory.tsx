@@ -44,7 +44,7 @@ export function DailySummaryHistory({ canReview = false }: DailySummaryHistoryPr
         return (
             <div className="flex flex-col gap-4 animate-pulse">
                 {[1, 2, 3].map(i => (
-                    <div key={i} className="h-32 rounded-xl border bg-zinc-900/50 border-zinc-800" />
+                    <div key={i} className="h-32 rounded-xl border bg-card border-border" />
                 ))}
             </div>
         )
@@ -60,7 +60,7 @@ export function DailySummaryHistory({ canReview = false }: DailySummaryHistoryPr
 
     if (summaries.length === 0) {
         return (
-            <div className="text-center p-8 rounded-xl border border-dashed border-zinc-800 text-zinc-500 text-sm">
+            <div className="text-center p-8 rounded-xl border border-dashed border-border text-muted-foreground text-sm">
                 No daily summaries generated yet.
             </div>
         )

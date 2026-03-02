@@ -31,6 +31,7 @@ export interface DailySummary {
     reviewedBy?: string           // User ID who approved/rejected
     reviewedAt?: string           // ISO timestamp
     publishedAt?: string          // ISO timestamp
+    rejectionReason?: string      // Reason provided when a supervisor rejects a draft (US-9.2)
     aiInsights: AiInsight[]
     metadata: DailySummaryMetadata
 }

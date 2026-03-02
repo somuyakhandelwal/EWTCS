@@ -39,7 +39,7 @@ export function SupervisorSummarySection() {
         return (
             <div className="flex flex-col gap-4 animate-pulse">
                 {[1, 2].map((i) => (
-                    <div key={i} className="h-40 rounded-xl border bg-zinc-900/50 border-zinc-800" />
+                    <div key={i} className="h-40 rounded-xl border bg-card border-border" />
                 ))}
             </div>
         )
@@ -55,7 +55,7 @@ export function SupervisorSummarySection() {
 
     if (drafts.length === 0) {
         return (
-            <div className="rounded-xl border border-dashed border-zinc-700 p-8 text-center text-zinc-500 text-sm">
+            <div className="rounded-xl border border-dashed border-border p-8 text-center text-muted-foreground text-sm">
                 No draft summaries pending review.
             </div>
         )

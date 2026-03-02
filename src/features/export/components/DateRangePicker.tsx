@@ -143,7 +143,7 @@ export function DateRangePicker({
       {preset === 'custom' && (
         <div className="flex flex-wrap items-center gap-3">
           <div className="flex flex-col gap-1">
-            <label className="text-xs text-zinc-400">From</label>
+            <label className="text-xs text-muted-foreground">From</label>
             <input
               type="date"
               value={customStart}
@@ -151,14 +151,14 @@ export function DateRangePicker({
               onChange={(e) => handleCustomStart(e.target.value)}
               disabled={disabled}
               className={cn(
-                'h-9 rounded-md border border-zinc-700 bg-zinc-900 px-3 py-1',
-                'text-sm text-zinc-100 focus:outline-none focus:ring-2 focus:ring-blue-500',
+                'h-9 rounded-md border border-border bg-card px-3 py-1',
+                'text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-blue-500',
                 'disabled:opacity-50'
               )}
             />
           </div>
           <div className="flex flex-col gap-1">
-            <label className="text-xs text-zinc-400">To</label>
+            <label className="text-xs text-muted-foreground">To</label>
             <input
               type="date"
               value={customEnd}
@@ -167,8 +167,8 @@ export function DateRangePicker({
               onChange={(e) => handleCustomEnd(e.target.value)}
               disabled={disabled}
               className={cn(
-                'h-9 rounded-md border border-zinc-700 bg-zinc-900 px-3 py-1',
-                'text-sm text-zinc-100 focus:outline-none focus:ring-2 focus:ring-blue-500',
+                'h-9 rounded-md border border-border bg-card px-3 py-1',
+                'text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-blue-500',
                 'disabled:opacity-50'
               )}
             />
@@ -178,7 +178,7 @@ export function DateRangePicker({
 
       {/* Resolved range display */}
       {preset !== 'custom' && (
-        <p className="text-xs text-zinc-500">
+        <p className="text-xs text-muted-foreground">
           {resolvePreset(preset, customStart, customEnd).label}
         </p>
       )}

@@ -50,7 +50,7 @@ export function DelayedPatientTargetConfig({ targetPct, onSaved }: DelayedPatien
         variant="ghost"
         size="sm"
         onClick={() => setEditing(true)}
-        className="text-zinc-500 hover:text-zinc-200 h-7 px-2"
+        className="text-muted-foreground hover:text-card-foreground h-7 px-2"
       >
         <Settings className="h-3.5 w-3.5 mr-1" />
         <span className="text-[10px]">
@@ -61,8 +61,8 @@ export function DelayedPatientTargetConfig({ targetPct, onSaved }: DelayedPatien
   }
 
   return (
-    <div className="flex items-center gap-2 bg-zinc-800 border border-zinc-700 rounded px-3 py-1.5">
-      <label className="text-[10px] text-zinc-400 whitespace-nowrap">Target %:</label>
+    <div className="flex items-center gap-2 bg-muted border border-border rounded px-3 py-1.5">
+      <label className="text-[10px] text-muted-foreground whitespace-nowrap">Target %:</label>
       <input
         type="number"
         min="0"
@@ -70,7 +70,7 @@ export function DelayedPatientTargetConfig({ targetPct, onSaved }: DelayedPatien
         value={input}
         onChange={(e) => setInput(e.target.value)}
         placeholder="e.g. 20"
-        className="w-16 bg-zinc-900 border border-zinc-700 rounded px-2 py-0.5 text-xs text-zinc-200 focus:outline-none focus:ring-1 focus:ring-blue-500"
+        className="w-16 bg-card border border-border rounded px-2 py-0.5 text-xs text-card-foreground focus:outline-none focus:ring-1 focus:ring-blue-500"
       />
       {error && <span className="text-[10px] text-red-400">{error}</span>}
       <Button size="sm" onClick={handleSave} disabled={saving} className="h-6 px-2 text-[10px]">
@@ -81,7 +81,7 @@ export function DelayedPatientTargetConfig({ targetPct, onSaved }: DelayedPatien
         size="sm"
         variant="ghost"
         onClick={() => { setEditing(false); setError(null) }}
-        className="h-6 px-1.5 text-zinc-500 hover:text-zinc-200"
+        className="h-6 px-1.5 text-muted-foreground hover:text-card-foreground"
       >
         <X className="h-3 w-3" />
       </Button>
