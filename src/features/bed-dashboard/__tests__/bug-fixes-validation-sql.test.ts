@@ -1,4 +1,5 @@
 /**
+ * @vitest-environment node
  * Bug-Fix Regression Tests — Validation, SQL & Auth (Bugs 1, 4–8)
  *
  * Bug 1  – createTemporaryBed: no duplicate bed-number check
@@ -10,10 +11,10 @@
  */
 
 import { describe, it, expect } from 'vitest'
-import { fileURLToPath } from 'url'
+
 import * as path from 'path'
 
-const __dirname = path.dirname(fileURLToPath(import.meta.url))
+const __dirname = import.meta.dirname
 
 // ─── Bug 1: duplicate bed number validation (schema) ────────────────────────
 
