@@ -1,0 +1,295 @@
+name: Security Scan Notifications
+
+on:
+  workflow_run:
+    workflows: ['Enhanced Security Scan']
+    types: [completed]
+  workflow_dispatch:
+    inputs:
+      scan_severity:
+        description: 'Severity level'
+        required: true
+        default: 'high'
+        type: choice
+        options:
+          - critical
+          - high
+          - medium
+
+permissions:
+  contents: read
+  artifacts: read
+
+jobs:
+  check-results:
+    name: Check Scan Results
+    runs-on: ubuntu-latest
+    if: github.event.workflow_run.conclusion != 'skipped'
+    outputs:
+      has_vulnerabilities: ${{ steps.check.outputs.has_vulnerabilities }}
+      critical_count: ${{ steps.check.outputs.critical_count }}
+      severity_level: ${{ steps.check.outputs.severity_level }}
+
+    steps:
+      - name: Download artifacts
+        uses: actions/download-artifact@v4
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          run-id: ${{ github.event.workflow_run.id }}
+
+      - name: Check vulnerability results
+        id: check
+        run: |
+          if [ ! -f "audit-report.json" ]; then
+            echo "has_vulnerabilities=false" >> $GITHUB_OUTPUT
+            exit 0
+          fi
+
+          CRITICAL=$(jq -r '.metadata.vulnerabilities.critical // 0' audit-report.json)
+          HIGH=$(jq -r '.metadata.vulnerabilities.high // 0' audit-report.json)
+          
+          if [ "$CRITICAL" -gt 0 ]; then
+            echo "has_vulnerabilities=true" >> $GITHUB_OUTPUT
+            echo "critical_count=$CRITICAL" >> $GITHUB_OUTPUT
+            echo "severity_level=critical" >> $GITHUB_OUTPUT
+          elif [ "$HIGH" -gt 0 ]; then
+            echo "has_vulnerabilities=true" >> $GITHUB_OUTPUT
+            echo "critical_count=$HIGH" >> $GITHUB_OUTPUT
+            echo "severity_level=high" >> $GITHUB_OUTPUT
+          else
+            echo "has_vulnerabilities=false" >> $GITHUB_OUTPUT
+          fi
+
+  notify-slack:
+    name: Slack Notification
+    runs-on: ubuntu-latest
+    needs: check-results
+    if: needs.check-results.outputs.has_vulnerabilities == 'true' && secrets.SLACK_WEBHOOK_URL != ''
+
+    steps:
+      - name: Download artifacts
+        uses: actions/download-artifact@v4
+
+      - name: Prepare Slack message
+        id: prepare
+        run: |
+          CRITICAL=$(jq -r '.metadata.vulnerabilities.critical // 0' audit-report.json)
+          HIGH=$(jq -r '.metadata.vulnerabilities.high // 0' audit-report.json)
+          
+          if [ "$CRITICAL" -gt 0 ]; then
+            COLOR="danger"
+            TEXT="🚨 CRITICAL: $CRITICAL critical vulnerabilities found!"
+          else
+            COLOR="warning"
+            TEXT="⚠️ WARNING: $HIGH high-severity vulnerabilities found!"
+          fi
+          
+          echo "color=$COLOR" >> $GITHUB_OUTPUT
+          echo "text=$TEXT" >> $GITHUB_OUTPUT
+
+      - name: Send Slack notification
+        uses: slackapi/slack-github-action@v1.24.0
+        with:
+          payload: |
+            {
+              "text": "${{ steps.prepare.outputs.text }}",
+              "blocks": [
+                {
+                  "type": "header",
+                  "text": {
+                    "type": "plain_text",
+                    "text": "🔒 Security Scan Alert"
+                  }
+                },
+                {
+                  "type": "section",
+                  "text": {
+                    "type": "mrkdwn",
+                    "text": "${{ steps.prepare.outputs.text }}\n*Action Required:* Review and prioritize fixes"
+                  }
+                },
+                {
+                  "type": "divider"
+                },
+                {
+                  "type": "actions",
+                  "elements": [
+                    {
+                      "type": "button",
+                      "text": {
+                        "type": "plain_text",
+                        "text": "View Scan"
+                      },
+                      "url": "${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.event.workflow_run.id }}"
+                    }
+                  ]
+                }
+              ]
+            }
+        env:
+          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
+          SLACK_WEBHOOK_TYPE: INCOMING_WEBHOOK
+
+  notify-email:
+    name: Email Notification
+    runs-on: ubuntu-latest
+    needs: check-results
+    if: needs.check-results.outputs.has_vulnerabilities == 'true' && secrets.SECURITY_EMAIL != ''
+
+    steps:
+      - name: Download artifacts
+        uses: actions/download-artifact@v4
+
+      - name: Prepare email content
+        id: email
+        run: |
+          CRITICAL=$(jq -r '.metadata.vulnerabilities.critical // 0' audit-report.json)
+          HIGH=$(jq -r '.metadata.vulnerabilities.high // 0' audit-report.json)
+          MEDIUM=$(jq -r '.metadata.vulnerabilities.medium // 0' audit-report.json)
+          
+          if [ "$CRITICAL" -gt 0 ]; then
+            SUBJECT="🚨 CRITICAL: Security Vulnerabilities Detected - Immediate Action Required"
+            PRIORITY="URGENT"
+          else
+            SUBJECT="⚠️ WARNING: Security Vulnerabilities Detected"
+            PRIORITY="HIGH"
+          fi
+          
+          echo "subject=$SUBJECT" >> $GITHUB_OUTPUT
+          echo "priority=$PRIORITY" >> $GITHUB_OUTPUT
+          echo "critical=$CRITICAL" >> $GITHUB_OUTPUT
+          echo "high=$HIGH" >> $GITHUB_OUTPUT
+          echo "medium=$MEDIUM" >> $GITHUB_OUTPUT
+
+      - name: Send email notification
+        uses: dawidd6/action-send-mail@v3
+        if: secrets.MAIL_SERVER != '' && secrets.MAIL_USERNAME != ''
+        with:
+          server_address: ${{ secrets.MAIL_SERVER }}
+          server_port: ${{ secrets.MAIL_PORT || '587' }}
+          username: ${{ secrets.MAIL_USERNAME }}
+          password: ${{ secrets.MAIL_PASSWORD }}
+          subject: ${{ steps.email.outputs.subject }}
+          to: ${{ secrets.SECURITY_EMAIL || 'security@hospital.com' }}
+          from: 'EWTCS Security Scan <noreply@hospital.com>'
+          body: |
+            URGENT SECURITY SCAN REPORT
+            ============================
+            
+            Priority: ${{ steps.email.outputs.priority }}
+            Date: $(date -u +"%Y-%m-%d %H:%M:%S UTC")
+            
+            VULNERABILITY SUMMARY
+            =====================
+            Critical: ${{ steps.email.outputs.critical }}
+            High: ${{ steps.email.outputs.high }}
+            Medium: ${{ steps.email.outputs.medium }}
+            
+            ACTION REQUIRED
+            ===============
+            ${{ steps.email.outputs.critical > 0 && '1. CRITICAL VULNS MUST BE FIXED WITHIN 48 HOURS' || '1. Review and prioritize fixes' }}
+            2. Access detailed report: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.event.workflow_run.id }}
+            3. Update SLA tracking with fix status
+            4. Escalate to management if SLAs will be breached
+            
+            NEXT STEPS
+            ==========
+            1. Run: npm audit fix
+            2. Test affected packages
+            3. Update dependencies
+            4. Run scan again to verify
+            
+            Need help? Contact: security@hospital.com
+            
+            ---
+            This is an automated message from EWTCS Security Scanning System
+          html_body: |
+            <html>
+              <body style="font-family: Arial, sans-serif;">
+                <h1>🔒 EWTCS Security Scan Alert</h1>
+                <p><strong>Priority:</strong> ${{ steps.email.outputs.priority }}</p>
+                <p><strong>Date:</strong> $(date -u +"%Y-%m-%d %H:%M:%S UTC")</p>
+                
+                <h2>Vulnerability Summary</h2>
+                <table border="1" cellpadding="5">
+                  <tr>
+                    <td><strong>Critical</strong></td>
+                    <td style="color: red;">${{ steps.email.outputs.critical }}</td>
+                  </tr>
+                  <tr>
+                    <td><strong>High</strong></td>
+                    <td style="color: orange;">${{ steps.email.outputs.high }}</td>
+                  </tr>
+                  <tr>
+                    <td><strong>Medium</strong></td>
+                    <td style="color: gold;">${{ steps.email.outputs.medium }}</td>
+                  </tr>
+                </table>
+                
+                <h2>Action Required</h2>
+                <p>${{ steps.email.outputs.critical > 0 && '⚠️ CRITICAL VULNERABILITIES MUST BE FIXED WITHIN 48 HOURS' || 'Review and prioritize fixes' }}</p>
+                
+                <a href="${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.event.workflow_run.id }}">View Full Report →</a>
+              </body>
+            </html>
+
+  generate-report:
+    name: Generate Scan History Report
+    runs-on: ubuntu-latest
+    if: github.event_name == 'schedule'
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Download latest scan
+        uses: actions/download-artifact@v4
+        continue-on-error: true
+
+      - name: Create scan history
+        run: |
+          mkdir -p .security-scan-archive
+          SCAN_DATE=$(date +%Y-%m-%d)
+          
+          if [ -f "audit-report.json" ]; then
+            cp "audit-report.json" ".security-scan-archive/scan-$SCAN_DATE.json"
+          fi
+          
+          # Generate markdown summary
+          cat > .security-scan-archive/HISTORY.md << 'EOF'
+          # Security Scan History
+          
+          ## Recent Scans
+          
+          | Date | Critical | High | Medium | Low | Status |
+          |------|----------|------|--------|-----|--------|
+          EOF
+          
+          for file in $(ls -1 .security-scan-archive/scan-*.json | sort -r | head -10); do
+            DATE=$(echo $file | sed 's/.*scan-\([^.]*\).*/\1/')
+            CRITICAL=$(jq -r '.metadata.vulnerabilities.critical // 0' "$file")
+            HIGH=$(jq -r '.metadata.vulnerabilities.high // 0' "$file")
+            MEDIUM=$(jq -r '.metadata.vulnerabilities.medium // 0' "$file")
+            LOW=$(jq -r '.metadata.vulnerabilities.low // 0' "$file")
+            
+            if [ "$CRITICAL" -gt 0 ]; then
+              STATUS="❌ CRITICAL"
+            elif [ "$HIGH" -gt 0 ]; then
+              STATUS="⚠️ HIGH"
+            else
+              STATUS="✅ CLEAN"
+            fi
+            
+            echo "| $DATE | $CRITICAL | $HIGH | $MEDIUM | $LOW | $STATUS |" >> .security-scan-archive/HISTORY.md
+          done
+          
+          echo "✅ Scan history updated"
+
+      - name: Commit and push scan history
+        run: |
+          git config user.name "EWTCS Security Bot"
+          git config user.email "security@hospital.com"
+          git add .security-scan-archive/ || true
+          git commit -m "chore: update security scan history" || true
+          git push origin main || true
+        continue-on-error: true

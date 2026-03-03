@@ -1,47 +1,38 @@
-# EWTCS Security Audit Workflow
-# EPIC 17: Security & Privacy
-# Runs weekly + on every PR to catch vulnerabilities
+# ⚠️ DEPRECATED: Use security-scan-enhanced.yml instead
+# This workflow has been superseded by the Enhanced Security Scan workflow
+# which provides comprehensive scanning, SLA tracking, and notifications.
+# 
+# See: .github/workflows/security-scan-enhanced.yml
+# Documentation: docs/SECURITY_SCANNING.md
 
-name: Security Audit
+name: Security Audit (DEPRECATED)
 
 on:
   schedule:
     - cron: '0 9 * * 1'  # Every Monday 9 AM
-  push:
-    branches: [main]
-  pull_request:
-    branches: [main]
 
 jobs:
-  security-audit:
-    name: NPM Security Audit
+  deprecation-notice:
+    name: Deprecation Notice
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: '18'
-          cache: 'npm'
-
-      - name: Install dependencies
-        run: npm ci
-
-      - name: Run security audit
-        run: npm audit --audit-level=high
-        continue-on-error: true
-
-      - name: Save audit report
-        run: npm audit --json > audit-report.json || true
-
-      - name: Upload audit report
-        uses: actions/upload-artifact@v4
-        with:
-          name: security-audit-report
-          path: audit-report.json
-          retention-days: 30
+      - name: Display deprecation notice
+        run: |
+          echo "⚠️ DEPRECATED WORKFLOW"
+          echo "This workflow (security-updates.yml) is deprecated."
+          echo "Please use security-scan-enhanced.yml instead."
+          echo ""
+          echo "Enhancements in new workflow:"
+          echo "  ✅ Comprehensive JSON parsing"
+          echo "  ✅ SLA deadline tracking"
+          echo "  ✅ Automatic escalation"
+          echo "  ✅ Slack & email notifications"
+          echo "  ✅ GitHub issue creation"
+          echo "  ✅ PR comments with results"
+          echo "  ✅ Historical archival"
+          echo "  ✅ SLA breach detection"
+          echo ""
+          echo "See documentation at: docs/SECURITY_SCANNING.md"
 
       - name: Fail on critical vulnerabilities
         run: |
