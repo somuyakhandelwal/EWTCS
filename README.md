@@ -316,6 +316,7 @@ Full environment variable reference: See [CONFIGURATION.md](CONFIGURATION.md)
 ### Quick Links
 
 - **[QUICKSTART.md](QUICKSTART.md)** ⚡ - Get running in 5 minutes
+- **[INSTALLATION_GUIDE.md](INSTALLATION_GUIDE.md)** 🖥️ - Production deployment guide for system administrators
 - **[PROJECT_STATUS.md](PROJECT_STATUS.md)** 📊 - Current status, features, and roadmap
 - **[docs/README.md](docs/README.md)** 📑 - Complete documentation index
 
