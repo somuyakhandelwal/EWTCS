@@ -1,5 +1,5 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/shared/components/ui/card"
-import { Bed, BarChart3, Clock, Layers, History, Building2 } from "lucide-react"
+import { Bed, BarChart3, Clock, Layers, History, Building2, ListChecks } from "lucide-react"
 import Link from "next/link"
 import { ImportDialog } from "@/features/import/components/ImportDialog"
 
@@ -114,6 +114,24 @@ export function AdminQuickActions() {
                                 </h3>
                                 <p className="text-sm text-muted-foreground mt-1">
                                     Add and configure hospital wards
+                                </p>
+                            </div>
+                        </div>
+                    </Link>
+                    <Link
+                        href="/admin/delay-reasons"
+                        className="p-4 rounded-lg bg-background border border-border hover:border-border hover:bg-background transition-all group"
+                    >
+                        <div className="flex items-start gap-3">
+                            <div className="p-2 bg-amber-900/20 border border-amber-900/50 rounded-lg group-hover:bg-amber-900/30 transition-colors">
+                                <ListChecks className="h-5 w-5 text-amber-500" />
+                            </div>
+                            <div>
+                                <h3 className="font-semibold text-foreground group-hover:text-amber-400 transition-colors">
+                                    Delay Reasons
+                                </h3>
+                                <p className="text-sm text-muted-foreground mt-1">
+                                    Configure disposition hold dropdown options
                                 </p>
                             </div>
                         </div>

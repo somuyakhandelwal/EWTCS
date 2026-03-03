@@ -35,6 +35,10 @@ export interface AuditorHistoryRecord {
   transitionTime: Date
   durationInPreviousStageMs: number | null
   notes: string | null
+  /** US-8.2: ID of the shift tagged on this log entry (null for pre-migration rows) */
+  shiftId: string | null
+  /** US-8.2: Resolved name of the shift (null for pre-migration rows) */
+  shiftName: string | null
 }
 
 const SORT_COLUMN_MAP: Record<AuditorHistorySortBy, string> = {
@@ -133,8 +137,11 @@ export async function fetchAuditorHistory(options: FetchAuditorHistoryOptions): 
         sl.changed_by_username as "changedByUsername",
         sl.transition_time as "transitionTime",
         sl.duration_in_previous_stage_ms as "durationInPreviousStageMs",
-        sl.notes
+        sl.notes,
+        sl.shift_id as "shiftId",
+        sh.name     as "shiftName"
       FROM stage_logs sl
+      LEFT JOIN shifts sh ON sh.id = sl.shift_id
       ${whereSql}
       ORDER BY ${SORT_COLUMN_MAP[safeSortBy]} ${safeSortOrder}
       LIMIT $${listParams.length - 1}

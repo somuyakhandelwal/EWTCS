@@ -31,6 +31,10 @@ interface BedGridProps {
   onUndo?: () => void
   /** True while the undo API call is in-flight */
   isUndoing?: boolean
+  /** US-16.2: true when browser is offline — enables cached transition map in context menu */
+  isOffline?: boolean
+  /** US-16.2: beds that have a write queued for sync — shown with an amber badge */
+  queuedBedIds?: Set<string>
 }
 
 export function BedGrid({
@@ -49,6 +53,8 @@ export function BedGrid({
   undoState,
   onUndo,
   isUndoing = false,
+  isOffline = false,
+  queuedBedIds,
 }: BedGridProps) {
   const {
     menuState,
@@ -60,7 +66,7 @@ export function BedGrid({
     handleOpenMenu,
     handleBedTap,
     handleCloseMenu,
-  } = useBedContextMenu(data.beds, onStageSelect)
+  } = useBedContextMenu(data.beds, onStageSelect, isOffline, data.stageTransitionMap)
 
   const {
     showDelayedOnly,
@@ -141,6 +147,7 @@ export function BedGrid({
               undoTimerSeconds={undoState?.bedId === bed.id ? undoState.timer : 0}
               onUndo={undoState?.bedId === bed.id ? onUndo : undefined}
               isUndoing={undoState?.bedId === bed.id ? isUndoing : false}
+              isQueuedOffline={queuedBedIds?.has(bed.id) ?? false}
             />
           ))}
         </div>

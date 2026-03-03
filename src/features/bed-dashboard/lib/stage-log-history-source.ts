@@ -1,5 +1,7 @@
 // stage-log-history-source.ts
 // Unified source for stage transition history across live + archived logs.
+// US-8.2: shift_id is included in both branches so callers can join shifts
+//         and show / override the shift tag per log entry.
 
 export const STAGE_LOG_HISTORY_CTE = `
 WITH stage_logs AS (
@@ -15,7 +17,8 @@ WITH stage_logs AS (
     COALESCE(u.username, 'Unknown') AS changed_by_username,
     bsl.transition_time,
     bsl.duration_in_previous_stage_ms,
-    bsl.notes
+    bsl.notes,
+    bsl.shift_id
   FROM bed_stage_logs bsl
   LEFT JOIN beds b ON b.id = bsl.bed_id
   LEFT JOIN stages fs ON fs.id = bsl.from_stage_id
@@ -36,7 +39,8 @@ WITH stage_logs AS (
     COALESCE(u.username, 'Unknown') AS changed_by_username,
     bsl.transition_time,
     bsl.duration_in_previous_stage_ms,
-    bsl.notes
+    bsl.notes,
+    bsl.shift_id
   FROM bed_stage_logs_archive bsl
   LEFT JOIN beds b ON b.id = bsl.bed_id
   LEFT JOIN stages fs ON fs.id = bsl.from_stage_id

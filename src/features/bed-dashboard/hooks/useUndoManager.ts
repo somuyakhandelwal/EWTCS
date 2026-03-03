@@ -1,5 +1,6 @@
 // useUndoManager — encapsulates undo timer state and handleUndo logic
 // Extracted from BedDashboardClient to keep that file under 200 lines
+// US-16.2: Undo is blocked when browser is offline
 
 import { useState, useRef, useEffect, useCallback } from 'react'
 
@@ -7,6 +8,8 @@ export function useUndoManager(
   lastUpdatedBedId: string | null | undefined,
   lastUpdatedStageId: string | null | undefined,
   handleRefresh: () => Promise<void> | void,
+  /** US-16.2: When true, undo is blocked — cannot reach the server */
+  isOffline = false,
 ) {
   const [undoState, setUndoState] = useState<{
     bedId: string
@@ -65,6 +68,13 @@ export function useUndoManager(
 
   const handleUndo = useCallback(async () => {
     if (!undoState || isUndoing) return
+
+    // US-16.2: block undo while offline — the API call would fail anyway
+    if (isOffline) {
+      setUndoError('Cannot undo while offline. Please reconnect and try again.')
+      return
+    }
+
     setUndoError(null)
     setIsUndoing(true)
 
@@ -98,7 +108,7 @@ export function useUndoManager(
     } finally {
       setIsUndoing(false)
     }
-  }, [undoState, isUndoing, handleRefresh])
+  }, [undoState, isUndoing, isOffline, handleRefresh])
 
   return { undoState, undoError, handleUndo, isUndoing }
 }

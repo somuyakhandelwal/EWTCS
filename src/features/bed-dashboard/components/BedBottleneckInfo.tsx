@@ -1,13 +1,13 @@
+'use client'
+
+import { useEffect, useState } from 'react'
 import { Hourglass } from 'lucide-react'
 import { cn } from '@/shared/lib/utils'
 import { formatElapsedTime } from '../lib/utils'
 import type { DispositionDelayReason } from '../types/bed'
 import { DISPOSITION_DELAY_REASON_LABELS } from '../types/bed'
-
-const REASON_OPTIONS = Object.entries(DISPOSITION_DELAY_REASON_LABELS) as [
-  DispositionDelayReason,
-  string,
-][]
+import { getActiveDelayReasonOptions } from '../actions/delay-reason-options-actions'
+import type { DelayReasonOption } from '../actions/delay-reason-options-actions'
 
 interface BedBottleneckInfoProps {
   bedId: string
@@ -23,6 +23,14 @@ export function BedBottleneckInfo({
   dispositionDelayReason,
   onReasonSelect,
 }: BedBottleneckInfoProps) {
+  const [reasonOptions, setReasonOptions] = useState<DelayReasonOption[]>([])
+
+  useEffect(() => {
+    if (onReasonSelect) {
+      getActiveDelayReasonOptions().then(setReasonOptions)
+    }
+  }, [onReasonSelect])
+
   return (
     <>
       <div className="mt-1 flex items-center gap-1 rounded bg-amber-100 dark:bg-amber-900/40 border border-amber-300 dark:border-amber-700/50 px-2 py-0.5">
@@ -32,7 +40,7 @@ export function BedBottleneckInfo({
         </span>
       </div>
 
-      {/* US-1.7: Inline reason selector when handler provided */}
+      {/* US-1.7: Inline reason selector — DB-driven, no free text (EPIC-17) */}
       {onReasonSelect && (
         <select
           className={cn(
@@ -48,12 +56,10 @@ export function BedBottleneckInfo({
           }}
         >
           <option value="" disabled>
-            Select reason…
+            {reasonOptions.length === 0 ? 'Loading…' : 'Select reason…'}
           </option>
-          {REASON_OPTIONS.map(([value, label]) => (
-            <option key={value} value={value}>
-              {label}
-            </option>
+          {reasonOptions.map(opt => (
+            <option key={opt.id} value={opt.value}>{opt.label}</option>
           ))}
         </select>
       )}
@@ -61,7 +67,7 @@ export function BedBottleneckInfo({
       {/* Show recorded reason label when no handler (read-only) */}
       {!onReasonSelect && dispositionDelayReason && (
         <p className="text-[10px] text-amber-600 dark:text-amber-400/80">
-          {DISPOSITION_DELAY_REASON_LABELS[dispositionDelayReason]}
+          {DISPOSITION_DELAY_REASON_LABELS[dispositionDelayReason] ?? dispositionDelayReason}
         </p>
       )}
     </>

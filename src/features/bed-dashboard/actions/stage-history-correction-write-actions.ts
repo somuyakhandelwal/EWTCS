@@ -41,7 +41,7 @@ type WriteResult =
  */
 export async function submitHistoryCorrection(payload: SubmitCorrectionPayload): Promise<WriteResult> {
   try {
-    const session = await requireWriteRole(['supervisor', 'admin'], {
+    const session = await requireWriteRole('beds', {
       entityType: 'bed_stage_log',
       entityId: payload.bedStageLogId,
     })

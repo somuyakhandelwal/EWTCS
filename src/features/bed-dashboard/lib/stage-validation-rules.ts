@@ -85,7 +85,7 @@ export async function getValidNextStages(
  */
 export async function getStageTransitionMap(
   userRole: UserRole
-): Promise<Map<string, { allowed: string[]; requiresOverride: string[] }>> {
+): Promise<Map<string, { allowed: string[]; requiresOverride: string[]; blocked: string[] }>> {
   try {
     const result = await pool.query<{
       fromStageId: string | null
@@ -106,12 +106,12 @@ export async function getStageTransitionMap(
       []
     )
 
-    const map = new Map<string, { allowed: string[]; requiresOverride: string[] }>()
+    const map = new Map<string, { allowed: string[]; requiresOverride: string[]; blocked: string[] }>()
 
     for (const row of result.rows) {
       const key = row.fromStageId || 'null'
       if (!map.has(key)) {
-        map.set(key, { allowed: [], requiresOverride: [] })
+        map.set(key, { allowed: [], requiresOverride: [], blocked: [] })
       }
 
       const entry = map.get(key)!
@@ -126,6 +126,12 @@ export async function getStageTransitionMap(
       ) {
         if (!entry.requiresOverride.includes(row.toStageId)) {
           entry.requiresOverride.push(row.toStageId)
+        }
+      } else {
+        // Explicitly forbidden with no override path — track so callers can distinguish
+        // "no DB rule" (allowed by default) from "rule says forbidden".
+        if (!entry.blocked.includes(row.toStageId)) {
+          entry.blocked.push(row.toStageId)
         }
       }
     }

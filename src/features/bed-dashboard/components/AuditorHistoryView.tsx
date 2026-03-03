@@ -26,6 +26,9 @@ import {
   buildAuditorHistoryPayload,
   DEFAULT_AUDITOR_HISTORY_FILTERS,
 } from './auditor-history-view.utils'
+import { getShiftsAction } from '@/features/shift-management/actions/shift-actions'
+import { overrideLogShift } from '@/features/shift-management/actions/shift-override-actions'
+import type { Shift } from '@/shared/types/shift.types'
 
 interface AuditorHistoryViewProps {
   readOnly?: boolean
@@ -33,11 +36,13 @@ interface AuditorHistoryViewProps {
   canEdit?: boolean
   /** Shows Corrected badges + corrected stage names without Edit button. Analytics page. */
   showCorrections?: boolean
+  /** US-8.2 AC-4: Shows inline shift override selector for supervisors / admins. */
+  canOverrideShift?: boolean
 }
 
 // readOnly: auditors may still export/filter/sort (Export stays enabled; see auditor-history-view-readonly.test)
 // eslint-disable-next-line @typescript-eslint/no-unused-vars -- prop part of API, not used to disable Export
-export function AuditorHistoryView({ readOnly = false, canEdit = false, showCorrections = false }: AuditorHistoryViewProps) {
+export function AuditorHistoryView({ readOnly = false, canEdit = false, showCorrections = false, canOverrideShift = false }: AuditorHistoryViewProps) {
   const shouldFetchCorrections = canEdit || showCorrections
 
   const [rows, setRows]             = useState<AuditorHistoryRecord[]>([])
@@ -52,6 +57,8 @@ export function AuditorHistoryView({ readOnly = false, canEdit = false, showCorr
   const [correctedLogIds, setCorrectedLogIds]     = useState<Set<string>>(new Set())
   const [correctedStageMap, setCorrectedStageMap] = useState<Record<string, string>>({})
   const [editingRecord, setEditingRecord]         = useState<AuditorHistoryRecord | null>(null)
+  // US-8.2 AC-4: shifts for the inline override selector
+  const [shifts, setShifts] = useState<Shift[]>([])
 
   const totalPages = Math.max(1, Math.ceil(totalCount / AUDITOR_HISTORY_PAGE_SIZE))
 
@@ -85,6 +92,18 @@ export function AuditorHistoryView({ readOnly = false, canEdit = false, showCorr
   }, [filters, page, sortBy, sortOrder, shouldFetchCorrections])
 
   useEffect(() => { void loadHistory() }, [loadHistory])
+
+  // US-8.2 AC-4: fetch shifts once when override is available
+  useEffect(() => {
+    if (!canOverrideShift) return
+    getShiftsAction().then(r => { if (r.success && r.shifts) setShifts(r.shifts) }).catch(() => {})
+  }, [canOverrideShift])
+
+  // US-8.2 AC-4: supervisor reassigns the shift on a log entry, then refreshes
+  const handleShiftOverride = useCallback(async (logId: string, shiftId: string) => {
+    await overrideLogShift({ logId, shiftId })
+    void loadHistory()
+  }, [loadHistory])
 
   const onSort = (col: AuditorHistorySortBy) => {
     setPage(1)
@@ -152,6 +171,9 @@ export function AuditorHistoryView({ readOnly = false, canEdit = false, showCorr
             correctedStageMap={correctedStageMap}
             canEdit={canEdit}
             showCorrections={shouldFetchCorrections}
+            canOverrideShift={canOverrideShift}
+            shifts={shifts}
+            onOverrideShift={handleShiftOverride}
             sortBy={sortBy} sortOrder={sortOrder}
             onSort={onSort} onEdit={setEditingRecord}
           />

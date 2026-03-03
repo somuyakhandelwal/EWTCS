@@ -69,6 +69,14 @@ feature-name/
 - Midnight auto-run via GitHub Actions cron (18:30 UTC = 00:00 IST)
 - Manual trigger: `npm run cron:summary`
 
+### `notifications/`
+**EPIC 15: Notifications & Alerts (US-15.5) ✅**
+- Per-user alert preference configuration for supervisors/admins
+- Enable/disable alert types (delayed, escalation, bottleneck, system errors)
+- User-defined alert thresholds with validation
+- Reset-to-default workflow
+- Preference-aware supervisor alert visibility
+
 ## Future Features
 
 Based on EPICS.md, upcoming features may include:
@@ -82,12 +90,6 @@ Based on EPICS.md, upcoming features may include:
 ### `ai-summary/`
 **EPIC 9: Daily AI Summary Generator** *(planned — Phase 3)*
 - Remaining: AI model integration, report formatting, PDF/email export
-
-### `notifications/`
-**EPIC 15: Notifications & Alerts**
-- Alert system
-- Notification delivery
-- User preferences
 
 ## Adding a New Feature
 

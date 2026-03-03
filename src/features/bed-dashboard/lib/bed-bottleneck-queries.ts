@@ -41,6 +41,7 @@ export async function getBedsWithElapsedTime(
       )
       SELECT
         bt.id,
+        bt.ward_id AS "wardId",
         bt.bed_number AS "bedNumber",
         bt.current_stage_id AS "currentStageId",
         bt.patient_start_time AS "patientStartTime",
