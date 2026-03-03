@@ -34,7 +34,8 @@ export interface SignOffParams {
 export async function signOffReport(params: SignOffParams): Promise<SignOffResult> {
     try {
         const session = await requireWriteRole(
-            ['supervisor', 'admin'],
+            'reports',
+
             {
                 actionType: 'REPORT_SIGNED_OFF',
                 entityType: 'report',

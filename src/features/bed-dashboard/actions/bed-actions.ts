@@ -29,7 +29,7 @@ export async function updateBedStage(input: UpdateBedStageInput): Promise<{
   errors?: Record<string, string[]>
 }> {
   try {
-    const session = await requireWriteRole(['nurse', 'supervisor', 'admin', 'housekeeping'], {
+    const session = await requireWriteRole('beds', {
       actionType: 'UPDATE',
       entityType: 'bed',
       entityId: input.bedId,

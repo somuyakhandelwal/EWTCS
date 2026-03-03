@@ -86,7 +86,7 @@ export async function markBedClean(bedId: string): Promise<{
   error?: string
 }> {
   try {
-    const session = await requireWriteRole(['nurse', 'supervisor', 'admin'], {
+    const session = await requireWriteRole('beds', {
       actionType: 'UPDATE',
       entityType: 'bed',
       entityId: bedId,

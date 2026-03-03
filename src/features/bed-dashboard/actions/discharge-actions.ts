@@ -42,7 +42,7 @@ export async function dischargeAndResetBed(input: {
   notes?: string
 }): Promise<DischargeAndResetResult> {
   try {
-    const session = await requireWriteRole(['nurse', 'supervisor', 'admin'], {
+    const session = await requireWriteRole('beds', {
       actionType: 'DISCHARGE',
       entityType: 'bed',
       entityId: input.bedId,

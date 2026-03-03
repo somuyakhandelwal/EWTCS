@@ -53,7 +53,7 @@ describe('signOffReport', () => {
         const result = await signOffReport({ reportDate: TODAY })
 
         expect(requireWriteRole).toHaveBeenCalledWith(
-            ['supervisor', 'admin'],
+            'reports',
             expect.objectContaining({ actionType: 'REPORT_SIGNED_OFF' })
         )
         expect(createSignOff).toHaveBeenCalledWith(
