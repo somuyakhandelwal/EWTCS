@@ -11,10 +11,11 @@
  */
 
 import { describe, it, expect } from 'vitest'
+import { fileURLToPath } from 'node:url'
 
 import * as path from 'path'
 
-const __dirname = import.meta.dirname
+const __dirname = path.dirname(fileURLToPath(import.meta.url))
 
 // ─── Bug 1: duplicate bed number validation (schema) ────────────────────────
 
