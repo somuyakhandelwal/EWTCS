@@ -14,7 +14,10 @@ Detailed breakdown of the project's codebase, feature modules, and critical entr
 Relational schema overview identifying core entities (Beds, Logs, Admissions) and their relationships.
 
 ### [3. Project Scan Report](./project-scan-report.json)
-The technical state file summarizing the findings from the deep-scan documentation process.
+Detailed technical state file summarizing findings from the deep-scan documentation process.
+
+### [4. Training & Onboarding](./training/nurse-training-slides.md)
+Comprehensive training materials for Nurses and Supervisors, including slides, Quick Reference Cards (QRCs), and video scripts.
 
 ---
 
