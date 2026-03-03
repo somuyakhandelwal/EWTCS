@@ -63,15 +63,16 @@ jobs:
             echo "✅ No critical vulnerabilities found."
           fi
 
-  dependency-review:
-    name: Dependency Review
-    runs-on: ubuntu-latest
-    if: github.event_name == 'pull_request'
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-
-      - name: Dependency Review
-        uses: actions/dependency-review-action@v4
-        with:
-          fail-on-severity: high
+  # dependency-review requires GitHub Advanced Security (GHAS / GitHub Enterprise).
+  # Vulnerability scanning is already covered by the security-audit job above
+  # via `npm audit --audit-level=high`. Enable this job only if GHAS is activated
+  # for this repository.
+  # dependency-review:
+  #   name: Dependency Review
+  #   runs-on: ubuntu-latest
+  #   if: github.event_name == 'pull_request'
+  #   steps:
+  #     - uses: actions/checkout@v4
+  #     - uses: actions/dependency-review-action@v4
+  #       with:
+  #         fail-on-severity: high
