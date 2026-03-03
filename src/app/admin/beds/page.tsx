@@ -5,6 +5,7 @@ import { BedManagementClient } from '@/features/bed-management/components/BedMan
 import { AlertTriangle } from 'lucide-react'
 import Link from 'next/link'
 import { Button } from '@/shared/components/ui/button'
+import { Tooltip } from '@/shared/components/ui/tooltip'
 import type { BedManagementData } from '@/features/bed-management/types/bed-management.types'
 
 interface Ward {
@@ -54,10 +55,12 @@ export default async function BedManagementPage() {
         <div className="min-h-screen bg-background text-foreground p-3 sm:p-8">
             <div className="max-w-7xl mx-auto space-y-6">
                 {/* Navigation */}
-                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-                    <Link href="/admin">
-                        <Button variant="outline">← Back to Admin</Button>
-                    </Link>
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4" data-help-id="admin-beds-header">
+                    <Tooltip content="Return to admin overview" side="bottom">
+                        <Link href="/admin">
+                            <Button variant="outline">← Back to Admin</Button>
+                        </Link>
+                    </Tooltip>
                     <div className="text-right">
                         <p className="text-sm text-muted-foreground">
                             Logged in as <span className="text-foreground">{session.username}</span>
@@ -67,10 +70,12 @@ export default async function BedManagementPage() {
                 </div>
 
                 {/* Main Content */}
-                <BedManagementClient
-                    initialBeds={bedsResult.data as BedManagementData[]}
-                    wards={wardsResult.data as Ward[]}
-                />
+                <div data-help-id="admin-beds-table">
+                    <BedManagementClient
+                        initialBeds={bedsResult.data as BedManagementData[]}
+                        wards={wardsResult.data as Ward[]}
+                    />
+                </div>
             </div>
         </div>
     )

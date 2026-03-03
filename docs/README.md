@@ -13,6 +13,7 @@ Start here if you're new to the project:
 ## 📚 Core Documentation
 
 ### Setup & Configuration
+- **[INSTALLATION_GUIDE.md](../INSTALLATION_GUIDE.md)** - Step-by-step production deployment guide for system administrators (EPIC 18)
 - **[DATABASE_SETUP.md](../DATABASE_SETUP.md)** - PostgreSQL installation, database creation, migrations
 - **[CONFIGURATION.md](../CONFIGURATION.md)** - Environment variables, deployment, production setup
 - **[.env.example](../.env.example)** - Environment variable template with detailed comments
@@ -54,9 +55,10 @@ Historical requirements and design documents (for reference only):
 
 ### For System Administrators
 1. Read [README.md](../README.md) - Project overview
-2. Review [DATABASE_SETUP.md](../DATABASE_SETUP.md) - Database requirements
-3. Study [CONFIGURATION.md](../CONFIGURATION.md) - Deployment and production setup
-4. Check [.env.example](../.env.example) - Environment configuration
+2. Follow **[INSTALLATION_GUIDE.md](../INSTALLATION_GUIDE.md)** - Full production deployment walkthrough
+3. Review [DATABASE_SETUP.md](../DATABASE_SETUP.md) - Detailed database reference
+4. Study [CONFIGURATION.md](../CONFIGURATION.md) - Environment variables and production setup
+5. Check [.env.example](../.env.example) - Environment configuration template
 
 ### For Data Analysts
 1. Read [README.md](../README.md) - System overview
@@ -68,6 +70,7 @@ Historical requirements and design documents (for reference only):
 | Task | Documentation |
 |------|---------------|
 | Install the system | [QUICKSTART.md](../QUICKSTART.md) |
+| Deploy to production | [INSTALLATION_GUIDE.md](../INSTALLATION_GUIDE.md) |
 | Set up database | [DATABASE_SETUP.md](../DATABASE_SETUP.md) |
 | Configure environment | [CONFIGURATION.md](../CONFIGURATION.md) & [.env.example](../.env.example) |
 | Contribute code | [CONTRIBUTING.md](../CONTRIBUTING.md) |

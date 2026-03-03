@@ -19,6 +19,12 @@ Detailed technical state file summarizing findings from the deep-scan documentat
 ### [4. Training & Onboarding](./training/nurse-training-slides.md)
 Comprehensive training materials for Nurses and Supervisors, including slides, Quick Reference Cards (QRCs), and video scripts.
 
+### [5. In-App Help System](./HELP_SYSTEM.md)
+Implementation notes for global contextual help, searchable tips, guided tours, and telemetry.
+
+### [6. Help System QA Checklist](./HELP_SYSTEM_QA.md)
+Manual verification checklist mapping acceptance criteria to test steps.
+
 ---
 
 ## 🎯 Architecture Goals

@@ -1,4 +1,4 @@
-import { beforeEach, describe, expect, it, vi } from 'vitest'
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
 process.env.SESSION_SECRET = 'test-session-secret-for-middleware'
 
@@ -19,6 +19,9 @@ vi.mock('jose', () => ({
 
 import { config, middleware } from '@/middleware'
 
+// Cast a mock object to the middleware's expected type without importing NextRequest
+const toReq = (r: unknown) => r as unknown as Parameters<typeof middleware>[0]
+
 function buildRequest(pathname: string, token = 'session-token') {
   return {
     cookies: {
@@ -34,13 +37,13 @@ function buildRequest(pathname: string, token = 'session-token') {
       clone: vi.fn(() => new URL(`http://localhost:3000${pathname}`)),
     },
     url: `http://localhost:3000${pathname}`,
-  } as never
+  }
 }
 
 describe('middleware analytics role access', () => {
   beforeEach(() => {
     vi.clearAllMocks()
-    process.env.NODE_ENV = 'test'
+    vi.stubEnv('NODE_ENV', 'test')
     delete process.env.FORCE_HTTPS
 
     redirectSpy.mockImplementation((url: URL) => ({
@@ -63,7 +66,7 @@ describe('middleware analytics role access', () => {
   })
 
   it('allows auditor to access /analytics', async () => {
-    const response = await middleware(buildRequest('/analytics'))
+    const response = await middleware(toReq(buildRequest('/analytics')))
 
     expect(nextSpy).toHaveBeenCalledTimes(1)
     expect(redirectSpy).not.toHaveBeenCalled()
@@ -79,11 +82,15 @@ describe('middleware analytics role access', () => {
       },
     })
 
-    await middleware(buildRequest('/analytics'))
+    await middleware(toReq(buildRequest('/analytics')))
 
     expect(redirectSpy).toHaveBeenCalledTimes(1)
     const redirectUrl = redirectSpy.mock.calls[0][0] as URL
     expect(redirectUrl.pathname).toBe('/login')
+  })
+
+  afterEach(() => {
+    vi.unstubAllEnvs()
   })
 })
 
@@ -110,9 +117,13 @@ describe('middleware HTTPS enforcement', () => {
     })
   })
 
+  afterEach(() => {
+    vi.unstubAllEnvs()
+  })
+
   it('redirects insecure production requests to HTTPS when enabled', async () => {
-    process.env.NODE_ENV = 'production'
-    process.env.FORCE_HTTPS = 'true'
+    vi.stubEnv('NODE_ENV', 'production')
+    vi.stubEnv('FORCE_HTTPS', 'true')
 
     const request = buildRequest('/dashboard')
     request.nextUrl.hostname = 'example.com'
@@ -121,7 +132,7 @@ describe('middleware HTTPS enforcement', () => {
       return null
     }) as never
 
-    await middleware(request)
+    await middleware(toReq(request))
 
     expect(redirectSpy).toHaveBeenCalledTimes(1)
     const redirectUrl = redirectSpy.mock.calls[0][0] as URL
@@ -132,14 +143,14 @@ describe('middleware HTTPS enforcement', () => {
   })
 
   it('redirects insecure staging requests to HTTPS when enabled', async () => {
-    process.env.NODE_ENV = 'staging'
-    process.env.FORCE_HTTPS = 'true'
+    vi.stubEnv('NODE_ENV', 'staging')
+    vi.stubEnv('FORCE_HTTPS', 'true')
 
     const request = buildRequest('/login')
     request.nextUrl.hostname = 'staging.example.com'
-    request.headers.get = vi.fn(() => 'http') as never
+    request.headers.get = vi.fn(() => 'http')
 
-    await middleware(request)
+    await middleware(toReq(request))
 
     expect(redirectSpy).toHaveBeenCalledTimes(1)
     const redirectUrl = redirectSpy.mock.calls[0][0] as URL
@@ -147,14 +158,14 @@ describe('middleware HTTPS enforcement', () => {
   })
 
   it('allows insecure requests when FORCE_HTTPS=false', async () => {
-    process.env.NODE_ENV = 'production'
-    process.env.FORCE_HTTPS = 'false'
+    vi.stubEnv('NODE_ENV', 'production')
+    vi.stubEnv('FORCE_HTTPS', 'false')
 
     const request = buildRequest('/dashboard')
     request.nextUrl.hostname = 'example.com'
-    request.headers.get = vi.fn(() => 'http') as never
+    request.headers.get = vi.fn(() => 'http')
 
-    const response = await middleware(request)
+    const response = await middleware(toReq(request))
 
     expect(redirectSpy).not.toHaveBeenCalled()
     expect(nextSpy).toHaveBeenCalledTimes(1)
@@ -162,14 +173,14 @@ describe('middleware HTTPS enforcement', () => {
   })
 
   it('does not redirect localhost requests even when HTTPS enforcement is enabled', async () => {
-    process.env.NODE_ENV = 'production'
-    process.env.FORCE_HTTPS = 'true'
+    vi.stubEnv('NODE_ENV', 'production')
+    vi.stubEnv('FORCE_HTTPS', 'true')
 
     const request = buildRequest('/dashboard')
     request.nextUrl.hostname = 'localhost'
-    request.headers.get = vi.fn(() => 'http') as never
+    request.headers.get = vi.fn(() => 'http')
 
-    const response = await middleware(request)
+    const response = await middleware(toReq(request))
 
     expect(redirectSpy).not.toHaveBeenCalled()
     expect(nextSpy).toHaveBeenCalledTimes(1)

@@ -77,6 +77,27 @@ feature-name/
 - Reset-to-default workflow
 - Preference-aware supervisor alert visibility
 
+### `security-scanning/`
+**EPIC 17: Security & Privacy (Automated Vulnerability Scanning) ✅**
+- Automated weekly vulnerability scanning with npm audit
+- Weekly schedule (Monday 00:00 UTC) + on-demand + PR integration
+- SLA tracking with deadline calculation per severity:
+  - Critical: 48 hours
+  - High: 7 days
+  - Medium: 30 days
+  - Low: 90 days
+- Breach detection and escalation levels (none/warning/critical)
+- Slack & email notifications for vulnerability alerts
+- GitHub issue creation for critical vulnerabilities
+- PR comments with scan results and blocking on critical vulns
+- Historical scan archival (90-day artifacts + git history)
+- Dependabot integration for automated dependency updates
+- Multi-format reporting (Markdown, HTML, JSON)
+- Admin-only server actions with audit logging
+- React hooks for client-side report integration
+- UI components for vulnerability and SLA status display
+- See: `docs/SECURITY_SCANNING.md` and `docs/SECURITY_TEAM_RUNBOOK.md`
+
 ## Future Features
 
 Based on EPICS.md, upcoming features may include:
