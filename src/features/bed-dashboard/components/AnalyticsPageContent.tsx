@@ -106,7 +106,11 @@ export function AnalyticsPageContent({
         </div>
         <div data-export-id="export-auditor-history" className="print-section print-no-break">
           <Suspense fallback={<SectionSkeleton />}>
-            <AuditorHistoryView readOnly={isAuditMode} showCorrections />
+            <AuditorHistoryView
+              readOnly={isAuditMode}
+              showCorrections
+              canOverrideShift={!isAuditMode && (role === 'supervisor' || role === 'admin')}
+            />
           </Suspense>
         </div>
         <div data-export-id="export-tat" className="print-section print-no-break">

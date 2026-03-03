@@ -24,9 +24,12 @@ export async function updateBedStage(input: UpdateBedStageInput): Promise<{
   success: boolean
   data?: Awaited<ReturnType<typeof updateBedStageInDB>>
   error?: string
-  reason?: string // Why transition wasn't allowed or why override is needed
-  requiresOverride?: boolean // If true, transition needs supervisor approval
+  reason?: string
+  requiresOverride?: boolean
   errors?: Record<string, string[]>
+  /** US-16.4: true when bed state changed since the client queued this operation */
+  conflict?: boolean
+  serverStageId?: string | null
 }> {
   try {
     const session = await requireWriteRole(['nurse', 'supervisor', 'admin', 'housekeeping'], {
@@ -52,16 +55,29 @@ export async function updateBedStage(input: UpdateBedStageInput): Promise<{
       return { success: false, error: wardError }
     }
 
-    // NEW: Get current bed to validate transition
     const bed = await getBedById(result.data.bedId)
     if (!bed) {
-      return {
-        success: false,
-        error: 'Bed not found',
-      }
+      return { success: false, error: 'Bed not found' }
     }
 
-    // NEW: Validate stage transition (US-2.2)
+    // US-16.4: Conflict detection — bed may have been moved by another user while offline.
+    // Compare expected stage (what client saw when queuing) vs actual current stage.
+    if (result.data.expectedStageId && bed.currentStageId !== result.data.expectedStageId) {
+      await logAudit({
+        actionType: 'SYNC_CONFLICT',
+        entityType: 'stage_transition',
+        entityId: result.data.bedId,
+        performedBy: session.userId,
+        changes: {
+          expectedStageId: result.data.expectedStageId,
+          actualStageId: bed.currentStageId,
+          enqueuedAt: result.data.enqueuedAt,
+        },
+      }).catch(() => {})
+      return { success: false, conflict: true, serverStageId: bed.currentStageId ?? '' }
+    }
+
+    // Validate stage transition (US-2.2)
     const validationResult = await validateTransition(
       bed.currentStageId,
       result.data.toStageId,

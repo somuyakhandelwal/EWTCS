@@ -1,8 +1,33 @@
 // Discharge Database Queries
 // US-2.3: Reset Bed on Patient Discharge
+// US-8.2: Auto-tag discharge log entries with the active shift
 // Extracted from discharge-actions.ts to stay under the 200-line file limit.
 
 import type { PoolClient } from 'pg'
+
+/**
+ * US-8.2: Inline subquery that resolves the active shift for the current
+ * wall-clock time. Handles the Night shift that crosses midnight
+ * (start_time > end_time). Identical pattern to INSERT_BED_STAGE_LOG_SQL
+ * in bed-mutations.constants.ts — keep both in sync.
+ */
+const SHIFT_AUTOTAG_SUBQUERY = `
+  (
+    SELECT s.id
+    FROM   shifts s
+    WHERE  s.is_active = TRUE
+      AND (
+        (s.start_time <= s.end_time
+           AND NOW()::time >= s.start_time
+           AND NOW()::time <  s.end_time)
+        OR
+        (s.start_time > s.end_time
+           AND (NOW()::time >= s.start_time OR NOW()::time < s.end_time))
+      )
+    ORDER BY s.is_default DESC, s.created_at ASC
+    LIMIT 1
+  )
+`
 
 export interface BedDischargeRow {
   id: string
@@ -76,18 +101,22 @@ export async function insertDischargeLogs(
       ? now.getTime() - new Date(bed.lastStageChange).getTime()
       : null
     await client.query(
+      // US-8.2: auto-tag shift_id via inline subquery (midnight-safe)
       `INSERT INTO bed_stage_logs
-         (bed_id, from_stage_id, to_stage_id, changed_by_user_id, duration_in_previous_stage_ms, notes)
-       VALUES ($1, $2, $3, $4, $5, $6)`,
+         (bed_id, from_stage_id, to_stage_id, changed_by_user_id,
+          duration_in_previous_stage_ms, notes, shift_id)
+       VALUES ($1, $2, $3, $4, $5, $6, ${SHIFT_AUTOTAG_SUBQUERY})`,
       [bedId, bed.currentStageId, dischargeStageId, changedByUserId, durationInPreviousStageMs, notes]
     )
   }
 
   // Step 2: Discharge Process → Cleaning (auto-advanced, 0ms duration)
+  // US-8.2: auto-tag shift_id via inline subquery (midnight-safe)
   await client.query(
     `INSERT INTO bed_stage_logs
-       (bed_id, from_stage_id, to_stage_id, changed_by_user_id, duration_in_previous_stage_ms, notes)
-     VALUES ($1, $2, $3, $4, $5, $6)`,
+       (bed_id, from_stage_id, to_stage_id, changed_by_user_id,
+        duration_in_previous_stage_ms, notes, shift_id)
+     VALUES ($1, $2, $3, $4, $5, $6, ${SHIFT_AUTOTAG_SUBQUERY})`,
     [bedId, dischargeStageId, cleaningStageId, changedByUserId, 0, 'Auto-advanced to Cleaning on patient discharge']
   )
 }
@@ -120,11 +149,13 @@ export async function archiveAndResetBed(
     ? admittedAt.getTime() - new Date(prevDischarge.rows[0].discharged_at).getTime()
     : null
 
-  // Step 3: Archive to patient_admissions (includes US-3.4 TAT column)
+  // Step 3: Archive to patient_admissions (includes US-3.4 TAT + US-8.2 shift_id)
   const admissionResult = await client.query<{ id: string }>(
+    // US-8.2: tag the admission with the shift active at discharge time
     `INSERT INTO patient_admissions
-       (bed_id, admitted_at, discharged_at, total_duration_ms, discharged_by_user_id, notes, tat_from_previous_discharge_ms)
-     VALUES ($1, $2, $3, $4, $5, $6, $7)
+       (bed_id, admitted_at, discharged_at, total_duration_ms, discharged_by_user_id,
+        notes, tat_from_previous_discharge_ms, shift_id)
+     VALUES ($1, $2, $3, $4, $5, $6, $7, ${SHIFT_AUTOTAG_SUBQUERY})
      RETURNING id`,
     [bedId, admittedAt, now, totalDurationMs, userId, notes, tatFromPreviousDischargeMs]
   )

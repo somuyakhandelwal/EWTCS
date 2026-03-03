@@ -9,16 +9,14 @@ import { useElapsedTime } from '../hooks/useElapsedTime'
 import { CleaningActions, isCleaningStage } from './CleaningActions'
 import { BedBottleneckInfo } from './BedBottleneckInfo'
 import { BedCardVisualBadges } from './BedCardVisualBadges'
+import { BedCardUndoSection } from './BedCardUndoSection'
 import { cn } from '@/shared/lib/utils'
 import { highlightMatch } from '../lib/highlight-match'
 import { StageIcon } from './StageIcon'
 
 const ACKNOWLEDGE_PAUSE_MS = 30_000
 
-/** Controls which time information is shown on the bed card.
- * - 'nurse'      → "In Stage" (time in current stage, from lastStageChange). Resets on every stage change.
- * - 'supervisor' → Both "In Stage" AND "Patient Total" (total time since admission, from patientStartTime).
- */
+/** 'nurse' = In Stage timer only. 'supervisor' = In Stage + Patient Total (since admission). */
 export type BedCardViewMode = 'nurse' | 'supervisor'
 
 interface BedCardProps {
@@ -26,8 +24,6 @@ interface BedCardProps {
   onClick?: (bed: BedWithElapsedTime) => void
   onContextMenu?: (event: MouseEvent<HTMLDivElement>, bed: BedWithElapsedTime) => void
   onReasonSelect?: (bedId: string, reason: DispositionDelayReason) => void
-  onMarkClean?: (bedId: string) => void
-  isMarkCleanUpdating?: boolean
   showUpdated?: boolean
   errorMessage?: string | null
   searchQuery?: string
@@ -40,12 +36,14 @@ interface BedCardProps {
   animationEnabled?: boolean
   /** Controls which timers are shown. Defaults to 'nurse'. */
   viewMode?: BedCardViewMode
+  /** US-16.2: true when this bed has a write queued for offline sync */
+  isQueuedOffline?: boolean
 }
 
 export const BedCard = memo(function BedCard({
   bed, onClick, onContextMenu, onReasonSelect, showUpdated = false, errorMessage = null,
   searchQuery = '', showUndo = false, onUndo, undoTimerSeconds = 0, animationEnabled = true,
-  isUndoing = false,
+  isUndoing = false, isQueuedOffline = false,
 }: BedCardProps) {
   const rawStageName = bed.currentStage?.name || 'Empty'
   const stageName = rawStageName === 'Cleaning' ? 'In Cleaning' : rawStageName
@@ -130,19 +128,19 @@ export const BedCard = memo(function BedCard({
           </div>
           {onContextMenu && <p className="text-[10px] text-muted-foreground">Tap or right-click to update stage</p>}
           {showUpdated && <p className="text-[10px] text-status-occupied" role="status">Updated</p>}
+          {isQueuedOffline && (
+            <p className="text-[10px] text-amber-500 font-medium" role="status" aria-label="Update queued — will sync when reconnected">
+              ⏳ Pending sync
+            </p>
+          )}
           {errorMessage && <p className="text-[10px] text-destructive" role="alert">{errorMessage}</p>}
           {showUndo && onUndo && (
-            <div className="mt-2 flex items-center gap-2">
-              <button
-                className="px-3 py-1 bg-primary hover:opacity-90 text-primary-foreground text-xs rounded transition-colors font-semibold shadow focus:ring-2 focus:ring-ring focus:outline-none disabled:opacity-50 disabled:cursor-not-allowed"
-                onClick={e => { e.stopPropagation(); onUndo(); }}
-                disabled={isUndoing}
-                aria-label={isUndoing ? 'Undoing…' : `Undo last action (expires in ${undoTimerSeconds} seconds)`}
-              >{isUndoing ? 'Undoing…' : 'Undo'}</button>
-              {!isUndoing && (
-                <span className="text-xs text-muted-foreground" aria-hidden="true">({undoTimerSeconds}s)</span>
-              )}
-            </div>
+            <BedCardUndoSection
+              show={showUndo}
+              onUndo={onUndo}
+              isUndoing={isUndoing}
+              timerSeconds={undoTimerSeconds}
+            />
           )}
           {isBottleneck && (
             <BedBottleneckInfo

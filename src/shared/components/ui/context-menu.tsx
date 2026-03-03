@@ -8,7 +8,7 @@ export interface ContextMenuItem {
   label: React.ReactNode
   icon?: React.ReactNode
   disabled?: boolean
-  onSelect: () => void
+  onSelect: () => void | Promise<void>
   className?: string
 }
 
@@ -173,7 +173,10 @@ export function ContextMenu({
                   if (item.disabled) {
                     return
                   }
-                  item.onSelect()
+                  // onSelect may return a Promise (async stage-update handlers).
+                  // We must not let an unhandled rejection escape to the browser.
+                  const result = item.onSelect() as unknown
+                  if (result instanceof Promise) result.catch(() => {})
                   onClose()
                 }}
                 role="menuitem"

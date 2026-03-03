@@ -1,139 +1,65 @@
 // Real-time Bed Updates Hook
-// Epic 1: Nurse Desk Bed Dashboard
 // US-1.2: Display Real-Time Bed Status
+// US-16.1: Cache Data Locally
+// US-16.2: Enable Offline UI
 
 'use client'
 
-import { useState, useEffect, useRef, useCallback } from 'react'
-import { getBedGridData } from '../actions/bed-grid-actions'
-import { getStableBeds } from '../lib/bed-diff'
-import { realtimeConfig } from '@/shared/config/realtime'
-import {
-  getRetryInterval,
-  handleConnectionError,
-  resetConnectionStatus,
-  pauseConnectionStatus,
-  resumeConnectionStatus,
-} from '../lib/connection-manager'
+import { useCallback, useEffect, useRef } from 'react'
+import { handleOnlineStatus, pauseConnectionStatus, resumeConnectionStatus } from '../lib/connection-manager'
+import { useNetworkStatus } from './useNetworkStatus'
+import { useFetchBedData } from './useFetchBedData'
+import { usePollingEngine } from './usePollingEngine'
 import type { BedGridData } from '../types/bed'
-import type { 
-  UseRealtimeBedUpdatesReturn, 
-  ConnectionStatusDetails 
-} from '../types/realtime'
+import type { UseRealtimeBedUpdatesReturn } from '../types/realtime'
 
 /**
- * Custom hook for real-time bed status updates
- * Implements intelligent polling with error handling and connection status tracking
+ * Composes useFetchBedData + usePollingEngine + useNetworkStatus to deliver
+ * real-time bed updates with offline cache fallback (US-16.1 / US-16.2).
  */
 export function useRealtimeBedUpdates(
-  initialData: BedGridData
+  initialData: BedGridData,
 ): UseRealtimeBedUpdatesReturn<BedGridData> {
-  const [data, setData] = useState<BedGridData>(initialData)
-  const [isLoading, setIsLoading] = useState(false)
-  const [connectionStatus, setConnectionStatus] = useState<ConnectionStatusDetails>({
-    status: 'connected',
-    lastUpdate: new Date(),
-    errorCount: 0,
+  const { isOnline } = useNetworkStatus()
+  const isOnlineRef = useRef(isOnline)
+
+  const {
+    data,
+    isLoading,
+    connectionStatus,
+    setConnectionStatus,
+    cacheTimestamp,
+    fetchData,
+    abortControllerRef,
+    retryTimeoutRef,
+    errorCountRef,
+  } = useFetchBedData(initialData, isOnlineRef)
+
+  const { startPolling, stopPolling } = usePollingEngine(fetchData, isOnline, {
+    retryTimeoutRef,
+    abortControllerRef,
+    isOnlineRef,
+    onPause: () => setConnectionStatus(pauseConnectionStatus),
+    onResume: () => setConnectionStatus(resumeConnectionStatus),
   })
 
-  const pollIntervalRef = useRef<NodeJS.Timeout | null>(null)
-  const retryTimeoutRef = useRef<NodeJS.Timeout | null>(null)
-  const abortControllerRef = useRef<AbortController | null>(null)
-  const isVisibleRef = useRef(true)
-  const errorCountRef = useRef(0)
+  // React to online ↔ offline transitions
+  useEffect(() => {
+    isOnlineRef.current = isOnline
 
-  /**
-   * Fetch latest bed data from server
-   */
-  const fetchData = useCallback(async () => {
-    if (!realtimeConfig.enabled) return
-
-    try {
-      // Cancel previous request if still in flight
-      if (abortControllerRef.current) {
-        abortControllerRef.current.abort()
-      }
-
-      abortControllerRef.current = new AbortController()
-      setIsLoading(true)
-
-      const result = await getBedGridData()
-
-      if (result.success && result.data) {
-        // Use smart diffing to prevent unnecessary updates
-        setData((prevData) => ({
-          ...result.data!,
-          beds: getStableBeds(prevData.beds, result.data!.beds),
-        }))
-
-        errorCountRef.current = 0
-        setConnectionStatus(resetConnectionStatus())
-      } else {
-        throw new Error(result.error || 'Failed to fetch bed data')
-      }
-    } catch (error) {
-      // Ignore abort errors (user-initiated cancellation)
-      if (error instanceof Error && error.name === 'AbortError') {
-        return
-      }
-
-      const errorMessage = error instanceof Error ? error.message : 'Unknown error'
-      
-      errorCountRef.current += 1
-      setConnectionStatus((prev) => handleConnectionError(prev, errorMessage))
-
-      // Schedule retry with exponential backoff
-      const retryInterval = getRetryInterval(errorCountRef.current)
-      retryTimeoutRef.current = setTimeout(() => {
-        fetchData()
-      }, retryInterval)
-    } finally {
-      setIsLoading(false)
+    if (!isOnline) {
+      stopPolling()
+      // fetchData detects isOnlineRef.current=false and loads cache + updates status
+      void fetchData()
+    } else {
+      setConnectionStatus((prev) => handleOnlineStatus(prev))
+      stopPolling()
+      void fetchData()
+      startPolling()
     }
-  }, [])
+  }, [isOnline, fetchData, startPolling, stopPolling, setConnectionStatus])
 
-  /**
-   * Start polling
-   */
-  const startPolling = useCallback(() => {
-    if (!realtimeConfig.enabled) return
-    if (pollIntervalRef.current) return // Already polling
-
-    pollIntervalRef.current = setInterval(() => {
-      if (isVisibleRef.current) {
-        fetchData()
-      }
-    }, realtimeConfig.pollingInterval)
-  }, [fetchData])
-
-  /**
-   * Stop polling
-   */
-  const stopPolling = useCallback(() => {
-    if (pollIntervalRef.current) {
-      clearInterval(pollIntervalRef.current)
-      pollIntervalRef.current = null
-    }
-    if (retryTimeoutRef.current) {
-      clearTimeout(retryTimeoutRef.current)
-      retryTimeoutRef.current = null
-    }
-    if (abortControllerRef.current) {
-      abortControllerRef.current.abort()
-      abortControllerRef.current = null
-    }
-  }, [])
-
-  /**
-   * Manual refresh
-   */
-  const refresh = useCallback(async () => {
-    await fetchData()
-  }, [fetchData])
-
-  /**
-   * Manual reconnect
-   */
+  // Manual reconnect — resets error state and re-starts the poll cycle
   const reconnect = useCallback(() => {
     errorCountRef.current = 0
     setConnectionStatus({
@@ -142,48 +68,22 @@ export function useRealtimeBedUpdates(
       errorCount: 0,
     })
     stopPolling()
-    fetchData()
+    void fetchData()
     startPolling()
-  }, [connectionStatus.lastUpdate, fetchData, startPolling, stopPolling])
-
-  /**
-   * Handle visibility change (pause polling when tab inactive)
-   */
-  useEffect(() => {
-    const handleVisibilityChange = () => {
-      isVisibleRef.current = !document.hidden
-
-      if (document.hidden) {
-        setConnectionStatus(pauseConnectionStatus)
-      } else {
-        // Resume and fetch immediately
-        setConnectionStatus(resumeConnectionStatus)
-        fetchData()
-      }
-    }
-
-    document.addEventListener('visibilitychange', handleVisibilityChange)
-    return () => document.removeEventListener('visibilitychange', handleVisibilityChange)
-  }, [fetchData])
-
-  /**
-   * Start/stop polling on mount/unmount
-   */
-  useEffect(() => {
-    if (realtimeConfig.enabled) {
-      startPolling()
-    }
-
-    return () => {
-      stopPolling()
-    }
-  }, [startPolling, stopPolling])
+  }, [connectionStatus.lastUpdate, errorCountRef, fetchData, startPolling, stopPolling, setConnectionStatus])
 
   return {
     data,
     connectionStatus,
     isLoading,
-    refresh,
+    refresh: fetchData,
     reconnect,
+    isOffline: !isOnline,
+    cacheTimestamp,
   }
 }
+
+// Re-export sub-hooks so consumers can import from a single entry-point if needed
+export { useFetchBedData } from './useFetchBedData'
+export { usePollingEngine } from './usePollingEngine'
+

@@ -31,6 +31,8 @@ describe('AuditorHistoryView audit mode read access', () => {
             transitionTime: new Date('2026-02-20T10:00:00.000Z'),
             durationInPreviousStageMs: 1000,
             notes: null,
+            shiftId: null,
+            shiftName: null,
           },
         ],
         totalCount: 1,
