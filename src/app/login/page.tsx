@@ -1,6 +1,6 @@
 'use client'
 
-import { type FormEvent, useState } from 'react'
+import { type FormEvent, useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { Button } from '@/shared/components/ui/button'
 import { Input } from '@/shared/components/ui/input'
@@ -12,10 +12,39 @@ import { motion } from 'framer-motion'
 export default function LoginPage() {
     const router = useRouter()
     const [pending, setPending] = useState(false)
+    const [isRestoring, setIsRestoring] = useState(true)
     const [state, setState] = useState<{
         message?: string
         errors?: Record<string, string[]>
     }>({})
+
+    useEffect(() => {
+        const attemptRestore = async () => {
+            const token = localStorage.getItem('kiosk_recovery_token')
+            if (!token) {
+                setIsRestoring(false)
+                return
+            }
+            try {
+                const response = await fetch('/api/auth/restore-kiosk', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ kioskToken: token })
+                })
+                const result = await response.json()
+                if (result.success) {
+                    router.push(result.redirectTo || '/dashboard')
+                    router.refresh()
+                } else {
+                    localStorage.removeItem('kiosk_recovery_token')
+                    setIsRestoring(false)
+                }
+            } catch {
+                setIsRestoring(false)
+            }
+        }
+        attemptRestore()
+    }, [router])
 
     const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
         event.preventDefault()
@@ -43,7 +72,12 @@ export default function LoginPage() {
                     message: result.message,
                     errors: result.errors,
                 })
+                setPending(false)
                 return
+            }
+
+            if (result.kioskToken) {
+                localStorage.setItem('kiosk_recovery_token', result.kioskToken)
             }
 
             router.push(result.redirectTo || '/dashboard')
@@ -53,6 +87,20 @@ export default function LoginPage() {
             setState({ message: 'Unable to sign in right now. Please try again.' })
             setPending(false)
         }
+    }
+
+    if (isRestoring) {
+        return (
+            <div className="flex min-h-screen items-center justify-center bg-background px-4 py-12 relative overflow-hidden">
+                <div className="absolute top-0 left-0 w-full h-full overflow-hidden pointer-events-none">
+                    <div className="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] bg-muted/50 rounded-full blur-[100px]" />
+                    <div className="absolute bottom-[-10%] right-[-10%] w-[40%] h-[40%] bg-muted/50 rounded-full blur-[100px]" />
+                </div>
+                <div className="text-center text-muted-foreground animate-pulse text-lg relative z-10">
+                    Restoring kiosk session...
+                </div>
+            </div>
+        )
     }
 
     return (
