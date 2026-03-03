@@ -51,18 +51,25 @@ export async function createSession(
         .sign(encodedKey)
 
     const cookieStore = await cookies()
-    cookieStore.set('session', session, {
-        httpOnly: true,
-        secure: process.env.NODE_ENV === 'production',
-        expires: expiresAt,
-        maxAge: SESSION_MAX_AGE_MS / 1000,  // seconds mein
-        sameSite: 'lax',
-        path: '/',
-        ...(kiosk && { maxAge: 365 * 24 * 60 * 60 }),
-    })
-
     if (kiosk) {
+        cookieStore.set('session', session, {
+            httpOnly: true,
+            secure: process.env.NODE_ENV === 'production',
+            expires: expiresAt,
+            maxAge: 365 * 24 * 60 * 60,
+            sameSite: 'lax',
+            path: '/',
+        })
+
         cookieStore.set('kiosk_browser_session', 'active', {
+            httpOnly: true,
+            secure: process.env.NODE_ENV === 'production',
+            sameSite: 'lax',
+            path: '/',
+        })
+    } else {
+        // Normal sessions: no expires/maxAge so it's cleared when browser closes
+        cookieStore.set('session', session, {
             httpOnly: true,
             secure: process.env.NODE_ENV === 'production',
             sameSite: 'lax',
@@ -159,11 +166,10 @@ async function renewSession(sessionData: SessionPayload) {
         .sign(encodedKey)
 
     const cookieStore = await cookies()
+    // Renewed normal sessions remain as browser session cookies
     cookieStore.set('session', newSession, {
         httpOnly: true,
         secure: process.env.NODE_ENV === 'production',
-        expires: expiresAt,
-        maxAge: SESSION_MAX_AGE_MS / 1000,
         sameSite: 'lax',
         path: '/',
     })

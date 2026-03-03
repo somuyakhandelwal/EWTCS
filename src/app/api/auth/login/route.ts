@@ -75,12 +75,14 @@ export async function POST(request: Request) {
     )
 
     let kioskOpts: KioskOptions | undefined
+    let kioskTokenForClient: string | undefined
     if (kioskMode) {
       const boundIp = request.headers.get('x-forwarded-for')?.split(',')[0].trim()
         ?? request.headers.get('x-real-ip')
         ?? 'unknown'
       const kioskSessionId = await createKioskSession(user.id, boundIp)
       kioskOpts = { isKiosk: true, kioskIp: boundIp, kioskSessionId }
+      kioskTokenForClient = kioskSessionId
     }
 
     await createSession(user.id, user.username, user.role, kioskOpts)
@@ -91,7 +93,7 @@ export async function POST(request: Request) {
         ? '/supervisor'
         : '/dashboard'
 
-    return NextResponse.json({ success: true, redirectTo })
+    return NextResponse.json({ success: true, redirectTo, kioskToken: kioskTokenForClient })
   } catch (error) {
     logger.error('Login API error', error instanceof Error ? error : undefined)
     return NextResponse.json({ success: false, message: 'Internal server error' }, { status: 500 })
