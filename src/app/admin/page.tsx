@@ -13,6 +13,8 @@ import CreateUserDialog from "@/features/user-management/components/CreateUserDi
 import { KioskSessionsPanel } from "@/features/user-management/components/KioskSessionsPanel"
 import { DailySummaryTrigger } from "@/features/ai-summary/components/DailySummaryTrigger"
 import { DailySummaryHistory } from "@/features/ai-summary/components/DailySummaryHistory"
+import { BackupStatusPanel } from "@/features/data-retention/components/BackupStatusPanel"
+import { SystemHealthPanel } from "@/features/system-health/components/SystemHealthPanel"
 
 export default async function AdminDashboard() {
     const session = await verifyActiveSession()
@@ -112,6 +114,36 @@ export default async function AdminDashboard() {
 
                 {/* Kiosk Sessions — US-5.3 */}
                 <KioskSessionsPanel />
+
+                {/* System Health & Error Monitoring — US-13.5 */}
+                <Card className="bg-card border-border">
+                    <CardHeader>
+                        <div>
+                            <CardTitle className="text-xl text-foreground">System Health</CardTitle>
+                            <p className="text-sm text-muted-foreground mt-1">
+                                Live database health, connection pool, and error event monitoring
+                            </p>
+                        </div>
+                    </CardHeader>
+                    <CardContent>
+                        <SystemHealthPanel />
+                    </CardContent>
+                </Card>
+
+                {/* Database Backups — US-13.4 */}
+                <Card className="bg-card border-border">
+                    <CardHeader>
+                        <div>
+                            <CardTitle className="text-xl text-foreground">Database Backups</CardTitle>
+                            <p className="text-sm text-muted-foreground mt-1">
+                                Automated daily backups · runs locally, data never leaves the server
+                            </p>
+                        </div>
+                    </CardHeader>
+                    <CardContent>
+                        <BackupStatusPanel />
+                    </CardContent>
+                </Card>
 
                 {/* AI Daily Summaries — EPIC 9 */}
                 <Card className="bg-card border-border">
