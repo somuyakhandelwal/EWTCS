@@ -4,6 +4,7 @@ import { KioskBanner } from "@/features/auth/components/KioskBanner"
 import { redirect } from "next/navigation"
 import { AlertTriangle } from "lucide-react"
 import Link from "next/link"
+import { Tooltip } from "@/shared/components/ui/tooltip"
 
 import { verifyActiveSession } from "@/shared/lib/active-session"
 import { getBedGridData } from "@/features/bed-dashboard/actions/bed-grid-actions"
@@ -25,7 +26,7 @@ export default async function SupervisorDashboard() {
                 <KioskBanner username={session.username} kioskIp={session.kioskIp} />
             )}
             <div className="max-w-7xl mx-auto space-y-6 sm:space-y-8">
-                <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+                <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between" data-help-id="supervisor-header">
                     <div>
                         <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-foreground">
                             Supervisor {session.username}
@@ -36,13 +37,15 @@ export default async function SupervisorDashboard() {
                         <div className="p-2 bg-amber-900/20 border border-amber-900/50 rounded-full">
                             <ClipboardList className="h-6 w-6 text-amber-500" />
                         </div>
-                        <Link
-                            href="/analytics"
-                            className="flex items-center gap-2 px-4 py-2 rounded-lg bg-muted hover:bg-zinc-700 border border-border hover:border-zinc-500 text-card-foreground hover:text-foreground text-sm font-medium transition-colors"
-                        >
-                            <BarChart2 className="h-4 w-4 text-blue-400" />
-                            Analytics
-                        </Link>
+                        <Tooltip content="Open analytics dashboard" side="bottom">
+                            <Link
+                                href="/analytics"
+                                className="flex items-center gap-2 px-4 py-2 rounded-lg bg-muted hover:bg-zinc-700 border border-border hover:border-zinc-500 text-card-foreground hover:text-foreground text-sm font-medium transition-colors"
+                            >
+                                <BarChart2 className="h-4 w-4 text-blue-400" />
+                                Analytics
+                            </Link>
+                        </Tooltip>
                         <LogoutButton />
                     </div>
                 </div>

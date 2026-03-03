@@ -64,15 +64,17 @@ export function SupervisorClientShell({ initialData }: SupervisorClientShellProp
         <>
             <AlertPreferencesPanel onPreferencesChange={setAlertPreferences} />
 
-            <SupervisorBedOverview
-                initialData={data}
-                alertPreferences={alertPreferences}
-                onAddTempBed={() => setModalOpen(true)}
-                onRemoveTempBed={handleRemoveTempBed}
-                isRemovingId={removingId}
-                onAddVirtualBed={() => setVirtualModalOpen(true)}
-                onRemoveVirtualBed={handleRemoveVirtualBed}
-            />
+            <div data-help-id="supervisor-overview">
+                <SupervisorBedOverview
+                    initialData={data}
+                    alertPreferences={alertPreferences}
+                    onAddTempBed={() => setModalOpen(true)}
+                    onRemoveTempBed={handleRemoveTempBed}
+                    isRemovingId={removingId}
+                    onAddVirtualBed={() => setVirtualModalOpen(true)}
+                    onRemoveVirtualBed={handleRemoveVirtualBed}
+                />
+            </div>
 
             {/* EPIC 7: Supervisors access "Edit History" directly on this page (AC 1).
                 canEdit=true enables the Edit button per row and the EditHistoryModal. */}

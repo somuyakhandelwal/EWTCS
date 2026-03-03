@@ -29,7 +29,11 @@ export default async function ChangePasswordPage() {
         redirect('/dashboard')
     }
 
-    return <ChangePasswordForm />
+    return (
+        <div data-help-id="change-password-form">
+            <ChangePasswordForm />
+        </div>
+    )
 }
 
 export const metadata = {

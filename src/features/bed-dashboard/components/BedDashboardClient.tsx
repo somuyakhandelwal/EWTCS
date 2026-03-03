@@ -4,6 +4,7 @@
 import { useCallback, useState, useTransition } from 'react'
 import { MapPin } from 'lucide-react'
 import { Button } from '@/shared/components/ui/button'
+import { Tooltip } from '@/shared/components/ui/tooltip'
 import { BedGrid } from './BedGrid'
 import { ConnectionStatus } from './ConnectionStatus'
 import { OfflineBanner } from './OfflineBanner'
@@ -67,10 +68,8 @@ export function BedDashboardClient({
     handleDischargeConfirm: originalHandleDischargeConfirm,
     closeDischargeModal,
   } = useBedStageUpdate(realtimeData)
-
   const offlineQueue = useOfflineQueue()
   const [, startTransition] = useTransition()
-
   const baseHandleReasonSelect = useCallback(
     async (bedId: string, reason: DispositionDelayReason) => {
       await recordDispositionDelayReason({ bedId, reason })
@@ -133,40 +132,44 @@ export function BedDashboardClient({
       )}
 
       {/* Action Bar (Virtual Bed / Settings / Connection) */}
-      <div className="flex justify-end items-center gap-2">
-        <Button
-          variant="outline"
-          size="sm"
-          onClick={() => setVirtualBedModalOpen(true)}
-          className="flex items-center gap-1.5 h-8 px-3 rounded-lg border-status-virtual/30 bg-status-virtual/5 text-status-virtual hover:bg-status-virtual/10 transition-colors font-semibold"
-          title="Add virtual (hallway/stretcher) bed"
-          aria-label="Add virtual hallway or stretcher bed"
-        >
-          <MapPin className="h-3.5 w-3.5" aria-hidden="true" />
-          <span className="text-xs font-medium">Add Virtual Bed</span>
-        </Button>
+      <div className="flex justify-end items-center gap-2" data-help-id="dashboard-actions">
+        <Tooltip content="Create temporary virtual bed" side="left">
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => setVirtualBedModalOpen(true)}
+            className="flex items-center gap-1.5 h-8 px-3 rounded-lg border-status-virtual/30 bg-status-virtual/5 text-status-virtual hover:bg-status-virtual/10 transition-colors font-semibold"
+            title="Add virtual (hallway/stretcher) bed"
+            aria-label="Add virtual hallway or stretcher bed"
+          >
+            <MapPin className="h-3.5 w-3.5" aria-hidden="true" />
+            <span className="text-xs font-medium">Add Virtual Bed</span>
+          </Button>
+        </Tooltip>
         <DashboardSettings enabled={settings.confirmCriticalStages} onToggle={toggleConfirmation} />
         <ConnectionStatus status={connectionStatus} onReconnect={reconnect} />
       </div>
 
-      <BedGrid
-        data={displayData}
-        onRefresh={handleRefresh}
-        onStageSelect={handleStageSelectOptimistic}
-        onReasonSelect={canRecordDispositionReasons ? handleReasonSelect : undefined}
-        tatSummary={tatSummary}
-        updatingBedId={updatingBedId}
-        updatingStageId={updatingStageId}
-        lastUpdatedBedId={lastUpdatedBedId}
-        lastUpdatedStageId={lastUpdatedStageId}
-        errorByBedId={errorByBedId}
-        isRefreshing={isLoading}
-        undoState={undoState}
-        onUndo={handleUndo}
-        isUndoing={isUndoing}
-        isOffline={isOffline}
-        queuedBedIds={offlineQueue.queuedBedIds}
-      />
+      <div data-help-id="dashboard-grid">
+        <BedGrid
+          data={displayData}
+          onRefresh={handleRefresh}
+          onStageSelect={handleStageSelectOptimistic}
+          onReasonSelect={canRecordDispositionReasons ? handleReasonSelect : undefined}
+          tatSummary={tatSummary}
+          updatingBedId={updatingBedId}
+          updatingStageId={updatingStageId}
+          lastUpdatedBedId={lastUpdatedBedId}
+          lastUpdatedStageId={lastUpdatedStageId}
+          errorByBedId={errorByBedId}
+          isRefreshing={isLoading}
+          undoState={undoState}
+          onUndo={handleUndo}
+          isUndoing={isUndoing}
+          isOffline={isOffline}
+          queuedBedIds={offlineQueue.queuedBedIds}
+        />
+      </div>
       {undoError && (
         <div className="text-center text-xs text-red-500 font-semibold mt-2">{undoError}</div>
       )}

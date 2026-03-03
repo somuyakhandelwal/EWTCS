@@ -19,7 +19,7 @@ export default function UserManual() {
 
     return (
         <div className="min-h-screen bg-gray-50 text-gray-900 p-4 md:p-8 print:p-0 print:bg-white">
-            <div className="max-w-6xl mx-auto flex flex-col md:flex-row justify-between items-center mb-8 print:hidden">
+            <div data-help-id="manual-header" className="max-w-6xl mx-auto flex flex-col md:flex-row justify-between items-center mb-8 print:hidden">
                 <div>
                     <h1 className="text-4xl font-bold text-blue-900">EWTCS User Manual</h1>
                     <p className="text-gray-600 mt-2">Comprehensive guide to using the system</p>
@@ -44,7 +44,7 @@ export default function UserManual() {
                 </div>
             </div>
 
-            <div className="max-w-6xl mx-auto grid grid-cols-1 lg:grid-cols-4 gap-8">
+            <div data-help-id="manual-content" className="max-w-6xl mx-auto grid grid-cols-1 lg:grid-cols-4 gap-8">
                 <div className="lg:col-span-1 print:hidden">
                     <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-100 sticky top-8">
                         <h2 className="text-xl font-bold mb-4 border-b pb-2">Table of Contents</h2>
