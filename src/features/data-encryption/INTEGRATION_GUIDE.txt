@@ -1,0 +1,254 @@
+/**
+ * Encryption Feature Integration Guide
+ * How to use data-encryption feature in your components
+ */
+
+// ============================================================================
+// 1. ENCRYPT USER DATA ON REGISTRATION
+// ============================================================================
+
+// File: src/features/auth/actions/register.ts
+
+import { encryptUserData } from '@/features/data-encryption/actions/encrypt-actions';
+
+export async function registerAction(data: {
+  username: string;
+  email: string;
+  fullName: string;
+  password: string;
+}) {
+  // Encrypt sensitive fields
+  const encrypted = await encryptUserData({
+    email: data.email,
+    fullName: data.fullName,
+    password: data.password,
+  });
+
+  // Store in database
+  const user = await db.user.create({
+    username: data.username,
+    // Encrypted fields
+    email_encrypted: encrypted.email_encrypted,
+    full_name_encrypted: encrypted.full_name_encrypted,
+    password_hash: encrypted.password_hash,
+    encryption_status: 'encrypted',
+    encrypted_at: new Date(),
+  });
+
+  return user;
+}
+
+// ============================================================================
+// 2. ENCRYPT PATIENT DATA ON ADMISSION
+// ============================================================================
+
+// File: src/features/bed-dashboard/actions/patient-actions.ts
+
+import { encryptPatientData } from '@/features/data-encryption/actions/encrypt-actions';
+
+export async function admitPatientAction(data: {
+  bedId: string;
+  patientName: string;
+  patientContact: string;
+  medicalRecordId: string;
+  diagnosis: string;
+}) {
+  // Encrypt patient PII/PHI
+  const encrypted = await encryptPatientData({
+    name: data.patientName,
+    contact: data.patientContact,
+    medicalRecordId: data.medicalRecordId,
+    diagnosis: data.diagnosis,
+  });
+
+  // Create admission record
+  const admission = await db.patientAdmission.create({
+    bed_id: data.bedId,
+    admitted_at: new Date(),
+    // Encrypted fields
+    patient_name_encrypted: encrypted.patient_name_encrypted,
+    patient_contact_encrypted: encrypted.patient_contact_encrypted,
+    medical_record_id_encrypted: encrypted.medical_record_id_encrypted,
+    admission_diagnosis_encrypted: encrypted.admission_diagnosis_encrypted,
+    encryption_status: 'encrypted',
+    encrypted_at: new Date(),
+  });
+
+  return admission;
+}
+
+// ============================================================================
+// 3. DISPLAY ENCRYPTED FIELD IN COMPONENT
+// ============================================================================
+
+// File: src/features/bed-dashboard/components/PatientInfo.tsx
+
+'use client';
+
+import { EncryptedFieldDisplay } from '@/features/data-encryption/components/EncryptedFieldDisplay';
+import type { EncryptedFieldValue } from '@/features/data-encryption/types/encryption';
+
+interface PatientInfoProps {
+  patientNameEncrypted: EncryptedFieldValue;
+  patientContactEncrypted: EncryptedFieldValue;
+}
+
+export function PatientInfo({
+  patientNameEncrypted,
+  patientContactEncrypted,
+}: PatientInfoProps) {
+  return (
+    <div className="space-y-4">
+      <EncryptedFieldDisplay
+        encrypted={patientNameEncrypted}
+        label="Patient Name"
+        fieldType="name"
+        revealOnClick={true}
+      />
+
+      <EncryptedFieldDisplay
+        encrypted={patientContactEncrypted}
+        label="Contact Info"
+        fieldType="phone/email"
+        revealOnClick={true}
+        showCopyButton={true}
+      />
+    </div>
+  );
+}
+
+// ============================================================================
+// 4. USE ENCRYPTED DATA IN HOOKS
+// ============================================================================
+
+// File: src/features/bed-dashboard/hooks/use-patient-info.ts
+
+import { useEncryptedField } from '@/features/data-encryption/hooks/use-encrypted-field';
+import type { EncryptedFieldValue } from '@/features/data-encryption/types/encryption';
+
+export function usePatientInfoDecryption(
+  patientNameEncrypted: EncryptedFieldValue | null
+) {
+  const { plaintext: patientName, isLoading, error } = useEncryptedField(
+    patientNameEncrypted,
+    {
+      autoDecrypt: false, // Only decrypt when needed
+      onError: (error) => {
+        console.error('Failed to decrypt patient name:', error);
+      },
+    }
+  );
+
+  return {
+    patientName,
+    isLoading,
+    error,
+  };
+}
+
+// ============================================================================
+// 5. VALIDATION WITH ZOD
+// ============================================================================
+
+import {
+  patientEncryptionInputSchema,
+  type PatientEncryptionInput,
+} from '@/features/data-encryption/schemas/encrypt-schemas';
+
+export async function validateAndEncryptPatient(
+  input: unknown
+): Promise<PatientEncryptionInput> {
+  // Zod validates input structure
+  const parsed = patientEncryptionInputSchema.parse(input);
+
+  // All fields validated before encryption
+  return parsed;
+}
+
+// ============================================================================
+// 6. STARTUP VALIDATION
+// ============================================================================
+
+// File: src/app/layout.tsx
+
+import { validateEncryption } from '@/features/data-encryption/actions/encrypt-actions';
+
+async function RootLayout({ children }) {
+  // Validate encryption is configured
+  const encryption = await validateEncryption();
+  if (!encryption.isValid) {
+    console.error(encryption.message);
+    // In production: prevent app from starting
+  }
+
+  return (
+    <html>
+      <body>{children}</body>
+    </html>
+  );
+}
+
+// ============================================================================
+// 7. AUDIT LOGGING WITH ENCRYPTION
+// ============================================================================
+
+// File: src/shared/lib/audit-logger.ts
+
+import { encryptField } from '@/features/data-encryption/lib/field-encryptor';
+
+export async function logSensitiveAction(
+  action: string,
+  details: {
+    ipAddress?: string;
+    userId: string;
+    details: string;
+  }
+) {
+  // Encrypt sensitive details
+  const encryptedIp = details.ipAddress
+    ? encryptField(details.ipAddress)
+    : null;
+  const encryptedDetails = encryptField(details.details);
+
+  // Store audit log
+  await db.auditLog.create({
+    action_type: action,
+    performed_by_user_id: details.userId,
+    ip_address_encrypted: encryptedIp,
+    action_details_encrypted: encryptedDetails,
+    encryption_status: 'encrypted',
+    encrypted_at: new Date(),
+  });
+}
+
+// ============================================================================
+// CHECKLIST FOR INTEGRATION
+// ============================================================================
+
+/*
+✅ Phase 5 Integration Steps:
+
+1. [ ] Update user registration to encrypt email/full_name
+2. [ ] Update patient admission to encrypt patient data
+3. [ ] Update audit logging to encrypt IP and details
+4. [ ] Add EncryptedFieldDisplay to patient info components
+5. [ ] Update bed-dashboard to show encrypted fields
+6. [ ] Add encryption status badges to admin panels
+7. [ ] Test with actual encrypted data
+8. [ ] Verify performance (encryption overhead)
+9. [ ] Add error handling for decryption failures
+10. [ ] Document in team runbook
+
+✅ Testing Checklist:
+
+1. [ ] Can create user with encrypted email
+2. [ ] Can login with encrypted email
+3. [ ] Can display encrypted patient info
+4. [ ] Can copy encrypted field to clipboard
+5. [ ] Audit logs contain encrypted IP/details
+6. [ ] Key rotation process works
+7. [ ] Decryption fails gracefully with wrong key
+8. [ ] Performance acceptable (<100ms per decrypt)
+9. [ ] Bulk encryption job completes successfully
+10. [ ] Status reporting shows encryption progress
+*/
