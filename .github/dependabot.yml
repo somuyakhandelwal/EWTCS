@@ -8,8 +8,6 @@ updates:
       day: 'monday'
       time: '03:00'
     open-pull-requests-limit: 10
-    pull-request-branch-name:
-      separator: '/'
     reviewers:
       - 'somuyakhandelwal'
     assignees:
@@ -21,9 +19,6 @@ updates:
       prefix: 'chore'
       prefix-scope: 'deps'
       include: 'scope'
-    rebase-strategy: 'auto'
-    allow:
-      - dependency-type: 'all'
     ignore:
       # Ignore major version updates (require manual review)
       - dependency-name: 'next'
@@ -51,4 +46,3 @@ updates:
       - 'somuyakhandelwal'
     commit-message:
       prefix: 'ci'
-      include: 'scope'

@@ -157,8 +157,6 @@ async function renewSession(sessionData: SessionPayload) {
         jwtPayload.kioskSessionId = sessionData.kioskSessionId
     }
 
-
-
     const newSession = await new SignJWT(jwtPayload)
         .setProtectedHeader({ alg: 'HS256' })
         .setIssuedAt()

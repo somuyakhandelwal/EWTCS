@@ -71,7 +71,7 @@ A simple, intuitive dashboard that provides:
 
 ---
 
-## 🚀 Getting Started
+## Getting Started 🚀
 
 ### Prerequisites
 - Node.js 18.x or higher
