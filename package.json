@@ -19,6 +19,7 @@
     "db:create": "node scripts/run-migrations.js create",
     "init": "node scripts/init-system.js",
     "db:seed": "node scripts/seed-genuine-data.mjs",
+    "seed:config": "node scripts/seed-config.mjs",
     "db:reset": "node scripts/reset-db.js",
     "validate:env": "node scripts/validate-env-example.js",
     "validate:db": "node scripts/validate-db-connection.js",
