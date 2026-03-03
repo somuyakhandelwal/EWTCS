@@ -1,11 +1,12 @@
 'use server'
 
-import { getAllStages, getBedsWithElapsedTime, getBedById } from '../lib/queries'
+import { getAllStages, getBedsWithElapsedTime } from '../lib/queries'
 import { logger } from '@/shared/config/logger'
 import type { BedGridData } from '../types/bed'
-import { getUserWard, getBedAccessInfo } from '../lib/bed-queries'
+import { getUserWard } from '../lib/bed-queries'
 import { requireRole } from '@/shared/lib/auth'
-import { categorizeStagesForTransition } from '../lib/stage-validation'
+import { getStageTransitionMap } from '../lib/stage-validation'
+import type { UserRole } from '../lib/stage-validation-types'
 import { getGlobalThresholdMs, getGlobalEscalationThresholdMs } from '@/shared/lib/threshold'
 import { perfStart, perfEnd, logPerf, PERF_SLA } from '@/shared/lib/perf-monitor'
 
@@ -20,7 +21,7 @@ export async function getBedGridData(): Promise<{
 }> {
   try {
     // Auth guard: all roles can fetch the dashboard, but must be authenticated
-    await requireRole(['nurse', 'supervisor', 'admin', 'housekeeping'])
+    const session = await requireRole(['nurse', 'supervisor', 'admin', 'housekeeping'])
 
     // EPIC 13: track end-to-end latency for Dashboard SLA monitoring (<2 s).
     const perfMark = perfStart()
@@ -32,11 +33,44 @@ export async function getBedGridData(): Promise<{
       getGlobalEscalationThresholdMs(),
     ])
 
-    // Fetch beds and stages in parallel
-    const [beds, stages] = await Promise.all([
+    // Fetch beds, stages, transition map, and caller's ward assignment in parallel
+    // US-16.2: stageTransitionMap is cached with BedGridData so offline nurses see stage options
+    const [allBeds, stages, transitionMapRaw, userWard] = await Promise.all([
       getBedsWithElapsedTime(delayThresholdMs, escalationThresholdMs),
       getAllStages(),
+      getStageTransitionMap(session.role as UserRole),
+      getUserWard(session.userId),
     ])
+
+    // Ward-scope the bed list for nurses and housekeeping.
+    // Admins/supervisors see every ward; floater nurses (no ward assigned) also see all.
+    const wardScopedRoles = new Set<string>(['nurse', 'housekeeping'])
+    const beds =
+      wardScopedRoles.has(session.role) && userWard
+        ? allBeds.filter(b => b.wardId === userWard || b.isVirtual || b.isTemporary)
+        : allBeds
+
+    // Convert Map → plain Record (JSON-serialisable for localStorage cache).
+    // US-16.2: replicate the online "no rule = allowed by default" behaviour so the
+    // offline transition map matches what categorizeStagesForTransition returns online.
+    // For every (fromStageId, toStageId) pair that has NO explicit DB row, the online
+    // path allows the transition.  We identify those here by comparing each stage against
+    // the explicitly-covered set (allowed + requiresOverride + blocked) and add them to
+    // allowed, keeping parity with the runtime validation logic.
+    const allStageIds = stages.map(s => s.id)
+    const allFromKeys = [...allStageIds, 'null']
+    const stageTransitionMap: BedGridData['stageTransitionMap'] = {}
+
+    for (const fromKey of allFromKeys) {
+      const entry = transitionMapRaw.get(fromKey) ?? { allowed: [], requiresOverride: [], blocked: [] }
+      const covered = new Set([...entry.allowed, ...entry.requiresOverride, ...entry.blocked])
+      // Stages absent from `covered` have no DB rule → allowed by default (matches online path)
+      const noRuleStages = allStageIds.filter(id => !covered.has(id))
+      stageTransitionMap[fromKey] = {
+        allowed: [...entry.allowed, ...noRuleStages],
+        requiresOverride: entry.requiresOverride,
+      }
+    }
 
     const bottleneckCount = beds.filter(b => b.isDispositionBottleneck).length
     const escalationCount = beds.filter(b => b.isEscalated).length
@@ -48,15 +82,13 @@ export async function getBedGridData(): Promise<{
       escalationThresholdMs,
       bottleneckCount,
       escalationCount,
+      stageTransitionMap,
+      // Carry the caller's ward ID into the cache so the offline layer can enforce
+      // the same restriction without a network call (nurses only; undefined for admins)
+      userWardId: wardScopedRoles.has(session.role) ? userWard : undefined,
     }
 
-    logger.info('Bed grid data fetched successfully', {
-      bedCount: beds.length,
-      stageCount: stages.length,
-      delayedBeds: beds.filter(b => b.isDelayed).length,
-      escalatedBeds: escalationCount,
-      bottleneckBeds: bottleneckCount,
-    })
+    logger.info('Bed grid data fetched successfully', { bedCount: beds.length, stageCount: stages.length })
 
     // EPIC 13: log latency sample — WARN is emitted if > 2 s SLA.
     logPerf('dashboard.getBedGridData', perfEnd(perfMark), PERF_SLA.DASHBOARD_MS)
@@ -105,83 +137,3 @@ export async function getDelayedBeds(): Promise<{
   }
 }
 
-/**
- * Get valid stage transitions for a specific bed (US-2.2)
- * Returns categorized stages for UI display (allowed, requires override, invalid)
- */
-export async function getValidTransitionsForBed(bedId: string): Promise<{
-  success: boolean
-  allowed?: string[]
-  requiresOverride?: string[]
-  invalid?: string[]
-  error?: string
-}> {
-  try {
-    const session = await requireRole(['nurse', 'supervisor', 'admin', 'housekeeping'])
-
-    // Verify user has access to this bed — mirrors the same logic in bed-actions.ts
-    const [userWard, bedInfo] = await Promise.all([
-      getUserWard(session.userId),
-      getBedAccessInfo(bedId)
-    ])
-
-    if (!bedInfo) {
-      return { success: false, error: 'Bed not found' }
-    }
-
-    const hasWardAccess =
-      session.role === 'admin' ||
-      bedInfo.is_virtual ||
-      bedInfo.is_temporary ||
-      (!userWard && !bedInfo.ward_id) ||
-      (userWard && bedInfo.ward_id && userWard === bedInfo.ward_id)
-
-    if (!hasWardAccess) {
-      return {
-        success: false,
-        error: 'Access denied to this bed',
-      }
-    }
-
-    // Get the bed to find current stage
-    const bed = await getBedById(bedId)
-    if (!bed) {
-      return {
-        success: false,
-        error: 'Bed not found',
-      }
-    }
-
-    // Get all stages
-    const allStages = await getAllStages()
-    const allStageIds = allStages.map(s => s.id)
-
-    // Categorize stages based on transition rules
-    const categorized = await categorizeStagesForTransition(
-      bed.currentStageId,
-      allStageIds,
-      session.role as 'nurse' | 'supervisor' | 'admin' | 'housekeeping'
-    )
-
-    logger.info('Valid transitions fetched for bed', {
-      bedId,
-      role: session.role,
-      allowed: categorized.allowed.length,
-      requiresOverride: categorized.requiresOverride.length,
-      invalid: categorized.invalid.length,
-    })
-
-    return {
-      success: true,
-      allowed: categorized.allowed,
-      requiresOverride: categorized.requiresOverride,
-      invalid: categorized.invalid,
-    }
-  } catch (error) {
-    logger.error('Failed to get valid transitions for bed', error as Error)
-    return {
-      success: false,
-      error: error instanceof Error ? error.message : 'Failed to get valid transitions',
-    }
-  }
-}

@@ -43,6 +43,10 @@ export const UpdateBedStageSchema = z.object({
   notes: z.string().max(500).optional(),
   /** US-8.2: Supervisor-provided shift ID to override auto-resolution for this log entry */
   shiftOverrideId: z.string().uuid('Invalid shift ID').optional().nullable(),
+  /** US-16.4: stage the client expected the bed to be in — used for conflict detection */
+  expectedStageId: z.string().uuid().optional(),
+  /** US-16.4: ISO timestamp when the client queued this operation */
+  enqueuedAt: z.string().optional(),
 })
 
 export type CreateBedInput = z.infer<typeof CreateBedSchema>

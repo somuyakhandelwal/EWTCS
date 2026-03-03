@@ -8,9 +8,15 @@ vi.mock('@/shared/lib/audit', () => ({
   logAudit: vi.fn(),
 }))
 
+vi.mock('@/shared/lib/auth-policy', () => ({
+  hasPermission: vi.fn(),
+  logPolicyViolation: vi.fn(),
+}))
+
 import { verifyActiveSession } from '@/shared/lib/active-session'
 import { logAudit } from '@/shared/lib/audit'
-import { requireAdminWrite, requireWriteRole } from '@/shared/lib/auth'
+import { hasPermission, logPolicyViolation } from '@/shared/lib/auth-policy'
+import { requireAdminWrite, requireWriteRole, requireReadRole, requireDeleteRole, checkPolicyGuard } from '@/shared/lib/auth'
 
 describe('shared auth write guards', () => {
   beforeEach(() => {
@@ -90,5 +96,43 @@ describe('shared auth write guards', () => {
     await expect(
       requireAdminWrite({ actionType: 'ACTIVATE', entityType: 'user', entityId: 'user-1' })
     ).rejects.toThrow('Read-only mode: auditors cannot perform write actions')
+  })
+})
+
+describe('granular access policies', () => {
+  beforeEach(() => {
+    vi.clearAllMocks()
+    vi.mocked(verifyActiveSession).mockResolvedValue({
+      userId: 'u-1',
+      username: 'nurse1',
+      role: 'nurse',
+    } as never)
+  })
+
+  it('allows read action when hasPermission is true', async () => {
+    vi.mocked(hasPermission).mockReturnValue(true)
+    const session = await requireReadRole('beds')
+    expect(session.userId).toBe('u-1')
+    expect(hasPermission).toHaveBeenCalledWith('nurse', 'beds', 'read')
+  })
+
+  it('denies read action and logs violation when hasPermission is false', async () => {
+    vi.mocked(hasPermission).mockReturnValue(false)
+    await expect(requireReadRole('beds')).rejects.toThrow('Forbidden: Role nurse cannot perform read on beds')
+    expect(logPolicyViolation).toHaveBeenCalled()
+  })
+
+  it('uses granular policy check for valid resource in requireWriteRole', async () => {
+    vi.mocked(hasPermission).mockReturnValue(true)
+    const session = await requireWriteRole('beds')
+    expect(session.userId).toBe('u-1')
+    // Should call hasPermission since 'beds' is a valid predefined resource
+    expect(hasPermission).toHaveBeenCalledWith('nurse', 'beds', 'write')
+  })
+
+  it('denies delete action via requireDeleteRole when permission is missing', async () => {
+    vi.mocked(hasPermission).mockReturnValue(false)
+    await expect(requireDeleteRole('users')).rejects.toThrow(/Forbidden/)
+    expect(logPolicyViolation).toHaveBeenCalled()
   })
 })

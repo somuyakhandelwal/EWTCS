@@ -17,6 +17,8 @@ import { removeTemporaryBed } from '@/features/bed-management/actions/temporary-
 import { removeVirtualBed, createVirtualBed } from '@/features/bed-management/actions/virtual-bed-actions'
 import { getBedGridData } from '@/features/bed-dashboard/actions/bed-grid-actions'
 import type { BedGridData } from '@/features/bed-dashboard/types/bed'
+import { AlertPreferencesPanel } from '@/features/notifications/components/AlertPreferencesPanel'
+import type { AlertPreferences } from '@/features/notifications/types/alert-preferences'
 
 interface SupervisorClientShellProps {
     initialData: BedGridData
@@ -28,6 +30,7 @@ export function SupervisorClientShell({ initialData }: SupervisorClientShellProp
     const [removingId, setRemovingId] = useState<string | null>(null)
     // BUG FIX #6: shell owns the refreshed data so UI updates immediately after remove/create
     const [data, setData] = useState<BedGridData>(initialData)
+    const [alertPreferences, setAlertPreferences] = useState<AlertPreferences | null>(null)
     const [, startTransition] = useTransition()
 
     /** Re-fetch grid data and push it into the overview. */
@@ -59,8 +62,11 @@ export function SupervisorClientShell({ initialData }: SupervisorClientShellProp
 
     return (
         <>
+            <AlertPreferencesPanel onPreferencesChange={setAlertPreferences} />
+
             <SupervisorBedOverview
                 initialData={data}
+                alertPreferences={alertPreferences}
                 onAddTempBed={() => setModalOpen(true)}
                 onRemoveTempBed={handleRemoveTempBed}
                 isRemovingId={removingId}

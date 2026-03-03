@@ -24,7 +24,7 @@ interface LatestTransition {
  */
 export async function undoLastBedStageUpdate({ bedId }: { bedId: string }) {
   try {
-    const session = await requireWriteRole(['nurse', 'supervisor', 'admin'], {
+    const session = await requireWriteRole('beds', {
       actionType: 'UNDO',
       entityType: 'bed',
       entityId: bedId,

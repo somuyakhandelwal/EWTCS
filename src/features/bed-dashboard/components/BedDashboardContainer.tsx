@@ -8,7 +8,7 @@ interface Props {
     isKiosk: boolean
 }
 
-export async function BedDashboardContainer({ role }: Props) {
+export async function BedDashboardContainer({ role, isKiosk }: Props) {
     const bedGridResult = await getBedGridData()
 
     if (!bedGridResult.success || !bedGridResult.data) {

@@ -5,14 +5,76 @@
  * Extracted from AuditorHistoryView to keep each file under 200 lines.
  *
  * Props:
- *   showCorrections — show Corrected badges + corrected stage names (no Edit button)
- *   canEdit         — show Edit button (implies showCorrections)
+ *   showCorrections  — show Corrected badges + corrected stage names (no Edit button)
+ *   canEdit          — show Edit button (implies showCorrections)
+ *   canOverrideShift — show Shift column with inline override selector (US-8.2 AC-4)
+ *   shifts           — list of active shifts for the override selector
+ *   onOverrideShift  — callback when supervisor changes a log's shift
  */
 
+import { useState } from 'react'
 import { Badge } from '@/shared/components/ui/badge'
 import { Pencil } from 'lucide-react'
 import type { AuditorHistoryRecord, AuditorHistorySortBy } from '../lib/auditor-history-queries'
+import type { Shift } from '@/shared/types/shift.types'
 
+// ---------------------------------------------------------------------------
+// ShiftCell — inline shift label + override selector (US-8.2 AC-4)
+// ---------------------------------------------------------------------------
+function ShiftCell({
+  logId, shiftId, shiftName, shifts, onOverride,
+}: {
+  logId: string
+  shiftId: string | null
+  shiftName: string | null
+  shifts: Shift[]
+  onOverride: (logId: string, shiftId: string) => Promise<void>
+}) {
+  const [editing, setEditing]   = useState(false)
+  const [saving,  setSaving]    = useState(false)
+
+  const handleChange = async (newShiftId: string) => {
+    setSaving(true)
+    await onOverride(logId, newShiftId)
+    setSaving(false)
+    setEditing(false)
+  }
+
+  if (!editing) {
+    return (
+      <span className="flex items-center gap-1.5">
+        <span className="text-muted-foreground">{shiftName ?? '—'}</span>
+        <button
+          onClick={() => setEditing(true)}
+          title="Override shift for this log entry"
+          className="text-blue-400 hover:text-blue-300 border border-blue-700/40 hover:border-blue-500/60 bg-blue-950/20 hover:bg-blue-950/40 rounded p-0.5 transition-colors"
+        >
+          <Pencil className="h-3 w-3" />
+        </button>
+      </span>
+    )
+  }
+
+  return (
+    <select
+      autoFocus
+      defaultValue={shiftId ?? ''}
+      disabled={saving}
+      onBlur={() => setEditing(false)}
+      onChange={e => { void handleChange(e.target.value) }}
+      className="text-xs rounded border border-border bg-card text-foreground px-1.5 py-1 focus:outline-none focus:ring-1 focus:ring-blue-500"
+    >
+      <option value="">— No shift —</option>
+      {shifts.map(s => (
+        <option key={s.id} value={s.id}>{s.name}</option>
+      ))}
+    </select>
+  )
+}
+
+// ---------------------------------------------------------------------------
+// AuditorHistoryTable
+// ---------------------------------------------------------------------------
 interface AuditorHistoryTableProps {
   rows: AuditorHistoryRecord[]
   loading: boolean
@@ -20,6 +82,12 @@ interface AuditorHistoryTableProps {
   correctedStageMap: Record<string, string>
   showCorrections: boolean
   canEdit: boolean
+  /** US-8.2 AC-4: show Shift column with inline override (supervisor / admin) */
+  canOverrideShift?: boolean
+  /** US-8.2 AC-4: active shifts for the override selector */
+  shifts?: Shift[]
+  /** US-8.2 AC-4: called when supervisor reassigns a shift */
+  onOverrideShift?: (logId: string, shiftId: string) => Promise<void>
   sortBy: AuditorHistorySortBy
   sortOrder: 'asc' | 'desc'
   onSort: (col: AuditorHistorySortBy) => void
@@ -28,7 +96,9 @@ interface AuditorHistoryTableProps {
 
 export function AuditorHistoryTable({
   rows, loading, correctedLogIds, correctedStageMap,
-  showCorrections, canEdit, sortBy, sortOrder, onSort, onEdit,
+  showCorrections, canEdit,
+  canOverrideShift = false, shifts = [], onOverrideShift,
+  sortBy, sortOrder, onSort, onEdit,
 }: AuditorHistoryTableProps) {
   const marker = (col: AuditorHistorySortBy) =>
     sortBy === col ? (sortOrder === 'asc' ? ' ↑' : ' ↓') : ''
@@ -38,6 +108,10 @@ export function AuditorHistoryTable({
       <button onClick={() => onSort(col)}>{label}{marker(col)}</button>
     </th>
   )
+
+  const showShiftCol = canOverrideShift && shifts.length > 0
+  // base 6 cols + optional Shift col + optional Actions col
+  const colCount = 6 + (showShiftCol ? 1 : 0) + (canEdit ? 1 : 0)
 
   return (
     <div className="overflow-x-auto border border-border rounded-md">
@@ -50,13 +124,14 @@ export function AuditorHistoryTable({
             <SortTh col="toStageName" label="To" />
             <th className="p-2">User ID</th>
             <SortTh col="changedByUsername" label="Username" />
+            {showShiftCol && <th className="p-2 text-blue-400">Shift</th>}
             {canEdit && <th className="p-2 text-amber-400">Actions</th>}
           </tr>
         </thead>
         <tbody>
           {!loading && rows.length === 0 && (
             <tr>
-              <td className="p-3 text-muted-foreground" colSpan={canEdit ? 7 : 6}>
+              <td className="p-3 text-muted-foreground" colSpan={colCount}>
                 No history records found.
               </td>
             </tr>
@@ -88,6 +163,17 @@ export function AuditorHistoryTable({
                 </td>
                 <td className="p-2 font-mono text-xs">{row.changedByUserId}</td>
                 <td className="p-2">{row.changedByUsername}</td>
+                {showShiftCol && (
+                  <td className="p-2">
+                    <ShiftCell
+                      logId={row.id}
+                      shiftId={row.shiftId}
+                      shiftName={row.shiftName}
+                      shifts={shifts}
+                      onOverride={onOverrideShift!}
+                    />
+                  </td>
+                )}
                 {canEdit && (
                   <td className="p-2">
                     <button

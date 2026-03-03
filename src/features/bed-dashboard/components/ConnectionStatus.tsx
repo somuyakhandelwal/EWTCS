@@ -1,6 +1,7 @@
 // Connection Status Indicator Component
 // Epic 1: Nurse Desk Bed Dashboard
 // US-1.2: Display Real-Time Bed Status
+// US-16.2: Added 'offline' status (amber, distinct from 'disconnected' red)
 
 'use client'
 
@@ -55,6 +56,14 @@ export const ConnectionStatus = React.memo(function ConnectionStatus({
           color: 'text-muted-foreground',
           bgColor: 'bg-zinc-500/10',
           label: 'Paused',
+          showPulse: false,
+        }
+      case 'offline':
+        return {
+          icon: WifiOff,
+          color: 'text-amber-500',
+          bgColor: 'bg-amber-500/10',
+          label: 'Offline',
           showPulse: false,
         }
     }

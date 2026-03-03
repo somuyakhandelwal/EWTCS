@@ -19,7 +19,7 @@ export async function recordDispositionDelayReason(input: {
   notes?: string
 }): Promise<{ success: boolean; error?: string }> {
   try {
-    const session = await requireWriteRole(['nurse', 'supervisor', 'admin'], {
+    const session = await requireWriteRole('beds', {
       actionType: 'UPDATE',
       entityType: 'disposition_delay_reason',
       entityId: input.bedId,

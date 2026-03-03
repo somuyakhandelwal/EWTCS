@@ -1,8 +1,8 @@
 'use client'
 
 import { useState, useMemo, useCallback, type MouseEvent } from 'react'
-import type { BedWithElapsedTime } from '../types/bed'
-import { getValidTransitionsForBed } from '../actions/bed-grid-actions'
+import type { BedWithElapsedTime, StageTransitionMap } from '../types/bed'
+import { getValidTransitionsForBed } from '../actions/bed-transition-actions'
 
 interface MenuState {
   bedId: string
@@ -12,10 +12,17 @@ interface MenuState {
 /**
  * Manages context-menu state for the bed grid: opening, loading
  * valid stage transitions from the server, and closing.
+ *
+ * US-16.2: When `isOffline=true`, skips the server action and derives valid
+ * transitions from the locally cached `stageTransitionMap` (bundled into
+ * BedGridData at fetch time). This allows nurses to see and select stage
+ * options while offline so their action can be queued for sync.
  */
 export function useBedContextMenu(
   beds: BedWithElapsedTime[],
   onStageSelect?: (bedId: string, stageId: string) => void,
+  isOffline = false,
+  stageTransitionMap?: StageTransitionMap,
 ) {
   const [menuState, setMenuState] = useState<MenuState | null>(null)
   const [validNextStages, setValidNextStages] = useState<string[]>([])
@@ -25,11 +32,32 @@ export function useBedContextMenu(
 
   const openMenuForBed = useCallback(
     async (bedId: string, position: { x: number; y: number }) => {
-      // Clear previous data immediately to prevent "flash" of old bed's transitions
+      // US-16.2: Offline — resolve transitions from cache synchronously so the menu
+      // opens with ALL stage options visible immediately (no "Loading transitions…" flash).
+      if (isOffline) {
+        setMenuError(null)
+        setMenuState({ bedId, position })
+        if (stageTransitionMap) {
+          const bed = beds.find(b => b.id === bedId)
+          const fromKey = bed?.currentStageId ?? 'null'
+          const transitions = stageTransitionMap[fromKey]
+          setValidNextStages(transitions?.allowed ?? [])
+          setOverrideRequiredStages(transitions?.requiresOverride ?? [])
+        } else {
+          // Cached data predates this feature (old cache version) — graceful degradation
+          setValidNextStages([])
+          setOverrideRequiredStages([])
+          setMenuError('Stage options unavailable offline. Please reconnect to update this bed.')
+        }
+        return
+      }
+
+      // Online — clear stale transitions from the previous bed first, then fetch from server.
+      // setIsLoadingTransitions(true) causes BedStageContextMenu to show "Verifying access…"
+      // instead of the empty-item spinner, matching the expected online loading UX.
       setValidNextStages([])
       setOverrideRequiredStages([])
       setMenuError(null)
-
       setMenuState({ bedId, position })
       setIsLoadingTransitions(true)
       try {
@@ -50,7 +78,7 @@ export function useBedContextMenu(
         setIsLoadingTransitions(false)
       }
     },
-    [],
+    [beds, isOffline, stageTransitionMap],
   )
 
   const handleOpenMenu = useCallback(

@@ -1,5 +1,6 @@
 // Connection Manager
 // Handles retry logic and connection status updates for real-time polling
+// US-16.2: Added offline/online status helpers
 
 import { realtimeConfig } from '@/shared/config/realtime'
 import type { ConnectionStatus, ConnectionStatusDetails } from '../types/realtime'
@@ -73,5 +74,44 @@ export function resumeConnectionStatus(
   return {
     ...prevStatus,
     status: prevStatus.errorCount > 0 ? 'reconnecting' : 'connected',
+  }
+}
+
+// ─────────────────────────────────────────────
+// US-16.2: Offline / Online helpers
+// ─────────────────────────────────────────────
+
+/**
+ * Transition to offline status.
+ * Called when `navigator.onLine` becomes false or the `offline` window event fires.
+ * Preserves the last known good data timestamp so the banner can show
+ * "Showing data from X minutes ago".
+ */
+export function handleOfflineStatus(
+  prevStatus: ConnectionStatusDetails,
+  cacheTimestamp: Date | null
+): ConnectionStatusDetails {
+  return {
+    ...prevStatus,
+    status: 'offline',
+    usingCachedData: true,
+    cacheTimestamp,
+  }
+}
+
+/**
+ * Transition back from offline to reconnecting.
+ * Called when the `online` window event fires.
+ * Resets error count — a fresh fetch will decide whether we reach 'connected'.
+ */
+export function handleOnlineStatus(
+  prevStatus: ConnectionStatusDetails
+): ConnectionStatusDetails {
+  return {
+    ...prevStatus,
+    status: 'reconnecting',
+    errorCount: 0,
+    usingCachedData: false,
+    cacheTimestamp: null,
   }
 }
