@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server'
 import type { NextRequest } from 'next/server'
 import { jwtVerify } from 'jose'
+import { logger } from '@/shared/config/logger'
 
 const secretKey = process.env.SESSION_SECRET
 const encodedKey = new TextEncoder().encode(secretKey!)
@@ -32,8 +33,6 @@ function isSecureRequest(request: NextRequest) {
 }
 
 export async function middleware(request: NextRequest) {
-    // EPIC 17 / US-17.1: Enforce HTTPS on all matched routes in staging/production.
-    // This protects pages and API routes behind this middleware from plaintext transport.
     if (shouldEnforceHttps() && !isLocalHost(request.nextUrl.hostname) && !isSecureRequest(request)) {
         const httpsUrl = request.nextUrl.clone()
         httpsUrl.protocol = 'https:'
@@ -41,8 +40,7 @@ export async function middleware(request: NextRequest) {
     }
 
     const token = request.cookies.get('session')?.value
-
-    let session = null
+    let session: Record<string, unknown> | null = null
 
     if (token) {
         try {
@@ -50,10 +48,8 @@ export async function middleware(request: NextRequest) {
                 algorithms: ['HS256'],
             })
 
-            // US-5.2 AC-4: Check inactivity timeout in middleware
             const lastActivity = (payload.lastActivity as number) || Date.now()
-            if (Date.now() - lastActivity > INACTIVITY_TIMEOUT_MS) {
-                // Idle timeout — treat as no session
+            if (!payload.isKiosk && Date.now() - lastActivity > INACTIVITY_TIMEOUT_MS) {
                 session = null
             } else {
                 session = payload
@@ -63,72 +59,69 @@ export async function middleware(request: NextRequest) {
         }
     }
 
-    const { pathname } = request.nextUrl
+    const getRoutingResponse = () => {
+        const { pathname } = request.nextUrl
 
-    // US-5.3: Kiosk IP binding — if the session was created in kiosk mode,
-    // reject any request coming from a different IP address.
-    if (session?.isKiosk && session.kioskIp && session.kioskIp !== 'unknown') {
-        const clientIp =
-            request.headers.get('x-forwarded-for')?.split(',')[0].trim() ?? 'unknown'
-        if (clientIp !== session.kioskIp) {
-            const res = NextResponse.redirect(new URL('/login', request.url))
-            res.cookies.delete('session')
-            return res
+        if (session?.isKiosk && session.kioskIp && session.kioskIp !== 'unknown') {
+            const clientIp = request.headers.get('x-forwarded-for')?.split(',')[0].trim() ?? 'unknown'
+            if (clientIp !== session.kioskIp) {
+                const res = NextResponse.redirect(new URL('/login', request.url))
+                res.cookies.delete('session')
+                return res
+            }
         }
-    }
 
-    // US-5.5: /change-password requires an active session
-    if (pathname.startsWith('/change-password')) {
-        if (!session) {
+        if (pathname.startsWith('/change-password') && !session) {
             return NextResponse.redirect(new URL('/login', request.url))
         }
-    }
 
-    // Protected routes
-    if (pathname.startsWith('/admin')) {
-        if (!session || session.role !== 'admin') {
+        if (pathname.startsWith('/admin') && (!session || session.role !== 'admin')) {
             return NextResponse.redirect(new URL('/login', request.url))
         }
-    }
 
-    if (pathname.startsWith('/supervisor')) {
-        if (!session || (session.role !== 'supervisor' && session.role !== 'admin')) {
+        if (pathname.startsWith('/supervisor') && (!session || (session.role !== 'supervisor' && session.role !== 'admin'))) {
             return NextResponse.redirect(new URL('/login', request.url))
         }
-    }
 
-    // Bed grid: accessible to all operational roles (nurse, housekeeping) and
-    // oversight roles (supervisor, admin) who may need direct grid access.
-    if (pathname.startsWith('/dashboard')) {
-        const dashboardRoles = ['nurse', 'housekeeping', 'supervisor', 'admin']
-        if (!session || !dashboardRoles.includes(session.role as string)) {
+        if (pathname.startsWith('/dashboard')) {
+            const dashboardRoles = ['nurse', 'housekeeping', 'supervisor', 'admin']
+            if (!session || !dashboardRoles.includes(session.role as string)) {
+                return NextResponse.redirect(new URL('/login', request.url))
+            }
+        }
+
+        if (pathname.startsWith('/analytics') && (!session || (session.role !== 'supervisor' && session.role !== 'admin' && session.role !== 'auditor'))) {
             return NextResponse.redirect(new URL('/login', request.url))
         }
-    }
 
-    // Analytics: supervisor, admin, and auditor
-    if (pathname.startsWith('/analytics')) {
-        if (!session || (session.role !== 'supervisor' && session.role !== 'admin' && session.role !== 'auditor')) {
-            return NextResponse.redirect(new URL('/login', request.url))
-        }
-    }
-
-    // Already logged in — redirect away from login
-    if (pathname.startsWith('/login')) {
-        if (session) {
+        if (pathname.startsWith('/login') && session) {
             if (session.role === 'admin') return NextResponse.redirect(new URL('/admin', request.url))
             if (session.role === 'supervisor') return NextResponse.redirect(new URL('/supervisor', request.url))
             if (session.role === 'auditor') return NextResponse.redirect(new URL('/analytics', request.url))
-            // nurse and housekeeping both use the bed grid dashboard
-            if (session.role === 'nurse' || session.role === 'housekeeping') {
-                return NextResponse.redirect(new URL('/dashboard', request.url))
-            }
-            // Fallback: unknown future roles go to login (do not silently grant access)
+            if (session.role === 'nurse' || session.role === 'housekeeping') return NextResponse.redirect(new URL('/dashboard', request.url))
             return NextResponse.redirect(new URL('/login', request.url))
         }
+
+        return NextResponse.next()
     }
 
-    return NextResponse.next()
+    const response = getRoutingResponse()
+
+    if (session?.isKiosk && !request.cookies.has('kiosk_browser_session')) {
+        logger.info('Kiosk session restored automatically after browser restart', {
+            userId: session.userId,
+            kioskIp: session.kioskIp,
+            event: 'kiosk_session_restored'
+        })
+        response.cookies.set('kiosk_browser_session', 'active', {
+            httpOnly: true,
+            secure: process.env.NODE_ENV === 'production',
+            sameSite: 'lax',
+            path: '/',
+        })
+    }
+
+    return response
 }
 
 export const config = {

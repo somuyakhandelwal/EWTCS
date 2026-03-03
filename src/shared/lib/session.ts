@@ -60,6 +60,15 @@ export async function createSession(
         path: '/',
         ...(kiosk && { maxAge: 365 * 24 * 60 * 60 }),
     })
+
+    if (kiosk) {
+        cookieStore.set('kiosk_browser_session', 'active', {
+            httpOnly: true,
+            secure: process.env.NODE_ENV === 'production',
+            sameSite: 'lax',
+            path: '/',
+        })
+    }
 }
 
 /**
@@ -164,6 +173,14 @@ export async function deleteSession() {
     try {
         const cookieStore = await cookies()
         cookieStore.set('session', '', {
+            httpOnly: true,
+            secure: process.env.NODE_ENV === 'production',
+            expires: new Date(0),
+            sameSite: 'lax',
+            path: '/',
+            maxAge: 0,
+        })
+        cookieStore.set('kiosk_browser_session', '', {
             httpOnly: true,
             secure: process.env.NODE_ENV === 'production',
             expires: new Date(0),
