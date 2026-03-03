@@ -21,9 +21,11 @@ import { getBedGridData } from '../actions/bed-grid-actions'
 import { getBedStatistics } from '../lib/utils'
 import { VirtualBedsSection } from './VirtualBedsSection'
 import { SupervisorTemporaryBeds } from './SupervisorTemporaryBeds'
+import type { AlertPreferences } from '@/features/notifications/types/alert-preferences'
 
 interface SupervisorBedOverviewProps {
   initialData: BedGridData
+  alertPreferences?: AlertPreferences | null
   /** Pass the modal trigger down from the app/supervisor page (app layer) so this
    *  component stays within the bed-dashboard feature boundary. */
   onAddTempBed?: () => void
@@ -36,6 +38,7 @@ interface SupervisorBedOverviewProps {
 
 export function SupervisorBedOverview({
   initialData,
+  alertPreferences,
   onAddTempBed,
   onRemoveTempBed,
   isRemovingId,
@@ -66,10 +69,42 @@ export function SupervisorBedOverview({
     }
   }, [])
 
-  const delayedBeds = useMemo(
-    () => data.beds.filter(b => b.isDelayed || b.isDispositionBottleneck),
+  const userDelayThresholdMs = (alertPreferences?.thresholds.delayMinutes ?? (data.delayThresholdMs / 60000)) * 60 * 1000
+  const userEscalationThresholdMs = (alertPreferences?.thresholds.escalationMinutes ?? (data.escalationThresholdMs / 60000)) * 60 * 1000
+  const userBottleneckThresholdCount = alertPreferences?.thresholds.bottleneckCount ?? 1
+
+  const delayedByUserThreshold = useMemo(
+    () => data.beds.filter(bed => (bed.elapsedTimeMs ?? 0) >= userDelayThresholdMs),
+    [data.beds, userDelayThresholdMs]
+  )
+
+  const escalatedByUserThreshold = useMemo(
+    () => data.beds.filter(bed => (bed.elapsedTimeMs ?? 0) >= userEscalationThresholdMs),
+    [data.beds, userEscalationThresholdMs]
+  )
+
+  const bottleneckBeds = useMemo(
+    () => data.beds.filter(bed => bed.isDispositionBottleneck),
     [data.beds]
   )
+
+  const showDelayedAlerts = alertPreferences?.enabledAlertTypes.delayedBeds ?? true
+  const showEscalationAlerts = alertPreferences?.enabledAlertTypes.escalations ?? true
+  const showBottleneckAlerts =
+    (alertPreferences?.enabledAlertTypes.dispositionBottlenecks ?? true) &&
+    bottleneckBeds.length >= userBottleneckThresholdCount
+
+  const visibleDelayedBeds = useMemo(() => {
+    if (!showDelayedAlerts && !showBottleneckAlerts) return []
+    if (showDelayedAlerts && showBottleneckAlerts) {
+      const map = new Map<string, BedGridData['beds'][number]>()
+      delayedByUserThreshold.forEach((bed) => map.set(bed.id, bed))
+      bottleneckBeds.forEach((bed) => map.set(bed.id, bed))
+      return [...map.values()]
+    }
+    if (showDelayedAlerts) return delayedByUserThreshold
+    return bottleneckBeds
+  }, [bottleneckBeds, delayedByUserThreshold, showBottleneckAlerts, showDelayedAlerts])
 
   // US-6.5: all temporary beds visible to supervisor
   const temporaryBeds = useMemo(
@@ -87,20 +122,22 @@ export function SupervisorBedOverview({
     <div className="space-y-6">
 
       {/* US-15.x: Prominent delayed bed count banner with color coding + click-to-filter */}
-      <DelayedBedCountBanner
-        delayedCount={delayedBeds.length}
-        onFilterDelayed={() => setShowDelayedOnly(prev => !prev)}
-        isFiltered={showDelayedOnly}
-      />
+      {showDelayedAlerts && (
+        <DelayedBedCountBanner
+          delayedCount={visibleDelayedBeds.length}
+          onFilterDelayed={() => setShowDelayedOnly(prev => !prev)}
+          isFiltered={showDelayedOnly}
+        />
+      )}
 
       {/* Stats */}
       <BedGridStats
         total={stats.total}
         occupied={stats.occupied}
         available={stats.available}
-        delayed={stats.delayed}
-        bottleneckCount={data.bottleneckCount}
-        escalationCount={data.escalationCount}
+        delayed={showDelayedAlerts ? delayedByUserThreshold.length : 0}
+        bottleneckCount={showBottleneckAlerts ? bottleneckBeds.length : 0}
+        escalationCount={showEscalationAlerts ? escalatedByUserThreshold.length : 0}
       />
 
       {/* Legend */}
@@ -126,14 +163,14 @@ export function SupervisorBedOverview({
       />
 
       {/* Bottleneck panel — supervisor can see + trigger refresh after update */}
-      <BottleneckPanel beds={data.beds} onReasonRecorded={handleRefresh} />
+      {showBottleneckAlerts && <BottleneckPanel beds={data.beds} onReasonRecorded={handleRefresh} />}
 
       {/* US-15.x: Delayed / bottleneck bed cards — shown when filter is active */}
-      {showDelayedOnly && delayedBeds.length > 0 && (
+      {showDelayedOnly && visibleDelayedBeds.length > 0 && (
         <div className="space-y-3">
           <div className="flex items-center justify-between">
             <h2 className="text-sm font-semibold text-card-foreground uppercase tracking-wider">
-              Beds Requiring Attention ({delayedBeds.length})
+              Beds Requiring Attention ({visibleDelayedBeds.length})
             </h2>
             <Button
               variant="ghost"
@@ -146,14 +183,14 @@ export function SupervisorBedOverview({
             </Button>
           </div>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
-            {delayedBeds.map(bed => (
+            {visibleDelayedBeds.map(bed => (
               <BedCard key={bed.id} bed={bed} viewMode="supervisor" />
             ))}
           </div>
         </div>
       )}
 
-      {showDelayedOnly && delayedBeds.length === 0 && (
+      {showDelayedOnly && visibleDelayedBeds.length === 0 && (
         <div className="rounded-lg border border-border bg-card py-10 text-center">
           <p className="text-muted-foreground">🎉 No delayed beds — all patients are on track.</p>
         </div>
