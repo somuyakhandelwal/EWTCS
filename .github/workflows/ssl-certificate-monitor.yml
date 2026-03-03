@@ -1,0 +1,27 @@
+name: SSL Certificate Monitor
+
+on:
+  schedule:
+    - cron: '0 2 * * *'
+  workflow_dispatch:
+
+jobs:
+  ssl-check:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Verify SSL certificate and redirect
+        env:
+          SSL_CHECK_DOMAIN: ${{ secrets.SSL_CHECK_DOMAIN }}
+          SSL_MIN_VALID_DAYS: '30'
+        run: npm run security:ssl:check

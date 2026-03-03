@@ -18,6 +18,8 @@ EWTCS uses environment variables for multi-environment configuration with suppor
 
 ### Optional
 - `NODE_ENV` - `development | staging | production` (default: development)
+- `FORCE_HTTPS` - `true | false` (default: `true` in `.env.example`; enforced in staging/production)
+- `HSTS_PRELOAD` - `true | false` (default: `false`; set `true` only after domain is accepted in HSTS preload list)
 - `RED_ALERT_THRESHOLD_MS` - Delay threshold in milliseconds (default: 10800000 / 3 hours)
 - `OPENAI_API_KEY` - OpenAI API key (plaintext, dev)
 - `OPENAI_API_KEY_ENCRYPTED` - Encrypted OpenAI key (production)
@@ -164,6 +166,62 @@ The system uses an immutable `audit_logs` table for compliance-critical events.
 - Rotate credentials every 90 days
 - Enable SSL/TLS for production database connections
 - Mask sensitive values in logs (manually avoid logging secrets like API keys, tokens, passwords, or full connection strings)
+
+## HTTPS/TLS Enforcement (EPIC 17)
+
+EWTCS enforces secure transport in staging/production through middleware redirects and response headers.
+
+### Application-level controls
+- **HTTP → HTTPS redirect**: Middleware redirects insecure requests when `NODE_ENV` is `staging` or `production` and `FORCE_HTTPS !== false`.
+- **Coverage scope**: Redirect check applies to all pages and API routes, excluding internal/static assets (`_next/static`, `_next/image`, `favicon.ico`, `robots.txt`, `sitemap.xml`).
+- **HSTS**: `Strict-Transport-Security` is set in production (`max-age=31536000; includeSubDomains`).
+- **HSTS preload**: Add `preload` token only when `HSTS_PRELOAD=true` and after successful preload submission.
+- **Mixed content hardening**: `Content-Security-Policy: upgrade-insecure-requests` is set for all routes.
+
+### Certificate installation and auto-renewal
+
+> Note: Certificate issuance/installation is infrastructure-owned (DNS, load balancer, reverse proxy, or hosting platform). Application code cannot directly install certificates on your production edge.
+
+#### Managed hosting (recommended: Vercel / cloud platform)
+1. Add your custom domain in platform settings.
+2. Enable platform-managed SSL certificate.
+3. Verify DNS and certificate status is **Issued/Active**.
+4. Ensure automatic renewal is enabled (usually default).
+5. Add repository secret `SSL_CHECK_DOMAIN` and enable the workflow `ssl-certificate-monitor.yml`.
+
+#### Self-hosted (Nginx/Apache/Load Balancer)
+1. Install TLS cert via Let's Encrypt (or enterprise CA).
+2. Configure auto-renewal (`certbot renew` via system timer/cron).
+3. Reload web server after renewal.
+4. Add cert-expiry monitoring alerts (30/14/7 day thresholds).
+5. Configure repository secret `SSL_CHECK_DOMAIN` so CI continuously validates certificate health.
+
+### Certificate monitoring automation
+
+Run manually:
+```bash
+SSL_CHECK_DOMAIN=your-domain.example npm run security:ssl:check
+```
+
+CI automation:
+- Workflow: `.github/workflows/ssl-certificate-monitor.yml`
+- Trigger: daily schedule + manual dispatch
+- Checks: TLS certificate validity + HTTP→HTTPS redirect
+
+### Validation commands
+
+```bash
+# HTTP redirect check
+curl -I http://your-domain.example
+
+# HTTPS header check (verify Strict-Transport-Security)
+curl -I https://your-domain.example
+```
+
+Expected results:
+- HTTP returns `301` or `308` to `https://...`
+- HTTPS response includes `Strict-Transport-Security`
+- Browser console shows no mixed-content warnings on core routes (`/`, `/login`, `/dashboard`, `/analytics`, `/admin`)
 
 ## Troubleshooting
 

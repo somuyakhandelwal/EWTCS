@@ -24,6 +24,7 @@
     "validate:db": "node scripts/validate-db-connection.js",
     "validate:migrations": "node scripts/validate-migrations.js",
     "validate:schema": "node scripts/validate-db-schema.js",
+    "security:ssl:check": "node scripts/check-ssl-certificate.mjs",
     "validate:all": "npm run validate:env && npm run validate:db && npm run validate:migrations && npm run validate:schema && npm run build",
     "perf:seed": "node scripts/seed-realistic-performance-volume.js",
     "perf:check": "node scripts/run-performance-gate.js",
