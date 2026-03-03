@@ -3,7 +3,7 @@
 // Separated to keep bed-actions.ts under the 200-line file limit
 
 import { logger } from '@/shared/config/logger'
-import { getUserWard, getBedWard } from '../lib/bed-queries'
+import { checkWardAccess } from '../lib/bed-queries'
 import { requireWriteRole } from '@/shared/lib/auth'
 import { logAudit } from '@/shared/lib/audit'
 import pool from '@/shared/lib/db'
@@ -25,20 +25,15 @@ export async function recordDispositionDelayReason(input: {
       entityId: input.bedId,
     })
 
-    // Ward-level access check (same IDOR pattern as updateBedStage)
-    const userWard = await getUserWard(session.userId)
-    const bedWard = await getBedWard(input.bedId)
-    const hasWardAccess =
-      (!userWard && !bedWard) ||                      // wards not configured — open access
-      (userWard && bedWard && userWard === bedWard) || // same ward
-      session.role === 'admin'                         // admin bypasses ward check
-
-    if (!hasWardAccess) {
+    // Ward-level access check (centralized in checkWardAccess)
+    const wardError = await checkWardAccess(session.userId, input.bedId, session.role)
+    if (wardError) {
       logger.warn('Unauthorized disposition reason record attempt', {
         userId: session.userId,
         bedId: input.bedId,
+        error: wardError
       })
-      return { success: false, error: 'Access denied to this bed.' }
+      return { success: false, error: wardError }
     }
 
     const client = await pool.connect()

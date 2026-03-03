@@ -1,6 +1,7 @@
 import 'server-only'
 import { SignJWT, jwtVerify } from 'jose'
 import { cookies } from 'next/headers'
+import { logger } from '@/shared/config/logger'
 
 const secretKey = process.env.SESSION_SECRET
 if (!secretKey) {
@@ -113,7 +114,7 @@ export async function verifySession() {
     } catch (err) {
         const errorCode = (err as Record<string, unknown>)?.code
         if (errorCode !== 'ERR_JWS_SIGNATURE_VERIFICATION_FAILED') {
-            console.warn('Unexpected session verification error:', err instanceof Error ? err.message : String(err))
+            logger.warn('Unexpected session verification error', { error: err instanceof Error ? err.message : String(err) })
         }
         return null
     }

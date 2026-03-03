@@ -6,7 +6,7 @@
 // Replaces the generic ConfirmationModal for this specific critical workflow.
 
 import { memo, useEffect } from 'react'
-import { LogOut, Clock, X, Loader2 } from 'lucide-react'
+import { LogOut, Clock, X } from 'lucide-react'
 import { Button } from '@/shared/components/ui/button'
 import { cn } from '@/shared/lib/utils'
 import { formatElapsedTime } from '../lib/utils'
@@ -148,16 +148,9 @@ export const DischargeModal = memo(function DischargeModal({
             variant="destructive"
             className="flex-1"
             onClick={onConfirm}
-            disabled={isSubmitting}
+            loading={isSubmitting}
           >
-            {isSubmitting ? (
-              <>
-                <Loader2 className="h-4 w-4 animate-spin mr-2" />
-                Discharging…
-              </>
-            ) : (
-              'Confirm Discharge'
-            )}
+            Confirm Discharge
           </Button>
         </div>
       </div>

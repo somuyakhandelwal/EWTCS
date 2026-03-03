@@ -15,7 +15,7 @@ import {
 } from '@/shared/components/ui/card'
 import { AlertCircle, BedDouble, AlertTriangle } from 'lucide-react'
 import { cn } from '@/shared/lib/utils'
-import { formatDuration } from '@/features/bed-dashboard/lib/duration-formatters'
+import { formatDuration } from '@/shared/lib/duration-formatters'
 import { useBedPerformanceData } from '../hooks/useBedPerformanceData'
 import { BedPerformanceTable } from './BedPerformanceTable'
 import { BedPerformanceChart } from './BedPerformanceChart'

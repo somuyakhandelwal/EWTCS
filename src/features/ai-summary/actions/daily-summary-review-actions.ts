@@ -25,7 +25,7 @@ import {
 } from '../lib/daily-summary-review-store'
 // Cross-feature import (ai-summary → management-report): required to sync sign-off
 // records when an AI summary is approved. Sign-off creation is non-fatal.
-import { createSignOff } from '@/features/management-report/lib/signoff-queries'
+import { createSignOff } from '@/shared/lib/signoff-queries'
 import type { DailySummary } from '../types/daily-summary'
 
 type ActionResult = { success: boolean; summary?: DailySummary; error?: string }

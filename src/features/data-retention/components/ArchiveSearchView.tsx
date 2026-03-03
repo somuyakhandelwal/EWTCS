@@ -107,7 +107,8 @@ export function ArchiveSearchView({ className }: ArchiveSearchViewProps) {
             size="sm"
             onClick={handleSearch}
             disabled={isPending || !from || !to}
-            className="h-8 bg-zinc-700 hover:bg-zinc-600 text-card-foreground text-xs"
+            variant="secondary"
+            className="h-8 text-xs"
           >
             {isPending
               ? <><Loader2 className="h-3.5 w-3.5 mr-1.5 animate-spin" />Searching…</>

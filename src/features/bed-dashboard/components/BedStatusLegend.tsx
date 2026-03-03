@@ -71,8 +71,8 @@ export const BedStatusLegend = memo(function BedStatusLegend({ stages, delayThre
           <div className="mt-3 pt-3 border-t border-border flex flex-wrap gap-4" role="list">
             {/* US-15.3: Critical Escalation indicator */}
             <div className="flex items-center gap-2" role="listitem" tabIndex={0} aria-label={`Critical Escalation: more than ${escalationThresholdLabel}`}>
-              <div className="w-5 h-5 rounded border-2 border-fuchsia-400 dark:border-fuchsia-700 bg-fuchsia-100 dark:bg-fuchsia-900/50 flex items-center justify-center motion-safe:animate-pulse" aria-hidden="true">
-                <AlertTriangle className="h-3.5 w-3.5 text-fuchsia-700 dark:text-fuchsia-400" />
+              <div className="w-5 h-5 rounded border-2 border-status-escalated/50 bg-status-escalated/10 flex items-center justify-center motion-safe:animate-pulse" aria-hidden="true">
+                <AlertTriangle className="h-3.5 w-3.5 text-status-escalated" />
               </div>
               <span className="text-xs text-muted-foreground">
                 Critical Escalation (&gt;{escalationThresholdLabel})
@@ -80,8 +80,8 @@ export const BedStatusLegend = memo(function BedStatusLegend({ stages, delayThre
             </div>
             {/* Delay indicator */}
             <div className="flex items-center gap-2" role="listitem" tabIndex={0} aria-label={`Delayed: more than ${thresholdLabel}`}>
-              <div className="w-5 h-5 rounded border-2 border-red-400 dark:border-red-700 bg-red-100 dark:bg-red-900/50 flex items-center justify-center motion-safe:animate-pulse" aria-hidden="true">
-                <AlertCircle className="h-3.5 w-3.5 text-red-700 dark:text-red-400" />
+              <div className="w-5 h-5 rounded border-2 border-status-delayed/50 bg-status-delayed/10 flex items-center justify-center motion-safe:animate-pulse" aria-hidden="true">
+                <AlertCircle className="h-3.5 w-3.5 text-status-delayed" />
               </div>
               <span className="text-xs text-muted-foreground">
                 Delayed (&gt;{thresholdLabel})
@@ -89,8 +89,8 @@ export const BedStatusLegend = memo(function BedStatusLegend({ stages, delayThre
             </div>
             {/* US-1.6: Disposition bottleneck key */}
             <div className="flex items-center gap-2" role="listitem" tabIndex={0} aria-label="Disposition Hold: more than 30 minutes in Decision Made">
-              <div className="w-5 h-5 rounded border-2 border-amber-400 dark:border-amber-700 bg-amber-100 dark:bg-amber-900/40 flex items-center justify-center motion-safe:animate-pulse" aria-hidden="true">
-                <Clock className="h-3.5 w-3.5 text-amber-600 dark:text-amber-400" />
+              <div className="w-5 h-5 rounded border-2 border-status-cleaning/50 bg-status-cleaning/10 flex items-center justify-center motion-safe:animate-pulse" aria-hidden="true">
+                <Clock className="h-3.5 w-3.5 text-status-cleaning" />
               </div>
               <span className="text-xs text-muted-foreground">
                 Disposition Hold (&gt;30 min in Decision Made)

@@ -3,7 +3,7 @@
 import { getAllStages, getBedsWithElapsedTime, getBedById } from '../lib/queries'
 import { logger } from '@/shared/config/logger'
 import type { BedGridData } from '../types/bed'
-import { getUserWard, getBedWard } from '../lib/bed-queries'
+import { getUserWard, getBedAccessInfo } from '../lib/bed-queries'
 import { requireRole } from '@/shared/lib/auth'
 import { categorizeStagesForTransition } from '../lib/stage-validation'
 import { getGlobalThresholdMs, getGlobalEscalationThresholdMs } from '@/shared/lib/threshold'
@@ -120,13 +120,21 @@ export async function getValidTransitionsForBed(bedId: string): Promise<{
     const session = await requireRole(['nurse', 'supervisor', 'admin', 'housekeeping'])
 
     // Verify user has access to this bed — mirrors the same logic in bed-actions.ts
-    const userWard = await getUserWard(session.userId)
-    const bedWard = await getBedWard(bedId)
+    const [userWard, bedInfo] = await Promise.all([
+      getUserWard(session.userId),
+      getBedAccessInfo(bedId)
+    ])
+
+    if (!bedInfo) {
+      return { success: false, error: 'Bed not found' }
+    }
 
     const hasWardAccess =
       session.role === 'admin' ||
-      (!userWard && !bedWard) ||
-      (userWard && bedWard && userWard === bedWard)
+      bedInfo.is_virtual ||
+      bedInfo.is_temporary ||
+      (!userWard && !bedInfo.ward_id) ||
+      (userWard && bedInfo.ward_id && userWard === bedInfo.ward_id)
 
     if (!hasWardAccess) {
       return {

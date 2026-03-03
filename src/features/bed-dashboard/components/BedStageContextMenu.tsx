@@ -80,13 +80,27 @@ export function BedStageContextMenu({
     return null
   }
 
+  // US-2.2 FLASHY BUG FIX: If we are still loading transition rules, show a loading state
+  // instead of a briefly-full (but disabled) menu. This prevents the "flash" of items.
+  if (isUpdating && !error) {
+    return (
+      <ContextMenu
+        isOpen={isOpen}
+        position={position}
+        items={[]}
+        onClose={onClose}
+        header={bed ? `Verifying access for ${bed.bedNumber}...` : "Checking access..."}
+      />
+    )
+  }
+
   return (
     <ContextMenu
       isOpen={isOpen}
       position={position}
       items={error ? [] : items}
       onClose={onClose}
-      header={`Update ${bed.bedNumber}`}
+      header={bed ? `Update ${bed.bedNumber}` : "Update Bed"}
       error={error}
     />
   )

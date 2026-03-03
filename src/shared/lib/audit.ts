@@ -4,12 +4,30 @@ import { logger } from '@/shared/config/logger'
 import { headers } from 'next/headers'
 import { getClientIpFromHeaders } from '@/shared/lib/request-ip'
 
+/** Used when entity_id cannot be represented as a UUID (e.g. key-value system settings). */
+const NIL_UUID = '00000000-0000-0000-0000-000000000000'
+const UUID_RE  = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
+
+/**
+ * Coerces `entityId` to a valid UUID.
+ * If it is not already a UUID, returns the nil UUID and records the original
+ * value in the returned metadata so traceability is not lost.
+ */
+function resolveEntityId(
+    entityId: string,
+    metadata: Record<string, unknown>,
+): { entityId: string; metadata: Record<string, unknown> } {
+    if (UUID_RE.test(entityId)) return { entityId, metadata }
+    return {
+        entityId: NIL_UUID,
+        metadata: { ...metadata, _entityRef: entityId },
+    }
+}
+
 /**
  * Generic audit logging system for all features
  * Use this for tracking any entity changes (users, beds, patients, etc.)
- */
-
-export type AuditAction = 'CREATE' | 'UPDATE' | 'DELETE' | 'ACTIVATE' | 'DEACTIVATE' | 'LOGIN' | 'LOGOUT' | string
+ */export type AuditAction = 'CREATE' | 'UPDATE' | 'DELETE' | 'ACTIVATE' | 'DEACTIVATE' | 'LOGIN' | 'LOGOUT' | string
 
 export interface AuditLogEntry {
     /** Type of action performed */
@@ -48,29 +66,8 @@ export interface AuditLogRecord {
     target_username?: string | null
 }
 
-/**
- * Log any entity action to audit trail
- * 
- * @example
- * // Log user creation
- * await logAudit({
- *   actionType: 'CREATE',
- *   entityType: 'user',
- *   entityId: newUserId,
- *   performedBy: adminId,
- *   changes: { username, role }
- * })
- * 
- * // Log bed status change
- * await logAudit({
- *   actionType: 'UPDATE',
- *   entityType: 'bed',
- *   entityId: bedId,
- *   performedBy: nurseId,
- *   changes: { status: 'occupied' },
- *   reason: 'Patient admitted'
- * })
- */
+/** Log any entity action to the audit trail. Non-UUID entityId values are
+ *  coerced to the nil UUID; the original string is stored in metadata._entityRef. */
 export async function logAudit(entry: AuditLogEntry): Promise<void> {
     try {
         let resolvedIpAddress = entry.ipAddress || null
@@ -84,6 +81,9 @@ export async function logAudit(entry: AuditLogEntry): Promise<void> {
             }
         }
 
+        // entity_id column is UUID — coerce non-UUID values to nil UUID.
+        const { entityId, metadata } = resolveEntityId(entry.entityId, entry.metadata ?? {})
+
         await pool.query(
             `INSERT INTO audit_logs 
             (action_type, entity_type, entity_id, performed_by_user_id, changes, reason, metadata, ip_address) 
@@ -91,11 +91,11 @@ export async function logAudit(entry: AuditLogEntry): Promise<void> {
             [
                 entry.actionType,
                 entry.entityType,
-                entry.entityId,
+                entityId,
                 entry.performedBy,
                 JSON.stringify(entry.changes || {}),
                 entry.reason || null,
-                JSON.stringify(entry.metadata || {}),
+                JSON.stringify(metadata),
                 resolvedIpAddress,
             ]
         )

@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server'
 import { z } from 'zod'
 import bcrypt from 'bcrypt'
 import pool from '@/shared/lib/db'
+import { logger } from '@/shared/config/logger'
 import { createSession, type KioskOptions } from '@/shared/lib/session'
 import { createKioskSession } from '@/features/auth/lib/kiosk'
 
@@ -92,7 +93,7 @@ export async function POST(request: Request) {
 
     return NextResponse.json({ success: true, redirectTo })
   } catch (error) {
-    console.error('Login API error:', error)
+    logger.error('Login API error', error instanceof Error ? error : undefined)
     return NextResponse.json({ success: false, message: 'Internal server error' }, { status: 500 })
   }
 }

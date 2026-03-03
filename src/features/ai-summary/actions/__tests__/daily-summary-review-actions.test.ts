@@ -7,7 +7,7 @@ vi.mock('@/shared/lib/audit', () => ({ logAudit: vi.fn() }))
 vi.mock('@/shared/config/logger', () => ({
     logger: { info: vi.fn(), warn: vi.fn(), error: vi.fn() },
 }))
-vi.mock('@/features/management-report/lib/signoff-queries', () => ({
+vi.mock('@/shared/lib/signoff-queries', () => ({
     createSignOff: vi.fn(),
 }))
 vi.mock('@/features/ai-summary/lib/daily-summary-store', () => ({
@@ -28,7 +28,7 @@ import {
     flagInsight,
     getDraftSummariesPendingReview,
 } from '@/features/ai-summary/lib/daily-summary-review-store'
-import { createSignOff } from '@/features/management-report/lib/signoff-queries'
+import { createSignOff } from '@/shared/lib/signoff-queries'
 import {
     approveSummary,
     rejectSummary,

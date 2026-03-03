@@ -5,7 +5,7 @@
 //
 // Pure SVG — no external chart library required.
 
-import { memo } from 'react'
+import { memo, useState } from 'react'
 import { cn } from '@/shared/lib/utils'
 
 interface DelayedPatientGaugeProps {
@@ -52,6 +52,7 @@ export const DelayedPatientGauge = memo(function DelayedPatientGauge({
   targetPct,
   className,
 }: DelayedPatientGaugeProps) {
+  const [pinHovered, setPinHovered] = useState(false)
   const clampedPct = Math.max(0, Math.min(100, pct))
   // 0% → 0°, 100% → 180° (semi-circle)
   const fillDeg = (clampedPct / 100) * 180
@@ -92,15 +93,44 @@ export const DelayedPatientGauge = memo(function DelayedPatientGauge({
 
       {/* Target marker pin */}
       {targetPos && (
-        <circle
-          cx={targetPos.x}
-          cy={targetPos.y}
-          r={5}
-          fill="#f59e0b"
-          stroke="#1c1917"
-          strokeWidth={2}
-          aria-label={`Target: ${targetPct}%`}
-        />
+        <g
+          style={{ cursor: 'default' }}
+          onMouseEnter={() => setPinHovered(true)}
+          onMouseLeave={() => setPinHovered(false)}
+        >
+          <circle
+            cx={targetPos.x}
+            cy={targetPos.y}
+            r={pinHovered ? 7 : 5}
+            fill="#f59e0b"
+            stroke="#1c1917"
+            strokeWidth={2}
+            style={{ transition: 'r 0.15s' }}
+            aria-label={`Target: ${targetPct}%`}
+          />
+          {pinHovered && (
+            <>
+              <rect
+                x={targetPos.x - 36}
+                y={targetPos.y - 26}
+                width={72}
+                height={18}
+                rx={4}
+                fill="#3f3f46"
+                stroke="#52525b"
+                strokeWidth={1}
+              />
+              <text
+                x={targetPos.x}
+                y={targetPos.y - 13}
+                textAnchor="middle"
+                style={{ fontSize: 10, fill: '#fbbf24', fontFamily: 'inherit', fontWeight: 600 }}
+              >
+                Target: {targetPct}%
+              </text>
+            </>
+          )}
+        </g>
       )}
 
       {/* Centre label */}

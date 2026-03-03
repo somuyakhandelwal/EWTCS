@@ -14,27 +14,27 @@ interface DelayedBedCountBannerProps {
 
 function getBannerStyle(count: number) {
   if (count === 0) return {
-    bg: 'bg-green-950/40',
-    border: 'border-green-800/50',
-    text: 'text-green-400',
-    label: 'text-green-300',
-    icon: <CheckCircle className="h-8 w-8 text-green-400" />,
+    bg: 'bg-status-success/10',
+    border: 'border-status-success/30',
+    text: 'text-status-success',
+    label: 'text-status-success/80',
+    icon: <CheckCircle className="h-8 w-8 text-status-success" />,
     message: 'All patients on track',
   }
   if (count <= 2) return {
-    bg: 'bg-yellow-950/40',
-    border: 'border-yellow-800/50',
-    text: 'text-yellow-400',
-    label: 'text-yellow-300',
-    icon: <Clock className="h-8 w-8 text-yellow-400" />,
+    bg: 'bg-status-cleaning/10',
+    border: 'border-status-cleaning/30',
+    text: 'text-status-cleaning',
+    label: 'text-status-cleaning/80',
+    icon: <Clock className="h-8 w-8 text-status-cleaning" />,
     message: 'Requires attention',
   }
   return {
-    bg: 'bg-red-950/40',
-    border: 'border-red-800/50',
-    text: 'text-red-400',
-    label: 'text-red-300',
-    icon: <AlertTriangle className="h-8 w-8 text-red-400" />,
+    bg: 'bg-status-delayed/10',
+    border: 'border-status-delayed/30',
+    text: 'text-status-delayed',
+    label: 'text-status-delayed/80',
+    icon: <AlertTriangle className="h-8 w-8 text-status-delayed" />,
     message: 'Immediate action needed',
   }
 }

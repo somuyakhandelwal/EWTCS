@@ -16,7 +16,6 @@ import { isCleaningStage } from './CleaningActions'
 
 interface BedGridProps {
   data: BedGridData
-  searchQuery?: string
   onRefresh?: () => void
   onBedClick?: (bed: BedWithElapsedTime) => void
   onStageSelect?: (bedId: string, stageId: string) => void
@@ -36,7 +35,6 @@ interface BedGridProps {
 
 export function BedGrid({
   data,
-  searchQuery = '',
   onRefresh,
   onBedClick,
   onStageSelect,
@@ -67,35 +65,29 @@ export function BedGrid({
   const {
     showDelayedOnly,
     sortOrder,
-    displayedBeds: filteredBeds,
+    searchQuery,
+    displayedBeds,
     isFilterActive,
     toggleDelayedFilter,
     toggleSortOrder,
+    setSearchQuery,
     clearFilter,
   } = useBedFilter(data.beds)
-
-  // Further filter by search query
-  const displayedBeds = useMemo(() => {
-    if (!searchQuery.trim()) return filteredBeds
-    const q = searchQuery.toLowerCase()
-    return filteredBeds.filter(bed =>
-      bed.bedNumber.toLowerCase().includes(q) ||
-      bed.currentStage?.name.toLowerCase().includes(q)
-    )
-  }, [filteredBeds, searchQuery])
 
   const stats = useMemo(() => getBedStatistics(data.beds), [data.beds])
   const cleaningCount = useMemo(() => data.beds.filter(b => isCleaningStage(b.currentStage?.name)).length, [data.beds])
 
   return (
     <div className="space-y-6">
-      {/* Header with filters and actions */}
+      {/* Unified Header with Search, filters and actions */}
       <BedGridHeader
+        searchQuery={searchQuery}
         showDelayedOnly={showDelayedOnly}
         sortOrder={sortOrder}
         delayedCount={stats.delayed}
         isFilterActive={isFilterActive}
         isRefreshing={isRefreshing}
+        onSearchChange={setSearchQuery}
         onToggleFilter={toggleDelayedFilter}
         onToggleSortOrder={toggleSortOrder}
         onClearFilter={clearFilter}

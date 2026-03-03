@@ -1,9 +1,9 @@
 'use client'
 
-import { useCallback, useState, useRef, useEffect, useTransition } from 'react'
+import { useCallback, useState, useEffect, useTransition } from 'react'
 import { MapPin } from 'lucide-react'
+import { Button } from '@/shared/components/ui/button'
 import { BedGrid } from './BedGrid'
-import { SearchInput } from './SearchInput'
 import { ConnectionStatus } from './ConnectionStatus'
 import { SupervisorOverrideModal } from './SupervisorOverrideModal'
 import { ConfirmationModal } from './ConfirmationModal'
@@ -68,26 +68,6 @@ export function BedDashboardClient({
   // but cannot update useBedStageUpdate's isolated useState after mount.
   const { undoState, undoError, handleUndo, isUndoing } = useUndoManager(lastUpdatedBedId, lastUpdatedStageId, realtimeRefresh)
 
-  // Search state: immediate input and debounced query used for filtering (US-1.2)
-  const [searchInput, setSearchInput] = useState('')
-  const [searchQuery, setSearchQuery] = useState('')
-  const searchDebounceRef = useRef<NodeJS.Timeout | null>(null)
-
-  useEffect(() => {
-    if (searchDebounceRef.current) clearTimeout(searchDebounceRef.current)
-    searchDebounceRef.current = setTimeout(() => {
-      setSearchQuery(searchInput.trim())
-      searchDebounceRef.current = null
-    }, 200)
-
-    return () => {
-      if (searchDebounceRef.current) {
-        clearTimeout(searchDebounceRef.current)
-        searchDebounceRef.current = null
-      }
-    }
-  }, [searchInput])
-
   const handleBedClick = useCallback((bed: BedWithElapsedTime) => {
     void bed
   }, [])
@@ -116,30 +96,26 @@ export function BedDashboardClient({
 
   return (
     <div className="space-y-4">
-      {/* Search Input */}
-      <SearchInput
-        value={searchInput}
-        onChange={setSearchInput}
-        placeholder="Search by bed number (EW-01) or status (Triage)..."
-      />
-      {/* Connection Status Indicator */}
+      {/* Action Bar (Virtual Bed / Settings / Connection) */}
       <div className="flex justify-end items-center gap-2">
-        <button
-          type="button"
+        <Button
+          variant="outline"
+          size="sm"
           onClick={() => setVirtualBedModalOpen(true)}
-          className="flex items-center gap-1.5 rounded-md bg-muted border border-border px-3 py-1.5 text-xs font-semibold text-muted-foreground hover:bg-muted/70 transition-colors focus:ring-2 focus:ring-ring"
+          className="flex items-center gap-1.5 h-8 px-3 rounded-lg border-status-virtual/30 bg-status-virtual/5 text-status-virtual hover:bg-status-virtual/10 transition-colors font-semibold"
           title="Add virtual (hallway/stretcher) bed"
           aria-label="Add virtual hallway or stretcher bed"
         >
           <MapPin className="h-3.5 w-3.5" aria-hidden="true" />
-          Add Virtual Bed
-        </button>
+          <span className="text-xs font-medium">Add Virtual Bed</span>
+        </Button>
         <DashboardSettings
           enabled={settings.confirmCriticalStages}
           onToggle={toggleConfirmation}
         />
         <ConnectionStatus status={connectionStatus} onReconnect={reconnect} />
       </div>
+
       <BedGrid
         data={data}
         onRefresh={handleRefresh}
@@ -153,7 +129,6 @@ export function BedDashboardClient({
         lastUpdatedStageId={lastUpdatedStageId}
         errorByBedId={errorByBedId}
         isRefreshing={isLoading}
-        searchQuery={searchQuery}
         undoState={undoState}
         onUndo={handleUndo}
         isUndoing={isUndoing}

@@ -2,7 +2,7 @@
 
 import { memo, useEffect } from 'react'
 import { Button } from '@/shared/components/ui/button'
-import { Loader2, AlertTriangle, X } from 'lucide-react'
+import { AlertTriangle, X } from 'lucide-react'
 import type { Stage } from '../types/bed'
 import { cn } from '@/shared/lib/utils'
 import { getStageColorClasses } from '@/shared/utils/stage-colors'
@@ -109,7 +109,7 @@ export const ConfirmationModal = memo(function ConfirmationModal({
                     <Button
                         variant="outline"
                         onClick={onCancel}
-                        disabled={isUpdating}
+                        loading={isUpdating}
                         className="focus:ring-2 focus:ring-zinc-400"
                     >
                         Cancel
@@ -117,17 +117,10 @@ export const ConfirmationModal = memo(function ConfirmationModal({
                     <Button
                         variant="destructive"
                         onClick={onConfirm}
-                        disabled={isUpdating}
+                        loading={isUpdating}
                         className="focus:ring-2 focus:ring-red-400"
                     >
-                        {isUpdating ? (
-                            <>
-                                <Loader2 className="mr-2 h-4 w-4 animate-spin" aria-hidden="true" />
-                                <span>Updating...</span>
-                            </>
-                        ) : (
-                            'Confirm Update'
-                        )}
+                        Confirm Update
                     </Button>
                 </div>
             </div>

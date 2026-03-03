@@ -12,7 +12,6 @@ import { cn } from '@/shared/lib/utils'
 import { RetentionConfigForm } from './RetentionConfigForm'
 import { ArchivalRunsTable } from './ArchivalRunsTable'
 import { ArchiveSearchView } from './ArchiveSearchView'
-import { StorageStatsView } from './StorageStatsView'
 import { triggerArchival, fetchArchivalRuns } from '../actions/archival-actions'
 import type { ArchivalRun, RetentionConfig } from '../lib/data-retention-types'
 
@@ -98,23 +97,21 @@ export function DataRetentionView({
               </Button>
               {!readOnly && (
                 <Button size="sm" onClick={handleTrigger} disabled={isTriggerPending}
-                  className="h-7 bg-zinc-700 hover:bg-zinc-600 text-card-foreground text-xs">
+                  variant="secondary"
+                  className="h-7 text-xs">
                   {isTriggerPending ? 'Running…' : 'Run Now'}
                 </Button>
               )}
             </div>
           </div>
           {triggerFeedback && (
-            <p className="text-xs text-blue-400 mt-1">{triggerFeedback}</p>
+            <p className="text-xs text-retention mt-1">{triggerFeedback}</p>
           )}
         </CardHeader>
         <CardContent>
           <ArchivalRunsTable runs={runs} onApproved={handleRefresh} />
         </CardContent>
       </Card>
-
-      {/* ── Storage monitoring (US-14.4) ── */}
-      <StorageStatsView />
 
       {/* ── Archive search (US-14.3) — admin + auditor ── */}
       <ArchiveSearchView />

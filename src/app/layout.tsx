@@ -29,8 +29,11 @@ if (typeof window === "undefined") {
   void initializeSystem();
 }
 
+import { Suspense } from "react"
 import { ThemeProvider } from "@/shared/components/ThemeProvider"
 import { GlobalThemeToggle } from "@/shared/components/GlobalThemeToggle"
+import { RouteProgressBar } from "@/shared/components/RouteProgressBar"
+import { PageTransition } from "@/shared/components/PageTransition"
 
 export default function RootLayout({
   children,
@@ -48,8 +51,13 @@ export default function RootLayout({
           enableSystem
           disableTransitionOnChange
         >
+          <Suspense fallback={null}>
+            <RouteProgressBar />
+          </Suspense>
           <DatabaseStatusBanner />
-          {children}
+          <PageTransition>
+            {children}
+          </PageTransition>
           <GlobalThemeToggle />
         </ThemeProvider>
       </body>
