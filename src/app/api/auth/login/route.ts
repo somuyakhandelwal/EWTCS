@@ -8,7 +8,6 @@ import { createKioskSession } from '@/features/auth/lib/kiosk'
 import { logAudit } from '@/shared/lib/audit'
 import { getPasswordResetStatus } from '@/features/auth/lib/password-reset-db'
 import { logUnknownLoginAttempt } from '@/features/auth/lib/auth-helpers'
-import { logger } from '@/shared/config/logger'
 
 const loginSchema = z.object({
   username: z.string().min(1, 'Username is required'),
