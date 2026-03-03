@@ -5,6 +5,7 @@ import { redirect } from "next/navigation"
 import { AlertTriangle } from "lucide-react"
 import Link from "next/link"
 import { Tooltip } from "@/shared/components/ui/tooltip"
+import { FeedbackForm } from "@/features/adoption/components/FeedbackForm"
 
 import { verifyActiveSession } from "@/shared/lib/active-session"
 import { getBedGridData } from "@/features/bed-dashboard/actions/bed-grid-actions"
@@ -68,6 +69,13 @@ export default async function SupervisorDashboard() {
                     </p>
                     <SupervisorSummarySection />
                 </section>
+
+                {/* Feedback — hidden on kiosk sessions */}
+                {!session.isKiosk && (
+                    <div className="max-w-xl">
+                        <FeedbackForm />
+                    </div>
+                )}
             </div>
         </div>
     )

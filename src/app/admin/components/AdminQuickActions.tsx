@@ -1,5 +1,5 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/shared/components/ui/card"
-import { Bed, BarChart3, Clock, Layers, History, Building2, ListChecks } from "lucide-react"
+import { Bed, BarChart3, Clock, Layers, History, Building2, ListChecks, TrendingUp } from "lucide-react"
 import Link from "next/link"
 import { ImportDialog } from "@/features/import/components/ImportDialog"
 import { Tooltip } from "@/shared/components/ui/tooltip"
@@ -144,6 +144,26 @@ export function AdminQuickActions() {
                                     </h3>
                                     <p className="text-sm text-muted-foreground mt-1">
                                         Configure disposition hold dropdown options
+                                    </p>
+                                </div>
+                            </div>
+                        </Link>
+                    </Tooltip>
+                    <Tooltip content="Monitor staff usage and adoption" side="top" wrapperClassName="block">
+                        <Link
+                            href="/admin/adoption"
+                            className="p-4 rounded-lg bg-background border border-border hover:border-border hover:bg-background transition-all group"
+                        >
+                            <div className="flex items-start gap-3">
+                                <div className="p-2 bg-teal-900/20 border border-teal-900/50 rounded-lg group-hover:bg-teal-900/30 transition-colors">
+                                    <TrendingUp className="h-5 w-5 text-teal-500" />
+                                </div>
+                                <div>
+                                    <h3 className="font-semibold text-foreground group-hover:text-teal-400 transition-colors">
+                                        System Adoption
+                                    </h3>
+                                    <p className="text-sm text-muted-foreground mt-1">
+                                        Monitor staff usage and engagement
                                     </p>
                                 </div>
                             </div>
