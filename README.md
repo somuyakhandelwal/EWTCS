@@ -105,9 +105,9 @@ The setup script will:
 - Other users: `nurse`, `nurse1`, `supervisor1` (same password)
 - **Note:** These are created by `npm run db:seed` which runs `scripts/seed-db.js`
 
----
+## Setup ⚙️
 
-#### Manual Setup (For Experienced Developers)
+#### Manual Setup
 
 1. **Clone & install dependencies**
    ```bash

@@ -17,7 +17,6 @@ updates:
       - 'automated'
     commit-message:
       prefix: 'chore'
-      prefix-scope: 'deps'
       include: 'scope'
     ignore:
       # Ignore major version updates (require manual review)

@@ -8,7 +8,7 @@ import { Label } from '@/shared/components/ui/label'
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/shared/components/ui/card'
 import { Tooltip } from '@/shared/components/ui/tooltip'
 import ForgotPasswordInfo from '@/features/auth/components/ForgotPasswordInfo'
-import { motion } from 'framer-motion'
+import AuthBackground, { KioskRestoreLoader } from '@/features/auth/components/AuthBackground'
 
 export default function LoginPage() {
     const router = useRouter()
@@ -69,10 +69,7 @@ export default function LoginPage() {
             const result = await response.json()
 
             if (!response.ok || !result.success) {
-                setState({
-                    message: result.message,
-                    errors: result.errors,
-                })
+                setState({ message: result.message, errors: result.errors })
                 setPending(false)
                 return
             }
@@ -83,68 +80,42 @@ export default function LoginPage() {
 
             router.push(result.redirectTo || '/dashboard')
             router.refresh()
-            // Note: We don't setPending(false) here because we're navigating away
         } catch {
             setState({ message: 'Unable to sign in right now. Please try again.' })
             setPending(false)
         }
     }
 
-    if (isRestoring) {
-        return (
-            <div className="flex min-h-screen items-center justify-center bg-background px-4 py-12 relative overflow-hidden">
-                <div className="absolute top-0 left-0 w-full h-full overflow-hidden pointer-events-none">
-                    <div className="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] bg-muted/50 rounded-full blur-[100px]" />
-                    <div className="absolute bottom-[-10%] right-[-10%] w-[40%] h-[40%] bg-muted/50 rounded-full blur-[100px]" />
-                </div>
-                <div className="text-center text-muted-foreground animate-pulse text-lg relative z-10">
-                    Restoring kiosk session...
-                </div>
-            </div>
-        )
-    }
+    if (isRestoring) return <KioskRestoreLoader />
 
     return (
-        <div className="flex min-h-screen items-center justify-center bg-background px-4 py-12 sm:px-6 lg:px-8 relative overflow-hidden">
-
-            {/* Background decoration */}
-            <div className="absolute top-0 left-0 w-full h-full overflow-hidden pointer-events-none">
-                <div className="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] bg-muted/50 rounded-full blur-[100px]" />
-                <div className="absolute bottom-[-10%] right-[-10%] w-[40%] h-[40%] bg-muted/50 rounded-full blur-[100px]" />
-            </div>
-
-            <motion.div
-                initial={{ opacity: 0, y: 20, scale: 0.95 }}
-                animate={{ opacity: 1, y: 0, scale: 1 }}
-                transition={{ duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
-                className="w-full max-w-sm relative z-10"
-            >
-                <div data-help-id="login-form">
+        <AuthBackground>
+            <div data-help-id="login-form">
                 <Card className="w-full shadow-2xl bg-card/40 border-border backdrop-blur-2xl text-foreground">
                     <CardHeader>
-                        <CardTitle className="text-2xl font-bold text-center text-foreground">Sign In</CardTitle>
-                        <CardDescription className="text-center text-muted-foreground">
+                        <CardTitle className="text-2xl font-bold text-center">Sign In</CardTitle>
+                        <CardDescription className="text-center">
                             Enter your credentials to access the nurse dashboard
                         </CardDescription>
                     </CardHeader>
                     <form onSubmit={handleSubmit}>
                         <CardContent className="space-y-4">
                             <div className="space-y-2">
-                                <Label htmlFor="username" className="text-foreground">Username</Label>
+                                <Label htmlFor="username">Username</Label>
                                 <Input
                                     id="username"
                                     name="username"
                                     placeholder="Enter your username"
                                     required
                                     autoComplete="username"
-                                    className="bg-background/50 border-border text-foreground placeholder:text-muted-foreground focus:ring-ring focus:border-ring"
+                                    className="bg-background/50 border-border"
                                 />
                                 {state?.errors?.username && (
                                     <p className="text-sm text-red-500">{state.errors.username}</p>
                                 )}
                             </div>
                             <div className="space-y-2">
-                                <Label htmlFor="password" className="text-foreground">Password</Label>
+                                <Label htmlFor="password">Password</Label>
                                 <Input
                                     id="password"
                                     type="password"
@@ -152,7 +123,7 @@ export default function LoginPage() {
                                     placeholder="••••••••"
                                     required
                                     autoComplete="current-password"
-                                    className="bg-background/50 border-border text-foreground placeholder:text-muted-foreground focus:ring-ring focus:border-ring"
+                                    className="bg-background/50 border-border"
                                 />
                                 {state?.errors?.password && (
                                     <p className="text-sm text-red-500">{state.errors.password}</p>
@@ -164,25 +135,22 @@ export default function LoginPage() {
                                 </div>
                             )}
 
-                            {/* US-5.3: Kiosk Mode option — for dedicated nurse workstations */}
                             <div data-help-id="login-kiosk" className="flex items-start gap-3 pt-1">
                                 <input
                                     id="kioskMode"
                                     name="kioskMode"
                                     type="checkbox"
-                                    className="mt-0.5 h-4 w-4 rounded border-border bg-background/50 accent-primary cursor-pointer"
+                                    className="mt-1 h-4 w-4 rounded border-border bg-background/50 accent-primary cursor-pointer"
                                 />
                                 <div>
-                                    <Label htmlFor="kioskMode" className="text-foreground font-normal cursor-pointer">
+                                    <Label htmlFor="kioskMode" className="font-normal cursor-pointer">
                                         Enable Kiosk Mode
                                     </Label>
-                                    <p className="text-[11px] text-muted-foreground mt-0.5">
-                                        Session never expires — for dedicated nurse workstations only
+                                    <p className="text-[11px] text-muted-foreground mt-0.5 leading-none">
+                                        Session never expires — for dedicated nurse workstations
                                     </p>
                                 </div>
                             </div>
-
-                            {/* US-5.5: Forgot password info */}
                             <ForgotPasswordInfo />
                         </CardContent>
                         <CardFooter>
@@ -194,12 +162,7 @@ export default function LoginPage() {
                         </CardFooter>
                     </form>
                 </Card>
-                </div>
-            </motion.div>
-
-            <div className="absolute bottom-4 text-muted-foreground text-xs text-center w-full">
-                &copy; 2026 EWTCS Project
             </div>
-        </div>
+        </AuthBackground>
     )
 }

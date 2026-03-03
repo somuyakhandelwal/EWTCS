@@ -9,7 +9,6 @@ if (!secretKey) {
 }
 const encodedKey = new TextEncoder().encode(secretKey)
 
-// US-5.2: Configurable session durations via environment variables
 const SESSION_MAX_AGE_MS = Number(process.env.SESSION_MAX_AGE_MS) || 12 * 60 * 60 * 1000      // 12 hours
 const INACTIVITY_TIMEOUT_MS = Number(process.env.INACTIVITY_TIMEOUT_MS) || 30 * 60 * 1000     // 30 min idle
 
