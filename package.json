@@ -27,7 +27,11 @@
     "validate:all": "npm run validate:env && npm run validate:db && npm run validate:migrations && npm run validate:schema && npm run build",
     "perf:seed": "node scripts/seed-realistic-performance-volume.js",
     "perf:check": "node scripts/run-performance-gate.js",
-    "perf:validate": "npm run perf:seed && npm run perf:check"
+    "perf:validate": "npm run perf:seed && npm run perf:check",
+    "backup:run": "node scripts/db-backup.mjs",
+    "backup:verify": "node scripts/db-backup-verify.mjs",
+    "backup:restore": "node scripts/db-restore.mjs",
+    "backup:setup": "node scripts/setup-backup-cron.mjs"
   },
   "dependencies": {
     "@google/generative-ai": "^0.24.1",
