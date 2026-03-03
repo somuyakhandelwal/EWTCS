@@ -4,39 +4,42 @@
 
 'use client'
 
-import { useState, useTransition } from 'react'
+import { useState, useTransition, useEffect } from 'react'
 import { Hourglass, ChevronDown, ChevronUp } from 'lucide-react'
 import { cn } from '@/shared/lib/utils'
 import type { BedWithElapsedTime, DispositionDelayReason } from '../types/bed'
-import { DISPOSITION_DELAY_REASON_LABELS } from '../types/bed'
 import { formatElapsedTime } from '../lib/utils'
 import { recordDispositionDelayReason } from '../actions/disposition-actions'
+import { getActiveDelayReasonOptions } from '../actions/delay-reason-options-actions'
+import type { DelayReasonOption } from '../actions/delay-reason-options-actions'
 
 interface BottleneckPanelProps {
   beds: BedWithElapsedTime[]
   onReasonRecorded?: () => void
 }
 
-const REASON_OPTIONS = Object.entries(DISPOSITION_DELAY_REASON_LABELS) as [
-  DispositionDelayReason,
-  string,
-][]
-
 export function BottleneckPanel({ beds, onReasonRecorded }: BottleneckPanelProps) {
   const [isExpanded, setIsExpanded] = useState(true)
   const [savingBedId, setSavingBedId] = useState<string | null>(null)
   const [errorByBedId, setErrorByBedId] = useState<Record<string, string>>({})
+  const [reasonOptions, setReasonOptions] = useState<DelayReasonOption[]>([])
   const [, startTransition] = useTransition()
 
-  const bottleneckBeds = beds.filter(b => b.isDispositionBottleneck)
+  useEffect(() => {
+    getActiveDelayReasonOptions().then(setReasonOptions)
+  }, [])
 
+  const bottleneckBeds = beds.filter(b => b.isDispositionBottleneck)
   if (bottleneckBeds.length === 0) return null
 
-  async function handleReasonChange(bedId: string, reason: DispositionDelayReason) {
+  async function handleReasonChange(bedId: string, reason: string) {
     setSavingBedId(bedId)
     setErrorByBedId(prev => ({ ...prev, [bedId]: '' }))
 
-    const result = await recordDispositionDelayReason({ bedId, reason })
+    const result = await recordDispositionDelayReason({
+      bedId,
+      reason: reason as DispositionDelayReason,
+    })
 
     setSavingBedId(null)
 
@@ -45,14 +48,11 @@ export function BottleneckPanel({ beds, onReasonRecorded }: BottleneckPanelProps
       return
     }
 
-    startTransition(() => {
-      onReasonRecorded?.()
-    })
+    startTransition(() => { onReasonRecorded?.() })
   }
 
   return (
     <div className="rounded-lg border border-amber-500/30 bg-muted/20">
-      {/* Header — always visible */}
       <button
         type="button"
         onClick={() => setIsExpanded(prev => !prev)}
@@ -60,9 +60,7 @@ export function BottleneckPanel({ beds, onReasonRecorded }: BottleneckPanelProps
       >
         <div className="flex items-center gap-2">
           <Hourglass className="h-4 w-4 text-amber-400 shrink-0" />
-          <span className="text-sm font-semibold text-amber-500">
-            Disposition Hold
-          </span>
+          <span className="text-sm font-semibold text-amber-500">Disposition Hold</span>
           <span className="ml-1 rounded-full bg-amber-500 px-2 py-0.5 text-xs font-bold text-background">
             {bottleneckBeds.length}
           </span>
@@ -70,14 +68,11 @@ export function BottleneckPanel({ beds, onReasonRecorded }: BottleneckPanelProps
             patient{bottleneckBeds.length !== 1 ? 's' : ''} waiting for beds upstairs
           </span>
         </div>
-        {isExpanded ? (
-          <ChevronUp className="h-4 w-4 text-amber-400" />
-        ) : (
-          <ChevronDown className="h-4 w-4 text-amber-400" />
-        )}
+        {isExpanded
+          ? <ChevronUp className="h-4 w-4 text-amber-400" />
+          : <ChevronDown className="h-4 w-4 text-amber-400" />}
       </button>
 
-      {/* Expanded table */}
       {isExpanded && (
         <div className="border-t border-border px-4 pb-4">
           <div className="mt-3 divide-y divide-border">
@@ -95,14 +90,14 @@ export function BottleneckPanel({ beds, onReasonRecorded }: BottleneckPanelProps
                       'disabled:opacity-50'
                     )}
                     value={bed.dispositionDelayReason ?? ''}
-                    disabled={savingBedId === bed.id}
-                    onChange={e =>
-                      handleReasonChange(bed.id, e.target.value as DispositionDelayReason)
-                    }
+                    disabled={savingBedId === bed.id || reasonOptions.length === 0}
+                    onChange={e => handleReasonChange(bed.id, e.target.value)}
                   >
-                    <option value="" disabled>Select reason…</option>
-                    {REASON_OPTIONS.map(([value, label]) => (
-                      <option key={value} value={value}>{label}</option>
+                    <option value="" disabled>
+                      {reasonOptions.length === 0 ? 'Loading…' : 'Select reason…'}
+                    </option>
+                    {reasonOptions.map(opt => (
+                      <option key={opt.id} value={opt.value}>{opt.label}</option>
                     ))}
                   </select>
                   {errorByBedId[bed.id] && (
