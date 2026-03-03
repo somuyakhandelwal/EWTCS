@@ -13,6 +13,7 @@ Start here if you're new to the project:
 ## 📚 Core Documentation
 
 ### Setup & Configuration
+- **[INSTALLATION_GUIDE.md](../INSTALLATION_GUIDE.md)** - Step-by-step production deployment guide for system administrators (EPIC 18)
 - **[DATABASE_SETUP.md](../DATABASE_SETUP.md)** - PostgreSQL installation, database creation, migrations
 - **[CONFIGURATION.md](../CONFIGURATION.md)** - Environment variables, deployment, production setup
 - **[ADMIN_HANDBOOK.md](ADMIN_HANDBOOK.md)** - Admin operations runbook for configuration, backups, troubleshooting, security, and command references
@@ -70,6 +71,7 @@ Historical requirements and design documents (for reference only):
 | Task | Documentation |
 |------|---------------|
 | Install the system | [QUICKSTART.md](../QUICKSTART.md) |
+| Deploy to production | [INSTALLATION_GUIDE.md](../INSTALLATION_GUIDE.md) |
 | Set up database | [DATABASE_SETUP.md](../DATABASE_SETUP.md) |
 | Configure environment | [CONFIGURATION.md](../CONFIGURATION.md) & [.env.example](../.env.example) |
 | Run admin operations | [ADMIN_HANDBOOK.md](ADMIN_HANDBOOK.md) |
