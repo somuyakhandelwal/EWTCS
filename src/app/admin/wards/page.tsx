@@ -2,6 +2,7 @@ import { verifyActiveSession } from '@/shared/lib/active-session'
 import { redirect } from 'next/navigation'
 import Link from 'next/link'
 import { Button } from '@/shared/components/ui/button'
+import { Tooltip } from '@/shared/components/ui/tooltip'
 import { AlertTriangle } from 'lucide-react'
 import { getAllWards } from '@/features/ward-management/actions/ward-actions'
 import { WardTable } from '@/features/ward-management/components/WardTable'
@@ -22,9 +23,11 @@ export default async function WardManagementPage() {
             <div className="min-h-screen bg-background text-foreground p-3 sm:p-8">
                 <div className="max-w-7xl mx-auto space-y-6">
                     <div className="mb-6">
-                        <Link href="/admin">
-                            <Button variant="outline">← Back to Admin</Button>
-                        </Link>
+                        <Tooltip content="Return to admin overview" side="bottom">
+                            <Link href="/admin">
+                                <Button variant="outline">← Back to Admin</Button>
+                            </Link>
+                        </Tooltip>
                     </div>
 
                     <div className="rounded-lg border border-destructive/20 bg-destructive/10 p-8 text-center">
@@ -46,10 +49,12 @@ export default async function WardManagementPage() {
     return (
         <div className="min-h-screen bg-background text-foreground p-3 sm:p-8">
             <div className="max-w-7xl mx-auto space-y-6">
-                <div className="flex items-center justify-between">
-                    <Link href="/admin">
-                        <Button variant="outline">← Back to Admin</Button>
-                    </Link>
+                <div className="flex items-center justify-between" data-help-id="admin-wards-header">
+                    <Tooltip content="Return to admin overview" side="bottom">
+                        <Link href="/admin">
+                            <Button variant="outline">← Back to Admin</Button>
+                        </Link>
+                    </Tooltip>
                     <div className="text-right">
                         <p className="text-sm text-muted-foreground">
                             Logged in as <span className="text-foreground">{session.username}</span>
@@ -68,7 +73,9 @@ export default async function WardManagementPage() {
                     <AddWardDialog />
                 </div>
 
-                <WardTable wards={wards} />
+                <div data-help-id="admin-wards-table">
+                    <WardTable wards={wards} />
+                </div>
             </div>
         </div>
     )

@@ -3,6 +3,7 @@ import { BedDashboardContainer } from "@/features/bed-dashboard/components/BedDa
 import { BedGridSkeleton } from "@/features/bed-dashboard/components/BedGridSkeleton"
 import { LogoutButton } from "@/features/auth/components/LogoutButton"
 import { KioskBanner } from "@/features/auth/components/KioskBanner"
+import { FeedbackForm } from "@/features/adoption/components/FeedbackForm"
 import { redirect } from "next/navigation"
 import { Suspense } from "react"
 
@@ -20,7 +21,7 @@ export default async function DashboardPage() {
             )}
             <div className="max-w-7xl mx-auto space-y-6 sm:space-y-8">
                 {/* Header */}
-                <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+                <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between" data-help-id="dashboard-header">
                     <div>
                         <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-foreground">
                             Hello, {session?.username || 'Nurse'}
@@ -34,8 +35,15 @@ export default async function DashboardPage() {
 
                 {/* Bed Grid - Streamed */}
                 <Suspense fallback={<BedGridSkeleton />}>
-                    <BedDashboardContainer role={session.role} isKiosk={session.isKiosk} />
+                    <BedDashboardContainer role={session.role} />
                 </Suspense>
+
+                {/* Feedback — hidden on kiosk sessions */}
+                {!session.isKiosk && (
+                    <div className="max-w-xl">
+                        <FeedbackForm />
+                    </div>
+                )}
             </div>
         </div>
     )

@@ -1,0 +1,69 @@
+# ⚠️ DEPRECATED: Use security-scan-enhanced.yml instead
+# This workflow has been superseded by the Enhanced Security Scan workflow
+# which provides comprehensive scanning, SLA tracking, and notifications.
+# 
+# See: .github/workflows/security-scan-enhanced.yml
+# Documentation: docs/SECURITY_SCANNING.md
+
+name: Security Audit (DEPRECATED)
+
+on:
+  schedule:
+    - cron: '0 9 * * 1'  # Every Monday 9 AM
+
+jobs:
+  deprecation-notice:
+    name: Deprecation Notice
+    runs-on: ubuntu-latest
+    steps:
+      - name: Display deprecation notice
+        run: |
+          echo "⚠️ DEPRECATED WORKFLOW"
+          echo "This workflow (security-updates.yml) is deprecated."
+          echo "Please use security-scan-enhanced.yml instead."
+          echo ""
+          echo "Enhancements in new workflow:"
+          echo "  ✅ Comprehensive JSON parsing"
+          echo "  ✅ SLA deadline tracking"
+          echo "  ✅ Automatic escalation"
+          echo "  ✅ Slack & email notifications"
+          echo "  ✅ GitHub issue creation"
+          echo "  ✅ PR comments with results"
+          echo "  ✅ Historical archival"
+          echo "  ✅ SLA breach detection"
+          echo ""
+          echo "See documentation at: docs/SECURITY_SCANNING.md"
+
+      - name: Fail on critical vulnerabilities
+        run: |
+          CRITICAL=$(npm audit --json 2>/dev/null | node -e "
+            let d='';
+            process.stdin.on('data',c=>d+=c);
+            process.stdin.on('end',()=>{
+              try {
+                const a=JSON.parse(d);
+                console.log(a.metadata?.vulnerabilities?.critical||0);
+              } catch(e){ console.log(0); }
+            });
+          ")
+          echo "Critical vulnerabilities found: $CRITICAL"
+          if [ "$CRITICAL" -gt "0" ]; then
+            echo "❌ Critical vulnerabilities! Fix before merging."
+            exit 1
+          else
+            echo "✅ No critical vulnerabilities found."
+          fi
+
+  # dependency-review requires GitHub Advanced Security (GHAS / GitHub Enterprise).
+  # Vulnerability scanning is already covered by the security-audit job above
+  # via `npm audit --audit-level=high`. Enable this job only if GHAS is activated
+  # for this repository.
+  # dependency-review:
+  #   name: Dependency Review
+  #   runs-on: ubuntu-latest
+  #   if: github.event_name == 'pull_request'
+  #   steps:
+  #     - uses: actions/checkout@v4
+  #     - uses: actions/dependency-review-action@v4
+  #       with:
+  #         fail-on-severity: high

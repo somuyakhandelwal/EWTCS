@@ -34,6 +34,7 @@ import { ThemeProvider } from "@/shared/components/ThemeProvider"
 import { GlobalThemeToggle } from "@/shared/components/GlobalThemeToggle"
 import { RouteProgressBar } from "@/shared/components/RouteProgressBar"
 import { PageTransition } from "@/shared/components/PageTransition"
+import { GlobalHelp } from "@/features/help/components/GlobalHelp"
 
 export default function RootLayout({
   children,
@@ -58,6 +59,7 @@ export default function RootLayout({
           <PageTransition>
             {children}
           </PageTransition>
+          <GlobalHelp />
           <GlobalThemeToggle />
         </ThemeProvider>
       </body>

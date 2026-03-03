@@ -6,6 +6,7 @@ import { Button } from '@/shared/components/ui/button'
 import { Input } from '@/shared/components/ui/input'
 import { Label } from '@/shared/components/ui/label'
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/shared/components/ui/card'
+import { Tooltip } from '@/shared/components/ui/tooltip'
 import ForgotPasswordInfo from '@/features/auth/components/ForgotPasswordInfo'
 import { motion } from 'framer-motion'
 
@@ -70,6 +71,7 @@ export default function LoginPage() {
                 transition={{ duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
                 className="w-full max-w-sm relative z-10"
             >
+                <div data-help-id="login-form">
                 <Card className="w-full shadow-2xl bg-card/40 border-border backdrop-blur-2xl text-foreground">
                     <CardHeader>
                         <CardTitle className="text-2xl font-bold text-center text-foreground">Sign In</CardTitle>
@@ -115,7 +117,7 @@ export default function LoginPage() {
                             )}
 
                             {/* US-5.3: Kiosk Mode option — for dedicated nurse workstations */}
-                            <div className="flex items-start gap-3 pt-1">
+                            <div data-help-id="login-kiosk" className="flex items-start gap-3 pt-1">
                                 <input
                                     id="kioskMode"
                                     name="kioskMode"
@@ -136,12 +138,15 @@ export default function LoginPage() {
                             <ForgotPasswordInfo />
                         </CardContent>
                         <CardFooter>
-                            <Button className="w-full" type="submit" loading={pending}>
-                                Sign In
-                            </Button>
+                            <Tooltip content="Sign in to your dashboard" side="top">
+                                <Button className="w-full" type="submit" loading={pending}>
+                                    Sign In
+                                </Button>
+                            </Tooltip>
                         </CardFooter>
                     </form>
                 </Card>
+                </div>
             </motion.div>
 
             <div className="absolute bottom-4 text-muted-foreground text-xs text-center w-full">

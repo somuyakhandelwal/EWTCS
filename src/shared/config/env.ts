@@ -16,6 +16,8 @@ const envSchema = z.object({
     .url('NEXT_PUBLIC_APP_URL must be a valid URL')
     .default('http://localhost:3000'),
   NODE_ENV: z.enum(['development', 'staging', 'production']).default('development'),
+  FORCE_HTTPS: z.enum(['true', 'false']).optional(),
+  HSTS_PRELOAD: z.enum(['true', 'false']).optional(),
   RED_ALERT_THRESHOLD_MS: z.coerce.number().int().positive().default(10800000),
   OPENAI_API_KEY: z.string().optional(),
   OPENAI_API_KEY_ENCRYPTED: z.string().optional(),
@@ -54,6 +56,17 @@ const envSchema = z.object({
         code: z.ZodIssueCode.custom,
         message: 'DATABASE_URL_ENCRYPTED is required in production for security',
         path: ['DATABASE_URL_ENCRYPTED'],
+      });
+    }
+  }
+
+  if ((value.NODE_ENV === 'production' || value.NODE_ENV === 'staging') && !value.NEXT_PUBLIC_APP_URL.startsWith('https://')) {
+    const isBuildTime = process.env.NEXT_PHASE === 'phase-production-build';
+    if (!isBuildTime) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: 'NEXT_PUBLIC_APP_URL must start with https:// in staging/production',
+        path: ['NEXT_PUBLIC_APP_URL'],
       });
     }
   }
@@ -100,7 +113,6 @@ const resolveSecret = (
       throw error;
     }
   }
-
   // During build time, allow plaintext even in production
   const isBuildTime = process.env.NEXT_PHASE === 'phase-production-build';
   if (requireEncrypted && !isBuildTime) {
@@ -138,7 +150,6 @@ const aiSecret = envVars.OPENAI_API_KEY_ENCRYPTED || envVars.OPENAI_API_KEY
     false
   )
   : null;
-
 // Gemini key (EPIC 9): read directly from env, used by ai-service.ts
 const geminiApiKey = envVars.GEMINI_API_KEY || envVars.GOOGLE_GENERATIVE_AI_API_KEY || null;
 
@@ -146,7 +157,6 @@ const createAppConfig = (env: z.infer<typeof envSchema>): AppConfig => {
   const isDevelopment = env.NODE_ENV === 'development';
   const isStaging = env.NODE_ENV === 'staging';
   const isProduction = env.NODE_ENV === 'production';
-
   return {
     database: {
       url: databaseSecret.value,
@@ -176,10 +186,8 @@ const createAppConfig = (env: z.infer<typeof envSchema>): AppConfig => {
     }),
   };
 };
-
 export const env = envVars;
 export const config = Object.freeze(createAppConfig(envVars));
-
 export const logConfigurationStatus = (): void => {
   logger.info('Environment configuration loaded successfully', {
     environment: env.NODE_ENV,
