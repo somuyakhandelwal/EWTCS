@@ -10,27 +10,12 @@ export { getBedsWithElapsedTime } from './bed-bottleneck-queries'
 export async function getAllBeds(): Promise<Bed[]> {
   try {
     const result = await query<Bed>(`
-      SELECT 
-        b.id,
-        b.bed_number as "bedNumber",
-        b.current_stage_id as "currentStageId",
-        b.patient_start_time as "patientStartTime",
-        b.last_stage_change as "lastStageChange",
-        b.is_occupied as "isOccupied",
-        b.is_active as "isActive",
-        b.is_temporary as "isTemporary",
-        b.is_virtual as "isVirtual",
-        b.metadata,
-        b.created_at as "createdAt",
-        b.updated_at as "updatedAt",
-        json_build_object(
-          'id', s.id,
-          'name', s.name,
-          'displayOrder', s.display_order,
-          'colorCode', s.color_code,
-          'description', s.description,
-          'isActive', s.is_active
-        ) as "currentStage"
+      SELECT b.id, b.bed_number as "bedNumber", b.current_stage_id as "currentStageId",
+        b.patient_start_time as "patientStartTime", b.last_stage_change as "lastStageChange",
+        b.is_occupied as "isOccupied", b.is_active as "isActive", b.is_temporary as "isTemporary",
+        b.is_virtual as "isVirtual", b.metadata, b.created_at as "createdAt", b.updated_at as "updatedAt",
+        json_build_object('id', s.id, 'name', s.name, 'displayOrder', s.display_order,
+          'colorCode', s.color_code, 'description', s.description, 'isActive', s.is_active) as "currentStage"
       FROM beds b
       LEFT JOIN stages s ON b.current_stage_id = s.id
       WHERE b.is_active = true

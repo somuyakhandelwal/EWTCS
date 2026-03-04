@@ -14,11 +14,7 @@ export default function LoginPage() {
     const router = useRouter()
     const [pending, setPending] = useState(false)
     const [restoringSession, setRestoringSession] = useState(true)
-    const [state, setState] = useState<{
-        message?: string
-        errors?: Record<string, string[]>
-    }>({})
-
+    const [state, setState] = useState<{ message?: string; errors?: Record<string, string[]> }>({})
     useEffect(() => {
         const restoreSession = async () => {
             const token = localStorage.getItem('kiosk_session_token')
@@ -46,7 +42,6 @@ export default function LoginPage() {
                 setRestoringSession(false)
             }
         }
-
         restoreSession()
     }, [router])
 
@@ -56,12 +51,7 @@ export default function LoginPage() {
         setState({})
 
         const formData = new FormData(event.currentTarget)
-        const payload = {
-            username: String(formData.get('username') || ''),
-            password: String(formData.get('password') || ''),
-            kioskMode: formData.get('kioskMode') === 'on',
-        }
-
+        const payload = { username: String(formData.get('username') || ''), password: String(formData.get('password') || ''), kioskMode: formData.get('kioskMode') === 'on' }
         try {
             const response = await fetch('/api/auth/login', {
                 method: 'POST',
@@ -111,13 +101,11 @@ export default function LoginPage() {
                 <div className="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] bg-muted/50 rounded-full blur-[100px]" />
                 <div className="absolute bottom-[-10%] right-[-10%] w-[40%] h-[40%] bg-muted/50 rounded-full blur-[100px]" />
             </div>
-
             <motion.div
                 initial={{ opacity: 0, y: 20, scale: 0.95 }}
                 animate={{ opacity: 1, y: 0, scale: 1 }}
                 transition={{ duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
-                className="w-full max-w-sm relative z-10"
-            >
+                className="w-full max-w-sm relative z-10">
                 <div data-help-id="login-form">
                     <Card className="w-full shadow-2xl bg-card/40 border-border backdrop-blur-2xl text-foreground">
                         <CardHeader>
@@ -162,15 +150,13 @@ export default function LoginPage() {
                                         {state.message}
                                     </div>
                                 )}
-
                                 {/* US-5.3: Kiosk Mode option — for dedicated nurse workstations */}
                                 <div data-help-id="login-kiosk" className="flex items-start gap-3 pt-1">
                                     <input
                                         id="kioskMode"
                                         name="kioskMode"
                                         type="checkbox"
-                                        className="mt-0.5 h-4 w-4 rounded border-border bg-background/50 accent-primary cursor-pointer"
-                                    />
+                                        className="mt-0.5 h-4 w-4 rounded border-border bg-background/50 accent-primary cursor-pointer" />
                                     <div>
                                         <Label htmlFor="kioskMode" className="text-foreground font-normal cursor-pointer">
                                             Enable Kiosk Mode
@@ -180,7 +166,6 @@ export default function LoginPage() {
                                         </p>
                                     </div>
                                 </div>
-
                                 {/* US-5.5: Forgot password info */}
                                 <ForgotPasswordInfo />
                             </CardContent>

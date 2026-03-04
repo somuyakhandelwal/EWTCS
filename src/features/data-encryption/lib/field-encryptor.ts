@@ -26,18 +26,10 @@ export function encryptField(
   masterKey: string = ENCRYPTION_KEY
 ): EncryptedFieldValue {
   try {
-    if (!plaintext || typeof plaintext !== 'string') {
-      throw new Error('Plaintext must be non-empty string');
-    }
-
-    if (!masterKey || typeof masterKey !== 'string') {
-      throw new Error('Master key is missing or invalid');
-    }
-
+    if (!plaintext || typeof plaintext !== 'string') throw new Error('Plaintext must be non-empty string');
+    if (!masterKey || typeof masterKey !== 'string') throw new Error('Master key is missing or invalid');
     // Validate key format
-    if (masterKey.length !== 64 || !/^[a-f0-9]{64}$/i.test(masterKey)) {
-      throw new Error('Master key must be 64-char hex string (256-bit)');
-    }
+    if (masterKey.length !== 64 || !/^[a-f0-9]{64}$/i.test(masterKey)) throw new Error('Master key must be 64-char hex string (256-bit)');
 
     // Convert hex key to buffer
     const keyBuffer = Buffer.from(masterKey, 'hex');
@@ -79,18 +71,10 @@ export function decryptField(
   masterKey: string = ENCRYPTION_KEY
 ): string {
   try {
-    if (!encryptedField || !encryptedField.data) {
-      throw new Error('Encrypted field data is missing');
-    }
-
-    if (!masterKey || typeof masterKey !== 'string') {
-      throw new Error('Master key is missing or invalid');
-    }
-
+    if (!encryptedField || !encryptedField.data) throw new Error('Encrypted field data is missing');
+    if (!masterKey || typeof masterKey !== 'string') throw new Error('Master key is missing or invalid');
     // Validate key format
-    if (masterKey.length !== 64 || !/^[a-f0-9]{64}$/i.test(masterKey)) {
-      throw new Error('Master key must be 64-char hex string');
-    }
+    if (masterKey.length !== 64 || !/^[a-f0-9]{64}$/i.test(masterKey)) throw new Error('Master key must be 64-char hex string');
 
     // Convert hex key to buffer
     const keyBuffer = Buffer.from(masterKey, 'hex');

@@ -1,0 +1,1291 @@
+﻿
+ RUN  v3.2.4 C:/Users/aditi/OneDrive/Desktop/EWTCS/EWTCS
+
+node.exe : 
+ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ» 
+Unhandled Errors 
+ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»
+At line:1 char:1
++ & "C:\Program 
+Files\nodejs/node.exe" 
+"C:\Program 
+Files\nodejs/node_mo ...
++ ~~~~~~~~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~
+    + CategoryInfo          
+    : NotSpecified: (ΓÄ»ΓÄ  
+  »ΓÄ»ΓÄ»ΓÄ»...ΓÄ»ΓÄ»ΓÄ»Γ   
+ Ä»ΓÄ»:String) [], Remot    
+eException
+    + FullyQualifiedErrorId 
+    : NativeCommandError
+ 
+
+Vitest caught 82 unhandled 
+errors during the test run.
+This might cause false 
+positive tests. Resolve 
+unhandled errors to make 
+sure your tests are not 
+affected.
+
+ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ» 
+Unhandled Error 
+ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»
+Error: EPERM: operation not 
+permitted, open 'C:\Users\ad
+iti\AppData\Local\Temp\k_J_b
+zEQ78eHzymQTjb5P\web\40b9f1f
+37d5bd759c353e90078138580f67
+eb091'
+ Γ¥» open node:internal/fs/p
+romises:641:25
+ Γ¥» writeFile node:internal
+/fs/promises:1215:14
+
+
+ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ» 
+Unhandled Error 
+ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»
+Error: EPERM: operation not 
+permitted, open 'C:\Users\ad
+iti\AppData\Local\Temp\k_J_b
+zEQ78eHzymQTjb5P\web\40b9f1f
+37d5bd759c353e90078138580f67
+eb091'
+ Γ¥» open node:internal/fs/p
+romises:641:25
+ Γ¥» writeFile node:internal
+/fs/promises:1215:14
+
+
+ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ» 
+Unhandled Error 
+ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»
+Error: EPERM: operation not 
+permitted, open 'C:\Users\ad
+iti\AppData\Local\Temp\k_J_b
+zEQ78eHzymQTjb5P\web\40b9f1f
+37d5bd759c353e90078138580f67
+eb091'
+ Γ¥» open node:internal/fs/p
+romises:641:25
+ Γ¥» writeFile node:internal
+/fs/promises:1215:14
+
+
+ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ» 
+Unhandled Error 
+ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»
+Error: EPERM: operation not 
+permitted, open 'C:\Users\ad
+iti\AppData\Local\Temp\k_J_b
+zEQ78eHzymQTjb5P\web\40b9f1f
+37d5bd759c353e90078138580f67
+eb091'
+ Γ¥» open node:internal/fs/p
+romises:641:25
+ Γ¥» writeFile node:internal
+/fs/promises:1215:14
+
+
+ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ» 
+Unhandled Error 
+ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»
+Error: EPERM: operation not 
+permitted, open 'C:\Users\ad
+iti\AppData\Local\Temp\k_J_b
+zEQ78eHzymQTjb5P\web\40b9f1f
+37d5bd759c353e90078138580f67
+eb091'
+ Γ¥» open node:internal/fs/p
+romises:641:25
+ Γ¥» writeFile node:internal
+/fs/promises:1215:14
+
+
+ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ» 
+Unhandled Error 
+ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»
+Error: EPERM: operation not 
+permitted, open 'C:\Users\ad
+iti\AppData\Local\Temp\k_J_b
+zEQ78eHzymQTjb5P\web\40b9f1f
+37d5bd759c353e90078138580f67
+eb091'
+ Γ¥» open node:internal/fs/p
+romises:641:25
+ Γ¥» writeFile node:internal
+/fs/promises:1215:14
+
+
+ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ» 
+Unhandled Error 
+ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»
+Error: EPERM: operation not 
+permitted, open 'C:\Users\ad
+iti\AppData\Local\Temp\k_J_b
+zEQ78eHzymQTjb5P\web\40b9f1f
+37d5bd759c353e90078138580f67
+eb091'
+ Γ¥» open node:internal/fs/p
+romises:641:25
+ Γ¥» writeFile node:internal
+/fs/promises:1215:14
+
+
+ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ» 
+Unhandled Error 
+ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»
+Error: EPERM: operation not 
+permitted, open 'C:\Users\ad
+iti\AppData\Local\Temp\k_J_b
+zEQ78eHzymQTjb5P\web\40b9f1f
+37d5bd759c353e90078138580f67
+eb091'
+ Γ¥» open node:internal/fs/p
+romises:641:25
+ Γ¥» writeFile node:internal
+/fs/promises:1215:14
+ Γ¥» Proxy.fetch node_module
+s/vitest/dist/chunks/coverag
+e.DL5VHqXY.js:2479:4
+ Γ¥» EventEmitter.onMessage 
+node_modules/vitest/dist/chu
+nks/index.B521nVV-.js:103:20
+
+
+ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ» 
+Unhandled Error 
+ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»
+Error: EPERM: operation not 
+permitted, open 'C:\Users\ad
+iti\AppData\Local\Temp\k_J_b
+zEQ78eHzymQTjb5P\web\40b9f1f
+37d5bd759c353e90078138580f67
+eb091'
+ Γ¥» open node:internal/fs/p
+romises:641:25
+ Γ¥» writeFile node:internal
+/fs/promises:1215:14
+
+
+ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ» 
+Unhandled Error 
+ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»
+Error: EPERM: operation not 
+permitted, open 'C:\Users\ad
+iti\AppData\Local\Temp\k_J_b
+zEQ78eHzymQTjb5P\web\40b9f1f
+37d5bd759c353e90078138580f67
+eb091'
+ Γ¥» open node:internal/fs/p
+romises:641:25
+ Γ¥» writeFile node:internal
+/fs/promises:1215:14
+
+
+ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ» 
+Unhandled Error 
+ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»
+Error: EPERM: operation not 
+permitted, open 'C:\Users\ad
+iti\AppData\Local\Temp\k_J_b
+zEQ78eHzymQTjb5P\web\40b9f1f
+37d5bd759c353e90078138580f67
+eb091'
+ Γ¥» open node:internal/fs/p
+romises:641:25
+ Γ¥» writeFile node:internal
+/fs/promises:1215:14
+
+
+ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ» 
+Unhandled Error 
+ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»
+Error: EPERM: operation not 
+permitted, open 'C:\Users\ad
+iti\AppData\Local\Temp\k_J_b
+zEQ78eHzymQTjb5P\web\40b9f1f
+37d5bd759c353e90078138580f67
+eb091'
+ Γ¥» open node:internal/fs/p
+romises:641:25
+ Γ¥» writeFile node:internal
+/fs/promises:1215:14
+
+
+ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ» 
+Unhandled Error 
+ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»
+Error: EPERM: operation not 
+permitted, open 'C:\Users\ad
+iti\AppData\Local\Temp\k_J_b
+zEQ78eHzymQTjb5P\web\40b9f1f
+37d5bd759c353e90078138580f67
+eb091'
+ Γ¥» open node:internal/fs/p
+romises:641:25
+ Γ¥» writeFile node:internal
+/fs/promises:1215:14
+
+
+ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ» 
+Unhandled Error 
+ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»
+Error: EPERM: operation not 
+permitted, open 'C:\Users\ad
+iti\AppData\Local\Temp\k_J_b
+zEQ78eHzymQTjb5P\web\40b9f1f
+37d5bd759c353e90078138580f67
+eb091'
+ Γ¥» open node:internal/fs/p
+romises:641:25
+ Γ¥» writeFile node:internal
+/fs/promises:1215:14
+
+
+ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ» 
+Unhandled Error 
+ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»
+Error: EPERM: operation not 
+permitted, open 'C:\Users\ad
+iti\AppData\Local\Temp\k_J_b
+zEQ78eHzymQTjb5P\web\40b9f1f
+37d5bd759c353e90078138580f67
+eb091'
+ Γ¥» open node:internal/fs/p
+romises:641:25
+ Γ¥» writeFile node:internal
+/fs/promises:1215:14
+
+
+ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ» 
+Unhandled Error 
+ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»
+Error: EPERM: operation not 
+permitted, open 'C:\Users\ad
+iti\AppData\Local\Temp\k_J_b
+zEQ78eHzymQTjb5P\web\40b9f1f
+37d5bd759c353e90078138580f67
+eb091'
+ Γ¥» open node:internal/fs/p
+romises:641:25
+ Γ¥» writeFile node:internal
+/fs/promises:1215:14
+
+
+ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ» 
+Unhandled Error 
+ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»
+Error: EPERM: operation not 
+permitted, open 'C:\Users\ad
+iti\AppData\Local\Temp\k_J_b
+zEQ78eHzymQTjb5P\web\40b9f1f
+37d5bd759c353e90078138580f67
+eb091'
+ Γ¥» open node:internal/fs/p
+romises:641:25
+ Γ¥» writeFile node:internal
+/fs/promises:1215:14
+ Γ¥» Proxy.fetch node_module
+s/vitest/dist/chunks/coverag
+e.DL5VHqXY.js:2479:4
+ Γ¥» EventEmitter.onMessage 
+node_modules/vitest/dist/chu
+nks/index.B521nVV-.js:103:20
+
+
+ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ» 
+Unhandled Error 
+ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»
+Error: EPERM: operation not 
+permitted, open 'C:\Users\ad
+iti\AppData\Local\Temp\k_J_b
+zEQ78eHzymQTjb5P\web\40b9f1f
+37d5bd759c353e90078138580f67
+eb091'
+ Γ¥» open node:internal/fs/p
+romises:641:25
+ Γ¥» writeFile node:internal
+/fs/promises:1215:14
+
+
+ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ» 
+Unhandled Error 
+ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»
+Error: EPERM: operation not 
+permitted, open 'C:\Users\ad
+iti\AppData\Local\Temp\k_J_b
+zEQ78eHzymQTjb5P\web\40b9f1f
+37d5bd759c353e90078138580f67
+eb091'
+ Γ¥» open node:internal/fs/p
+romises:641:25
+ Γ¥» writeFile node:internal
+/fs/promises:1215:14
+
+
+ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ» 
+Unhandled Error 
+ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»
+Error: EPERM: operation not 
+permitted, open 'C:\Users\ad
+iti\AppData\Local\Temp\k_J_b
+zEQ78eHzymQTjb5P\web\40b9f1f
+37d5bd759c353e90078138580f67
+eb091'
+ Γ¥» open node:internal/fs/p
+romises:641:25
+ Γ¥» writeFile node:internal
+/fs/promises:1215:14
+
+
+ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ» 
+Unhandled Error 
+ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»
+Error: EPERM: operation not 
+permitted, open 'C:\Users\ad
+iti\AppData\Local\Temp\k_J_b
+zEQ78eHzymQTjb5P\web\40b9f1f
+37d5bd759c353e90078138580f67
+eb091'
+ Γ¥» open node:internal/fs/p
+romises:641:25
+ Γ¥» writeFile node:internal
+/fs/promises:1215:14
+
+
+ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ» 
+Unhandled Error 
+ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»
+Error: EPERM: operation not 
+permitted, open 'C:\Users\ad
+iti\AppData\Local\Temp\k_J_b
+zEQ78eHzymQTjb5P\web\40b9f1f
+37d5bd759c353e90078138580f67
+eb091'
+ Γ¥» open node:internal/fs/p
+romises:641:25
+ Γ¥» writeFile node:internal
+/fs/promises:1215:14
+
+
+ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ» 
+Unhandled Error 
+ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»
+Error: EPERM: operation not 
+permitted, open 'C:\Users\ad
+iti\AppData\Local\Temp\k_J_b
+zEQ78eHzymQTjb5P\web\40b9f1f
+37d5bd759c353e90078138580f67
+eb091'
+ Γ¥» open node:internal/fs/p
+romises:641:25
+ Γ¥» writeFile node:internal
+/fs/promises:1215:14
+
+
+ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ» 
+Unhandled Error 
+ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»
+Error: EPERM: operation not 
+permitted, open 'C:\Users\ad
+iti\AppData\Local\Temp\k_J_b
+zEQ78eHzymQTjb5P\web\40b9f1f
+37d5bd759c353e90078138580f67
+eb091'
+ Γ¥» open node:internal/fs/p
+romises:641:25
+ Γ¥» writeFile node:internal
+/fs/promises:1215:14
+
+
+ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ» 
+Unhandled Error 
+ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»
+Error: EPERM: operation not 
+permitted, open 'C:\Users\ad
+iti\AppData\Local\Temp\k_J_b
+zEQ78eHzymQTjb5P\web\40b9f1f
+37d5bd759c353e90078138580f67
+eb091'
+ Γ¥» open node:internal/fs/p
+romises:641:25
+ Γ¥» writeFile node:internal
+/fs/promises:1215:14
+
+
+ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ» 
+Unhandled Error 
+ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»
+Error: EPERM: operation not 
+permitted, open 'C:\Users\ad
+iti\AppData\Local\Temp\k_J_b
+zEQ78eHzymQTjb5P\web\40b9f1f
+37d5bd759c353e90078138580f67
+eb091'
+ Γ¥» open node:internal/fs/p
+romises:641:25
+ Γ¥» writeFile node:internal
+/fs/promises:1215:14
+
+
+ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ» 
+Unhandled Error 
+ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»
+Error: EPERM: operation not 
+permitted, open 'C:\Users\ad
+iti\AppData\Local\Temp\k_J_b
+zEQ78eHzymQTjb5P\web\40b9f1f
+37d5bd759c353e90078138580f67
+eb091'
+ Γ¥» open node:internal/fs/p
+romises:641:25
+ Γ¥» writeFile node:internal
+/fs/promises:1215:14
+
+
+ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ» 
+Unhandled Error 
+ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»
+Error: EPERM: operation not 
+permitted, open 'C:\Users\ad
+iti\AppData\Local\Temp\k_J_b
+zEQ78eHzymQTjb5P\web\40b9f1f
+37d5bd759c353e90078138580f67
+eb091'
+ Γ¥» open node:internal/fs/p
+romises:641:25
+ Γ¥» writeFile node:internal
+/fs/promises:1215:14
+
+
+ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ» 
+Unhandled Error 
+ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»
+Error: EPERM: operation not 
+permitted, open 'C:\Users\ad
+iti\AppData\Local\Temp\k_J_b
+zEQ78eHzymQTjb5P\web\40b9f1f
+37d5bd759c353e90078138580f67
+eb091'
+ Γ¥» open node:internal/fs/p
+romises:641:25
+ Γ¥» writeFile node:internal
+/fs/promises:1215:14
+
+
+ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ» 
+Unhandled Error 
+ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»
+Error: EPERM: operation not 
+permitted, open 'C:\Users\ad
+iti\AppData\Local\Temp\k_J_b
+zEQ78eHzymQTjb5P\web\40b9f1f
+37d5bd759c353e90078138580f67
+eb091'
+ Γ¥» open node:internal/fs/p
+romises:641:25
+ Γ¥» writeFile node:internal
+/fs/promises:1215:14
+
+
+ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ» 
+Unhandled Error 
+ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»
+Error: EPERM: operation not 
+permitted, open 'C:\Users\ad
+iti\AppData\Local\Temp\k_J_b
+zEQ78eHzymQTjb5P\web\40b9f1f
+37d5bd759c353e90078138580f67
+eb091'
+ Γ¥» open node:internal/fs/p
+romises:641:25
+ Γ¥» writeFile node:internal
+/fs/promises:1215:14
+
+
+ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ» 
+Unhandled Error 
+ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»
+Error: EPERM: operation not 
+permitted, open 'C:\Users\ad
+iti\AppData\Local\Temp\k_J_b
+zEQ78eHzymQTjb5P\web\40b9f1f
+37d5bd759c353e90078138580f67
+eb091'
+ Γ¥» open node:internal/fs/p
+romises:641:25
+ Γ¥» writeFile node:internal
+/fs/promises:1215:14
+
+
+ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ» 
+Unhandled Error 
+ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»
+Error: EPERM: operation not 
+permitted, open 'C:\Users\ad
+iti\AppData\Local\Temp\k_J_b
+zEQ78eHzymQTjb5P\web\40b9f1f
+37d5bd759c353e90078138580f67
+eb091'
+ Γ¥» open node:internal/fs/p
+romises:641:25
+ Γ¥» writeFile node:internal
+/fs/promises:1215:14
+
+
+ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ» 
+Unhandled Error 
+ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»
+Error: EPERM: operation not 
+permitted, open 'C:\Users\ad
+iti\AppData\Local\Temp\k_J_b
+zEQ78eHzymQTjb5P\web\40b9f1f
+37d5bd759c353e90078138580f67
+eb091'
+ Γ¥» open node:internal/fs/p
+romises:641:25
+ Γ¥» writeFile node:internal
+/fs/promises:1215:14
+
+
+ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ» 
+Unhandled Error 
+ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»
+Error: EPERM: operation not 
+permitted, open 'C:\Users\ad
+iti\AppData\Local\Temp\k_J_b
+zEQ78eHzymQTjb5P\web\40b9f1f
+37d5bd759c353e90078138580f67
+eb091'
+ Γ¥» open node:internal/fs/p
+romises:641:25
+ Γ¥» writeFile node:internal
+/fs/promises:1215:14
+
+
+ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ» 
+Unhandled Error 
+ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»
+Error: EPERM: operation not 
+permitted, open 'C:\Users\ad
+iti\AppData\Local\Temp\k_J_b
+zEQ78eHzymQTjb5P\web\40b9f1f
+37d5bd759c353e90078138580f67
+eb091'
+ Γ¥» open node:internal/fs/p
+romises:641:25
+ Γ¥» writeFile node:internal
+/fs/promises:1215:14
+
+
+ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ» 
+Unhandled Error 
+ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»
+Error: EPERM: operation not 
+permitted, open 'C:\Users\ad
+iti\AppData\Local\Temp\k_J_b
+zEQ78eHzymQTjb5P\web\40b9f1f
+37d5bd759c353e90078138580f67
+eb091'
+ Γ¥» open node:internal/fs/p
+romises:641:25
+ Γ¥» writeFile node:internal
+/fs/promises:1215:14
+
+
+ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ» 
+Unhandled Error 
+ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»
+Error: EPERM: operation not 
+permitted, open 'C:\Users\ad
+iti\AppData\Local\Temp\k_J_b
+zEQ78eHzymQTjb5P\web\40b9f1f
+37d5bd759c353e90078138580f67
+eb091'
+ Γ¥» open node:internal/fs/p
+romises:641:25
+ Γ¥» writeFile node:internal
+/fs/promises:1215:14
+
+
+ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ» 
+Unhandled Error 
+ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»
+Error: EPERM: operation not 
+permitted, open 'C:\Users\ad
+iti\AppData\Local\Temp\k_J_b
+zEQ78eHzymQTjb5P\web\40b9f1f
+37d5bd759c353e90078138580f67
+eb091'
+ Γ¥» open node:internal/fs/p
+romises:641:25
+ Γ¥» writeFile node:internal
+/fs/promises:1215:14
+
+
+ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ» 
+Unhandled Error 
+ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»
+Error: EPERM: operation not 
+permitted, open 'C:\Users\ad
+iti\AppData\Local\Temp\k_J_b
+zEQ78eHzymQTjb5P\web\40b9f1f
+37d5bd759c353e90078138580f67
+eb091'
+ Γ¥» open node:internal/fs/p
+romises:641:25
+ Γ¥» writeFile node:internal
+/fs/promises:1215:14
+
+
+ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ» 
+Unhandled Error 
+ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»
+Error: EPERM: operation not 
+permitted, open 'C:\Users\ad
+iti\AppData\Local\Temp\k_J_b
+zEQ78eHzymQTjb5P\web\40b9f1f
+37d5bd759c353e90078138580f67
+eb091'
+ Γ¥» open node:internal/fs/p
+romises:641:25
+ Γ¥» writeFile node:internal
+/fs/promises:1215:14
+
+
+ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ» 
+Unhandled Error 
+ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»
+Error: EPERM: operation not 
+permitted, open 'C:\Users\ad
+iti\AppData\Local\Temp\k_J_b
+zEQ78eHzymQTjb5P\web\40b9f1f
+37d5bd759c353e90078138580f67
+eb091'
+ Γ¥» open node:internal/fs/p
+romises:641:25
+ Γ¥» writeFile node:internal
+/fs/promises:1215:14
+
+
+ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ» 
+Unhandled Error 
+ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»
+Error: EPERM: operation not 
+permitted, open 'C:\Users\ad
+iti\AppData\Local\Temp\k_J_b
+zEQ78eHzymQTjb5P\web\40b9f1f
+37d5bd759c353e90078138580f67
+eb091'
+ Γ¥» open node:internal/fs/p
+romises:641:25
+ Γ¥» writeFile node:internal
+/fs/promises:1215:14
+
+
+ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ» 
+Unhandled Error 
+ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»
+Error: EPERM: operation not 
+permitted, open 'C:\Users\ad
+iti\AppData\Local\Temp\k_J_b
+zEQ78eHzymQTjb5P\web\40b9f1f
+37d5bd759c353e90078138580f67
+eb091'
+ Γ¥» open node:internal/fs/p
+romises:641:25
+ Γ¥» writeFile node:internal
+/fs/promises:1215:14
+
+
+ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ» 
+Unhandled Error 
+ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»
+Error: EPERM: operation not 
+permitted, open 'C:\Users\ad
+iti\AppData\Local\Temp\k_J_b
+zEQ78eHzymQTjb5P\web\40b9f1f
+37d5bd759c353e90078138580f67
+eb091'
+ Γ¥» open node:internal/fs/p
+romises:641:25
+ Γ¥» writeFile node:internal
+/fs/promises:1215:14
+
+
+ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ» 
+Unhandled Error 
+ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»
+Error: EPERM: operation not 
+permitted, open 'C:\Users\ad
+iti\AppData\Local\Temp\k_J_b
+zEQ78eHzymQTjb5P\web\40b9f1f
+37d5bd759c353e90078138580f67
+eb091'
+ Γ¥» open node:internal/fs/p
+romises:641:25
+ Γ¥» writeFile node:internal
+/fs/promises:1215:14
+
+
+ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ» 
+Unhandled Error 
+ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»
+Error: EPERM: operation not 
+permitted, open 'C:\Users\ad
+iti\AppData\Local\Temp\k_J_b
+zEQ78eHzymQTjb5P\web\40b9f1f
+37d5bd759c353e90078138580f67
+eb091'
+ Γ¥» open node:internal/fs/p
+romises:641:25
+ Γ¥» writeFile node:internal
+/fs/promises:1215:14
+
+
+ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ» 
+Unhandled Error 
+ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»
+Error: EPERM: operation not 
+permitted, open 'C:\Users\ad
+iti\AppData\Local\Temp\k_J_b
+zEQ78eHzymQTjb5P\web\40b9f1f
+37d5bd759c353e90078138580f67
+eb091'
+ Γ¥» open node:internal/fs/p
+romises:641:25
+ Γ¥» writeFile node:internal
+/fs/promises:1215:14
+
+
+ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ» 
+Unhandled Error 
+ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»
+Error: EPERM: operation not 
+permitted, open 'C:\Users\ad
+iti\AppData\Local\Temp\k_J_b
+zEQ78eHzymQTjb5P\web\40b9f1f
+37d5bd759c353e90078138580f67
+eb091'
+ Γ¥» open node:internal/fs/p
+romises:641:25
+ Γ¥» writeFile node:internal
+/fs/promises:1215:14
+
+
+ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ» 
+Unhandled Error 
+ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»
+Error: EPERM: operation not 
+permitted, open 'C:\Users\ad
+iti\AppData\Local\Temp\k_J_b
+zEQ78eHzymQTjb5P\web\40b9f1f
+37d5bd759c353e90078138580f67
+eb091'
+ Γ¥» open node:internal/fs/p
+romises:641:25
+ Γ¥» writeFile node:internal
+/fs/promises:1215:14
+
+
+ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ» 
+Unhandled Error 
+ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»
+Error: EPERM: operation not 
+permitted, open 'C:\Users\ad
+iti\AppData\Local\Temp\k_J_b
+zEQ78eHzymQTjb5P\web\40b9f1f
+37d5bd759c353e90078138580f67
+eb091'
+ Γ¥» open node:internal/fs/p
+romises:641:25
+ Γ¥» writeFile node:internal
+/fs/promises:1215:14
+
+
+ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ» 
+Unhandled Error 
+ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»
+Error: EPERM: operation not 
+permitted, open 'C:\Users\ad
+iti\AppData\Local\Temp\k_J_b
+zEQ78eHzymQTjb5P\web\40b9f1f
+37d5bd759c353e90078138580f67
+eb091'
+ Γ¥» open node:internal/fs/p
+romises:641:25
+ Γ¥» writeFile node:internal
+/fs/promises:1215:14
+
+
+ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ» 
+Unhandled Error 
+ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»
+Error: EPERM: operation not 
+permitted, open 'C:\Users\ad
+iti\AppData\Local\Temp\k_J_b
+zEQ78eHzymQTjb5P\web\40b9f1f
+37d5bd759c353e90078138580f67
+eb091'
+ Γ¥» open node:internal/fs/p
+romises:641:25
+ Γ¥» writeFile node:internal
+/fs/promises:1215:14
+
+
+ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ» 
+Unhandled Error 
+ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»
+Error: EPERM: operation not 
+permitted, open 'C:\Users\ad
+iti\AppData\Local\Temp\k_J_b
+zEQ78eHzymQTjb5P\web\40b9f1f
+37d5bd759c353e90078138580f67
+eb091'
+ Γ¥» open node:internal/fs/p
+romises:641:25
+ Γ¥» writeFile node:internal
+/fs/promises:1215:14
+
+
+ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ» 
+Unhandled Error 
+ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»
+Error: EPERM: operation not 
+permitted, open 'C:\Users\ad
+iti\AppData\Local\Temp\k_J_b
+zEQ78eHzymQTjb5P\web\40b9f1f
+37d5bd759c353e90078138580f67
+eb091'
+ Γ¥» open node:internal/fs/p
+romises:641:25
+ Γ¥» writeFile node:internal
+/fs/promises:1215:14
+
+
+ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ» 
+Unhandled Error 
+ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»
+Error: EPERM: operation not 
+permitted, open 'C:\Users\ad
+iti\AppData\Local\Temp\k_J_b
+zEQ78eHzymQTjb5P\web\40b9f1f
+37d5bd759c353e90078138580f67
+eb091'
+ Γ¥» open node:internal/fs/p
+romises:641:25
+ Γ¥» writeFile node:internal
+/fs/promises:1215:14
+
+
+ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ» 
+Unhandled Error 
+ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»
+Error: EPERM: operation not 
+permitted, open 'C:\Users\ad
+iti\AppData\Local\Temp\k_J_b
+zEQ78eHzymQTjb5P\web\40b9f1f
+37d5bd759c353e90078138580f67
+eb091'
+ Γ¥» open node:internal/fs/p
+romises:641:25
+ Γ¥» writeFile node:internal
+/fs/promises:1215:14
+
+
+ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ» 
+Unhandled Error 
+ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»
+Error: EPERM: operation not 
+permitted, open 'C:\Users\ad
+iti\AppData\Local\Temp\k_J_b
+zEQ78eHzymQTjb5P\web\40b9f1f
+37d5bd759c353e90078138580f67
+eb091'
+ Γ¥» open node:internal/fs/p
+romises:641:25
+ Γ¥» writeFile node:internal
+/fs/promises:1215:14
+
+
+ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ» 
+Unhandled Error 
+ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»
+Error: EPERM: operation not 
+permitted, open 'C:\Users\ad
+iti\AppData\Local\Temp\k_J_b
+zEQ78eHzymQTjb5P\web\40b9f1f
+37d5bd759c353e90078138580f67
+eb091'
+ Γ¥» open node:internal/fs/p
+romises:641:25
+ Γ¥» writeFile node:internal
+/fs/promises:1215:14
+
+
+ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ» 
+Unhandled Error 
+ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»
+Error: EPERM: operation not 
+permitted, open 'C:\Users\ad
+iti\AppData\Local\Temp\k_J_b
+zEQ78eHzymQTjb5P\web\40b9f1f
+37d5bd759c353e90078138580f67
+eb091'
+ Γ¥» open node:internal/fs/p
+romises:641:25
+ Γ¥» writeFile node:internal
+/fs/promises:1215:14
+
+
+ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ» 
+Unhandled Error 
+ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»
+Error: EPERM: operation not 
+permitted, open 'C:\Users\ad
+iti\AppData\Local\Temp\k_J_b
+zEQ78eHzymQTjb5P\web\40b9f1f
+37d5bd759c353e90078138580f67
+eb091'
+ Γ¥» open node:internal/fs/p
+romises:641:25
+ Γ¥» writeFile node:internal
+/fs/promises:1215:14
+
+
+ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ» 
+Unhandled Error 
+ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»
+Error: EPERM: operation not 
+permitted, open 'C:\Users\ad
+iti\AppData\Local\Temp\k_J_b
+zEQ78eHzymQTjb5P\web\40b9f1f
+37d5bd759c353e90078138580f67
+eb091'
+ Γ¥» open node:internal/fs/p
+romises:641:25
+ Γ¥» writeFile node:internal
+/fs/promises:1215:14
+
+
+ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ» 
+Unhandled Error 
+ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»
+Error: EPERM: operation not 
+permitted, open 'C:\Users\ad
+iti\AppData\Local\Temp\k_J_b
+zEQ78eHzymQTjb5P\web\40b9f1f
+37d5bd759c353e90078138580f67
+eb091'
+ Γ¥» open node:internal/fs/p
+romises:641:25
+ Γ¥» writeFile node:internal
+/fs/promises:1215:14
+
+
+ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ» 
+Unhandled Error 
+ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»
+Error: EPERM: operation not 
+permitted, open 'C:\Users\ad
+iti\AppData\Local\Temp\k_J_b
+zEQ78eHzymQTjb5P\web\40b9f1f
+37d5bd759c353e90078138580f67
+eb091'
+ Γ¥» open node:internal/fs/p
+romises:641:25
+ Γ¥» writeFile node:internal
+/fs/promises:1215:14
+
+
+ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ» 
+Unhandled Error 
+ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»
+Error: EPERM: operation not 
+permitted, open 'C:\Users\ad
+iti\AppData\Local\Temp\k_J_b
+zEQ78eHzymQTjb5P\web\40b9f1f
+37d5bd759c353e90078138580f67
+eb091'
+ Γ¥» open node:internal/fs/p
+romises:641:25
+ Γ¥» writeFile node:internal
+/fs/promises:1215:14
+
+
+
+ Test Files   (82)
+      Tests  no tests
+     Errors  82 errors
+   Start at  20:58:24
+   Duration  51.19s (transform 30ms, setup 0ms, collect 0ms, tests 0ms, environment 0ms, prepare 0ms)
+
+ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ» 
+Unhandled Error 
+ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»
+Error: EPERM: operation not 
+permitted, open 'C:\Users\ad
+iti\AppData\Local\Temp\k_J_b
+zEQ78eHzymQTjb5P\web\40b9f1f
+37d5bd759c353e90078138580f67
+eb091'
+ Γ¥» open node:internal/fs/p
+romises:641:25
+ Γ¥» writeFile node:internal
+/fs/promises:1215:14
+
+
+ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ» 
+Unhandled Error 
+ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»
+Error: EPERM: operation not 
+permitted, open 'C:\Users\ad
+iti\AppData\Local\Temp\k_J_b
+zEQ78eHzymQTjb5P\web\40b9f1f
+37d5bd759c353e90078138580f67
+eb091'
+ Γ¥» open node:internal/fs/p
+romises:641:25
+ Γ¥» writeFile node:internal
+/fs/promises:1215:14
+
+
+ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ» 
+Unhandled Error 
+ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»
+Error: EPERM: operation not 
+permitted, open 'C:\Users\ad
+iti\AppData\Local\Temp\k_J_b
+zEQ78eHzymQTjb5P\web\40b9f1f
+37d5bd759c353e90078138580f67
+eb091'
+ Γ¥» open node:internal/fs/p
+romises:641:25
+ Γ¥» writeFile node:internal
+/fs/promises:1215:14
+
+
+ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ» 
+Unhandled Error 
+ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»
+Error: EPERM: operation not 
+permitted, open 'C:\Users\ad
+iti\AppData\Local\Temp\k_J_b
+zEQ78eHzymQTjb5P\web\40b9f1f
+37d5bd759c353e90078138580f67
+eb091'
+ Γ¥» open node:internal/fs/p
+romises:641:25
+ Γ¥» writeFile node:internal
+/fs/promises:1215:14
+
+
+ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ» 
+Unhandled Error 
+ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»
+Error: EPERM: operation not 
+permitted, open 'C:\Users\ad
+iti\AppData\Local\Temp\k_J_b
+zEQ78eHzymQTjb5P\web\40b9f1f
+37d5bd759c353e90078138580f67
+eb091'
+ Γ¥» open node:internal/fs/p
+romises:641:25
+ Γ¥» writeFile node:internal
+/fs/promises:1215:14
+
+
+ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ» 
+Unhandled Error 
+ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»
+Error: EPERM: operation not 
+permitted, open 'C:\Users\ad
+iti\AppData\Local\Temp\k_J_b
+zEQ78eHzymQTjb5P\web\40b9f1f
+37d5bd759c353e90078138580f67
+eb091'
+ Γ¥» open node:internal/fs/p
+romises:641:25
+ Γ¥» writeFile node:internal
+/fs/promises:1215:14
+
+
+ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ» 
+Unhandled Error 
+ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»
+Error: EPERM: operation not 
+permitted, open 'C:\Users\ad
+iti\AppData\Local\Temp\k_J_b
+zEQ78eHzymQTjb5P\web\40b9f1f
+37d5bd759c353e90078138580f67
+eb091'
+ Γ¥» open node:internal/fs/p
+romises:641:25
+ Γ¥» writeFile node:internal
+/fs/promises:1215:14
+
+
+ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ» 
+Unhandled Error 
+ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»
+Error: EPERM: operation not 
+permitted, open 'C:\Users\ad
+iti\AppData\Local\Temp\k_J_b
+zEQ78eHzymQTjb5P\web\40b9f1f
+37d5bd759c353e90078138580f67
+eb091'
+ Γ¥» open node:internal/fs/p
+romises:641:25
+ Γ¥» writeFile node:internal
+/fs/promises:1215:14
+
+
+ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ» 
+Unhandled Error 
+ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»
+Error: EPERM: operation not 
+permitted, open 'C:\Users\ad
+iti\AppData\Local\Temp\k_J_b
+zEQ78eHzymQTjb5P\web\40b9f1f
+37d5bd759c353e90078138580f67
+eb091'
+ Γ¥» open node:internal/fs/p
+romises:641:25
+ Γ¥» writeFile node:internal
+/fs/promises:1215:14
+
+
+ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ» 
+Unhandled Error 
+ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»
+Error: EPERM: operation not 
+permitted, open 'C:\Users\ad
+iti\AppData\Local\Temp\k_J_b
+zEQ78eHzymQTjb5P\web\40b9f1f
+37d5bd759c353e90078138580f67
+eb091'
+ Γ¥» open node:internal/fs/p
+romises:641:25
+ Γ¥» writeFile node:internal
+/fs/promises:1215:14
+
+
+ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ» 
+Unhandled Error 
+ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»
+Error: EPERM: operation not 
+permitted, open 'C:\Users\ad
+iti\AppData\Local\Temp\k_J_b
+zEQ78eHzymQTjb5P\web\40b9f1f
+37d5bd759c353e90078138580f67
+eb091'
+ Γ¥» open node:internal/fs/p
+romises:641:25
+ Γ¥» writeFile node:internal
+/fs/promises:1215:14
+
+
+ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ» 
+Unhandled Error 
+ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»
+Error: EPERM: operation not 
+permitted, open 'C:\Users\ad
+iti\AppData\Local\Temp\k_J_b
+zEQ78eHzymQTjb5P\web\40b9f1f
+37d5bd759c353e90078138580f67
+eb091'
+ Γ¥» open node:internal/fs/p
+romises:641:25
+ Γ¥» writeFile node:internal
+/fs/promises:1215:14
+
+
+ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ» 
+Unhandled Error 
+ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»
+Error: EPERM: operation not 
+permitted, open 'C:\Users\ad
+iti\AppData\Local\Temp\k_J_b
+zEQ78eHzymQTjb5P\web\40b9f1f
+37d5bd759c353e90078138580f67
+eb091'
+ Γ¥» open node:internal/fs/p
+romises:641:25
+ Γ¥» writeFile node:internal
+/fs/promises:1215:14
+
+
+ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ» 
+Unhandled Error 
+ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»
+Error: EPERM: operation not 
+permitted, open 'C:\Users\ad
+iti\AppData\Local\Temp\k_J_b
+zEQ78eHzymQTjb5P\web\40b9f1f
+37d5bd759c353e90078138580f67
+eb091'
+ Γ¥» open node:internal/fs/p
+romises:641:25
+ Γ¥» writeFile node:internal
+/fs/promises:1215:14
+
+
+ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ» 
+Unhandled Error 
+ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»
+Error: EPERM: operation not 
+permitted, open 'C:\Users\ad
+iti\AppData\Local\Temp\k_J_b
+zEQ78eHzymQTjb5P\web\40b9f1f
+37d5bd759c353e90078138580f67
+eb091'
+ Γ¥» open node:internal/fs/p
+romises:641:25
+ Γ¥» writeFile node:internal
+/fs/promises:1215:14
+
+
+ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ» 
+Unhandled Error 
+ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»
+Error: EPERM: operation not 
+permitted, open 'C:\Users\ad
+iti\AppData\Local\Temp\k_J_b
+zEQ78eHzymQTjb5P\web\40b9f1f
+37d5bd759c353e90078138580f67
+eb091'
+ Γ¥» open node:internal/fs/p
+romises:641:25
+ Γ¥» writeFile node:internal
+/fs/promises:1215:14
+
+
+ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ» 
+Unhandled Error 
+ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»
+Error: EPERM: operation not 
+permitted, open 'C:\Users\ad
+iti\AppData\Local\Temp\k_J_b
+zEQ78eHzymQTjb5P\web\40b9f1f
+37d5bd759c353e90078138580f67
+eb091'
+ Γ¥» open node:internal/fs/p
+romises:641:25
+ Γ¥» writeFile node:internal
+/fs/promises:1215:14
+ Γ¥» Proxy.fetch node_module
+s/vitest/dist/chunks/coverag
+e.DL5VHqXY.js:2479:4
+ Γ¥» EventEmitter.onMessage 
+node_modules/vitest/dist/chu
+nks/index.B521nVV-.js:103:20
+
+ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»Γ
+Ä»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ
+»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»
+ΓÄ»ΓÄ»
+
