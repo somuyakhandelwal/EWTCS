@@ -1,0 +1,14 @@
+﻿lines.txt
+src/app/api/auth/login/route.ts
+src/app/api/auth/restore/route.ts
+src/app/layout.tsx
+src/app/login/page.tsx
+src/features/auth/components/SessionRestorer.tsx
+src/features/auth/lib/kiosk.ts
+src/features/bed-dashboard/lib/bed-queries.ts
+src/features/data-encryption/lib/field-encryptor.ts
+src/shared/config/env.ts
+src/shared/lib/session.test.ts
+src/shared/lib/session.ts
+test_err_utf8.txt
+test_output2.txt

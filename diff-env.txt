@@ -1,0 +1,37 @@
+﻿diff --git a/src/shared/config/env.ts b/src/shared/config/env.ts
+index d8a33b2..4ca37ef 100644
+--- a/src/shared/config/env.ts
++++ b/src/shared/config/env.ts
+@@ -25,29 +25,9 @@ const envSchema = z.object({
+   GEMINI_API_KEY: z.string().optional(),
+   GOOGLE_GENERATIVE_AI_API_KEY: z.string().optional(),
+ }).superRefine((value, ctx) => {
+-  if (!value.DATABASE_URL && !value.DATABASE_URL_ENCRYPTED) {
+-    ctx.addIssue({
+-      code: z.ZodIssueCode.custom,
+-      message: 'DATABASE_URL or DATABASE_URL_ENCRYPTED is required',
+-      path: ['DATABASE_URL'],
+-    });
+-  }
+-
+-  if (value.DATABASE_URL_ENCRYPTED && !value.ENCRYPTION_KEY) {
+-    ctx.addIssue({
+-      code: z.ZodIssueCode.custom,
+-      message: 'ENCRYPTION_KEY is required when DATABASE_URL_ENCRYPTED is provided',
+-      path: ['ENCRYPTION_KEY'],
+-    });
+-  }
+-
+-  if (value.OPENAI_API_KEY_ENCRYPTED && !value.ENCRYPTION_KEY) {
+-    ctx.addIssue({
+-      code: z.ZodIssueCode.custom,
+-      message: 'ENCRYPTION_KEY is required when OPENAI_API_KEY_ENCRYPTED is provided',
+-      path: ['ENCRYPTION_KEY'],
+-    });
+-  }
++  if (!value.DATABASE_URL && !value.DATABASE_URL_ENCRYPTED) ctx.addIssue({ code: z.ZodIssueCode.custom, message: 'DATABASE_URL or DATABASE_URL_ENCRYPTED is required', path: ['DATABASE_URL'] });
++  if (value.DATABASE_URL_ENCRYPTED && !value.ENCRYPTION_KEY) ctx.addIssue({ code: z.ZodIssueCode.custom, message: 'ENCRYPTION_KEY is required when DATABASE_URL_ENCRYPTED is provided', path: ['ENCRYPTION_KEY'] });
++  if (value.OPENAI_API_KEY_ENCRYPTED && !value.ENCRYPTION_KEY) ctx.addIssue({ code: z.ZodIssueCode.custom, message: 'ENCRYPTION_KEY is required when OPENAI_API_KEY_ENCRYPTED is provided', path: ['ENCRYPTION_KEY'] });
+ 
+   if (value.NODE_ENV === 'production' && !value.DATABASE_URL_ENCRYPTED) {
+     const isBuildTime = process.env.NEXT_PHASE === 'phase-production-build';

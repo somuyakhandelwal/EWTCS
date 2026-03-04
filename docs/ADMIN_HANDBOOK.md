@@ -6,7 +6,7 @@ Administrator runbook for configuration, maintenance, backup/recovery, security,
 - Owner: Platform / System Administration
 - Scope: Configuration, backups, troubleshooting, security, command references
 - Versioning: Git-tracked; update required in release PRs when operations change
-- Last Updated: 2026-03-03
+- Last Updated: 2026-03-04
 
 ## 1) System Overview
 EWTCS is a Next.js + PostgreSQL emergency-ward operations platform.
@@ -36,6 +36,8 @@ EWTCS is a Next.js + PostgreSQL emergency-ward operations platform.
 - `FORCE_HTTPS`, `HSTS_PRELOAD`
 - `RED_ALERT_THRESHOLD_MS`
 - `CRON_SECRET` (required for `/api/cron/archival`)
+- `OPENAI_API_KEY`, `OPENAI_API_KEY_ENCRYPTED` (OpenAI API connection)
+- `GEMINI_API_KEY` or `GOOGLE_GENERATIVE_AI_API_KEY` (Gemini AI connection)
 
 ### Validation Workflow
 ```bash
@@ -100,6 +102,7 @@ npm run validate:schema
 | Archival cron `401` | Missing/wrong `CRON_SECRET` | Set secret and send `Authorization: Bearer <CRON_SECRET>` |
 | No HTTP→HTTPS redirect | Env/proxy mismatch | Check `NODE_ENV`, `FORCE_HTTPS`, forwarded proto headers |
 | Slow dashboard/analytics | Performance regression | Run `npm run perf:seed` and `npm run perf:check` |
+| Kiosk session not restored | Local storage cleared or token expired | Re-authenticate kiosk device; ensure local storage persists |
 
 Escalate if health is degraded >2 minutes or auth/migration/audit behavior is unstable.
 
