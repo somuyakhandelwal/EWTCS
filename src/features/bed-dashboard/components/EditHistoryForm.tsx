@@ -2,8 +2,7 @@
 
 /**
  * EPIC 7 — EditHistoryForm
- * Extracted from EditHistoryModal to keep each file und          className="w-full rounded-md bg-muted border border-border text-foreground text-sm px-3 py-2 placeholder:text-zinc-600 focus:outline-none focus:ring-2 focus:ring-amber-500/40 resize-none" />
-        <PiiWarning warningLabels={notesWarning} className="mt-1" /> lines.
+ * Extracted from EditHistoryModal to keep each file under ~150 lines.
  * Renders: original record (read-only), editable stage/timestamp/notes, mandatory reason.
  */
 
