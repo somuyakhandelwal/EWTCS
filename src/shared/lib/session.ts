@@ -2,18 +2,19 @@ import 'server-only'
 import { SignJWT, jwtVerify } from 'jose'
 import { cookies } from 'next/headers'
 import { logger } from '@/shared/config/logger'
+import pool from '@/shared/lib/db'
 
 const secretKey = process.env.SESSION_SECRET
 if (!secretKey) {
     throw new Error('SESSION_SECRET is not defined in environment variables.')
 }
-const encodedKey = new TextEncoder().encode(secretKey)
+export const encodedKey = new TextEncoder().encode(secretKey)
 
 // US-5.2: Configurable session durations via environment variables
 const SESSION_MAX_AGE_MS = Number(process.env.SESSION_MAX_AGE_MS) || 12 * 60 * 60 * 1000      // 12 hours
 const INACTIVITY_TIMEOUT_MS = Number(process.env.INACTIVITY_TIMEOUT_MS) || 30 * 60 * 1000     // 30 min idle
 
-type SessionPayload = {
+export type SessionPayload = {
     userId: string
     username: string
     role: string
@@ -60,6 +61,7 @@ export async function createSession(
         path: '/',
         ...(kiosk && { maxAge: 365 * 24 * 60 * 60 }),
     })
+    return session
 }
 
 /**

@@ -1,6 +1,6 @@
 'use client'
 
-import { type FormEvent, useState } from 'react'
+import { type FormEvent, useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { Button } from '@/shared/components/ui/button'
 import { Input } from '@/shared/components/ui/input'
@@ -13,10 +13,42 @@ import { motion } from 'framer-motion'
 export default function LoginPage() {
     const router = useRouter()
     const [pending, setPending] = useState(false)
+    const [restoringSession, setRestoringSession] = useState(true)
     const [state, setState] = useState<{
         message?: string
         errors?: Record<string, string[]>
     }>({})
+
+    useEffect(() => {
+        const restoreSession = async () => {
+            const token = localStorage.getItem('kiosk_session_token')
+            if (!token) {
+                setRestoringSession(false)
+                return
+            }
+
+            try {
+                const res = await fetch('/api/auth/restore', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ token })
+                })
+                const data = await res.json()
+                if (res.ok && data.success) {
+                    router.push(data.redirectTo || '/dashboard')
+                    router.refresh()
+                } else {
+                    localStorage.removeItem('kiosk_session_token')
+                    setRestoringSession(false)
+                }
+            } catch {
+                localStorage.removeItem('kiosk_session_token')
+                setRestoringSession(false)
+            }
+        }
+
+        restoreSession()
+    }, [router])
 
     const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
         event.preventDefault()
@@ -47,6 +79,10 @@ export default function LoginPage() {
                 return
             }
 
+            if (result.success && result.token) {
+                localStorage.setItem('kiosk_session_token', result.token)
+            }
+
             router.push(result.redirectTo || '/dashboard')
             router.refresh()
             // Note: We don't setPending(false) here because we're navigating away
@@ -54,6 +90,17 @@ export default function LoginPage() {
             setState({ message: 'Unable to sign in right now. Please try again.' })
             setPending(false)
         }
+    }
+
+    if (restoringSession) {
+        return (
+            <div className="flex min-h-screen items-center justify-center bg-background relative overflow-hidden">
+                <div className="flex flex-col items-center relative z-10">
+                    <div className="h-8 w-8 rounded-full border-4 border-primary border-t-transparent animate-spin mb-4"></div>
+                    <p className="text-muted-foreground text-sm font-medium animate-pulse">Restoring session...</p>
+                </div>
+            </div>
+        )
     }
 
     return (
@@ -72,80 +119,80 @@ export default function LoginPage() {
                 className="w-full max-w-sm relative z-10"
             >
                 <div data-help-id="login-form">
-                <Card className="w-full shadow-2xl bg-card/40 border-border backdrop-blur-2xl text-foreground">
-                    <CardHeader>
-                        <CardTitle className="text-2xl font-bold text-center text-foreground">Sign In</CardTitle>
-                        <CardDescription className="text-center text-muted-foreground">
-                            Enter your credentials to access the nurse dashboard
-                        </CardDescription>
-                    </CardHeader>
-                    <form onSubmit={handleSubmit}>
-                        <CardContent className="space-y-4">
-                            <div className="space-y-2">
-                                <Label htmlFor="username" className="text-foreground">Username</Label>
-                                <Input
-                                    id="username"
-                                    name="username"
-                                    placeholder="Enter your username"
-                                    required
-                                    autoComplete="username"
-                                    className="bg-background/50 border-border text-foreground placeholder:text-muted-foreground focus:ring-ring focus:border-ring"
-                                />
-                                {state?.errors?.username && (
-                                    <p className="text-sm text-red-500">{state.errors.username}</p>
-                                )}
-                            </div>
-                            <div className="space-y-2">
-                                <Label htmlFor="password" className="text-foreground">Password</Label>
-                                <Input
-                                    id="password"
-                                    type="password"
-                                    name="password"
-                                    placeholder="••••••••"
-                                    required
-                                    autoComplete="current-password"
-                                    className="bg-background/50 border-border text-foreground placeholder:text-muted-foreground focus:ring-ring focus:border-ring"
-                                />
-                                {state?.errors?.password && (
-                                    <p className="text-sm text-red-500">{state.errors.password}</p>
-                                )}
-                            </div>
-                            {state?.message && (
-                                <div className="p-3 bg-destructive/20 text-destructive border border-destructive/50 text-sm rounded-md text-center">
-                                    {state.message}
+                    <Card className="w-full shadow-2xl bg-card/40 border-border backdrop-blur-2xl text-foreground">
+                        <CardHeader>
+                            <CardTitle className="text-2xl font-bold text-center text-foreground">Sign In</CardTitle>
+                            <CardDescription className="text-center text-muted-foreground">
+                                Enter your credentials to access the nurse dashboard
+                            </CardDescription>
+                        </CardHeader>
+                        <form onSubmit={handleSubmit}>
+                            <CardContent className="space-y-4">
+                                <div className="space-y-2">
+                                    <Label htmlFor="username" className="text-foreground">Username</Label>
+                                    <Input
+                                        id="username"
+                                        name="username"
+                                        placeholder="Enter your username"
+                                        required
+                                        autoComplete="username"
+                                        className="bg-background/50 border-border text-foreground placeholder:text-muted-foreground focus:ring-ring focus:border-ring"
+                                    />
+                                    {state?.errors?.username && (
+                                        <p className="text-sm text-red-500">{state.errors.username}</p>
+                                    )}
                                 </div>
-                            )}
-
-                            {/* US-5.3: Kiosk Mode option — for dedicated nurse workstations */}
-                            <div data-help-id="login-kiosk" className="flex items-start gap-3 pt-1">
-                                <input
-                                    id="kioskMode"
-                                    name="kioskMode"
-                                    type="checkbox"
-                                    className="mt-0.5 h-4 w-4 rounded border-border bg-background/50 accent-primary cursor-pointer"
-                                />
-                                <div>
-                                    <Label htmlFor="kioskMode" className="text-foreground font-normal cursor-pointer">
-                                        Enable Kiosk Mode
-                                    </Label>
-                                    <p className="text-[11px] text-muted-foreground mt-0.5">
-                                        Session never expires — for dedicated nurse workstations only
-                                    </p>
+                                <div className="space-y-2">
+                                    <Label htmlFor="password" className="text-foreground">Password</Label>
+                                    <Input
+                                        id="password"
+                                        type="password"
+                                        name="password"
+                                        placeholder="••••••••"
+                                        required
+                                        autoComplete="current-password"
+                                        className="bg-background/50 border-border text-foreground placeholder:text-muted-foreground focus:ring-ring focus:border-ring"
+                                    />
+                                    {state?.errors?.password && (
+                                        <p className="text-sm text-red-500">{state.errors.password}</p>
+                                    )}
                                 </div>
-                            </div>
+                                {state?.message && (
+                                    <div className="p-3 bg-destructive/20 text-destructive border border-destructive/50 text-sm rounded-md text-center">
+                                        {state.message}
+                                    </div>
+                                )}
 
-                            {/* US-5.5: Forgot password info */}
-                            <ForgotPasswordInfo />
-                        </CardContent>
-                        <CardFooter>
-                            <Tooltip content="Sign in to your dashboard" side="top">
-                                <Button className="w-full" type="submit" loading={pending}>
-                                    Sign In
-                                </Button>
-                            </Tooltip>
-                        </CardFooter>
-                    </form>
-                </Card>
+                                {/* US-5.3: Kiosk Mode option — for dedicated nurse workstations */}
+                                <div data-help-id="login-kiosk" className="flex items-start gap-3 pt-1">
+                                    <input
+                                        id="kioskMode"
+                                        name="kioskMode"
+                                        type="checkbox"
+                                        className="mt-0.5 h-4 w-4 rounded border-border bg-background/50 accent-primary cursor-pointer"
+                                    />
+                                    <div>
+                                        <Label htmlFor="kioskMode" className="text-foreground font-normal cursor-pointer">
+                                            Enable Kiosk Mode
+                                        </Label>
+                                        <p className="text-[11px] text-muted-foreground mt-0.5">
+                                            Session never expires — for dedicated nurse workstations only
+                                        </p>
+                                    </div>
+                                </div>
+
+                                {/* US-5.5: Forgot password info */}
+                                <ForgotPasswordInfo />
+                            </CardContent>
+                            <CardFooter>
+                                <Tooltip content="Sign in to your dashboard" side="top">
+                                    <Button className="w-full" type="submit" loading={pending}>
+                                        Sign In
+                                    </Button>
+                                </Tooltip>
+                            </CardFooter>
+                        </form>
+                    </Card>
                 </div>
             </motion.div>
 

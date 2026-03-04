@@ -4,6 +4,10 @@
 
 import 'server-only'
 import pool from '@/shared/lib/db'
+import { jwtVerify } from 'jose'
+import { cookies } from 'next/headers'
+import { logger } from '@/shared/config/logger'
+import { encodedKey, type SessionPayload } from '@/shared/lib/session'
 
 export interface KioskSession {
   id: string
@@ -38,4 +42,49 @@ export async function isKioskSessionActive(kioskSessionId: string): Promise<bool
     [kioskSessionId]
   )
   return rows.length > 0
+}
+
+/**
+ * Restore a kiosk session from a persisted token.
+ * US-13: Ensures session persists after browser crashes or restarts.
+ */
+export async function restoreKioskSession(token: string) {
+  try {
+    const { payload } = await jwtVerify(token, encodedKey, {
+      algorithms: ['HS256'],
+    })
+
+    const sessionData = payload as unknown as SessionPayload
+
+    if (!sessionData.isKiosk) {
+      throw new Error('Not a kiosk session token')
+    }
+
+    // Verify it still exists in DB and is active
+    const { rows } = await pool.query(
+      'SELECT 1 FROM kiosk_sessions WHERE id = $1 AND is_active = true',
+      [sessionData.kioskSessionId]
+    )
+
+    if (rows.length === 0) {
+      throw new Error('Kiosk session has been revoked')
+    }
+
+    // Re-establish cookie
+    const cookieStore = await cookies()
+    cookieStore.set('session', token, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production',
+      expires: new Date(Date.now() + 365 * 24 * 60 * 60 * 1000),
+      maxAge: 365 * 24 * 60 * 60,
+      sameSite: 'lax',
+      path: '/',
+    })
+
+    logger.info('Kiosk session restored', { userId: sessionData.userId, sessionId: sessionData.kioskSessionId })
+    return sessionData
+  } catch (err) {
+    logger.error('Kiosk session restoration failed', err instanceof Error ? err : new Error(String(err)))
+    return null
+  }
 }

@@ -83,7 +83,7 @@ export async function POST(request: Request) {
       kioskOpts = { isKiosk: true, kioskIp: boundIp, kioskSessionId }
     }
 
-    await createSession(user.id, user.username, user.role, kioskOpts)
+    const token = await createSession(user.id, user.username, user.role, kioskOpts)
 
     const redirectTo = user.role === 'admin'
       ? '/admin'
@@ -91,7 +91,11 @@ export async function POST(request: Request) {
         ? '/supervisor'
         : '/dashboard'
 
-    return NextResponse.json({ success: true, redirectTo })
+    return NextResponse.json({
+      success: true,
+      redirectTo,
+      ...(kioskMode && { token })
+    })
   } catch (error) {
     logger.error('Login API error', error instanceof Error ? error : undefined)
     return NextResponse.json({ success: false, message: 'Internal server error' }, { status: 500 })
