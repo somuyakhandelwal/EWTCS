@@ -10,6 +10,7 @@ import { LogoutButton } from '@/features/auth/components/LogoutButton'
 import { CorrectionAuditTrailView } from '@/features/bed-dashboard/components/CorrectionAuditTrailView'
 import { PrintButton } from '@/features/bed-dashboard/components/PrintButton'
 import { Button } from '@/shared/components/ui/button'
+import { Tooltip } from '@/shared/components/ui/tooltip'
 import { ArrowLeft, Loader2 } from 'lucide-react'
 import Link from 'next/link'
 import { Suspense } from 'react'
@@ -71,13 +72,15 @@ export function AnalyticsPageContent({
         </div>
 
         {/* Header */}
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4" data-help-id="analytics-header">
           {isAuditMode ? <LogoutButton /> : (
-            <Link href={backHref}>
-              <Button variant="ghost" size="sm" className="gap-2">
-                <ArrowLeft className="h-4 w-4" />Back
-              </Button>
-            </Link>
+            <Tooltip content="Return to previous page" side="bottom">
+              <Link href={backHref}>
+                <Button variant="ghost" size="sm" className="gap-2">
+                  <ArrowLeft className="h-4 w-4" />Back
+                </Button>
+              </Link>
+            </Tooltip>
           )}
           <div className="flex-1">
             <h1 className="text-3xl font-bold tracking-tight text-foreground">Emergency Ward Analytics</h1>
@@ -88,23 +91,31 @@ export function AnalyticsPageContent({
               </div>
             )}
           </div>
-          <PrintButton />
-          <ExportReportButton
-            scope="full"
-            pdfSections={FULL_REPORT_SECTIONS}
-            pdfTitle="Emergency Ward Analytics Report"
-            exportedBy={username}
-            label="Export Full Report"
-            size="sm"
-          />
+          <Tooltip content="Print current analytics view" side="bottom">
+            <span>
+              <PrintButton />
+            </span>
+          </Tooltip>
+          <Tooltip content="Download full PDF report" side="bottom">
+            <span>
+              <ExportReportButton
+                scope="full"
+                pdfSections={FULL_REPORT_SECTIONS}
+                pdfTitle="Emergency Ward Analytics Report"
+                exportedBy={username}
+                label="Export Full Report"
+                size="sm"
+              />
+            </span>
+          </Tooltip>
         </div>
 
-        <div data-export-id="export-stage-analytics" className="print-no-break">
+        <div data-export-id="export-stage-analytics" className="print-no-break" data-help-id="analytics-stage-analytics">
           <Suspense fallback={<SectionSkeleton />}>
             <StageAnalyticsView readOnly={isAuditMode} />
           </Suspense>
         </div>
-        <div data-export-id="export-auditor-history" className="print-section print-no-break">
+        <div data-export-id="export-auditor-history" className="print-section print-no-break" data-help-id="analytics-history">
           <Suspense fallback={<SectionSkeleton />}>
             <AuditorHistoryView
               readOnly={isAuditMode}

@@ -5,10 +5,9 @@ import { AlertTriangle } from "lucide-react"
 
 interface Props {
     role: string
-    isKiosk: boolean
 }
 
-export async function BedDashboardContainer({ role, isKiosk }: Props) {
+export async function BedDashboardContainer({ role }: Props) {
     const bedGridResult = await getBedGridData()
 
     if (!bedGridResult.success || !bedGridResult.data) {

@@ -6,7 +6,40 @@ const secretKey = process.env.SESSION_SECRET
 const encodedKey = new TextEncoder().encode(secretKey!)
 const INACTIVITY_TIMEOUT_MS = Number(process.env.INACTIVITY_TIMEOUT_MS) || 30 * 60 * 1000
 
+function isLocalHost(hostname: string) {
+    return hostname === 'localhost' || hostname === '127.0.0.1' || hostname === '::1'
+}
+
+function shouldEnforceHttps() {
+    const env = (process.env.NODE_ENV as string | undefined) ?? ''
+    const enforceableEnv = env === 'production' || env === 'staging'
+    if (!enforceableEnv) return false
+    return process.env.FORCE_HTTPS !== 'false'
+}
+
+function isSecureRequest(request: NextRequest) {
+    const forwardedProto = request.headers
+        .get('x-forwarded-proto')
+        ?.split(',')[0]
+        ?.trim()
+        ?.toLowerCase()
+
+    if (forwardedProto) {
+        return forwardedProto === 'https'
+    }
+
+    return request.nextUrl.protocol === 'https:'
+}
+
 export async function middleware(request: NextRequest) {
+    // EPIC 17 / US-17.1: Enforce HTTPS on all matched routes in staging/production.
+    // This protects pages and API routes behind this middleware from plaintext transport.
+    if (shouldEnforceHttps() && !isLocalHost(request.nextUrl.hostname) && !isSecureRequest(request)) {
+        const httpsUrl = request.nextUrl.clone()
+        httpsUrl.protocol = 'https:'
+        return NextResponse.redirect(httpsUrl, 308)
+    }
+
     const token = request.cookies.get('session')?.value
 
     let session = null
@@ -100,11 +133,6 @@ export async function middleware(request: NextRequest) {
 
 export const config = {
     matcher: [
-        '/dashboard/:path*',
-        '/admin/:path*',
-        '/supervisor/:path*',
-        '/analytics/:path*',
-        '/login',
-        '/change-password',
+        '/((?!_next/static|_next/image|favicon.ico|robots.txt|sitemap.xml).*)',
     ],
 }

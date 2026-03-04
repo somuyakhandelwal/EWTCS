@@ -30,7 +30,7 @@ export default async function AdminDashboard() {
     return (
         <div className="min-h-screen bg-background text-foreground p-3 sm:p-8">
             <div className="max-w-7xl mx-auto space-y-6 sm:space-y-8">
-                <div className="flex flex-col gap-4 sm:flex-row sm:items-center justify-between">
+                <div className="flex flex-col gap-4 sm:flex-row sm:items-center justify-between" data-help-id="admin-header">
                     <div>
                         <h1 className="text-3xl font-bold tracking-tight text-foreground">
                             Admin {session?.username ? session.username : 'Console'}

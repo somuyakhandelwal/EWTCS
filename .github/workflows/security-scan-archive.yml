@@ -1,0 +1,154 @@
+name: Security Scan Email & Archive
+
+on:
+  workflow_run:
+    workflows: ['Enhanced Security Scan']
+    types: [completed]
+
+permissions:
+  contents: write
+  artifacts: read
+
+jobs:
+  notify-email:
+    name: Email Notification
+    runs-on: ubuntu-latest
+    if: secrets.SECURITY_EMAIL != ''
+
+    steps:
+      - name: Download artifacts
+        uses: actions/download-artifact@v4
+        continue-on-error: true
+
+      - name: Prepare email content
+        id: email
+        run: |
+          if [ ! -f "audit-report.json" ]; then
+            echo "has_vulnerabilities=false" >> $GITHUB_OUTPUT
+            exit 0
+          fi
+
+          CRITICAL=$(jq -r '.metadata.vulnerabilities.critical // 0' audit-report.json)
+          HIGH=$(jq -r '.metadata.vulnerabilities.high // 0' audit-report.json)
+          MEDIUM=$(jq -r '.metadata.vulnerabilities.medium // 0' audit-report.json)
+
+          if [ "$CRITICAL" -gt 0 ]; then
+            SUBJECT="🚨 CRITICAL: Security Vulnerabilities Detected - Immediate Action Required"
+            PRIORITY="URGENT"
+          else
+            SUBJECT="⚠️ WARNING: Security Vulnerabilities Detected"
+            PRIORITY="HIGH"
+          fi
+
+          echo "subject=$SUBJECT" >> $GITHUB_OUTPUT
+          echo "priority=$PRIORITY" >> $GITHUB_OUTPUT
+          echo "critical=$CRITICAL" >> $GITHUB_OUTPUT
+          echo "high=$HIGH" >> $GITHUB_OUTPUT
+          echo "medium=$MEDIUM" >> $GITHUB_OUTPUT
+          echo "has_vulnerabilities=true" >> $GITHUB_OUTPUT
+
+      - name: Send email notification
+        uses: dawidd6/action-send-mail@v3
+        if: steps.email.outputs.has_vulnerabilities == 'true' && secrets.MAIL_SERVER != ''
+        with:
+          server_address: ${{ secrets.MAIL_SERVER }}
+          server_port: ${{ secrets.MAIL_PORT || '587' }}
+          username: ${{ secrets.MAIL_USERNAME }}
+          password: ${{ secrets.MAIL_PASSWORD }}
+          subject: ${{ steps.email.outputs.subject }}
+          to: ${{ secrets.SECURITY_EMAIL || 'security@hospital.com' }}
+          from: 'EWTCS Security Scan <noreply@hospital.com>'
+          body: |
+            URGENT SECURITY SCAN REPORT
+            ============================
+
+            Priority: ${{ steps.email.outputs.priority }}
+            Date: $(date -u +"%Y-%m-%d %H:%M:%S UTC")
+
+            VULNERABILITY SUMMARY
+            =====================
+            Critical: ${{ steps.email.outputs.critical }}
+            High: ${{ steps.email.outputs.high }}
+            Medium: ${{ steps.email.outputs.medium }}
+
+            ACTION REQUIRED
+            ===============
+            ${{ steps.email.outputs.critical > 0 && '1. CRITICAL VULNS MUST BE FIXED WITHIN 48 HOURS' || '1. Review and prioritize fixes' }}
+            2. Access detailed report: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.event.workflow_run.id }}
+            3. Update SLA tracking with fix status
+            4. Escalate to management if SLAs will be breached
+
+            NEXT STEPS
+            ==========
+            1. Run: npm audit fix
+            2. Test affected packages
+            3. Update dependencies
+            4. Run scan again to verify
+
+            Need help? Contact: security@hospital.com
+
+            ---
+            This is an automated message from EWTCS Security Scanning System
+
+  archive-scan:
+    name: Archive Scan Results
+    runs-on: ubuntu-latest
+    if: github.event_name == 'schedule'
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Download artifacts
+        uses: actions/download-artifact@v4
+        continue-on-error: true
+
+      - name: Create scan archive
+        run: |
+          mkdir -p .security-scan-archive
+          SCAN_DATE=$(date +%Y-%m-%d)
+
+          if [ -f "audit-report.json" ]; then
+            cp "audit-report.json" ".security-scan-archive/scan-$SCAN_DATE.json"
+          fi
+
+          # Generate markdown history
+          cat > .security-scan-archive/HISTORY.md << 'EOF'
+          # Security Scan History
+
+          ## Recent Scans
+
+          | Date | Critical | High | Medium | Low | Status |
+          |------|----------|------|--------|-----|--------|
+          EOF
+
+          for file in $(ls -1 .security-scan-archive/scan-*.json 2>/dev/null | sort -r | head -10); do
+            DATE=$(echo $file | sed 's/.*scan-\([^.]*\).*/\1/')
+            CRITICAL=$(jq -r '.metadata.vulnerabilities.critical // 0' "$file")
+            HIGH=$(jq -r '.metadata.vulnerabilities.high // 0' "$file")
+            MEDIUM=$(jq -r '.metadata.vulnerabilities.medium // 0' "$file")
+            LOW=$(jq -r '.metadata.vulnerabilities.low // 0' "$file")
+
+            if [ "$CRITICAL" -gt 0 ]; then
+              STATUS="❌ CRITICAL"
+            elif [ "$HIGH" -gt 0 ]; then
+              STATUS="⚠️ HIGH"
+            else
+              STATUS="✅ CLEAN"
+            fi
+
+            echo "| $DATE | $CRITICAL | $HIGH | $MEDIUM | $LOW | $STATUS |" >> .security-scan-archive/HISTORY.md
+          done
+
+          echo "✅ Archive created"
+
+      - name: Commit and push history
+        run: |
+          git config user.name "EWTCS Security Bot"
+          git config user.email "security@hospital.com"
+          git add .security-scan-archive/ || true
+          git diff --cached --quiet || git commit -m "chore: archive security scan results"
+          git push origin main || true
+        continue-on-error: true

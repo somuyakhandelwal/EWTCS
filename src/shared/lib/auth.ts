@@ -1,6 +1,6 @@
 import 'server-only'
 import { verifyActiveSession } from '@/shared/lib/active-session'
-import { logAudit, type AuditAction } from '@/shared/lib/audit'
+import { logAudit } from '@/shared/lib/audit'
 import {
     type Resource,
     type ActionType,
