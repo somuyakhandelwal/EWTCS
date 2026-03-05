@@ -158,6 +158,71 @@ The system uses an immutable `audit_logs` table for compliance-critical events.
 - Database trigger blocks `UPDATE` and `DELETE` on `audit_logs`
 - Corrections should be recorded as new audit events, not in-place edits
 
+## Automated Database Backups (US-13.4)
+
+Backups run entirely on the **server that hosts this application** — no cloud dependency,
+no data leaves the hospital network. The PostgreSQL connection is always local or LAN,
+which is the correct approach for medical data compliance.
+
+### How it works
+1. A scheduled task (crontab / Windows Task Scheduler) calls `node scripts/db-backup.mjs`
+2. `pg_dump` connects to PostgreSQL locally — no firewall hole needed
+3. Output is compressed with gzip (level 9) in-memory — no uncompressed temp files
+4. If `ENCRYPTION_KEY` is set, the gzip stream is encrypted with AES-256-CBC before writing
+5. File is written to `BACKUP_PATH` (NAS, external drive, any local mount)
+6. Files older than `BACKUP_RETENTION_DAYS` are automatically deleted
+7. On failure: logs to stderr + fires `BACKUP_ALERT_WEBHOOK_URL` if configured
+
+### Quick start
+```bash
+# 1. Configure (add to .env.local)
+BACKUP_PATH=/mnt/hospital-nas/ewtcs-backups   # or leave blank for ./backups
+BACKUP_RETENTION_DAYS=30
+BACKUP_ALERT_WEBHOOK_URL=https://...          # optional Slack/Teams/ntfy webhook
+
+# 2. Install scheduler (run once, then it runs automatically)
+npm run backup:setup       # Linux/macOS: installs crontab entries
+                           # Windows: prints schtasks commands to run as Admin
+
+# 3. Run a backup right now to test
+npm run backup:run
+
+# 4. Verify the backup is restorable
+npm run backup:verify      # auto-finds latest backup
+npm run backup:verify backups/ewtcs_backup_2026-03-03T20-30-00.sql.gz  # specific file
+```
+
+### Environment variables
+| Variable | Required | Default | Description |
+|---|---|---|---|
+| `DATABASE_URL` | Yes | — | Source database (local PostgreSQL) |
+| `BACKUP_PATH` | No | `./backups` | Destination directory. Set to NAS/external drive for production |
+| `BACKUP_RETENTION_DAYS` | No | `30` | Days before old backup files are deleted |
+| `BACKUP_ALERT_WEBHOOK_URL` | No | — | HTTP(S) webhook for failure alerts. Works with Slack, Teams, ntfy.sh |
+| `ENCRYPTION_KEY` | Recommended | — | AES-256 key. Same key used by encrypted secrets. Produces `.sql.gz.enc` files |
+
+### Cron schedule (installed by `npm run backup:setup`)
+| Task | Schedule | What it does |
+|---|---|---|
+| Daily backup | 02:00 local time every day | `pg_dump` → compress → encrypt → save |
+| Monthly verify | 03:00 on 1st of month | Restore into temp DB → validate rows → drop temp DB |
+
+Logs are written to `<project-root>/logs/backup.log` and `logs/backup-verify.log`.
+
+### Shifting to production (future)
+When the database moves to a cloud server or dedicated host:
+1. Set `BACKUP_PATH` to a hospital-approved storage mount or backup server path
+2. Ensure the app server has network access to the DB and the backup destination
+3. Re-run `npm run backup:setup` on the new server
+4. No code changes needed — `db-backup.mjs` is location-agnostic
+
+### Encryption format
+Encrypted backup files (`.sql.gz.enc`) contain:
+- **Bytes 0–15**: 16-byte random IV
+- **Bytes 16+**: AES-256-CBC encrypted gzip data
+
+Decryption key derivation: `scrypt(ENCRYPTION_KEY, 'EWTCS_SALT_2026', 32)` — identical to `encrypt-secret.js`.
+
 ## Security Best Practices
 
 - Never commit credentials to git; use `.env.local` (in `.gitignore`)

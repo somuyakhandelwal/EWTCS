@@ -1,8 +1,6 @@
 import 'server-only'
 import pool from '@/shared/lib/db'
 import { logger } from '@/shared/config/logger'
-import { headers } from 'next/headers'
-import { getClientIpFromHeaders } from '@/shared/lib/request-ip'
 
 /** Used when entity_id cannot be represented as a UUID (e.g. key-value system settings). */
 const NIL_UUID = '00000000-0000-0000-0000-000000000000'
@@ -67,19 +65,16 @@ export interface AuditLogRecord {
 }
 
 /** Log any entity action to the audit trail. Non-UUID entityId values are
- *  coerced to the nil UUID; the original string is stored in metadata._entityRef. */
+ *  coerced to the nil UUID; the original string is stored in metadata._entityRef.
+ *
+ *  IMPORTANT: ipAddress should always be resolved by the *caller* before invoking
+ *  this function. The function no longer attempts to call headers() internally
+ *  because in Next.js 15 server actions, calling headers() after cookies() have
+ *  been mutated throws a Dynamic Server Error that silently swallows the log.
+ */
 export async function logAudit(entry: AuditLogEntry): Promise<void> {
     try {
-        let resolvedIpAddress = entry.ipAddress || null
-
-        if (!resolvedIpAddress) {
-            try {
-                const requestHeaders = await headers()
-                resolvedIpAddress = getClientIpFromHeaders(requestHeaders)
-            } catch {
-                resolvedIpAddress = null
-            }
-        }
+        const resolvedIpAddress = entry.ipAddress ?? null
 
         // entity_id column is UUID — coerce non-UUID values to nil UUID.
         const { entityId, metadata } = resolveEntityId(entry.entityId, entry.metadata ?? {})

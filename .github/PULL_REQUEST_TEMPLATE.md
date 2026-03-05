@@ -37,6 +37,7 @@ Closes #
 
 ### Documentation
 - [ ] Updated documentation if needed
+- [ ] ADMIN_HANDBOOK.md updated (if configuration/maintenance/security/operations changed)
 - [ ] README updated (if setup process changed)
 - [ ] DATABASE_SETUP.md updated (if database changes)
 - [ ] Code comments added for complex logic

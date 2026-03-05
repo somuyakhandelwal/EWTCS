@@ -3,6 +3,7 @@ import { BedDashboardContainer } from "@/features/bed-dashboard/components/BedDa
 import { BedGridSkeleton } from "@/features/bed-dashboard/components/BedGridSkeleton"
 import { LogoutButton } from "@/features/auth/components/LogoutButton"
 import { KioskBanner } from "@/features/auth/components/KioskBanner"
+import { FeedbackForm } from "@/features/adoption/components/FeedbackForm"
 import { redirect } from "next/navigation"
 import { Suspense } from "react"
 
@@ -36,6 +37,13 @@ export default async function DashboardPage() {
                 <Suspense fallback={<BedGridSkeleton />}>
                     <BedDashboardContainer role={session.role} />
                 </Suspense>
+
+                {/* Feedback — hidden on kiosk sessions */}
+                {!session.isKiosk && (
+                    <div className="max-w-xl">
+                        <FeedbackForm />
+                    </div>
+                )}
             </div>
         </div>
     )

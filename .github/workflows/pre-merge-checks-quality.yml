@@ -49,6 +49,21 @@ jobs:
           else
             echo "ℹ️  No database changes detected"
           fi
+      - name: Enforce Admin Handbook updates for ops-impacting changes
+        run: |
+          OPS_CHANGES=$(git diff --name-only origin/${{ github.base_ref }}...HEAD | grep -E '^(migrations/|scripts/|src/shared/config/|src/middleware.ts|src/app/api/health/route.ts|src/app/api/cron/archival/route.ts|package.json|DATABASE_SETUP.md|CONFIGURATION.md)' || true)
+          if [ -n "$OPS_CHANGES" ]; then
+            HANDBOOK_CHANGED=$(git diff --name-only origin/${{ github.base_ref }}...HEAD | grep -E '^docs/ADMIN_HANDBOOK.md$' || true)
+            if [ -z "$HANDBOOK_CHANGED" ]; then
+              echo "❌ ERROR: Ops-impacting files changed but docs/ADMIN_HANDBOOK.md was not updated"
+              echo "Changed files requiring handbook review:"; echo "$OPS_CHANGES"
+              exit 1
+            else
+              echo "✅ Admin handbook updated for ops-impacting changes"
+            fi
+          else
+            echo "ℹ️  No ops-impacting changes detected"
+          fi
       - name: Validate README has setup instructions
         run: |
           if ! grep -q "## Setup" README.md && ! grep -q "## Getting Started" README.md; then
@@ -73,7 +88,8 @@ jobs:
               'Code is properly formatted',
               'Tested locally and works as expected',
               'Database migrations tested',
-              'Environment variables documented'
+              'Environment variables documented',
+              'ADMIN_HANDBOOK.md updated (if configuration/maintenance/security/operations changed)'
             ];
             const missingChecks = [];
             for (const check of requiredChecks) {
