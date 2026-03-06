@@ -8,6 +8,7 @@ import { jwtVerify } from 'jose'
 import { cookies } from 'next/headers'
 import { logger } from '@/shared/config/logger'
 import { encodedKey, type SessionPayload } from '@/shared/lib/session'
+import { isTokenBlacklisted } from '@/shared/lib/auth-service'
 
 export interface KioskSession {
   id: string
@@ -58,6 +59,16 @@ export async function restoreKioskSession(token: string) {
 
     if (!sessionData.isKiosk) {
       throw new Error('Not a kiosk session token')
+    }
+
+    // Reject tokens that have been invalidated via logout
+    if (await isTokenBlacklisted(token)) {
+      throw new Error('Token has been invalidated')
+    }
+
+    // Validate kioskSessionId is a non-empty string before querying
+    if (!sessionData.kioskSessionId || typeof sessionData.kioskSessionId !== 'string') {
+      throw new Error('Invalid kiosk session ID')
     }
 
     // Verify it still exists in DB and is active
