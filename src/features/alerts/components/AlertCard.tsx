@@ -6,7 +6,7 @@
 'use client'
 
 import { useState } from 'react'
-import { AlertTriangle, Hourglass, CheckCircle2, Clock } from 'lucide-react'
+import { AlertTriangle, Hourglass, CheckCircle2, Clock, ServerCrash } from 'lucide-react'
 import { cn } from '@/shared/lib/utils'
 import { Button } from '@/shared/components/ui/button'
 import { AlertSeverityBadge } from './AlertSeverityBadge'
@@ -28,6 +28,7 @@ const SEVERITY_BORDER: Record<Alert['severity'], string> = {
 const TYPE_ICON = {
   delayed_bed:            AlertTriangle,
   disposition_bottleneck: Hourglass,
+  system_error:           ServerCrash,
 }
 
 export function AlertCard({ alert, onAcknowledged }: AlertCardProps) {
@@ -87,7 +88,8 @@ export function AlertCard({ alert, onAcknowledged }: AlertCardProps) {
       <div className="flex items-center gap-3 text-xs text-zinc-500">
         <Clock className="h-3 w-3" />
         <span>
-          Bed <span className="font-medium text-zinc-300">{alert.bedNumber}</span>
+          {alert.type === 'system_error' ? 'Source' : 'Bed'}{' '}
+          <span className="font-medium text-zinc-300">{alert.bedNumber}</span>
         </span>
         <span>·</span>
         <span>

@@ -3,10 +3,6 @@ import { logger } from './logger';
 import { decryptSecret, maskSensitive, validatePostgresUrl } from './secrets';
 import type { AppConfig } from '@/shared/types/config.types';
 
-/**
- * Validates environment variables on startup
- * Supports development, staging, and production environments
- */
 const envSchema = z.object({
   DATABASE_URL: z.string().optional(),
   DATABASE_URL_ENCRYPTED: z.string().optional(),

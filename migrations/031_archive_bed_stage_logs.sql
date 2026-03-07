@@ -4,6 +4,11 @@
 --
 -- Creates a cold-store table for bed_stage_logs records older than 90 days.
 -- Rows are moved by the EPIC 14 archival runner in batches.
+--
+-- Note: migration 021_data_archival.sql may have already created
+-- bed_stage_logs_archive via "LIKE bed_stage_logs" without archived_at.
+-- We use CREATE TABLE IF NOT EXISTS + ALTER TABLE ADD COLUMN IF NOT EXISTS
+-- to stay idempotent.
 
 CREATE TABLE IF NOT EXISTS bed_stage_logs_archive (
     id UUID NOT NULL,
@@ -19,6 +24,10 @@ CREATE TABLE IF NOT EXISTS bed_stage_logs_archive (
     shift_override_by_user_id UUID,
     archived_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW()
 );
+
+-- Add archived_at if the table already existed without it (from migration 021)
+ALTER TABLE bed_stage_logs_archive
+    ADD COLUMN IF NOT EXISTS archived_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW();
 
 CREATE INDEX IF NOT EXISTS idx_bsl_archive_transition_time
     ON bed_stage_logs_archive(transition_time DESC);

@@ -32,6 +32,7 @@ export async function getUserPreferenceMap(userId: string): Promise<UserPreferen
   const prefs: UserPreferenceMap = {
     delayed_bed:            { ...DEFAULT_USER_PREFERENCES.delayed_bed },
     disposition_bottleneck: { ...DEFAULT_USER_PREFERENCES.disposition_bottleneck },
+    system_error:           { ...DEFAULT_USER_PREFERENCES.system_error },
   }
 
   for (const row of result.rows) {

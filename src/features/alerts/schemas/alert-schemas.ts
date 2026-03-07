@@ -7,6 +7,7 @@ import { piiRefine } from '@/shared/lib/pii'
 export const alertTypeSchema = z.enum([
   'delayed_bed',
   'disposition_bottleneck',
+  'system_error',
 ])
 
 /** Valid acknowledgment durations offered to the supervisor */

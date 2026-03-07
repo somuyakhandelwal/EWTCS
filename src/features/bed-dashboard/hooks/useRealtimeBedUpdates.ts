@@ -66,7 +66,7 @@ export function useRealtimeBedUpdates(
     stopPolling()
     void fetchData()
     startPolling()
-  }, [connectionStatus.lastUpdate, errorCountRef, fetchData, startPolling, stopPolling, setConnectionStatus])
+  }, [errorCountRef, fetchData, startPolling, stopPolling, setConnectionStatus])
 
   return {
     data,

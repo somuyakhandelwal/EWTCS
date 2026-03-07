@@ -33,12 +33,17 @@ export const ALERT_TYPE_DESCRIPTIONS: Record<AlertType, { label: string; descrip
     label: 'Disposition Bottleneck',
     description: 'Alert when a bed is stuck waiting for a disposition decision.',
   },
+  system_error: {
+    label: 'System Error',
+    description: 'Alert when an ERROR or CRITICAL system event is logged.',
+  },
 }
 
 /** System defaults: all types on, no threshold overrides. */
 export const DEFAULT_USER_PREFERENCES: UserPreferenceMap = {
   delayed_bed:             { enabled: true, minDelayThresholdMinutes: null },
   disposition_bottleneck:  { enabled: true, minDelayThresholdMinutes: null },
+  system_error:            { enabled: true, minDelayThresholdMinutes: null },
 }
 
-export const ALERT_TYPES: AlertType[] = ['delayed_bed', 'disposition_bottleneck']
+export const ALERT_TYPES: AlertType[] = ['delayed_bed', 'disposition_bottleneck', 'system_error']

@@ -23,6 +23,34 @@ const CRITICAL_ELAPSED_MULTIPLIER = 2
 const CRITICAL_BOTTLENECK_MS = 60 * 60 * 1000
 
 /**
+ * Surface error_events from the past 24 hours only.
+ */
+const SYSTEM_ERROR_WINDOW_MS = 24 * 60 * 60 * 1000
+
+interface ErrorEventRow {
+  id: string
+  level: 'ERROR' | 'CRITICAL'
+  category: string
+  message: string
+  createdAt: Date
+}
+
+async function getRecentErrorEvents(): Promise<ErrorEventRow[]> {
+  const since = new Date(Date.now() - SYSTEM_ERROR_WINDOW_MS)
+  const result = await query<ErrorEventRow>(
+    `SELECT id, level, category, message, created_at AS "createdAt"
+     FROM   error_events
+     WHERE  acknowledged = FALSE
+       AND  level IN ('ERROR', 'CRITICAL')
+       AND  created_at > $1
+     ORDER BY created_at DESC
+     LIMIT 50`,
+    [since]
+  )
+  return result.rows
+}
+
+/**
  * Build the full list of active alerts derived from live bed state.
  * Each delayed or bottleneck bed produces one alert.
  * Acknowledgment data is joined in-memory from the acks map.
@@ -31,9 +59,10 @@ export async function getActiveAlerts(): Promise<Alert[]> {
   const delayThresholdMs = config.alert.delayThresholdMs
   const criticalThresholdMs = delayThresholdMs * CRITICAL_ELAPSED_MULTIPLIER
 
-  const [beds, acks] = await Promise.all([
+  const [beds, acks, errorEvents] = await Promise.all([
     getBedsWithElapsedTime(delayThresholdMs, criticalThresholdMs),
     getActiveAcknowledgments(),
+    getRecentErrorEvents(),
   ])
 
   const ackMap = new Map<string, AlertAcknowledgment>(
@@ -90,6 +119,29 @@ export async function getActiveAlerts(): Promise<Alert[]> {
         startedAt: bed.lastStageChange ?? new Date(),
       })
     }
+  }
+
+  // ── System-error alerts ────────────────────────────────────────────────
+  for (const ev of errorEvents) {
+    const alertKey = `system_error:${ev.id}`
+    const ack = ackMap.get(alertKey) ?? null
+    const elapsedMs = Date.now() - new Date(ev.createdAt).getTime()
+
+    alerts.push({
+      id: alertKey,
+      type: 'system_error',
+      severity: ev.level === 'CRITICAL' ? 'critical' : 'warning',
+      title: `System Error — ${ev.category}`,
+      description: ev.message,
+      bedId: null,
+      bedNumber: ev.category,
+      elapsedTimeMs: elapsedMs,
+      isAcknowledged: ack !== null,
+      acknowledgedAt: ack?.acknowledgedAt ?? null,
+      acknowledgedBy: ack?.acknowledgedByUsername ?? null,
+      acknowledgedUntil: ack?.expiresAt ?? null,
+      startedAt: new Date(ev.createdAt),
+    })
   }
 
   return alerts

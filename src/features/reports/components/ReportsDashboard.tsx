@@ -6,36 +6,19 @@
 import { useState, useTransition, useCallback } from 'react'
 import { Download, RefreshCw, Printer } from 'lucide-react'
 import { getReportDataAction, exportReportCSVAction } from '../actions/report-actions'
-import { ReportKPICards } from './ReportKPICards'
-import { TrendChart } from './TrendChart'
-import { StageDelayChart } from './StageDelayChart'
-import { BedPerformanceTable } from './BedPerformanceTable'
-import { ActivityHeatmap } from './ActivityHeatmap'
 import { SignOffPanel } from './SignOffPanel'
+import { ReportsSectionContent } from './ReportsSectionContent'
 import type { ReportData } from '../types/report'
 import type { ReportFilterInput } from '../schemas/report-schemas'
 import type { SignOff } from '../lib/sign-off-queries'
 
-interface Section {
-  id: string
-  label: string
-}
-const SECTIONS: Section[] = [
+const SECTIONS = [
   { id: 'overview', label: 'Overview' },
   { id: 'trend',    label: 'Trends' },
   { id: 'stages',   label: 'Stage Delays' },
   { id: 'beds',     label: 'Bed Performance' },
   { id: 'heatmap',  label: 'Activity Heatmap' },
 ]
-
-function SectionCard({ title, children }: { title: string; children: React.ReactNode }) {
-  return (
-    <div className="rounded-xl border border-zinc-700 bg-zinc-900 p-5 space-y-4">
-      <h2 className="text-sm font-semibold text-zinc-200 uppercase tracking-wide">{title}</h2>
-      {children}
-    </div>
-  )
-}
 
 interface ReportsDashboardProps {
   initialData: ReportData
@@ -172,39 +155,7 @@ export function ReportsDashboard({ initialData, initialFilter, initialSignOff, c
         Screen: inactive sections get `hidden` via inline style.
         Print: `.print-section` overrides `display:none` with `display:block`.
       */}
-      <div className={`print-section ${activeTab === 'overview' ? '' : 'hidden'}`}>
-        <ReportKPICards metrics={data.metrics} />
-      </div>
-
-      <div className={`print-section ${activeTab === 'trend' ? '' : 'hidden'}`}>
-        <SectionCard title="Daily Trends — Patients · Avg TAT · Delays">
-          <TrendChart trend={data.trend} />
-        </SectionCard>
-      </div>
-
-      <div className={`print-section ${activeTab === 'stages' ? '' : 'hidden'}`}>
-        <SectionCard title="Stage-Wise Average Duration (US-10.5)">
-          <p className="text-xs text-zinc-500">
-            Red bar = bottleneck stage. Sorted by average duration descending.
-          </p>
-          <StageDelayChart stageDelays={data.stageDelays} />
-        </SectionCard>
-      </div>
-
-      <div className={`print-section ${activeTab === 'beds' ? '' : 'hidden'}`}>
-        <SectionCard title="Bed Performance (US-10.4)">
-          <p className="text-xs text-zinc-500">
-            Beds above the 75th percentile for delay rate are flagged as outliers.
-          </p>
-          <BedPerformanceTable beds={data.bedPerformance} />
-        </SectionCard>
-      </div>
-
-      <div className={`print-section ${activeTab === 'heatmap' ? '' : 'hidden'}`}>
-        <SectionCard title="Activity Heatmap — Transitions by Hour &amp; Day (US-10.6)">
-          <ActivityHeatmap heatmap={data.heatmap} />
-        </SectionCard>
-      </div>
+      <ReportsSectionContent data={data} activeTab={activeTab} />
 
       {/* US-12.4: Supervisor sign-off (hidden in print) */}
       <SignOffPanel

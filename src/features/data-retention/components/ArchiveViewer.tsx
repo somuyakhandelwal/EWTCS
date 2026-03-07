@@ -5,50 +5,15 @@
 import { useState, useTransition } from 'react'
 import { Search, RefreshCw, Download } from 'lucide-react'
 import { searchArchiveAction } from '../actions/retention-actions'
-import type { ArchivePage, ArchiveRow } from '../lib/retention-queries'
+import type { ArchivePage } from '../lib/retention-queries'
+import { downloadArchiveCSV } from '../lib/archive-export'
+import { ArchiveTable } from './ArchiveTable'
 
 interface BedOption { id: string; bedNumber: string; wardName: string | null }
 
 interface ArchiveViewerProps {
     initialData: ArchivePage
     beds: BedOption[]
-}
-
-function fmtDuration(ms: number | null): string {
-    if (ms == null) return '—'
-    const h = Math.floor(ms / 3_600_000)
-    const m = Math.floor((ms % 3_600_000) / 60_000)
-    if (h > 0) return `${h}h ${m}m`
-    return `${m}m`
-}
-
-function fmtTs(iso: string): string {
-    return new Date(iso).toLocaleString(undefined, { dateStyle: 'medium', timeStyle: 'short' })
-}
-
-function downloadCSV(rows: ArchiveRow[]) {
-    const header = 'Timestamp,Bed,Ward,From Stage,To Stage,Duration,Notes'
-    const body = rows.map((r) =>
-        [
-            fmtTs(r.transitionTime),
-            r.bedNumber,
-            r.wardName ?? '',
-            r.fromStage ?? '',
-            r.toStage ?? '',
-            fmtDuration(r.durationMs),
-            (r.notes ?? '').replace(/,/g, ';'),
-        ].join(',')
-    )
-    const csv  = [header, ...body].join('\n')
-    const blob = new Blob([csv], { type: 'text/csv' })
-    const url  = URL.createObjectURL(blob)
-    const a    = document.createElement('a')
-    a.href     = url
-    a.download = `archive_export_${new Date().toISOString().slice(0, 10)}.csv`
-    document.body.appendChild(a)
-    a.click()
-    document.body.removeChild(a)
-    URL.revokeObjectURL(url)
 }
 
 export function ArchiveViewer({ initialData, beds }: ArchiveViewerProps) {
@@ -142,7 +107,7 @@ export function ArchiveViewer({ initialData, beds }: ArchiveViewerProps) {
                 <div className="flex-1" />
                 <button
                     type="button"
-                    onClick={() => downloadCSV(data.rows)}
+                    onClick={() => downloadArchiveCSV(data.rows)}
                     disabled={data.rows.length === 0}
                     className="flex items-center gap-2 px-3 py-1.5 rounded-lg border border-zinc-600 bg-zinc-800
                                hover:bg-zinc-700 text-zinc-200 text-sm disabled:opacity-40 transition-colors"
@@ -173,48 +138,7 @@ export function ArchiveViewer({ initialData, beds }: ArchiveViewerProps) {
                         No archived records found for the selected filters.
                     </p>
                 ) : (
-                    <div className="overflow-x-auto">
-                        <table className="w-full text-sm">
-                            <thead>
-                                <tr className="border-b border-zinc-700 text-left">
-                                    <th className="px-3 py-2 text-xs text-zinc-400 font-medium">Timestamp</th>
-                                    <th className="px-3 py-2 text-xs text-zinc-400 font-medium">Bed</th>
-                                    <th className="px-3 py-2 text-xs text-zinc-400 font-medium">Ward</th>
-                                    <th className="px-3 py-2 text-xs text-zinc-400 font-medium">From Stage</th>
-                                    <th className="px-3 py-2 text-xs text-zinc-400 font-medium">To Stage</th>
-                                    <th className="px-3 py-2 text-xs text-zinc-400 font-medium">Duration</th>
-                                    <th className="px-3 py-2 text-xs text-zinc-400 font-medium">Notes</th>
-                                </tr>
-                            </thead>
-                            <tbody className="divide-y divide-zinc-800">
-                                {data.rows.map((row) => (
-                                    <tr key={row.id} className="hover:bg-zinc-800/50 transition-colors">
-                                        <td className="px-3 py-2 text-zinc-300 whitespace-nowrap">
-                                            {fmtTs(row.transitionTime)}
-                                        </td>
-                                        <td className="px-3 py-2 text-zinc-200 font-medium whitespace-nowrap">
-                                            {row.bedNumber}
-                                        </td>
-                                        <td className="px-3 py-2 text-zinc-400 whitespace-nowrap">
-                                            {row.wardName ?? '—'}
-                                        </td>
-                                        <td className="px-3 py-2 text-zinc-400 whitespace-nowrap">
-                                            {row.fromStage ?? '—'}
-                                        </td>
-                                        <td className="px-3 py-2 text-zinc-300 whitespace-nowrap">
-                                            {row.toStage ?? '—'}
-                                        </td>
-                                        <td className="px-3 py-2 text-zinc-400 whitespace-nowrap tabular-nums">
-                                            {fmtDuration(row.durationMs)}
-                                        </td>
-                                        <td className="px-3 py-2 text-zinc-500 max-w-[220px] truncate">
-                                            {row.notes ?? '—'}
-                                        </td>
-                                    </tr>
-                                ))}
-                            </tbody>
-                        </table>
-                    </div>
+                    <ArchiveTable rows={data.rows} />
                 )}
 
                 {/* Pagination */}

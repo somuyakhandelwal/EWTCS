@@ -1,13 +1,14 @@
 // Alert Types
 // EPIC 15: Notifications & Alerts (US-15.4)
 
-export type AlertType = 'delayed_bed' | 'disposition_bottleneck'
+export type AlertType = 'delayed_bed' | 'disposition_bottleneck' | 'system_error'
 
 export type AlertSeverity = 'critical' | 'warning'
 
 export const ALERT_TYPE_LABELS: Record<AlertType, string> = {
   delayed_bed: 'Delayed Bed',
   disposition_bottleneck: 'Disposition Bottleneck',
+  system_error: 'System Error',
 }
 
 export const ALERT_SEVERITY_LABELS: Record<AlertSeverity, string> = {
@@ -28,7 +29,8 @@ export interface Alert {
   severity: AlertSeverity
   title: string
   description: string
-  bedId: string
+  /** null for system_error alerts that are not bed-specific */
+  bedId: string | null
   bedNumber: string
   /** ms elapsed — total stay for delayed_bed; disposition time for bottleneck */
   elapsedTimeMs: number

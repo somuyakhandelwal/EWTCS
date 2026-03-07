@@ -8,6 +8,7 @@ import { Button } from '@/shared/components/ui/button'
 import { Input } from '@/shared/components/ui/input'
 import { ChevronLeft, ChevronRight, Download, Loader2, History, Search, RotateCcw } from 'lucide-react'
 import type { StageHistoryPage, StageHistoryRow, BedOption, StageOption, StageHistoryFilter } from '../lib/stage-history-queries'
+import { StageHistoryTable } from './StageHistoryTable'
 
 const selectCls = 'h-9 rounded-md border border-zinc-700 bg-zinc-800 text-zinc-200 text-sm px-2 focus:outline-none focus:ring-2 focus:ring-blue-500'
 
@@ -149,48 +150,7 @@ export function StageHistoryDashboard({ initialData, beds, stages, onFetch }: Pr
                 ) : data.rows.length === 0 ? (
                     <div className="text-center py-12 text-zinc-500">No stage transitions match the current filter.</div>
                 ) : (
-                    <div className="overflow-x-auto">
-                        <table className="w-full text-sm">
-                            <thead>
-                                <tr className="border-b border-zinc-800 text-zinc-400 text-xs uppercase tracking-wider">
-                                    <th className="pb-3 text-left font-medium pr-4">Timestamp</th>
-                                    <th className="pb-3 text-left font-medium pr-4">Bed</th>
-                                    <th className="pb-3 text-left font-medium pr-4">From Stage</th>
-                                    <th className="pb-3 text-left font-medium pr-4">To Stage</th>
-                                    <th className="pb-3 text-left font-medium pr-4">Duration</th>
-                                    <th className="pb-3 text-left font-medium pr-4">User</th>
-                                    <th className="pb-3 text-left font-medium pr-4">Shift</th>
-                                    <th className="pb-3 text-left font-medium">Notes</th>
-                                </tr>
-                            </thead>
-                            <tbody className="divide-y divide-zinc-800/50">
-                                {data.rows.map(row => (
-                                    <tr key={row.id} className="hover:bg-zinc-800/20 transition-colors">
-                                        <td className="py-3 pr-4 text-zinc-300 whitespace-nowrap text-xs">
-                                            {new Date(row.transition_time).toLocaleString('en-US', {
-                                                year: 'numeric', month: 'short', day: 'numeric',
-                                                hour: '2-digit', minute: '2-digit',
-                                            })}
-                                        </td>
-                                        <td className="py-3 pr-4 text-white font-medium">{row.bed_number}</td>
-                                        <td className="py-3 pr-4 text-zinc-400 text-xs">
-                                            {row.from_stage ?? <span className="italic text-zinc-600">—</span>}
-                                        </td>
-                                        <td className="py-3 pr-4 text-blue-300 font-medium text-xs">{row.to_stage}</td>
-                                        <td className="py-3 pr-4 text-zinc-400 text-xs">{fmtDuration(row.duration_prev_ms)}</td>
-                                        <td className="py-3 pr-4">
-                                            <div className="text-zinc-200 text-xs">{row.changed_by_username ?? '—'}</div>
-                                            {row.changed_by_role && <div className="text-zinc-500 text-xs capitalize">{row.changed_by_role}</div>}
-                                        </td>
-                                        <td className="py-3 pr-4 text-zinc-400 text-xs">{row.shift_name ?? '—'}</td>
-                                        <td className="py-3 text-zinc-500 text-xs max-w-[160px] truncate" title={row.notes ?? ''}>
-                                            {row.notes ?? '—'}
-                                        </td>
-                                    </tr>
-                                ))}
-                            </tbody>
-                        </table>
-                    </div>
+                    <StageHistoryTable rows={data.rows} />
                 )}
 
                 {data.total > 0 && (
