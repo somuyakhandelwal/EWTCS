@@ -2,6 +2,7 @@
 // Epic 1: Nurse Desk Bed Dashboard
 
 import { z } from 'zod'
+import { piiRefine } from '@/shared/lib/pii'
 
 export const StageSchema = z.object({
   id: z.string().uuid(),
@@ -39,8 +40,13 @@ export const UpdateBedStageSchema = z.object({
   bedId: z.string().uuid('Invalid bed ID'),
   toStageId: z.string().uuid('Invalid stage ID'),
   supervisorOverride: z.boolean().optional().default(false),
-  overrideReason: z.string().max(500).optional(),
-  notes: z.string().max(500).optional(),
+  overrideReason: z.string().max(500).optional().superRefine((val, ctx) => {
+    if (val) piiRefine(val, ctx)
+  }),
+  // US-17.6/17.8: PII blocked from notes field
+  notes: z.string().max(500).optional().superRefine((val, ctx) => {
+    if (val) piiRefine(val, ctx)
+  }),
 })
 
 export type CreateBedInput = z.infer<typeof CreateBedSchema>

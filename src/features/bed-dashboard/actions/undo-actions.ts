@@ -1,6 +1,8 @@
 // Undo Actions for Bed Stage
 // US-7: Undo Last Action (Nurse)
 
+'use server'
+
 import { getBedById } from '../lib/queries'
 import { logger } from '@/shared/config/logger'
 import { requireRole } from '@/shared/lib/auth'

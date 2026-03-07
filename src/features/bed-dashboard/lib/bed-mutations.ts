@@ -1,5 +1,6 @@
 // Bed Dashboard Mutations
 // Epic 2: One-Click Stage Update System
+// Epic 8: Shift Management (US-8.2) — shift_id is tagged on every log insert.
 
 import pool from '@/shared/lib/db'
 import { logger } from '@/shared/config/logger'
@@ -127,8 +128,20 @@ export async function updateBedStageInDB(
         to_stage_id,
         changed_by_user_id,
         duration_in_previous_stage_ms,
-        notes
-      ) VALUES ($1, $2, $3, $4, $5, $6)
+        notes,
+        shift_id
+      ) VALUES (
+        $1, $2, $3, $4, $5, $6,
+        -- US-8.2: auto-resolve the active shift for the current wall-clock time
+        (SELECT id FROM shifts
+         WHERE  is_active = true
+           AND  (
+                  (start_time < end_time AND NOW()::time BETWEEN start_time AND end_time)
+                  OR
+                  (start_time > end_time AND (NOW()::time >= start_time OR NOW()::time < end_time))
+                )
+         LIMIT 1)
+      )
       `,
       [
         bedId,

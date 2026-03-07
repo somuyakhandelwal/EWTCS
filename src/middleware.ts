@@ -46,7 +46,13 @@ export async function middleware(request: NextRequest) {
 
     // Protected routes
     if (pathname.startsWith('/admin')) {
-        if (!session || session.role !== 'admin') {
+        // US-12.3: Auditors get read-only access to audit + health pages only
+        if (session?.role === 'auditor') {
+            const auditOnly = pathname.startsWith('/admin/audit') || pathname.startsWith('/admin/health')
+            if (!auditOnly) {
+                return NextResponse.redirect(new URL('/admin/audit', request.url))
+            }
+        } else if (!session || session.role !== 'admin') {
             return NextResponse.redirect(new URL('/login', request.url))
         }
     }
@@ -74,6 +80,7 @@ export async function middleware(request: NextRequest) {
     if (pathname.startsWith('/login')) {
         if (session) {
             if (session.role === 'admin') return NextResponse.redirect(new URL('/admin', request.url))
+            if (session.role === 'auditor') return NextResponse.redirect(new URL('/admin/audit', request.url))
             if (session.role === 'supervisor') return NextResponse.redirect(new URL('/supervisor', request.url))
             return NextResponse.redirect(new URL('/dashboard', request.url))
         }

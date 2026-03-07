@@ -4,6 +4,7 @@ import { BedDashboardClient } from "@/features/bed-dashboard/components/BedDashb
 import { AlertTriangle } from "lucide-react"
 import { LogoutButton } from "@/features/auth/components/LogoutButton"
 import { KioskBanner } from "@/features/auth/components/KioskBanner"
+import { HelpDrawer } from "@/components/ui/HelpDrawer"
 import { redirect } from "next/navigation"
 
 export default async function DashboardPage() {
@@ -55,7 +56,20 @@ export default async function DashboardPage() {
                         </h1>
                         <p className="text-zinc-400 text-sm">Real-time bed status and ward overview</p>
                     </div>
-                    <div className="self-end sm:self-auto"><LogoutButton /></div>
+                    <div className="self-end sm:self-auto flex items-center gap-2">
+                        <HelpDrawer title="Bed Dashboard Help">
+                            <p className="font-medium text-white">How to use the Bed Dashboard</p>
+                            <ul className="space-y-2 list-disc list-inside">
+                                <li>Each card represents one bed. <strong className="text-white">Tap a card</strong> to update its stage.</li>
+                                <li>A <span className="text-red-400">red pulsing border</span> means the bed has been occupied longer than the delay threshold (3 hours by default).</li>
+                                <li>An <span className="text-amber-400">amber pulsing border</span> signals a disposition bottleneck — the patient has been in &quot;Decision Made&quot; for over 30 minutes.</li>
+                                <li>The connection badge (top-right) shows live update status. Use <strong className="text-white">Reconnect</strong> if it shows Disconnected.</li>
+                                <li>Use <strong className="text-white">Supervisor Override</strong> when changing a stage outside normal workflow — a reason is required.</li>
+                            </ul>
+                            <p className="text-zinc-400 text-xs pt-2">Need more help? Contact your ward supervisor.</p>
+                        </HelpDrawer>
+                        <LogoutButton />
+                    </div>
                 </div>
 
                 {/* Bed Grid */}

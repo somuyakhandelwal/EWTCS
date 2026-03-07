@@ -1,4 +1,4 @@
-import { ClipboardList, BarChart2 } from "lucide-react"
+import { ClipboardList, BarChart2, Bell, FileText } from "lucide-react"
 import { LogoutButton } from "@/features/auth/components/LogoutButton"
 import { KioskBanner } from "@/features/auth/components/KioskBanner"
 import { redirect } from "next/navigation"
@@ -35,6 +35,20 @@ export default async function SupervisorDashboard() {
                         <div className="p-2 bg-amber-900/20 border border-amber-900/50 rounded-full">
                             <ClipboardList className="h-6 w-6 text-amber-500" />
                         </div>
+                        <Link
+                            href="/supervisor/alerts"
+                            className="flex items-center gap-2 px-4 py-2 rounded-lg bg-red-950/40 hover:bg-red-900/40 border border-red-800/60 hover:border-red-700 text-red-300 hover:text-red-200 text-sm font-medium transition-colors"
+                        >
+                            <Bell className="h-4 w-4" />
+                            Alerts
+                        </Link>
+                        <Link
+                            href="/supervisor/summary"
+                            className="flex items-center gap-2 px-4 py-2 rounded-lg bg-blue-950/40 hover:bg-blue-900/40 border border-blue-800/60 hover:border-blue-700 text-blue-300 hover:text-blue-200 text-sm font-medium transition-colors"
+                        >
+                            <FileText className="h-4 w-4" />
+                            Daily Summary
+                        </Link>
                         <Link
                             href="/analytics"
                             className="flex items-center gap-2 px-4 py-2 rounded-lg bg-zinc-800 hover:bg-zinc-700 border border-zinc-700 hover:border-zinc-500 text-zinc-200 hover:text-white text-sm font-medium transition-colors"

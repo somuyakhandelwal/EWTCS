@@ -57,3 +57,49 @@
     @apply bg-background text-foreground;
   }
 }
+
+/* ── US-11.4 / US-11.1: Print-friendly / PDF export ─────────────────────── */
+@media print {
+  /* Reset dark background to white for readability */
+  html, body {
+    background: white !important;
+    color: black !important;
+    font-size: 11pt;
+  }
+
+  /* Hide interactive chrome */
+  .no-print {
+    display: none !important;
+  }
+
+  /* Force all report sections to render */
+  .print-section {
+    display: block !important;
+    page-break-inside: avoid;
+    margin-bottom: 1.5rem;
+  }
+
+  /* Lighten border and card backgrounds */
+  .rounded-xl,
+  .bg-zinc-900,
+  .bg-zinc-800 {
+    background: #f9f9f9 !important;
+    border-color: #ddd !important;
+    color: #111 !important;
+  }
+
+  /* Ensure charts scale correctly */
+  canvas, svg {
+    max-width: 100% !important;
+  }
+
+  /* Tab bar: hide on print */
+  [role="tablist"],
+  [role="tab"] {
+    display: none !important;
+  }
+
+  /* Page break helpers */
+  .page-break-before { page-break-before: always; }
+  .page-break-after  { page-break-after: always; }
+}

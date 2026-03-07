@@ -41,6 +41,15 @@ export const ConnectionStatus = React.memo(function ConnectionStatus({
           showPulse: false,
           animate: 'animate-spin',
         }
+      case 'syncing':
+        return {
+          icon: RefreshCw,
+          color: 'text-blue-400',
+          bgColor: 'bg-blue-400/10',
+          label: 'Syncing',
+          showPulse: false,
+          animate: 'animate-spin',
+        }
       case 'disconnected':
         return {
           icon: WifiOff,

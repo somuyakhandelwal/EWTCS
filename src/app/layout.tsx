@@ -3,6 +3,7 @@ import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import { initializeSystem } from "@/shared/config/init";
 import { DatabaseStatusBanner } from "@/components/ui/DatabaseStatusBanner";
+import { OfflineBanner } from "@/components/ui/OfflineBanner";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -40,6 +41,7 @@ export default function RootLayout({
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
         <DatabaseStatusBanner />
+        <OfflineBanner />
         {children}
       </body>
     </html>

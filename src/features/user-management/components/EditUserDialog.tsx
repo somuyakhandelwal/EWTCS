@@ -141,6 +141,7 @@ export default function EditUserDialog({ user, isOpen, onClose, wards = [] }: Ed
                             <option value="nurse">Nurse</option>
                             <option value="supervisor">Supervisor</option>
                             <option value="admin">Admin</option>
+                            <option value="auditor">Auditor (read-only)</option>
                         </select>
                         {state?.errors?.role && (
                             <p className="text-sm text-red-500">{state.errors.role}</p>

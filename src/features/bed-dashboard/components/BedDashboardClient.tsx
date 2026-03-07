@@ -16,6 +16,7 @@ import type { BedGridData, BedWithElapsedTime, DispositionDelayReason } from '..
 import { useRealtimeBedUpdates } from '../hooks/useRealtimeBedUpdates'
 import { useBedStageUpdate } from '../hooks/useBedStageUpdate'
 import { recordDispositionDelayReason } from '../actions/disposition-actions'
+import { undoLastBedStageUpdate } from '../actions/undo-actions'
 
 interface BedDashboardClientProps {
   initialData: BedGridData
@@ -84,23 +85,17 @@ export function BedDashboardClient({ initialData }: BedDashboardClientProps) {
     };
   }, [lastUpdatedBedId, lastUpdatedStageId]);
 
-  // Undo handler (to be implemented: call API, refresh, etc.)
+  // Undo handler — calls the server action directly (US-7.1)
   const [undoError, setUndoError] = useState<string | null>(null);
   const handleUndo = useCallback(async () => {
     if (!undoState) return;
     setUndoError(null);
-    try {
-      const res = await fetch('/src/features/bed-dashboard/api/undo', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ bedId: undoState.bedId, prevStageId: undoState.prevStageId }),
-      });
-      const data = await res.json();
-      if (!data.success) {
-        setUndoError(data.error || 'Undo failed');
-      }
-    } catch (e) {
-      setUndoError('Undo failed');
+    const result = await undoLastBedStageUpdate({
+      bedId: undoState.bedId,
+      prevStageId: undoState.prevStageId,
+    });
+    if (!result.success) {
+      setUndoError(result.error ?? 'Undo failed');
     }
     setUndoState(null);
     if (undoTimerRef.current) clearInterval(undoTimerRef.current);
@@ -171,6 +166,8 @@ export function BedDashboardClient({ initialData }: BedDashboardClientProps) {
         errorByBedId={errorByBedId}
         isRefreshing={isLoading}
         searchQuery={searchQuery}
+        undoState={undoState}
+        onUndo={handleUndo}
       />
       {undoError && (
         <div className="text-center text-xs text-red-500 font-semibold mt-2">{undoError}</div>

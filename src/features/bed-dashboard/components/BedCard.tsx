@@ -42,6 +42,10 @@ interface BedCardProps {
   showUpdated?: boolean
   errorMessage?: string | null
   searchQuery?: string
+  // US-7.1: Undo last stage update
+  showUndo?: boolean
+  onUndo?: () => void
+  undoTimerSeconds?: number
 }
 
 export const BedCard = memo(function BedCard({
@@ -52,6 +56,9 @@ export const BedCard = memo(function BedCard({
   showUpdated = false,
   errorMessage = null,
   searchQuery = '',
+  showUndo = false,
+  onUndo,
+  undoTimerSeconds,
 }: BedCardProps) {
   const stageName = bed.currentStage?.name || 'Empty'
   const stageColor = bed.currentStage?.colorCode || 'gray'

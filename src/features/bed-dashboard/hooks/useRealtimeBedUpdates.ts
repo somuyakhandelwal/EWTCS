@@ -7,6 +7,7 @@
 import { useState, useEffect, useRef, useCallback } from 'react'
 import { getBedGridData } from '../actions/bed-grid-actions'
 import { getStableBeds } from '../lib/bed-diff'
+import { writeBedCache, readBedCache } from '../lib/bed-cache'
 import { realtimeConfig } from '@/shared/config/realtime'
 import {
   getRetryInterval,
@@ -14,6 +15,7 @@ import {
   resetConnectionStatus,
   pauseConnectionStatus,
   resumeConnectionStatus,
+  startSyncStatus,
 } from '../lib/connection-manager'
 import type { BedGridData } from '../types/bed'
 import type { 
@@ -28,7 +30,9 @@ import type {
 export function useRealtimeBedUpdates(
   initialData: BedGridData
 ): UseRealtimeBedUpdatesReturn<BedGridData> {
-  const [data, setData] = useState<BedGridData>(initialData)
+  // US-16.1: Seed from local cache when navigating back or if server fetch is slow
+  const cachedData = readBedCache<BedGridData>()
+  const [data, setData] = useState<BedGridData>(cachedData ?? initialData)
   const [isLoading, setIsLoading] = useState(false)
   const [connectionStatus, setConnectionStatus] = useState<ConnectionStatusDetails>({
     status: 'connected',
@@ -65,6 +69,9 @@ export function useRealtimeBedUpdates(
           ...result.data!,
           beds: getStableBeds(prevData.beds, result.data!.beds),
         }))
+
+        // US-16.1: Persist to local cache for offline fallback
+        writeBedCache(result.data)
 
         errorCountRef.current = 0
         setConnectionStatus(resetConnectionStatus())
@@ -132,19 +139,15 @@ export function useRealtimeBedUpdates(
   }, [fetchData])
 
   /**
-   * Manual reconnect
+   * Manual reconnect — US-16.3: Show sync progress on reconnect
    */
   const reconnect = useCallback(() => {
     errorCountRef.current = 0
-    setConnectionStatus({
-      status: 'reconnecting',
-      lastUpdate: connectionStatus.lastUpdate,
-      errorCount: 0,
-    })
+    setConnectionStatus(startSyncStatus)
     stopPolling()
     fetchData()
     startPolling()
-  }, [connectionStatus.lastUpdate, fetchData, startPolling, stopPolling])
+  }, [fetchData, startPolling, stopPolling])
 
   /**
    * Handle visibility change (pause polling when tab inactive)

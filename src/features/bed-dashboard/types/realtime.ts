@@ -8,6 +8,7 @@
 export type ConnectionStatus = 
   | 'connected'      // Green: Active polling, recent successful update
   | 'reconnecting'   // Yellow: Attempting to reconnect after error
+  | 'syncing'        // Blue: Reconnected, syncing latest data from server
   | 'disconnected'   // Red: Multiple failed attempts
   | 'paused'         // Gray: Polling paused (tab inactive)
 

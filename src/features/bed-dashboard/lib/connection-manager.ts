@@ -75,3 +75,17 @@ export function resumeConnectionStatus(
     status: prevStatus.errorCount > 0 ? 'reconnecting' : 'connected',
   }
 }
+
+/**
+ * Transition to syncing state — shown immediately after reconnect is triggered
+ * so users see feedback while fresh data is being fetched.
+ */
+export function startSyncStatus(
+  prevStatus: ConnectionStatusDetails
+): ConnectionStatusDetails {
+  return {
+    ...prevStatus,
+    status: 'syncing',
+    errorCount: 0,
+  }
+}
