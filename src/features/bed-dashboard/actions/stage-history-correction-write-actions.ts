@@ -1,0 +1,162 @@
+'use server'
+
+/**
+ * EPIC 7: Error Handling & Correction — Write Actions
+ * submitHistoryCorrection: inserts a correction record and writes to audit log.
+ * Split from read actions to keep each file under 200 lines.
+ */
+
+import { requireWriteRole } from '@/shared/lib/auth'
+import { logAudit } from '@/shared/lib/audit'
+import { query } from '@/shared/lib/db'
+import { logger } from '@/shared/config/logger'
+import { detectPii, redactPii } from '@/shared/lib/pii-detector'
+import {
+  insertHistoryCorrection,
+  fetchBedStageLogOriginal,
+} from '../lib/stage-history-correction-queries'
+
+export interface CorrectedFieldsInput {
+  notes?: string
+  transition_time?: string
+  to_stage_id?: string
+}
+
+export interface SubmitCorrectionPayload {
+  bedStageLogId: string
+  correctionReason: string
+  correctedFields: CorrectedFieldsInput
+}
+
+type WriteResult =
+  | { success: true; data: { correctionId: string } }
+  | { success: false; error: string }
+
+/**
+ * Submit a supervisor correction for a single bed stage log entry.
+ * AC 1 — gated behind supervisor/admin role
+ * AC 2 — correctionReason is mandatory
+ * AC 3 — original data fetched and diffed; bed_stage_logs never mutated
+ * AC 4 — correctionId returned so UI marks the row as "Corrected"
+ * AC 5 — logged with supervisor userId in corrections table + audit log
+ */
+export async function submitHistoryCorrection(payload: SubmitCorrectionPayload): Promise<WriteResult> {
+  try {
+    const session = await requireWriteRole('beds', {
+      entityType: 'bed_stage_log',
+      entityId: payload.bedStageLogId,
+    })
+
+    if (!payload.correctionReason?.trim()) return { success: false, error: 'A correction reason is required.' }
+    if (!payload.bedStageLogId?.trim()) return { success: false, error: 'Invalid log record ID.' }
+
+    const hasField =
+      payload.correctedFields.notes !== undefined ||
+      payload.correctedFields.transition_time !== undefined ||
+      payload.correctedFields.to_stage_id !== undefined
+    if (!hasField) return { success: false, error: 'At least one field must be corrected.' }
+
+    // US-17.7: Backend PII enforcement on free-text fields
+    const textFields: Array<{ field: string; value: string | undefined }> = [
+      { field: 'correctionReason', value: payload.correctionReason },
+      { field: 'notes', value: payload.correctedFields.notes },
+    ]
+    for (const { field, value } of textFields) {
+      if (!value) continue
+      const pii = detectPii(value)
+      if (pii.hasPii) {
+        await logAudit({
+          actionType: 'PII_BLOCKED',
+          entityType: 'bed_stage_log',
+          entityId: payload.bedStageLogId,
+          performedBy: session.userId,
+          metadata: {
+            field,
+            detectedCategories: pii.summary,
+            redactedValue: redactPii(value),
+          },
+        })
+        logger.warn('PII detected and blocked in stage history correction', {
+          userId: session.userId,
+          logId: payload.bedStageLogId,
+          field,
+          categories: pii.summary,
+        })
+        return { success: false, error: `Field "${field}" contains patient information (${pii.summary}). Remove it before submitting.` }
+      }
+    }
+
+    // AC 3: fetch original to build before/after diff
+    const original = await fetchBedStageLogOriginal(payload.bedStageLogId)
+    if (!original) return { success: false, error: 'Stage log record not found.' }
+
+    const diff: Record<string, { from: unknown; to: unknown }> = {}
+
+    if (payload.correctedFields.notes !== undefined && payload.correctedFields.notes !== original.notes) {
+      diff.notes = { from: original.notes, to: payload.correctedFields.notes }
+    }
+
+    if (payload.correctedFields.transition_time !== undefined) {
+      const newTime = new Date(payload.correctedFields.transition_time)
+      const origTime = new Date(original.transitionTime)
+      if (!isNaN(newTime.getTime()) && newTime.toISOString() !== origTime.toISOString()) {
+        diff.transition_time = { from: origTime.toISOString(), to: newTime.toISOString() }
+      }
+    }
+
+    if (
+      payload.correctedFields.to_stage_id !== undefined &&
+      payload.correctedFields.to_stage_id !== original.toStageId
+    ) {
+      // Fetch new stage name for readability
+      const stageRes = await query<{ name: string }>(
+        'SELECT name FROM stages WHERE id = $1',
+        [payload.correctedFields.to_stage_id]
+      )
+      const newStageName = stageRes.rows[0]?.name ?? 'Unknown'
+
+      diff.to_stage_id = {
+        from: { id: original.toStageId, name: original.toStageName },
+        to: { id: payload.correctedFields.to_stage_id, name: newStageName },
+      }
+    }
+
+    if (Object.keys(diff).length === 0) {
+      return { success: false, error: 'No fields were changed from their original values.' }
+    }
+
+    // AC 3 & 4: insert correction row — original bed_stage_logs row untouched
+    const { id: correctionId } = await insertHistoryCorrection({
+      bedStageLogId: payload.bedStageLogId,
+      correctedByUserId: session.userId,
+      correctionReason: payload.correctionReason.trim(),
+      correctedFields: diff,
+    })
+
+    // AC 5: write to generic audit log with supervisor userId
+    try {
+      await logAudit({
+        actionType: 'HISTORY_CORRECTION' as Parameters<typeof logAudit>[0]['actionType'],
+        entityType: 'bed_stage_log',
+        entityId: payload.bedStageLogId,
+        performedBy: session.userId,
+        reason: payload.correctionReason.trim(),
+        metadata: { correctionId, supervisorId: session.userId, fieldsChanged: Object.keys(diff), diff },
+      })
+    } catch (auditError) {
+      // Audit log failure must not roll back the correction
+      logger.error('submitHistoryCorrection: audit log write failed', auditError as Error)
+    }
+
+    logger.info('Stage history correction submitted', {
+      correctionId, bedStageLogId: payload.bedStageLogId,
+      supervisorId: session.userId, fieldsChanged: Object.keys(diff),
+    })
+
+    return { success: true, data: { correctionId } }
+  } catch (error) {
+    const message = error instanceof Error ? error.message : 'Failed to submit correction'
+    logger.error('submitHistoryCorrection failed', error as Error)
+    return { success: false, error: message }
+  }
+}

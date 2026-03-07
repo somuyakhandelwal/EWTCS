@@ -34,8 +34,8 @@ export function AddBedDialog({ wards, onSuccess }: AddBedDialogProps) {
             if (result.success) {
                 setIsOpen(false)
                 onSuccess()
-                // Reset form
-                ;(e.target as HTMLFormElement).reset()
+                    // Reset form
+                    ; (e.target as HTMLFormElement).reset()
             } else {
                 setError(result.error || 'Failed to create bed')
             }
@@ -50,9 +50,9 @@ export function AddBedDialog({ wards, onSuccess }: AddBedDialogProps) {
             </Button>
 
             {isOpen && (
-                <div className="fixed inset-0 bg-black/80 flex items-center justify-center z-50">
-                    <div className="bg-zinc-900 border border-zinc-800 rounded-lg p-6 w-full max-w-md">
-                        <h2 className="text-xl font-bold text-white mb-4">Add New Bed</h2>
+                <div className="fixed inset-0 bg-background/80 flex items-center justify-center z-50 p-4">
+                    <div className="bg-card border border-border rounded-lg p-6 w-full max-w-md">
+                        <h2 className="text-xl font-bold text-foreground mb-4">Add New Bed</h2>
 
                         <form onSubmit={handleSubmit} className="space-y-4">
                             {/* Bed Number */}
@@ -77,7 +77,7 @@ export function AddBedDialog({ wards, onSuccess }: AddBedDialogProps) {
                                     name="wardId"
                                     required
                                     disabled={isPending}
-                                    className="w-full px-3 py-2 bg-zinc-800 border border-zinc-700 rounded-md text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                    className="w-full px-3 py-2 bg-muted border border-border rounded-md text-foreground focus:outline-none focus:ring-2 focus:ring-blue-500"
                                 >
                                     <option value="">Select ward...</option>
                                     {wards.map((ward) => (

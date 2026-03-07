@@ -1,6 +1,8 @@
 // Real-time Update Types
 // Epic 1: Nurse Desk Bed Dashboard
 // US-1.2: Display Real-Time Bed Status
+// US-16.1: Offline Cache
+// US-16.2: Offline UI
 
 /**
  * Connection status for real-time updates
@@ -11,20 +13,13 @@ export type ConnectionStatus =
   | 'syncing'        // Blue: Reconnected, syncing latest data from server
   | 'disconnected'   // Red: Multiple failed attempts
   | 'paused'         // Gray: Polling paused (tab inactive)
+  | 'offline'        // Amber: Browser has no network (US-16.2)
 
 /**
  * Real-time update configuration
+ * Source of truth is shared/config/realtime.ts; re-exported here for feature consumers.
  */
-export interface RealtimeConfig {
-  /** Whether real-time updates are enabled */
-  enabled: boolean
-  /** Polling interval in milliseconds */
-  pollingInterval: number
-  /** Retry interval after error */
-  retryInterval: number
-  /** Maximum retry interval (exponential backoff cap) */
-  maxRetryInterval: number
-}
+export type { RealtimeConfig } from '@/shared/config/realtime'
 
 /**
  * Connection status details
@@ -38,6 +33,11 @@ export interface ConnectionStatusDetails {
   errorCount: number
   /** Current error message if any */
   errorMessage?: string
+  // US-16.1
+  /** True when serving data from the local cache (network unavailable) */
+  usingCachedData?: boolean
+  /** When the cached snapshot was last written (null = no cache) */
+  cacheTimestamp?: Date | null
 }
 
 /**
@@ -54,4 +54,9 @@ export interface UseRealtimeBedUpdatesReturn<T> {
   refresh: () => Promise<void>
   /** Manually reconnect if disconnected */
   reconnect: () => void
+  // US-16.2
+  /** True when browser is offline — write operations should be blocked/queued */
+  isOffline: boolean
+  /** Epoch ms of the cache snapshot currently being displayed (null = live data) */
+  cacheTimestamp: number | null
 }

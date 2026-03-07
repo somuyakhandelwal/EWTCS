@@ -25,46 +25,82 @@ feature-name/
 - JWT session handling
 - Permission verification
 
-### `user-management/` *(Not yet in main branch)*
+### `user-management/`
 **EPIC 5: User Management (Admin)**
 - Admin user CRUD operations
 - User table and dialogs
 - Audit logging
 - Role management
 
+### `bed-dashboard/`
+**EPIC 1-4: Bed Dashboard & Time Tracking**
+- Real-time bed status grid with polling
+- Color-coded bed states and stage updates
+- Auto-refresh with connection status
+- Stage transition history and timestamps
+- Duration calculations and stage logs
+- Visual alerts and color configuration
+
+### `analytics/`
+**EPIC 7: Disposition Bottleneck & TAT Analytics**
+- Disposition bottleneck tracking
+- Waiting time analytics
+- Turnaround time (TAT) analysis
+- Delay reason attribution (US-17)
+- CSV export for analysis
+
+### `audit-mode/`
+**EPIC 12: Audit Role & Compliance (NEW) ✅**
+- Auditor read-only role with full data access
+- All action buttons disabled in audit mode
+- Audit logging with immutable records
+- Audit mode indicator banner
+- Read-only auditor history with filtering, sorting, pagination
+- Comprehensive audit trail with IP tracking and timestamps
+
+### `ai-summary/`
+**EPIC 9: Daily AI Summary Generator ✅**
+- Daily bed statistics aggregation (patients, stage time, delays, TAT)
+- AI narrative (200-300 words) + structured insights with confidence (US-9.1, US-9.3)
+- Draft → Review → Approve/Reject workflow (US-9.2)
+- Idempotent upsert into `daily_summaries` table
+- Server actions: `generateDailySummary`, `fetchDailySummaryByDate`, `fetchRecentDailySummaries`, `approveSummary`, `rejectSummary`, `updateSummaryDraftAction`, `flagInsightAction`
+- API route: `POST /api/daily-summary/generate`, `GET /api/daily-summary/generate`
+- Midnight auto-run via GitHub Actions cron (18:30 UTC = 00:00 IST)
+- Manual trigger: `npm run cron:summary`
+
+### `notifications/`
+**EPIC 15: Notifications & Alerts (US-15.5) ✅**
+- Per-user alert preference configuration for supervisors/admins
+- Enable/disable alert types (delayed, escalation, bottleneck, system errors)
+- User-defined alert thresholds with validation
+- Reset-to-default workflow
+- Preference-aware supervisor alert visibility
+
+### `security-scanning/`
+**EPIC 17: Security & Privacy (Automated Vulnerability Scanning) ✅**
+- Automated weekly vulnerability scanning with npm audit
+- Weekly schedule (Monday 00:00 UTC) + on-demand + PR integration
+- SLA tracking with deadline calculation per severity:
+  - Critical: 48 hours
+  - High: 7 days
+  - Medium: 30 days
+  - Low: 90 days
+- Breach detection and escalation levels (none/warning/critical)
+- Slack & email notifications for vulnerability alerts
+- GitHub issue creation for critical vulnerabilities
+- PR comments with scan results and blocking on critical vulns
+- Historical scan archival (90-day artifacts + git history)
+- Dependabot integration for automated dependency updates
+- Multi-format reporting (Markdown, HTML, JSON)
+- Admin-only server actions with audit logging
+- React hooks for client-side report integration
+- UI components for vulnerability and SLA status display
+- See: `docs/SECURITY_SCANNING.md` and `docs/SECURITY_TEAM_RUNBOOK.md`
+
 ## Future Features
 
-Based on EPICS.md, upcoming features will include:
-
-### `bed-dashboard/`
-**EPIC 1: Nurse Desk Bed Dashboard**
-- Real-time bed status grid
-- Color-coded bed states
-- Auto-refresh functionality
-
-### `bed-management/`
-**EPIC 2: One-Click Stage Update System**
-- Quick stage transitions
-- Bed status updates
-- Workflow controls
-
-### `time-tracking/`
-**EPIC 3: Time Tracking & Stage Logging**
-- Timestamp capture
-- Duration calculations
-- Historical logs
-
-### `visual-alerts/`
-**EPIC 4: Color Coding & Visual Alerts**
-- Alert components
-- Color mapping logic
-- Visual indicators
-
-### `configuration/`
-**EPIC 6: Bed & Workflow Configuration**
-- System configuration UI
-- Bed setup
-- Workflow customization
+Based on EPICS.md, upcoming features may include:
 
 ### `shift-management/`
 **EPIC 8: Shift Management**
@@ -73,34 +109,8 @@ Based on EPICS.md, upcoming features will include:
 - Analytics
 
 ### `ai-summary/`
-**EPIC 9: Daily AI Summary Generator**
-- AI report generation
-- Summary formatting
-- Export functionality
-
-### `reports/`
-**EPIC 10: Management Report Dashboard**
-- Analytics dashboard
-- Report generation
-- Data visualization
-
-### `audit/`
-**EPIC 12: Audit Logs & Compliance**
-- Comprehensive audit trails
-- Compliance tracking
-- Log viewing
-
-### `notifications/`
-**EPIC 15: Notifications & Alerts**
-- Alert system
-- Notification delivery
-- User preferences
-
-### `export/`
-**EPIC 11: Export & External Sharing**
-- Data export
-- Report sharing
-- Integration endpoints
+**EPIC 9: Daily AI Summary Generator** *(planned — Phase 3)*
+- Remaining: AI model integration, report formatting, PDF/email export
 
 ## Adding a New Feature
 

@@ -2,12 +2,7 @@
 
 import { requireAdmin } from '@/shared/lib/auth'
 import { getAllBedsForManagement, getWards } from '../lib/queries'
-
-export type ActionResult<T = unknown> = {
-    success: boolean
-    data?: T
-    error?: string
-}
+import type { ActionResult } from '../types/action-result'
 
 /**
  * Get all beds for management view

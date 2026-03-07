@@ -1,24 +1,26 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/shared/components/ui/card"
-import { Shield } from "lucide-react"
+import { Shield, Users, Settings, Activity } from "lucide-react"
 import { LogoutButton } from "@/features/auth/components/LogoutButton"
-import { HelpDrawer } from "@/components/ui/HelpDrawer"
 import { redirect } from "next/navigation"
+import { AdminRecentActivity } from './components/AdminRecentActivity'
+import { AdminQuickActions } from "./components/AdminQuickActions"
 
-import { verifyActiveSession } from "@/features/auth/lib/active-session"
+import { verifyActiveSession } from "@/shared/lib/active-session"
 import { getAllUsers, getUserLogs } from "@/features/user-management/actions/user-management-actions"
 import { getWards } from "@/features/user-management/lib/queries"
 import UserManagementTable from "@/features/user-management/components/UserManagementTable"
 import CreateUserDialog from "@/features/user-management/components/CreateUserDialog"
 import { KioskSessionsPanel } from "@/features/user-management/components/KioskSessionsPanel"
-import { AdminQuickActions } from "@/features/admin/components/AdminQuickActions"
-import { AdminStats } from "@/features/admin/components/AdminStats"
-import { AdminRecentActivity } from "@/features/admin/components/AdminRecentActivity"
+import { DailySummaryTrigger } from "@/features/ai-summary/components/DailySummaryTrigger"
+import { DailySummaryHistory } from "@/features/ai-summary/components/DailySummaryHistory"
+import { BackupStatusPanel } from "@/features/data-retention/components/BackupStatusPanel"
+import { SystemHealthPanel } from "@/features/system-health/components/SystemHealthPanel"
 
 export default async function AdminDashboard() {
     const session = await verifyActiveSession()
 
     if (!session) {
-        redirect('/login')
+        redirect('/api/auth/force-logout')
     }
     const usersResult = await getAllUsers()
     const logsResult = await getUserLogs()
@@ -28,47 +30,77 @@ export default async function AdminDashboard() {
     const recentLogs = logsResult.success ? logsResult.logs.slice(0, 5) : []
 
     return (
-        <div className="min-h-screen bg-black text-foreground p-8">
-            <div className="max-w-7xl mx-auto space-y-8">
-                <div className="flex items-center justify-between">
+        <div className="min-h-screen bg-background text-foreground p-3 sm:p-8">
+            <div className="max-w-7xl mx-auto space-y-6 sm:space-y-8">
+                <div className="flex flex-col gap-4 sm:flex-row sm:items-center justify-between" data-help-id="admin-header">
                     <div>
-                        <h1 className="text-3xl font-bold tracking-tight text-white">
+                        <h1 className="text-3xl font-bold tracking-tight text-foreground">
                             Admin {session?.username ? session.username : 'Console'}
                         </h1>
-                        <p className="text-zinc-400">System configuration and user management</p>
+                        <p className="text-muted-foreground">System configuration and user management</p>
                     </div>
-                    <div className="flex items-center gap-3">
-                        <div className="p-2 bg-red-900/20 border border-red-900/50 rounded-full">
-                            <Shield className="h-6 w-6 text-red-500" />
+                    <div className="flex items-center gap-6">
+                        <div className="p-2 bg-destructive/10 border border-destructive/20 rounded-full">
+                            <Shield className="h-6 w-6 text-destructive" />
                         </div>
-                        <HelpDrawer title="Admin Console Help">
-                            <p className="font-medium text-white">Admin Console Overview</p>
-                            <ul className="space-y-2 list-disc list-inside">
-                                <li><strong className="text-white">User Management</strong> — Create, edit, deactivate staff accounts and assign ward access.</li>
-                                <li><strong className="text-white">Bed Configuration</strong> — Add, rename, or deactivate beds and assign ward groupings.</li>
-                                <li><strong className="text-white">Reports</strong> — View TAT metrics, stage delay analytics, and sign off daily reports.</li>
-                                <li><strong className="text-white">Audit Logs</strong> — Review a full tamper-evident trail of all system actions.</li>
-                                <li><strong className="text-white">System Health</strong> — Monitor database and service connectivity.</li>
-                                <li><strong className="text-white">Data Retention</strong> — Archive old records and search historical data.</li>
-                                <li><strong className="text-white">Import Data</strong> — Upload historical CSV records to the archive.</li>
-                            </ul>
-                            <p className="text-zinc-400 text-xs pt-2">Admin actions are fully audit-logged.</p>
-                        </HelpDrawer>
                         <LogoutButton />
                     </div>
                 </div>
 
-                <AdminStats users={users} recentLogs={recentLogs} />
+                <div className="grid gap-4 md:grid-cols-4">
+                    <Card className="bg-card border-border">
+                        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                            <CardTitle className="text-sm font-medium text-card-foreground">Total Users</CardTitle>
+                            <Users className="h-4 w-4 text-muted-foreground" />
+                        </CardHeader>
+                        <CardContent>
+                            <div className="text-2xl font-bold text-foreground">{users.length}</div>
+                            <p className="text-xs text-muted-foreground">System accounts</p>
+                        </CardContent>
+                    </Card>
+                    <Card className="bg-card border-border">
+                        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                            <CardTitle className="text-sm font-medium text-card-foreground">Active Users</CardTitle>
+                            <Activity className="h-4 w-4 text-primary" />
+                        </CardHeader>
+                        <CardContent>
+                            <div className="text-2xl font-bold text-foreground">
+                                {users.filter((u: { is_active: boolean }) => u.is_active).length}
+                            </div>
+                            <p className="text-xs text-muted-foreground">Can access system</p>
+                        </CardContent>
+                    </Card>
+                    <Card className="bg-card border-border">
+                        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                            <CardTitle className="text-sm font-medium text-card-foreground">System Status</CardTitle>
+                            <Settings className="h-4 w-4 text-muted-foreground" />
+                        </CardHeader>
+                        <CardContent>
+                            <div className="text-2xl font-bold text-foreground">Operational</div>
+                            <p className="text-xs text-muted-foreground">All services running</p>
+                        </CardContent>
+                    </Card>
+                    <Card className="bg-card border-border">
+                        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                            <CardTitle className="text-sm font-medium text-card-foreground">Recent Actions</CardTitle>
+                            <Activity className="h-4 w-4 text-muted-foreground" />
+                        </CardHeader>
+                        <CardContent>
+                            <div className="text-2xl font-bold text-foreground">{recentLogs.length}</div>
+                            <p className="text-xs text-muted-foreground">Last 5 activities</p>
+                        </CardContent>
+                    </Card>
+                </div>
 
                 <AdminQuickActions />
 
                 {/* User Management Section */}
-                <Card className="bg-zinc-900 border-zinc-800">
+                <Card className="bg-card border-border">
                     <CardHeader>
-                        <div className="flex items-center justify-between">
+                        <div className="flex flex-col gap-4 sm:flex-row sm:items-center justify-between">
                             <div>
-                                <CardTitle className="text-xl text-white">User Management</CardTitle>
-                                <p className="text-sm text-zinc-400 mt-1">
+                                <CardTitle className="text-xl text-foreground">User Management</CardTitle>
+                                <p className="text-sm text-muted-foreground mt-1">
                                     Create, edit, and manage system users
                                 </p>
                             </div>
@@ -83,6 +115,53 @@ export default async function AdminDashboard() {
                 {/* Kiosk Sessions — US-5.3 */}
                 <KioskSessionsPanel />
 
+                {/* System Health & Error Monitoring — US-13.5 */}
+                <Card className="bg-card border-border">
+                    <CardHeader>
+                        <div>
+                            <CardTitle className="text-xl text-foreground">System Health</CardTitle>
+                            <p className="text-sm text-muted-foreground mt-1">
+                                Live database health, connection pool, and error event monitoring
+                            </p>
+                        </div>
+                    </CardHeader>
+                    <CardContent>
+                        <SystemHealthPanel />
+                    </CardContent>
+                </Card>
+
+                {/* Database Backups — US-13.4 */}
+                <Card className="bg-card border-border">
+                    <CardHeader>
+                        <div>
+                            <CardTitle className="text-xl text-foreground">Database Backups</CardTitle>
+                            <p className="text-sm text-muted-foreground mt-1">
+                                Automated daily backups · runs locally, data never leaves the server
+                            </p>
+                        </div>
+                    </CardHeader>
+                    <CardContent>
+                        <BackupStatusPanel />
+                    </CardContent>
+                </Card>
+
+                {/* AI Daily Summaries — EPIC 9 */}
+                <Card className="bg-card border-border">
+                    <CardHeader className="flex flex-col gap-4 sm:flex-row sm:items-center justify-between">
+                        <div>
+                            <CardTitle className="text-xl text-foreground">Daily AI Summaries</CardTitle>
+                            <p className="text-sm text-muted-foreground mt-1">
+                                Automated operational reports and performance metrics (read-only)
+                            </p>
+                        </div>
+                        <DailySummaryTrigger />
+                    </CardHeader>
+                    <CardContent>
+                        <DailySummaryHistory />
+                    </CardContent>
+                </Card>
+
+                {/* Recent Activity Log */}
                 <AdminRecentActivity recentLogs={recentLogs} />
             </div>
         </div>

@@ -2,8 +2,7 @@ import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import { initializeSystem } from "@/shared/config/init";
-import { DatabaseStatusBanner } from "@/components/ui/DatabaseStatusBanner";
-import { OfflineBanner } from "@/components/ui/OfflineBanner";
+import { DatabaseStatusBanner } from "@/shared/components/ui/DatabaseStatusBanner"
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -30,19 +29,39 @@ if (typeof window === "undefined") {
   void initializeSystem();
 }
 
+import { Suspense } from "react"
+import { ThemeProvider } from "@/shared/components/ThemeProvider"
+import { GlobalThemeToggle } from "@/shared/components/GlobalThemeToggle"
+import { RouteProgressBar } from "@/shared/components/RouteProgressBar"
+import { PageTransition } from "@/shared/components/PageTransition"
+import { GlobalHelp } from "@/features/help/components/GlobalHelp"
+
 export default function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" className="dark">
+    <html lang="en" suppressHydrationWarning>
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
-        <DatabaseStatusBanner />
-        <OfflineBanner />
-        {children}
+        <ThemeProvider
+          attribute="class"
+          defaultTheme="system"
+          enableSystem
+          disableTransitionOnChange
+        >
+          <Suspense fallback={null}>
+            <RouteProgressBar />
+          </Suspense>
+          <DatabaseStatusBanner />
+          <PageTransition>
+            {children}
+          </PageTransition>
+          <GlobalHelp />
+          <GlobalThemeToggle />
+        </ThemeProvider>
       </body>
     </html>
   );

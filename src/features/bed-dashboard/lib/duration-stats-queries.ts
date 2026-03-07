@@ -1,10 +1,13 @@
 // Stage Duration Statistics Queries
 // Purpose: Analyze duration statistics for each stage
 // Epic: EPIC 3 - Time Tracking & Stage Logging
+// EPIC 13: getStageDurationStats wrapped with 60 s cache to cut DB load on the
+//          analytics page (PERCENTILE_CONT is expensive on large log tables).
 
 import { query } from '@/shared/lib/db'
 import { logger } from '@/shared/config/logger'
 import type { StageDurationStats } from './stage-analytics'
+import { withCache, ANALYTICS_CACHE_TAG, ANALYTICS_CACHE_TTL_S } from '@/shared/lib/query-cache'
 
 // pg returns COUNT as string — raw row before coercion
 interface RawStageDurationStats {
@@ -20,16 +23,31 @@ interface RawStageDurationStats {
 }
 
 /**
- * Get duration statistics for each stage
- * @param startDate - Filter from this date
- * @param endDate - Filter until this date
+ * Internal implementation. Call the exported `getStageDurationStats` instead
+ * to benefit from the 60 s result cache.
  */
-export async function getStageDurationStats(
+async function getStageDurationStatsImpl(
   startDate?: Date,
   endDate?: Date
 ): Promise<StageDurationStats[]> {
   try {
-    let sql = `
+    // Build JOIN conditions for date range — must go on the JOIN, not WHERE,
+    // so that stages with no logs in the period still appear with 0 counts
+    // (WHERE on a LEFT JOIN column silently converts it to an INNER JOIN).
+    const params: unknown[] = []
+    let joinCondition = 's.id = bsl.to_stage_id'
+
+    if (startDate) {
+      params.push(startDate)
+      joinCondition += ` AND bsl.transition_time >= $${params.length}`
+    }
+
+    if (endDate) {
+      params.push(endDate)
+      joinCondition += ` AND bsl.transition_time <= $${params.length}`
+    }
+
+    const sql = `
       SELECT 
         s.name as "stageName",
         s.id as "stageId",
@@ -41,23 +59,7 @@ export async function getStageDurationStats(
         PERCENTILE_CONT(0.9) WITHIN GROUP (ORDER BY bsl.duration_in_previous_stage_ms) as "p90DurationMs",
         PERCENTILE_CONT(0.95) WITHIN GROUP (ORDER BY bsl.duration_in_previous_stage_ms) as "p95DurationMs"
       FROM stages s
-      LEFT JOIN bed_stage_logs bsl ON s.id = bsl.to_stage_id
-      WHERE 1=1
-    `
-
-    const params: unknown[] = []
-
-    if (startDate) {
-      params.push(startDate)
-      sql += ` AND bsl.transition_time >= $${params.length}`
-    }
-
-    if (endDate) {
-      params.push(endDate)
-      sql += ` AND bsl.transition_time <= $${params.length}`
-    }
-
-    sql += `
+      LEFT JOIN bed_stage_logs bsl ON ${joinCondition}
       GROUP BY s.id, s.name
       ORDER BY s.display_order ASC
     `
@@ -80,3 +82,15 @@ export async function getStageDurationStats(
     throw new Error('Failed to fetch stage duration statistics from database')
   }
 }
+
+/**
+ * Get duration statistics for each stage.
+ * EPIC 13: Cached for 60 s — PERCENTILE_CONT on large log tables is expensive.
+ * Invalidated via `revalidateTag('analytics')` when stage logs are mutated.
+ */
+export const getStageDurationStats = withCache(
+  getStageDurationStatsImpl,
+  'stage-duration-stats',
+  ANALYTICS_CACHE_TTL_S,
+  [ANALYTICS_CACHE_TAG],
+)

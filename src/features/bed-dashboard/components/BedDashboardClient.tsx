@@ -1,41 +1,48 @@
-// Bed Dashboard Client Wrapper
-// Epic 1: Nurse Desk Bed Dashboard
-// US-1.2: Real-time updates with intelligent polling + Search functionality
-
 'use client'
+// US-16.1 – US-16.4: Offline & Network Failure Mode (cache, optimistic UI, sync, conflicts)
 
-import { useCallback, useState, useRef, useEffect, useTransition } from 'react'
+import { useCallback, useState, useTransition } from 'react'
+import { MapPin } from 'lucide-react'
+import { Button } from '@/shared/components/ui/button'
+import { Tooltip } from '@/shared/components/ui/tooltip'
 import { BedGrid } from './BedGrid'
-import { SearchInput } from './SearchInput'
 import { ConnectionStatus } from './ConnectionStatus'
-import { SupervisorOverrideModal } from './SupervisorOverrideModal'
-import { ConfirmationModal } from './ConfirmationModal'
-import { DischargeModal } from './DischargeModal'
+import { OfflineBanner } from './OfflineBanner'
 import { DashboardSettings } from './DashboardSettings'
-import type { BedGridData, BedWithElapsedTime, DispositionDelayReason } from '../types/bed'
+import { BedDashboardModals } from './BedDashboardModals'
+import { SyncStatusBanner } from './SyncStatusBanner'
+import { SyncConflictModal } from './SyncConflictModal'
+import { useSyncConflictHandler } from '../hooks/useSyncConflictHandler'
+import type { BedGridData, DispositionDelayReason } from '../types/bed'
 import { useRealtimeBedUpdates } from '../hooks/useRealtimeBedUpdates'
 import { useBedStageUpdate } from '../hooks/useBedStageUpdate'
+import { useUndoManager } from '../hooks/useUndoManager'
+import { useOfflineQueue } from '../hooks/useOfflineQueue'
+import { useOfflineWriteInterceptor } from '../hooks/useOfflineWriteInterceptor'
+import { useOfflineOptimisticStages } from '../hooks/useOfflineOptimisticStages'
+import { useTatSummary } from '../hooks/useTatSummary'
 import { recordDispositionDelayReason } from '../actions/disposition-actions'
-import { undoLastBedStageUpdate } from '../actions/undo-actions'
 
 interface BedDashboardClientProps {
   initialData: BedGridData
+  canRecordDispositionReasons?: boolean
+  /** Server action for creating virtual beds — injected from app layer (no cross-feature import) */
+  onCreateVirtualBed: (fd: FormData) => Promise<{ success: boolean; error?: string }>
 }
 
-export function BedDashboardClient({ initialData }: BedDashboardClientProps) {
-  // Undo state: which bed can be undone, timer, and previous stage info
-  const [undoState, setUndoState] = useState<{
-    bedId: string;
-    prevStageId: string;
-    timer: number;
-  } | null>(null);
-  const undoTimerRef = useRef<NodeJS.Timeout | null>(null);
-
+export function BedDashboardClient({
+  initialData,
+  canRecordDispositionReasons = true,
+  onCreateVirtualBed,
+}: BedDashboardClientProps) {
   const {
     data: realtimeData,
     connectionStatus,
     isLoading,
     reconnect,
+    refresh: realtimeRefresh,
+    isOffline,
+    cacheTimestamp,
   } = useRealtimeBedUpdates(initialData)
 
   const {
@@ -48,160 +55,146 @@ export function BedDashboardClient({ initialData }: BedDashboardClientProps) {
     isOverrideSubmitting,
     overrideState,
     handleRefresh,
-    handleStageSelect,
-    handleOverrideApprove,
+    handleStageSelect: originalHandleStageSelect,
+    handleOverrideApprove: originalHandleOverrideApprove,
     closeOverrideModal,
     confirmationState,
-    handleConfirmationConfirm,
+    handleConfirmationConfirm: originalHandleConfirmationConfirm,
     closeConfirmationModal,
     settings,
     toggleConfirmation,
-    // US-2.3
     dischargeState,
     isDischargeSubmitting,
-    handleDischargeConfirm,
+    handleDischargeConfirm: originalHandleDischargeConfirm,
     closeDischargeModal,
-  } = useBedStageUpdate(realtimeData);
-
-  // Watch for stage update to enable Undo
-  useEffect(() => {
-    if (lastUpdatedBedId && lastUpdatedStageId) {
-      setUndoState({ bedId: lastUpdatedBedId, prevStageId: lastUpdatedStageId, timer: 30 });
-      if (undoTimerRef.current) clearInterval(undoTimerRef.current);
-      undoTimerRef.current = setInterval(() => {
-        setUndoState(prev => {
-          if (!prev) return null;
-          if (prev.timer <= 1) {
-            clearInterval(undoTimerRef.current!);
-            return null;
-          }
-          return { ...prev, timer: prev.timer - 1 };
-        });
-      }, 1000);
-    }
-    // Cleanup timer if bed changes
-    return () => {
-      if (undoTimerRef.current) clearInterval(undoTimerRef.current);
-    };
-  }, [lastUpdatedBedId, lastUpdatedStageId]);
-
-  // Undo handler — calls the server action directly (US-7.1)
-  const [undoError, setUndoError] = useState<string | null>(null);
-  const handleUndo = useCallback(async () => {
-    if (!undoState) return;
-    setUndoError(null);
-    const result = await undoLastBedStageUpdate({
-      bedId: undoState.bedId,
-      prevStageId: undoState.prevStageId,
-    });
-    if (!result.success) {
-      setUndoError(result.error ?? 'Undo failed');
-    }
-    setUndoState(null);
-    if (undoTimerRef.current) clearInterval(undoTimerRef.current);
-    await handleRefresh();
-  }, [undoState, handleRefresh]);
-
-  // Search state: immediate input and debounced query used for filtering (US-1.2)
-  const [searchInput, setSearchInput] = useState('')
-  const [searchQuery, setSearchQuery] = useState('')
-  const searchDebounceRef = useRef<NodeJS.Timeout | null>(null)
-
-  useEffect(() => {
-    if (searchDebounceRef.current) clearTimeout(searchDebounceRef.current)
-    searchDebounceRef.current = setTimeout(() => {
-      setSearchQuery(searchInput.trim())
-      searchDebounceRef.current = null
-    }, 200)
-
-    return () => {
-      if (searchDebounceRef.current) {
-        clearTimeout(searchDebounceRef.current)
-        searchDebounceRef.current = null
-      }
-    }
-  }, [searchInput])
-
-  const handleBedClick = useCallback((bed: BedWithElapsedTime) => {
-    void bed
-  }, [])
-
+  } = useBedStageUpdate(realtimeData)
+  const offlineQueue = useOfflineQueue()
   const [, startTransition] = useTransition()
-
-  const handleReasonSelect = useCallback(
+  const baseHandleReasonSelect = useCallback(
     async (bedId: string, reason: DispositionDelayReason) => {
       await recordDispositionDelayReason({ bedId, reason })
       startTransition(() => { handleRefresh() })
-    },
-    [handleRefresh]
+    }, [handleRefresh])
+
+  const { syncResult, syncConflicts, isApplyingConflict,
+    handleSyncComplete, handleKeepServer, handleForceApply, clearConflicts } = useSyncConflictHandler({ data })
+
+  const {
+    handleStageSelect,
+    handleOverrideApprove,
+    handleConfirmationConfirm,
+    handleDischargeConfirm,
+    handleReasonSelect,
+    onCreateVirtualBed: handleCreateVirtualBed,
+    retryDrain,
+  } = useOfflineWriteInterceptor({
+    isOffline,
+    offlineQueue,
+    realtimeRefresh,
+    originalHandleStageSelect,
+    originalHandleOverrideApprove,
+    originalHandleConfirmationConfirm,
+    originalHandleDischargeConfirm,
+    originalHandleReasonSelect: baseHandleReasonSelect,
+    originalOnCreateVirtualBed: onCreateVirtualBed,
+    overrideState,
+    confirmationState,
+    dischargeState,
+    closeOverrideModal,
+    closeConfirmationModal,
+    closeDischargeModal,
+    onSyncComplete: handleSyncComplete,
+  })
+
+  const { handleStageSelectOptimistic, displayData } = useOfflineOptimisticStages({
+    data,
+    isOffline,
+    pendingCount: offlineQueue.pendingCount,
+    handleStageSelect,
+  })
+  const { undoState, undoError, handleUndo, isUndoing } = useUndoManager(
+    lastUpdatedBedId, lastUpdatedStageId, realtimeRefresh, isOffline
   )
+
+  const tatSummary = useTatSummary(24)
+  const [virtualBedModalOpen, setVirtualBedModalOpen] = useState(false)
 
   return (
     <div className="space-y-4">
-      {/* Search Input */}
-      <SearchInput
-        value={searchInput}
-        onChange={setSearchInput}
-        placeholder="Search by bed number (EW-01) or status (Triage)..."
+      <OfflineBanner
+        isOffline={isOffline}
+        pendingCount={offlineQueue.pendingCount}
+        isDraining={offlineQueue.isDraining}
+        cacheTimestamp={cacheTimestamp}
       />
-      {/* Connection Status Indicator */}
-      <div className="flex justify-end items-center gap-2">
-        <DashboardSettings
-          enabled={settings.confirmCriticalStages}
-          onToggle={toggleConfirmation}
-        />
+      {!isOffline && (
+        <SyncStatusBanner isDraining={offlineQueue.isDraining} pendingCount={offlineQueue.pendingCount} syncResult={syncResult} onRetry={retryDrain} />
+      )}
+
+      {/* Action Bar (Virtual Bed / Settings / Connection) */}
+      <div className="flex justify-end items-center gap-2" data-help-id="dashboard-actions">
+        <Tooltip content="Create temporary virtual bed" side="left">
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => setVirtualBedModalOpen(true)}
+            className="flex items-center gap-1.5 h-8 px-3 rounded-lg border-status-virtual/30 bg-status-virtual/5 text-status-virtual hover:bg-status-virtual/10 transition-colors font-semibold"
+            title="Add virtual (hallway/stretcher) bed"
+            aria-label="Add virtual hallway or stretcher bed"
+          >
+            <MapPin className="h-3.5 w-3.5" aria-hidden="true" />
+            <span className="text-xs font-medium">Add Virtual Bed</span>
+          </Button>
+        </Tooltip>
+        <DashboardSettings enabled={settings.confirmCriticalStages} onToggle={toggleConfirmation} />
         <ConnectionStatus status={connectionStatus} onReconnect={reconnect} />
       </div>
 
-      <BedGrid
-        data={data}
-        onRefresh={handleRefresh}
-        onBedClick={handleBedClick}
-        onStageSelect={handleStageSelect}
-        onReasonSelect={handleReasonSelect}
-        updatingBedId={updatingBedId}
-        updatingStageId={updatingStageId}
-        lastUpdatedBedId={lastUpdatedBedId}
-        lastUpdatedStageId={lastUpdatedStageId}
-        errorByBedId={errorByBedId}
-        isRefreshing={isLoading}
-        searchQuery={searchQuery}
-        undoState={undoState}
-        onUndo={handleUndo}
-      />
+      <div data-help-id="dashboard-grid">
+        <BedGrid
+          data={displayData}
+          onRefresh={handleRefresh}
+          onStageSelect={handleStageSelectOptimistic}
+          onReasonSelect={canRecordDispositionReasons ? handleReasonSelect : undefined}
+          tatSummary={tatSummary}
+          updatingBedId={updatingBedId}
+          updatingStageId={updatingStageId}
+          lastUpdatedBedId={lastUpdatedBedId}
+          lastUpdatedStageId={lastUpdatedStageId}
+          errorByBedId={errorByBedId}
+          isRefreshing={isLoading}
+          undoState={undoState}
+          onUndo={handleUndo}
+          isUndoing={isUndoing}
+          isOffline={isOffline}
+          queuedBedIds={offlineQueue.queuedBedIds}
+        />
+      </div>
       {undoError && (
         <div className="text-center text-xs text-red-500 font-semibold mt-2">{undoError}</div>
       )}
 
-      <SupervisorOverrideModal
-        isOpen={Boolean(overrideState)}
-        bedNumber={overrideState?.bedNumber ?? null}
-        fromStageName={overrideState?.fromStageName ?? null}
-        toStage={overrideState?.toStage ?? null}
-        reason={overrideState?.reason ?? null}
-        onApprove={handleOverrideApprove}
-        onCancel={closeOverrideModal}
-        isLoading={isOverrideSubmitting}
-      />
-
-      <ConfirmationModal
-        isOpen={Boolean(confirmationState)}
-        bedNumber={confirmationState?.bedNumber ?? null}
-        fromStageName={confirmationState?.fromStageName ?? null}
-        toStage={confirmationState?.toStage ?? null}
-        onConfirm={handleConfirmationConfirm}
-        onCancel={closeConfirmationModal}
-        isUpdating={confirmationState ? updatingBedId === confirmationState.bedId : false}
-      />
-
-      {/* US-2.3: Discharge confirmation modal */}
-      <DischargeModal
-        isOpen={Boolean(dischargeState)}
+      <BedDashboardModals
+        overrideState={overrideState}
+        isOverrideSubmitting={isOverrideSubmitting}
+        onOverrideApprove={handleOverrideApprove}
+        onOverrideCancel={closeOverrideModal}
+        confirmationState={confirmationState}
+        updatingBedId={updatingBedId}
+        onConfirmationConfirm={handleConfirmationConfirm}
+        onConfirmationCancel={closeConfirmationModal}
         dischargeState={dischargeState}
-        onConfirm={handleDischargeConfirm}
-        onCancel={closeDischargeModal}
-        isSubmitting={isDischargeSubmitting}
+        isDischargeSubmitting={isDischargeSubmitting}
+        onDischargeConfirm={handleDischargeConfirm}
+        onDischargeCancel={closeDischargeModal}
+        virtualBedModalOpen={virtualBedModalOpen}
+        onVirtualBedClose={() => setVirtualBedModalOpen(false)}
+        onVirtualBedCreated={() => { setVirtualBedModalOpen(false); handleRefresh() }}
+        onVirtualBedSubmit={handleCreateVirtualBed}
       />
+      <SyncConflictModal conflicts={syncConflicts} isOpen={syncConflicts.length > 0}
+        isApplying={isApplyingConflict} onKeepServer={handleKeepServer}
+        onForceApply={handleForceApply} onClose={clearConflicts} />
     </div>
   )
 }

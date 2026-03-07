@@ -13,9 +13,12 @@ Start here if you're new to the project:
 ## 📚 Core Documentation
 
 ### Setup & Configuration
+- **[INSTALLATION_GUIDE.md](../INSTALLATION_GUIDE.md)** - Step-by-step production deployment guide for system administrators (EPIC 18)
 - **[DATABASE_SETUP.md](../DATABASE_SETUP.md)** - PostgreSQL installation, database creation, migrations
 - **[CONFIGURATION.md](../CONFIGURATION.md)** - Environment variables, deployment, production setup
+- **[ADMIN_HANDBOOK.md](ADMIN_HANDBOOK.md)** - Admin operations runbook for configuration, backups, troubleshooting, security, and command references
 - **[.env.example](../.env.example)** - Environment variable template with detailed comments
+- **Audit Logging & Compliance** - See `CONFIGURATION.md` section "Audit Logging & Compliance" for immutable audit trail details
 
 ### Development
 - **[CONTRIBUTING.md](../CONTRIBUTING.md)** - How to contribute (coding standards, workflow, PR process)
@@ -27,6 +30,12 @@ Start here if you're new to the project:
 
 ### Technical Documentation
 - **[Analytics System](../src/features/bed-dashboard/ANALYTICS_README.md)** - Stage analytics and reporting documentation
+- **[Autosave Reliability (EPIC 13)](AUTOSAVE_RELIABILITY_EPIC13.md)** - Acceptance-criteria traceability for autosave, retry, alerts, and test coverage
+- **[EPIC 13 Verification Checklist](EPIC13_VERIFICATION_CHECKLIST.md)** - Manual, staging, and release handoff checklist for autosave reliability
+- **[AI Summary Generator Guide](AI_SUMMARY_GUIDE.md)** - Configuration and details for the Daily AI Summary feature (EPIC 9)
+- **Supervisor Alert Preferences (EPIC 15 / US-15.5)** - Per-user alert toggles and thresholds in [AlertPreferencesPanel](../src/features/notifications/components/AlertPreferencesPanel.tsx)
+- **Auditor Bed History (EPIC 12)** - Read-only stage transition history with filtering, sorting, pagination, and CSV export in [AuditorHistoryView](../src/features/bed-dashboard/components/AuditorHistoryView.tsx)
+- **Auditor Read-Only Enforcement (EPIC 12)** - Centralized write guard for auditor role in [auth.ts](../src/shared/lib/auth.ts) (`requireWriteRole` / `requireAdminWrite`) with deny logging, analytics audit-mode banner, and full read-only analytics exploration controls
 - **[PROJECT_STATUS.md](../PROJECT_STATUS.md)** - Current project status, completed features, roadmap
 
 ## 📁 Archived Documentation
@@ -46,10 +55,11 @@ Historical requirements and design documents (for reference only):
 5. Study [Features Guide](../src/features/README.md) - Learn the architecture
 
 ### For System Administrators
-1. Read [README.md](../README.md) - Project overview
-2. Review [DATABASE_SETUP.md](../DATABASE_SETUP.md) - Database requirements
-3. Study [CONFIGURATION.md](../CONFIGURATION.md) - Deployment and production setup
-4. Check [.env.example](../.env.example) - Environment configuration
+1. Read [ADMIN_HANDBOOK.md](ADMIN_HANDBOOK.md) - Configuration, backup/recovery, troubleshooting, security, and command references
+2. Read [README.md](../README.md) - Project overview
+3. Review [DATABASE_SETUP.md](../DATABASE_SETUP.md) - Database requirements
+4. Study [CONFIGURATION.md](../CONFIGURATION.md) - Deployment and production setup
+5. Check [.env.example](../.env.example) - Environment configuration
 
 ### For Data Analysts
 1. Read [README.md](../README.md) - System overview
@@ -61,11 +71,14 @@ Historical requirements and design documents (for reference only):
 | Task | Documentation |
 |------|---------------|
 | Install the system | [QUICKSTART.md](../QUICKSTART.md) |
+| Deploy to production | [INSTALLATION_GUIDE.md](../INSTALLATION_GUIDE.md) |
 | Set up database | [DATABASE_SETUP.md](../DATABASE_SETUP.md) |
 | Configure environment | [CONFIGURATION.md](../CONFIGURATION.md) & [.env.example](../.env.example) |
+| Run admin operations | [ADMIN_HANDBOOK.md](ADMIN_HANDBOOK.md) |
 | Contribute code | [CONTRIBUTING.md](../CONTRIBUTING.md) |
 | Build a new feature | [Features Guide](../src/features/README.md) |
 | Use analytics | [Analytics Documentation](../src/features/bed-dashboard/ANALYTICS_README.md) |
+| Sign off a report | [signoff-actions.ts](../src/features/management-report/actions/signoff-actions.ts) |
 | Check project status | [PROJECT_STATUS.md](../PROJECT_STATUS.md) |
 | Report a bug | [GitHub Issues](https://github.com/somuyakhandelwal/EWTCS/issues) |
 
@@ -102,6 +115,14 @@ Environment and deployment:
 - Encrypted secrets
 - Deployment strategies
 
+### ADMIN_HANDBOOK.md
+System administration runbook:
+- Configuration and health operations
+- Backup and restore procedures
+- Troubleshooting playbooks
+- Security hardening and verification
+- Command reference and release update protocol
+
 ### CONTRIBUTING.md
 Developer guidelines:
 - Coding standards
@@ -125,4 +146,4 @@ Current state overview:
 
 ---
 
-**Last Updated:** February 18, 2026
+**Last Updated:** March 3, 2026

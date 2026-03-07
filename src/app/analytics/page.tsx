@@ -1,47 +1,47 @@
-import { StageAnalyticsView } from '@/features/bed-dashboard/components/StageAnalyticsView'
-import { verifyActiveSession } from '@/features/auth/lib/active-session'
+import { verifyActiveSession } from '@/shared/lib/active-session'
 import { redirect } from 'next/navigation'
-import { Button } from '@/shared/components/ui/button'
-import { ArrowLeft } from 'lucide-react'
-import Link from 'next/link'
+import { logAudit } from '@/shared/lib/audit'
+import { AnalyticsPageContent } from '@/features/bed-dashboard/components/AnalyticsPageContent'
+import '@/app/analytics/print.css'
 
 export default async function AnalyticsPage() {
   const session = await verifyActiveSession()
 
-  if (!session) {
-    redirect('/login')
-  }
+  if (!session) redirect('/api/auth/force-logout')
 
-  // Only supervisor and admin can view analytics
-  if (session.role !== 'supervisor' && session.role !== 'admin') {
+  if (session.role !== 'supervisor' && session.role !== 'admin' && session.role !== 'auditor') {
     redirect('/dashboard')
   }
 
-  // Back destination depends on role: supervisors came from /supervisor
-  const backHref = session.role === 'supervisor' ? '/supervisor' : '/dashboard'
+  const isAuditMode = session.role === 'auditor'
+
+  if (isAuditMode) {
+    try {
+      await logAudit({
+        actionType: 'AUDIT_MODE_ACCESS',
+        entityType: 'analytics',
+        entityId: 'analytics-dashboard',
+        performedBy: session.userId,
+        reason: 'Auditor accessed analytics in read-only mode',
+        metadata: { role: session.role, mode: 'read-only' },
+      })
+    } catch {
+      // Non-blocking
+    }
+  }
+
+  const backHref = session.role === 'supervisor'
+    ? '/supervisor'
+    : session.role === 'admin'
+      ? '/admin'
+      : '/analytics'
 
   return (
-    <div className="min-h-screen bg-black text-foreground p-8">
-      <div className="max-w-7xl mx-auto space-y-8">
-        {/* Header */}
-        <div className="flex items-center gap-4">
-          <Link href={backHref}>
-            <Button variant="ghost" size="sm" className="gap-2">
-              <ArrowLeft className="h-4 w-4" />
-              Back
-            </Button>
-          </Link>
-          <div>
-            <h1 className="text-3xl font-bold tracking-tight text-white">
-              Emergency Ward Analytics
-            </h1>
-            <p className="text-zinc-400">Analyze patient flow through treatment stages</p>
-          </div>
-        </div>
-
-        {/* Analytics View */}
-        <StageAnalyticsView />
-      </div>
-    </div>
+    <AnalyticsPageContent
+      isAuditMode={isAuditMode}
+      backHref={backHref}
+      username={session.username}
+      role={session.role}
+    />
   )
 }

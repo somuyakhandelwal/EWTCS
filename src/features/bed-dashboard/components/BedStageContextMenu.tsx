@@ -4,6 +4,8 @@ import { useMemo } from "react"
 import type { BedWithElapsedTime, Stage } from "../types/bed"
 import { getStageColorClasses } from '@/shared/utils/stage-colors'
 import { ContextMenu, type ContextMenuItem } from "@/shared/components/ui/context-menu"
+import { StageIcon } from "./StageIcon"
+import { cn } from "@/shared/lib/utils"
 
 interface BedStageContextMenuProps {
   bed: BedWithElapsedTime | null
@@ -32,6 +34,18 @@ export function BedStageContextMenu({
   onStageSelect,
   onClose,
 }: BedStageContextMenuProps) {
+  const getActionLabel = (fromStageName: string, toStageName: string) => {
+    if (fromStageName === 'Discharge Process' && toStageName === 'Cleaning') {
+      return 'Start Cleaning'
+    }
+
+    if (fromStageName === 'Cleaning' && toStageName === 'Empty') {
+      return 'Cleaning Complete'
+    }
+
+    return toStageName
+  }
+
   const items = useMemo<ContextMenuItem[]>(() => {
     if (!bed) {
       return []
@@ -44,14 +58,16 @@ export function BedStageContextMenu({
       const requiresOverride = overrideRequiredStages.includes(stage.id)
       const isDisabled = !isValid && !requiresOverride
 
-      let label = stage.name
+      const baseLabel = getActionLabel(bed.currentStage?.name ?? 'Empty', stage.name)
+      let label = baseLabel
       if (requiresOverride) {
-        label = `⚠️ ${stage.name} (needs approval)`
+        label = `⚠️ ${baseLabel} (needs approval)`
       }
 
       return {
         id: stage.id,
         label,
+        icon: <StageIcon colorCode={stage.colorCode} className={cn("h-4 w-4", colorClasses.text)} />,
         disabled: isUpdating || isCurrentStage || updatingStageId === stage.id || isDisabled,
         onSelect: () => onStageSelect(bed.id, stage.id),
         className: colorClasses.text,
@@ -64,13 +80,27 @@ export function BedStageContextMenu({
     return null
   }
 
+  // US-2.2 FLASHY BUG FIX: If we are still loading transition rules, show a loading state
+  // instead of a briefly-full (but disabled) menu. This prevents the "flash" of items.
+  if (isUpdating && !error) {
+    return (
+      <ContextMenu
+        isOpen={isOpen}
+        position={position}
+        items={[]}
+        onClose={onClose}
+        header={bed ? `Verifying access for ${bed.bedNumber}...` : "Checking access..."}
+      />
+    )
+  }
+
   return (
     <ContextMenu
       isOpen={isOpen}
       position={position}
       items={error ? [] : items}
       onClose={onClose}
-      header={`Update ${bed.bedNumber}`}
+      header={bed ? `Update ${bed.bedNumber}` : "Update Bed"}
       error={error}
     />
   )

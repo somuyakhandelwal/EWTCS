@@ -23,6 +23,16 @@
 # misc
 .DS_Store
 *.pem
+Thumbs.db
+
+# AI tool artifacts (Antigravity / Gemini / BMAD)
+.gemini/
+_bmad-output
+.agent/
+_bmad/
+.github/agents/
+.github/prompts/
+.github/copilot-instructions.md
 
 # debug
 npm-debug.log*
@@ -45,3 +55,23 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# backups (runtime files — never commit patient data)
+backups/
+
+# logs
+logs/
+*.log
+*_log.txt
+*_log*.txt
+error_logs.txt
+test_run_results.txt
+test_results_verbose.txt
+*_results*.txt
+*_fail.txt
+reset_test.txt
+perf_check_log.txt
+status_log.txt
+tsc_errors.txt
+*_errors.txt
+test_output.txt

@@ -6,7 +6,40 @@ const secretKey = process.env.SESSION_SECRET
 const encodedKey = new TextEncoder().encode(secretKey!)
 const INACTIVITY_TIMEOUT_MS = Number(process.env.INACTIVITY_TIMEOUT_MS) || 30 * 60 * 1000
 
+function isLocalHost(hostname: string) {
+    return hostname === 'localhost' || hostname === '127.0.0.1' || hostname === '::1'
+}
+
+function shouldEnforceHttps() {
+    const env = (process.env.NODE_ENV as string | undefined) ?? ''
+    const enforceableEnv = env === 'production' || env === 'staging'
+    if (!enforceableEnv) return false
+    return process.env.FORCE_HTTPS !== 'false'
+}
+
+function isSecureRequest(request: NextRequest) {
+    const forwardedProto = request.headers
+        .get('x-forwarded-proto')
+        ?.split(',')[0]
+        ?.trim()
+        ?.toLowerCase()
+
+    if (forwardedProto) {
+        return forwardedProto === 'https'
+    }
+
+    return request.nextUrl.protocol === 'https:'
+}
+
 export async function middleware(request: NextRequest) {
+    // EPIC 17 / US-17.1: Enforce HTTPS on all matched routes in staging/production.
+    // This protects pages and API routes behind this middleware from plaintext transport.
+    if (shouldEnforceHttps() && !isLocalHost(request.nextUrl.hostname) && !isSecureRequest(request)) {
+        const httpsUrl = request.nextUrl.clone()
+        httpsUrl.protocol = 'https:'
+        return NextResponse.redirect(httpsUrl, 308)
+    }
+
     const token = request.cookies.get('session')?.value
 
     let session = null
@@ -44,6 +77,13 @@ export async function middleware(request: NextRequest) {
         }
     }
 
+    // US-5.5: /change-password requires an active session
+    if (pathname.startsWith('/change-password')) {
+        if (!session) {
+            return NextResponse.redirect(new URL('/login', request.url))
+        }
+    }
+
     // Protected routes
     if (pathname.startsWith('/admin')) {
         // US-12.3: Auditors get read-only access to audit + health pages only
@@ -58,20 +98,23 @@ export async function middleware(request: NextRequest) {
     }
 
     if (pathname.startsWith('/supervisor')) {
-        if (!session || session.role !== 'supervisor') {
-            return NextResponse.redirect(new URL('/login', request.url))
-        }
-    }
-
-    if (pathname.startsWith('/dashboard')) {
-        if (!session || session.role !== 'nurse') {
-            return NextResponse.redirect(new URL('/login', request.url))
-        }
-    }
-
-    // Analytics: supervisor and admin only
-    if (pathname.startsWith('/analytics')) {
         if (!session || (session.role !== 'supervisor' && session.role !== 'admin')) {
+            return NextResponse.redirect(new URL('/login', request.url))
+        }
+    }
+
+    // Bed grid: accessible to all operational roles (nurse, housekeeping) and
+    // oversight roles (supervisor, admin) who may need direct grid access.
+    if (pathname.startsWith('/dashboard')) {
+        const dashboardRoles = ['nurse', 'housekeeping', 'supervisor', 'admin']
+        if (!session || !dashboardRoles.includes(session.role as string)) {
+            return NextResponse.redirect(new URL('/login', request.url))
+        }
+    }
+
+    // Analytics: supervisor, admin, and auditor
+    if (pathname.startsWith('/analytics')) {
+        if (!session || (session.role !== 'supervisor' && session.role !== 'admin' && session.role !== 'auditor')) {
             return NextResponse.redirect(new URL('/login', request.url))
         }
     }
@@ -82,7 +125,26 @@ export async function middleware(request: NextRequest) {
             if (session.role === 'admin') return NextResponse.redirect(new URL('/admin', request.url))
             if (session.role === 'auditor') return NextResponse.redirect(new URL('/admin/audit', request.url))
             if (session.role === 'supervisor') return NextResponse.redirect(new URL('/supervisor', request.url))
-            return NextResponse.redirect(new URL('/dashboard', request.url))
+            if (session.role === 'auditor') return NextResponse.redirect(new URL('/analytics', request.url))
+            // nurse and housekeeping both use the bed grid dashboard
+            if (session.role === 'nurse' || session.role === 'housekeeping') {
+                return NextResponse.redirect(new URL('/dashboard', request.url))
+            }
+            // Fallback: unknown future roles go to login (do not silently grant access)
+            return NextResponse.redirect(new URL('/login', request.url))
+        }
+    }
+
+    // API routes — require an authenticated session.
+    // Exceptions: /api/auth/* (login/logout), /api/health, /api/cron/*
+    // (cron uses its own CRON_SECRET Bearer-token auth).
+    if (pathname.startsWith('/api/')) {
+        const isPublicApi =
+            pathname.startsWith('/api/auth/') ||
+            pathname.startsWith('/api/health') ||
+            pathname.startsWith('/api/cron/')
+        if (!isPublicApi && !session) {
+            return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
         }
     }
 
@@ -90,5 +152,9 @@ export async function middleware(request: NextRequest) {
 }
 
 export const config = {
-    matcher: ['/dashboard/:path*', '/admin/:path*', '/supervisor/:path*', '/analytics/:path*', '/login'],
+    // Matches all routes except Next.js internals and static assets.
+    // Route-level auth checks (pages + /api/*) are handled inside the middleware function.
+    matcher: [
+        '/((?!_next/static|_next/image|favicon.ico|robots.txt|sitemap.xml).*)',
+    ],
 }

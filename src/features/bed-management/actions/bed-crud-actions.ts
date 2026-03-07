@@ -1,7 +1,7 @@
 'use server'
 
 import { revalidatePath } from 'next/cache'
-import { requireAdmin } from '@/shared/lib/auth'
+import { requireAdminWrite } from '@/shared/lib/auth'
 import { logAudit } from '@/shared/lib/audit'
 import { createBedSchema, updateBedSchema } from '../schemas/bed-management-schemas'
 import { getBedById, bedNumberExists, getEmptyStageId } from '../lib/queries'
@@ -9,12 +9,7 @@ import {
     createBed as createBedMutation,
     updateBed as updateBedMutation,
 } from '../lib/mutations'
-
-export type ActionResult<T = unknown> = {
-    success: boolean
-    data?: T
-    error?: string
-}
+import type { ActionResult } from '../types/action-result'
 
 /**
  * Helper function to revalidate relevant pages after bed changes
@@ -22,6 +17,7 @@ export type ActionResult<T = unknown> = {
 function revalidateBedPages() {
     revalidatePath('/admin/beds')
     revalidatePath('/dashboard')
+    revalidatePath('/supervisor')
 }
 
 /**
@@ -31,7 +27,11 @@ function revalidateBedPages() {
  */
 export async function createBed(formData: FormData): Promise<ActionResult> {
     try {
-        const session = await requireAdmin()
+        const session = await requireAdminWrite({
+            actionType: 'CREATE',
+            entityType: 'bed',
+            entityId: 'new',
+        })
 
         // Parse and validate input
         const input = {
@@ -96,7 +96,11 @@ export async function createBed(formData: FormData): Promise<ActionResult> {
  */
 export async function updateBed(formData: FormData): Promise<ActionResult> {
     try {
-        const session = await requireAdmin()
+        const session = await requireAdminWrite({
+            actionType: 'UPDATE',
+            entityType: 'bed',
+            entityId: formData.get('bedId') as string || 'unknown',
+        })
 
         // Parse and validate input
         const input = {

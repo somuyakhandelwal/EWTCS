@@ -6,7 +6,7 @@ import {
     updateUserSchema, 
     deactivateUserSchema
 } from '@/features/user-management/schemas/user-schemas'
-import { requireAdmin } from '@/features/user-management/lib/auth'
+import { requireAdminWrite } from '@/features/user-management/lib/auth'
 import { logUserAction } from '@/features/user-management/lib/audit'
 import { 
     getAllUsers as getAllUsersQuery, 
@@ -19,13 +19,13 @@ import {
     activateUserInDB
 } from '@/features/user-management/lib/mutations'
 
-/**
- * Create a new user
- * US-5.3: Admin can create new users with username, password, role
- */
 export async function createUser(prevState: unknown, formData: FormData) {
     try {
-        const session = await requireAdmin()
+        const session = await requireAdminWrite({
+            actionType: 'CREATE',
+            entityType: 'user',
+            entityId: 'new',
+        })
 
         // Validate input
         const result = createUserSchema.safeParse({
@@ -70,13 +70,13 @@ export async function createUser(prevState: unknown, formData: FormData) {
     }
 }
 
-/**
- * Update user details (username, password, role)
- * US-5.3: Admin can edit user details and roles
- */
 export async function updateUser(prevState: unknown, formData: FormData) {
     try {
-        const session = await requireAdmin()
+        const session = await requireAdminWrite({
+            actionType: 'UPDATE',
+            entityType: 'user',
+            entityId: formData.get('userId') as string || 'unknown',
+        })
 
         // Validate input
         const result = updateUserSchema.safeParse({
@@ -118,14 +118,13 @@ export async function updateUser(prevState: unknown, formData: FormData) {
     }
 }
 
-/**
- * Deactivate a user account
- * US-5.3: Admin can deactivate (not delete) users
- * US-5.3: Deactivated users cannot log in
- */
 export async function deactivateUser(userId: string, reason?: string) {
     try {
-        const session = await requireAdmin()
+        const session = await requireAdminWrite({
+            actionType: 'DEACTIVATE',
+            entityType: 'user',
+            entityId: userId,
+        })
         const result = deactivateUserSchema.safeParse({ userId, reason })
         if (!result.success) {
             return { success: false, message: 'Invalid user ID' }
@@ -142,12 +141,13 @@ export async function deactivateUser(userId: string, reason?: string) {
     }
 }
 
-/**
- * Activate a user account
- */
 export async function activateUser(userId: string) {
     try {
-        const session = await requireAdmin()
+        const session = await requireAdminWrite({
+            actionType: 'ACTIVATE',
+            entityType: 'user',
+            entityId: userId,
+        })
         await activateUserInDB(userId)
         await logUserAction('ACTIVATE', userId, session.userId)
         logger.info('User activated', { userId })
@@ -159,10 +159,6 @@ export async function activateUser(userId: string) {
     }
 }
 
-/**
- * Get all users with their details
- * Epic 5: US-5.3 - User Management
- */
 export async function getAllUsers() {
     try {
         const users = await getAllUsersQuery()
@@ -173,11 +169,6 @@ export async function getAllUsers() {
     }
 }
 
-/**
- * Get user management logs for audit trail
- * Epic 5: US-5.3 - User Management
- * US-5.3 Acceptance Criteria: "User management actions are logged"
- */
 export async function getUserLogs(userId?: string) {
     try {
         const logs = await getUserLogsQuery(userId)

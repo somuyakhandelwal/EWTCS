@@ -1,73 +1,39 @@
-// Admin Shift Management Page
-// EPIC 8: Shift Management (US-8.1)
-// Route: /admin/shifts
+// Admin: Shift Schedules Page (US-8.1)
+// Epic 8: Shift Management
 
-import { redirect } from 'next/navigation'
+import { getAllShifts } from '@/features/shift-management/lib/shift-queries'
+import { ShiftList } from '@/features/shift-management/components/ShiftList'
 import Link from 'next/link'
-import { Clock, ArrowLeft } from 'lucide-react'
-import { verifyActiveSession } from '@/features/auth/lib/active-session'
-import { LogoutButton } from '@/features/auth/components/LogoutButton'
-import { getShiftsAction } from '@/features/shifts/actions/shift-actions'
-import { ShiftsManager } from '@/features/shifts/components/ShiftsManager'
+import { Button } from '@/shared/components/ui/button'
+import { Tooltip } from '@/shared/components/ui/tooltip'
 
-export const metadata = {
-  title: 'Shift Management — Admin',
-}
+// Force dynamic rendering — prevents build-time DB connection errors
+export const dynamic = 'force-dynamic'
 
-export default async function AdminShiftsPage() {
-  const session = await verifyActiveSession()
-
-  if (!session) redirect('/login')
-  if (session.role !== 'admin') redirect('/admin')
-
-  const result = await getShiftsAction()
-  const shifts = result.success && result.shifts ? result.shifts : []
+export default async function ShiftsPage() {
+  const shifts = await getAllShifts()
 
   return (
-    <div className="min-h-screen bg-black text-foreground p-3 sm:p-8">
-      <div className="max-w-4xl mx-auto space-y-6 sm:space-y-8">
-        {/* Header */}
-        <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
-          <div className="flex items-center gap-3">
-            <Link
-              href="/admin"
-              className="p-2 rounded-lg text-zinc-400 hover:text-white hover:bg-zinc-800 transition-colors"
-              aria-label="Back to admin console"
-            >
-              <ArrowLeft className="h-5 w-5" />
+    <div className="min-h-screen bg-background text-foreground p-3 sm:p-8">
+      <div className="max-w-7xl mx-auto space-y-6">
+        <div className="flex items-center justify-between">
+          <Tooltip content="Return to admin overview" side="bottom">
+            <Link href="/admin">
+              <Button variant="outline">← Back to Admin</Button>
             </Link>
-            <div>
-              <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-white flex items-center gap-2">
-                <Clock className="h-6 w-6 text-blue-400" />
-                Shift Schedules
-              </h1>
-              <p className="text-zinc-400 text-sm">
-                Define ward shifts — each bed stage update is tagged with the active shift.
-              </p>
-            </div>
-          </div>
-          <div className="self-end sm:self-auto">
-            <LogoutButton />
-          </div>
+          </Tooltip>
         </div>
-
-        {/* Explainer */}
-        <div className="rounded-lg border border-zinc-800 bg-zinc-900/40 p-4 text-sm text-zinc-400 space-y-1">
-          <p>
-            <span className="font-medium text-zinc-200">Default shifts</span> — Morning (06:00–14:00),
-            Evening (14:00–22:00), Night (22:00–06:00).
-          </p>
-          <p>
-            Every bed stage transition is automatically tagged with the shift that was active
-            at the time of the change. Shift data is used in the{' '}
-            <Link href="/analytics" className="text-blue-400 hover:underline">
-              Analytics
-            </Link>{' '}
-            dashboard for shift-wise comparisons.
+        <div className="mb-6" data-help-id="admin-shifts-header">
+          <h1 className="text-2xl font-bold text-foreground">Shift Schedules</h1>
+          <p className="text-muted-foreground text-sm mt-1">
+            Configure Morning, Evening, and Night shifts. Default shifts cannot be deleted.
+            Shifts can overlap for transition periods. Each bed status update is automatically
+            tagged with the active shift.
           </p>
         </div>
-
-        <ShiftsManager initialShifts={shifts} />
+        <div data-help-id="admin-shifts-list">
+          <ShiftList initialShifts={shifts} />
+        </div>
       </div>
     </div>
   )

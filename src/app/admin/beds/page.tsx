@@ -1,10 +1,11 @@
-import { verifyActiveSession } from '@/features/auth/lib/active-session'
+import { verifyActiveSession } from '@/shared/lib/active-session'
 import { redirect } from 'next/navigation'
 import { getAllBeds, getWardsList } from '@/features/bed-management/actions/bed-queries-actions'
 import { BedManagementClient } from '@/features/bed-management/components/BedManagementClient'
 import { AlertTriangle } from 'lucide-react'
 import Link from 'next/link'
 import { Button } from '@/shared/components/ui/button'
+import { Tooltip } from '@/shared/components/ui/tooltip'
 import type { BedManagementData } from '@/features/bed-management/types/bed-management.types'
 
 interface Ward {
@@ -16,7 +17,7 @@ export default async function BedManagementPage() {
     // Verify admin access
     const session = await verifyActiveSession()
     if (!session || session.role !== 'admin') {
-        redirect('/login')
+        redirect('/api/auth/force-logout')
     }
 
     // Fetch beds and wards
@@ -28,8 +29,8 @@ export default async function BedManagementPage() {
     // Handle errors
     if (!bedsResult.success || !wardsResult.success) {
         return (
-            <div className="min-h-screen bg-black text-foreground p-8">
-                <div className="max-w-7xl mx-auto">
+            <div className="min-h-screen bg-background text-foreground p-3 sm:p-8">
+                <div className="max-w-7xl mx-auto space-y-6">
                     <div className="mb-6">
                         <Link href="/admin">
                             <Button variant="outline">← Back to Admin</Button>
@@ -41,7 +42,7 @@ export default async function BedManagementPage() {
                         <p className="text-red-300 font-semibold mb-2">
                             Failed to load bed management data
                         </p>
-                        <p className="text-zinc-400 text-sm">
+                        <p className="text-muted-foreground text-sm">
                             {bedsResult.error || wardsResult.error}
                         </p>
                     </div>
@@ -51,26 +52,30 @@ export default async function BedManagementPage() {
     }
 
     return (
-        <div className="min-h-screen bg-black text-foreground p-8">
+        <div className="min-h-screen bg-background text-foreground p-3 sm:p-8">
             <div className="max-w-7xl mx-auto space-y-6">
                 {/* Navigation */}
-                <div className="flex items-center justify-between">
-                    <Link href="/admin">
-                        <Button variant="outline">← Back to Admin</Button>
-                    </Link>
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4" data-help-id="admin-beds-header">
+                    <Tooltip content="Return to admin overview" side="bottom">
+                        <Link href="/admin">
+                            <Button variant="outline">← Back to Admin</Button>
+                        </Link>
+                    </Tooltip>
                     <div className="text-right">
-                        <p className="text-sm text-zinc-400">
-                            Logged in as <span className="text-white">{session.username}</span>
+                        <p className="text-sm text-muted-foreground">
+                            Logged in as <span className="text-foreground">{session.username}</span>
                         </p>
-                        <p className="text-xs text-zinc-500">Administrator</p>
+                        <p className="text-xs text-muted-foreground">Administrator</p>
                     </div>
                 </div>
 
                 {/* Main Content */}
-                <BedManagementClient 
-                    initialBeds={bedsResult.data as BedManagementData[]} 
-                    wards={wardsResult.data as Ward[]} 
-                />
+                <div data-help-id="admin-beds-table">
+                    <BedManagementClient
+                        initialBeds={bedsResult.data as BedManagementData[]}
+                        wards={wardsResult.data as Ward[]}
+                    />
+                </div>
             </div>
         </div>
     )

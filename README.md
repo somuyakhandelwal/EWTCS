@@ -283,6 +283,12 @@ npm run db:seed      # Seed initial test data
 npm run db:reset     # Drop and recreate schema (development only)
 ```
 
+### AI Summary
+```bash
+npm run cron:summary           # Aggregate yesterday's data manually
+node scripts/daily-summary-cron.mjs 2026-02-20  # Aggregate a specific date
+```
+
 **New to the project?** Run `npm run setup` for automated database setup!
 
 Migration details and best practices: See [CONFIGURATION.md#migrations](CONFIGURATION.md#migrations)
@@ -310,6 +316,7 @@ Full environment variable reference: See [CONFIGURATION.md](CONFIGURATION.md)
 ### Quick Links
 
 - **[QUICKSTART.md](QUICKSTART.md)** ⚡ - Get running in 5 minutes
+- **[INSTALLATION_GUIDE.md](INSTALLATION_GUIDE.md)** 🖥️ - Production deployment guide for system administrators
 - **[PROJECT_STATUS.md](PROJECT_STATUS.md)** 📊 - Current status, features, and roadmap
 - **[docs/README.md](docs/README.md)** 📑 - Complete documentation index
 
@@ -342,7 +349,8 @@ Full environment variable reference: See [CONFIGURATION.md](CONFIGURATION.md)
 - [x] Authentication system with bcrypt password hashing
 - [x] Role-based access control (Admin, Supervisor, Nurse)
 - [x] Complete user management system with CRUD operations
-- [x] Audit logging for all user actions
+- [x] Atomic audit logging (user ID, action, timestamp, IP address)
+- [x] Immutable audit trail with database-level protection
 
 **Bed Management & Tracking:**
 - [x] Bed status dashboard with grid layout (20 beds)
@@ -364,8 +372,9 @@ Full environment variable reference: See [CONFIGURATION.md](CONFIGURATION.md)
 - [x] CSV export functionality for analysts
 - [x] Performance-optimized queries with indexes
 
-### 🔄 Phase 2: Real-Time Updates & Advanced Features (PARTIALLY COMPLETE)
+### ✅ Phase 2: Real-Time Updates & Advanced Features (COMPLETE)
 
+**Real-Time & UX Enhancements:**
 - [x] Real-time updates with intelligent polling (US-1.2)
 - [x] Search by bed number and stage name with highlighting (US-1.2)
 - [x] Connection status indicator with auto-reconnect
@@ -373,16 +382,30 @@ Full environment variable reference: See [CONFIGURATION.md](CONFIGURATION.md)
 - [x] Bed history modal with full stage transition log
 - [x] Admin pages for bed and stage management (US-6.1)
 - [x] Stage color configuration (EPIC 4)
-- [ ] Push notifications for delayed beds
-- [ ] Enhanced mobile responsiveness
-- [ ] Batch operations for multiple beds
 
-### ⏳ Phase 3: AI & Reporting (PLANNED)
+**Audit & Compliance (EPIC 12) ✅ NEW:**
+- [x] Auditor read-only role with full data access
+- [x] All action buttons disabled in audit mode (enforced server-side)
+- [x] Audit mode indicator banner on screen
+- [x] Write-operation denial logged with full audit trail
+- [x] Read-only auditor history with filtering, sorting, pagination
+- [x] CSV export for audit data analysis
+- [x] 100% test coverage (302 tests, 19 test files)
 
-- [ ] Daily AI summary reports generator
-- [ ] Management dashboard with KPIs
+### 🔄 Phase 3: AI & Reporting (IN PROGRESS)
+
+**Daily AI Summary — Data Aggregation Layer (EPIC 9) ✅**
+- [x] `daily_summaries` database table (migration 023)
+- [x] Daily aggregation engine (patients, stage time, delays, TAT)
+- [x] Server actions and API route (`POST /api/daily-summary/generate`)
+- [x] Midnight auto-run via GitHub Actions cron
+- [x] Manual trigger: `npm run cron:summary`
+
+**Remaining Phase 3:**
+- [ ] AI model integration for human-readable report generation
+- [ ] Management KPI dashboard
 - [ ] Predictive analytics for bed allocation
-- [ ] Automated performance reports (PDF/CSV)
+- [ ] Automated PDF/CSV reports
 - [ ] Historical trend analysis
 - [ ] Bottleneck identification algorithms
 
@@ -416,7 +439,7 @@ We welcome contributions! This project can make a real difference in healthcare.
 
 - ✅ TypeScript required for all new code
 - ✅ Feature-first structure (see [src/features/README.md](src/features/README.md))
-- ✅ Maximum 200 lines per file
+- ✅ Maximum 200 lines per file (except `package-lock.json`)
 - ✅ Functional components with hooks
 - ✅ Tailwind CSS via shadcn/ui
 - ✅ Path aliases: `@/features/*`, `@/shared/*`, `@/app/*`
@@ -481,9 +504,9 @@ This project uses a **feature-first architecture** designed for:
 ### Security & Performance
 - **Bcrypt password hashing** - Industry-standard secure authentication
 - **Role-based access control** - Fine-grained permissions (Admin/Supervisor/Nurse)
-- **Audit logging** - Complete trail of all user actions
+- **Atomic audit logging** - All user actions (login/logout, stage updates, config changes) logged with user ID, IP, and timestamp in transactional database write
 - **Optimized queries** - Database indexes for analytics performance
-- **Immutable logs** - Stage transitions cannot be deleted, only corrected
+- **Immutable audit trail** - Database triggers prevent updates/deletes on audit logs; only corrections allowed
 
 **Learn more:** [Features Guide](src/features/README.md) | [Shared Code Guide](src/shared/README.md)
 

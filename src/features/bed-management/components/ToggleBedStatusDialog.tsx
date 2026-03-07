@@ -48,36 +48,35 @@ export function ToggleBedStatusDialog({
     const isDeactivate = action === 'deactivate'
 
     return (
-        <div className="fixed inset-0 bg-black/80 flex items-center justify-center z-50">
-            <div className="bg-zinc-900 border border-zinc-800 rounded-lg p-6 w-full max-w-md">
+        <div className="fixed inset-0 bg-background/80 flex items-center justify-center z-50 p-4">
+            <div className="bg-card border border-border rounded-lg p-6 w-full max-w-md">
                 {/* Header */}
                 <div className="flex items-center gap-3 mb-4">
                     <div
-                        className={`p-2 rounded-full ${
-                            isDeactivate
+                        className={`p-2 rounded-full ${isDeactivate
                                 ? 'bg-red-900/20 text-red-400'
                                 : 'bg-green-900/20 text-green-400'
-                        }`}
+                            }`}
                     >
                         <AlertTriangle className="h-5 w-5" />
                     </div>
-                    <h2 className="text-xl font-bold text-white">
+                    <h2 className="text-xl font-bold text-foreground">
                         {isDeactivate ? 'Deactivate Bed' : 'Reactivate Bed'}
                     </h2>
                 </div>
 
                 {/* Content */}
                 <div className="space-y-4">
-                    <p className="text-zinc-300">
+                    <p className="text-card-foreground">
                         {isDeactivate ? (
                             <>
                                 Are you sure you want to deactivate bed{' '}
-                                <span className="font-bold text-white">{bed.bedNumber}</span>?
+                                <span className="font-bold text-foreground">{bed.bedNumber}</span>?
                             </>
                         ) : (
                             <>
                                 Are you sure you want to reactivate bed{' '}
-                                <span className="font-bold text-white">{bed.bedNumber}</span>?
+                                <span className="font-bold text-foreground">{bed.bedNumber}</span>?
                             </>
                         )}
                     </p>

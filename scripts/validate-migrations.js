@@ -56,6 +56,28 @@ const validateMigrations = async () => {
     .map((file) => path.parse(file).name)
     .sort();
 
+  const numberToNames = new Map();
+  for (const name of migrationFiles) {
+    const match = name.match(/^(\d+)_/);
+    if (!match) continue;
+    const number = match[1];
+    const existing = numberToNames.get(number) ?? [];
+    existing.push(name);
+    numberToNames.set(number, existing);
+  }
+
+  const duplicates = Array.from(numberToNames.entries()).filter(([, names]) => names.length > 1);
+  if (duplicates.length > 0) {
+    // Pre-existing duplicates on main are not blocked here — the CI migration-validation
+    // job enforces uniqueness only for newly added migrations in a PR.
+    // A dedicated migration-cleanup PR is required to resolve pre-existing duplicates.
+    console.warn('⚠️  WARNING: Duplicate migration number prefixes detected (pre-existing):');
+    for (const [number, names] of duplicates) {
+      console.warn(`  ${number}: ${names.join(', ')}`);
+    }
+    console.warn('These should be resolved in a dedicated migration-cleanup PR.');
+  }
+
   console.log(`📁 Found ${migrationFiles.length} migration files\n`);
 
   const client = new Client({ connectionString: databaseUrl });
@@ -112,7 +134,7 @@ const validateMigrations = async () => {
       process.exit(1);
     }
 
-    // Verify migration order
+    // Verify migration order (informational only)
     const expectedOrder = [...appliedMigrations].sort();
     const actualOrder = appliedMigrations;
 
@@ -125,9 +147,10 @@ const validateMigrations = async () => {
     }
 
     if (orderMismatch) {
-      console.error('\n⚠️  WARNING: Migrations may have been applied out of order');
-      console.error('Expected order:', expectedOrder);
-      console.error('Actual order:', actualOrder);
+      console.log('\nℹ️  NOTE: Migration apply timestamps differ from filename order.');
+      console.log('This is informational when pending migrations = 0.');
+      console.log('Expected order:', expectedOrder);
+      console.log('Applied order:', actualOrder);
     }
 
     console.log('\n✅ All migrations validated successfully');

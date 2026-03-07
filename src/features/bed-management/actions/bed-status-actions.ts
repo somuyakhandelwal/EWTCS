@@ -1,7 +1,7 @@
 'use server'
 
 import { revalidatePath } from 'next/cache'
-import { requireAdmin } from '@/shared/lib/auth'
+import { requireAdminWrite } from '@/shared/lib/auth'
 import { logAudit } from '@/shared/lib/audit'
 import { toggleBedStatusSchema } from '../schemas/bed-management-schemas'
 import { getBedById } from '../lib/queries'
@@ -9,12 +9,7 @@ import {
     deactivateBed as deactivateBedMutation,
     reactivateBed as reactivateBedMutation,
 } from '../lib/mutations'
-
-export type ActionResult<T = unknown> = {
-    success: boolean
-    data?: T
-    error?: string
-}
+import type { ActionResult } from '../types/action-result'
 
 /**
  * Helper function to revalidate relevant pages after bed changes
@@ -22,6 +17,7 @@ export type ActionResult<T = unknown> = {
 function revalidateBedPages() {
     revalidatePath('/admin/beds')
     revalidatePath('/dashboard')
+    revalidatePath('/supervisor')
 }
 
 /**
@@ -31,7 +27,11 @@ function revalidateBedPages() {
  */
 export async function deactivateBed(formData: FormData): Promise<ActionResult> {
     try {
-        const session = await requireAdmin()
+        const session = await requireAdminWrite({
+            actionType: 'UPDATE',
+            entityType: 'bed',
+            entityId: formData.get('bedId') as string || 'unknown',
+        })
 
         const input = {
             bedId: formData.get('bedId') as string,
@@ -90,7 +90,11 @@ export async function deactivateBed(formData: FormData): Promise<ActionResult> {
  */
 export async function reactivateBed(formData: FormData): Promise<ActionResult> {
     try {
-        const session = await requireAdmin()
+        const session = await requireAdminWrite({
+            actionType: 'UPDATE',
+            entityType: 'bed',
+            entityId: formData.get('bedId') as string || 'unknown',
+        })
 
         const input = {
             bedId: formData.get('bedId') as string,

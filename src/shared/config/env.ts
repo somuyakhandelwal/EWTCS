@@ -16,9 +16,14 @@ const envSchema = z.object({
     .url('NEXT_PUBLIC_APP_URL must be a valid URL')
     .default('http://localhost:3000'),
   NODE_ENV: z.enum(['development', 'staging', 'production']).default('development'),
+  FORCE_HTTPS: z.enum(['true', 'false']).optional(),
+  HSTS_PRELOAD: z.enum(['true', 'false']).optional(),
   RED_ALERT_THRESHOLD_MS: z.coerce.number().int().positive().default(10800000),
   OPENAI_API_KEY: z.string().optional(),
   OPENAI_API_KEY_ENCRYPTED: z.string().optional(),
+  // EPIC 9: Gemini AI key (either name is accepted)
+  GEMINI_API_KEY: z.string().optional(),
+  GOOGLE_GENERATIVE_AI_API_KEY: z.string().optional(),
 }).superRefine((value, ctx) => {
   if (!value.DATABASE_URL && !value.DATABASE_URL_ENCRYPTED) {
     ctx.addIssue({
@@ -51,6 +56,17 @@ const envSchema = z.object({
         code: z.ZodIssueCode.custom,
         message: 'DATABASE_URL_ENCRYPTED is required in production for security',
         path: ['DATABASE_URL_ENCRYPTED'],
+      });
+    }
+  }
+
+  if ((value.NODE_ENV === 'production' || value.NODE_ENV === 'staging') && !value.NEXT_PUBLIC_APP_URL.startsWith('https://')) {
+    const isBuildTime = process.env.NEXT_PHASE === 'phase-production-build';
+    if (!isBuildTime) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: 'NEXT_PUBLIC_APP_URL must start with https:// in staging/production',
+        path: ['NEXT_PUBLIC_APP_URL'],
       });
     }
   }
@@ -97,7 +113,6 @@ const resolveSecret = (
       throw error;
     }
   }
-
   // During build time, allow plaintext even in production
   const isBuildTime = process.env.NEXT_PHASE === 'phase-production-build';
   if (requireEncrypted && !isBuildTime) {
@@ -128,19 +143,20 @@ if (!validatePostgresUrl(databaseSecret.value)) {
 
 const aiSecret = envVars.OPENAI_API_KEY_ENCRYPTED || envVars.OPENAI_API_KEY
   ? resolveSecret(
-      'OPENAI_API_KEY',
-      envVars.OPENAI_API_KEY,
-      envVars.OPENAI_API_KEY_ENCRYPTED,
-      envVars.ENCRYPTION_KEY,
-      false
-    )
+    'OPENAI_API_KEY',
+    envVars.OPENAI_API_KEY,
+    envVars.OPENAI_API_KEY_ENCRYPTED,
+    envVars.ENCRYPTION_KEY,
+    false
+  )
   : null;
+// Gemini key (EPIC 9): read directly from env, used by ai-service.ts
+const geminiApiKey = envVars.GEMINI_API_KEY || envVars.GOOGLE_GENERATIVE_AI_API_KEY || null;
 
 const createAppConfig = (env: z.infer<typeof envSchema>): AppConfig => {
   const isDevelopment = env.NODE_ENV === 'development';
   const isStaging = env.NODE_ENV === 'staging';
   const isProduction = env.NODE_ENV === 'production';
-
   return {
     database: {
       url: databaseSecret.value,
@@ -163,12 +179,15 @@ const createAppConfig = (env: z.infer<typeof envSchema>): AppConfig => {
         encrypted: aiSecret.encrypted,
       },
     }),
+    ...(geminiApiKey && {
+      gemini: {
+        apiKey: geminiApiKey,
+      },
+    }),
   };
 };
-
 export const env = envVars;
 export const config = Object.freeze(createAppConfig(envVars));
-
 export const logConfigurationStatus = (): void => {
   logger.info('Environment configuration loaded successfully', {
     environment: env.NODE_ENV,
@@ -176,7 +195,8 @@ export const logConfigurationStatus = (): void => {
     databaseUrl: maskSensitive(config.database.url),
     sslEnabled: config.database.ssl,
     databaseEncrypted: config.database.encrypted,
-    aiKeyConfigured: Boolean(config.ai?.apiKey),
+    aiKeyConfigured: Boolean(config.ai?.apiKey) || Boolean((config as Record<string, unknown> & { gemini?: { apiKey?: string } }).gemini?.apiKey),
+    geminiKeyConfigured: Boolean(geminiApiKey),
     aiKeyEncrypted: Boolean(config.ai?.encrypted),
     alertThreshold: `${env.RED_ALERT_THRESHOLD_MS}ms (${(env.RED_ALERT_THRESHOLD_MS / 3600000).toFixed(1)} hours)`,
   });

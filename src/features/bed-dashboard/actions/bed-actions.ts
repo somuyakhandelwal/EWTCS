@@ -5,30 +5,81 @@ import { logger } from '@/shared/config/logger'
 import { UpdateBedStageSchema, type UpdateBedStageInput } from '../schemas/bed-schemas'
 import { updateBedStageInDB } from '../lib/bed-mutations'
 import { checkWardAccess } from '../lib/bed-queries'
-import { requireRole } from '@/shared/lib/auth'
+import { requireWriteRole } from '@/shared/lib/auth'
 import { logAudit } from '@/shared/lib/audit'
 import { validateTransition } from '../lib/stage-validation'
+import { headers } from 'next/headers'
+import { getClientIpFromHeaders } from '@/shared/lib/request-ip'
+import { detectPii, redactPii } from '@/shared/lib/pii-detector'
 
 /**
  * Update bed stage (US-2.1, US-2.2)
  * Validates stage transitions before updating
+ *
+ * COMPLIANCE: Stage updates are logged to audit_logs within a transaction.
+ * This ensures audit logging cannot be skipped or fail silently.
+ * All stage changes are traceable with user ID, IP address, and override status.
+ * Fulfills EPIC 12 acceptance criteria: "All stage updates are logged"
  */
 export async function updateBedStage(input: UpdateBedStageInput): Promise<{
   success: boolean
   data?: Awaited<ReturnType<typeof updateBedStageInDB>>
   error?: string
-  reason?: string // Why transition wasn't allowed or why override is needed
-  requiresOverride?: boolean // If true, transition needs supervisor approval
+  reason?: string
+  requiresOverride?: boolean
   errors?: Record<string, string[]>
+  /** US-16.4: true when bed state changed since the client queued this operation */
+  conflict?: boolean
+  serverStageId?: string | null
 }> {
   try {
-    const session = await requireRole(['nurse', 'supervisor', 'admin'])
+    const session = await requireWriteRole('beds', {
+      actionType: 'UPDATE',
+      entityType: 'bed',
+      entityId: input.bedId,
+    })
+    const requestHeaders = await headers()
+    const ipAddress = getClientIpFromHeaders(requestHeaders)
 
     const result = UpdateBedStageSchema.safeParse(input)
     if (!result.success) {
       return {
         success: false,
         errors: result.error.flatten().fieldErrors,
+      }
+    }
+
+    // US-17.7: Backend PII enforcement — reject if PII detected in free-text fields
+    // This runs regardless of frontend validation to prevent bypass via direct API calls.
+    const freeTextFields: Array<{ field: string; value: string | undefined }> = [
+      { field: 'notes', value: result.data.notes },
+      { field: 'overrideReason', value: result.data.overrideReason },
+    ]
+    for (const { field, value } of freeTextFields) {
+      if (!value) continue
+      const pii = detectPii(value)
+      if (pii.hasPii) {
+        await logAudit({
+          actionType: 'PII_BLOCKED',
+          entityType: 'bed',
+          entityId: result.data.bedId,
+          performedBy: session.userId,
+          metadata: {
+            field,
+            detectedCategories: pii.summary,
+            redactedValue: redactPii(value),
+          },
+        })
+        logger.warn('PII detected and blocked in bed stage update', {
+          userId: session.userId,
+          bedId: result.data.bedId,
+          field,
+          categories: pii.summary,
+        })
+        return {
+          success: false,
+          error: `Field "${field}" contains patient information (${pii.summary}). Remove it before submitting.`,
+        }
       }
     }
 
@@ -39,20 +90,33 @@ export async function updateBedStage(input: UpdateBedStageInput): Promise<{
       return { success: false, error: wardError }
     }
 
-    // NEW: Get current bed to validate transition
     const bed = await getBedById(result.data.bedId)
     if (!bed) {
-      return {
-        success: false,
-        error: 'Bed not found',
-      }
+      return { success: false, error: 'Bed not found' }
     }
 
-    // NEW: Validate stage transition (US-2.2)
+    // US-16.4: Conflict detection — bed may have been moved by another user while offline.
+    // Compare expected stage (what client saw when queuing) vs actual current stage.
+    if (result.data.expectedStageId && bed.currentStageId !== result.data.expectedStageId) {
+      await logAudit({
+        actionType: 'SYNC_CONFLICT',
+        entityType: 'stage_transition',
+        entityId: result.data.bedId,
+        performedBy: session.userId,
+        changes: {
+          expectedStageId: result.data.expectedStageId,
+          actualStageId: bed.currentStageId,
+          enqueuedAt: result.data.enqueuedAt,
+        },
+      }).catch(() => {})
+      return { success: false, conflict: true, serverStageId: bed.currentStageId ?? '' }
+    }
+
+    // Validate stage transition (US-2.2)
     const validationResult = await validateTransition(
       bed.currentStageId,
       result.data.toStageId,
-      session.role as 'nurse' | 'supervisor' | 'admin'
+      session.role as 'nurse' | 'supervisor' | 'admin' | 'housekeeping'
     )
 
     // NEW: If transition is invalid, return error with reason
@@ -111,38 +175,19 @@ export async function updateBedStage(input: UpdateBedStageInput): Promise<{
     }
 
     // Proceed with update
+    // US-8.2: Pass shift override fields — supervisor can tag the log with a specific
+    // shift instead of the auto-resolved one (e.g. during shift handover).
+    const canOverrideShift = session.role === 'supervisor' || session.role === 'admin'
     const updateResult = await updateBedStageInDB({
       bedId: result.data.bedId,
       toStageId: result.data.toStageId,
       changedByUserId: session.userId,
       notes: result.data.notes,
+      ipAddress,
+      supervisorOverrideApplied: result.data.supervisorOverride,
+      shiftOverrideId: canOverrideShift ? (result.data.shiftOverrideId ?? null) : null,
+      shiftOverrideByUserId: canOverrideShift && result.data.shiftOverrideId ? session.userId : null,
     })
-
-    // BUG FIX #7: Log audit AFTER update with error handling
-    // If audit logging fails, still consider update successful (graceful degradation)
-    // but log the audit failure for compliance team to investigate
-    try {
-      await logAudit({
-        actionType: 'UPDATE',
-        entityType: 'bed',
-        entityId: updateResult.bedId,
-        performedBy: session.userId,
-        changes: {
-          fromStageId: updateResult.fromStageId,
-          toStageId: updateResult.toStageId,
-          isOccupied: updateResult.isOccupied,
-          supervisorOverrideApplied: result.data.supervisorOverride,
-        },
-      })
-    } catch (auditError) {
-      // BUG FIX #7: Log audit failure for compliance investigation
-      logger.error('CRITICAL: Audit logging failed - potential compliance issue', auditError as Error, {
-        bedId: updateResult.bedId,
-        userId: session.userId,
-        stageTransition: `${updateResult.fromStageId} → ${updateResult.toStageId}`,
-      })
-      // Still return success since bed WAS updated - audit failure is secondary
-    }
 
     return {
       success: true,

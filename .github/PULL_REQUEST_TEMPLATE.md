@@ -17,7 +17,7 @@ Closes #
 <!-- Ensure all items are checked before requesting review -->
 
 ### Code Quality
-- [ ] No file exceeds 200 lines
+- [ ] No file exceeds 200 lines (except lock files: package-lock.json, yarn.lock, pnpm-lock.yaml)
 - [ ] Code is properly formatted
 - [ ] TypeScript types are properly defined
 - [ ] No ESLint errors or warnings
@@ -26,6 +26,7 @@ Closes #
 - [ ] Tested locally and works as expected
 - [ ] Added/updated tests if applicable
 - [ ] All existing tests pass
+- [ ] EPIC 13 reliability verification completed (manual/staging) per `docs/EPIC13_VERIFICATION_CHECKLIST.md` (if applicable)
 
 ### Database & Environment
 - [ ] Database migrations tested (if applicable)
@@ -36,6 +37,7 @@ Closes #
 
 ### Documentation
 - [ ] Updated documentation if needed
+- [ ] ADMIN_HANDBOOK.md updated (if configuration/maintenance/security/operations changed)
 - [ ] README updated (if setup process changed)
 - [ ] DATABASE_SETUP.md updated (if database changes)
 - [ ] Code comments added for complex logic

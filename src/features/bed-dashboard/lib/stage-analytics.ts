@@ -14,6 +14,7 @@ export interface StageTransitionRecord {
   transitionTime: Date
   durationInPreviousStageMs: number | null
   durationInCurrentStageMs: number | null
+  changedByUserId: string
   changedByUsername: string
   notes: string | null
 }

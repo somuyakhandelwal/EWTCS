@@ -5,11 +5,12 @@
 // Separated from bed-actions.ts to keep files under the 200-line limit.
 // DB query helpers live in ../lib/discharge-queries.ts.
 
-import { requireRole } from '@/shared/lib/auth'
+import { requireWriteRole } from '@/shared/lib/auth'
 import { logAudit } from '@/shared/lib/audit'
 import { logger } from '@/shared/config/logger'
 import pool from '@/shared/lib/db'
-import { getUserWard, getBedWard } from '../lib/bed-queries'
+import { checkWardAccess } from '../lib/bed-queries'
+import { detectPii, redactPii } from '@/shared/lib/pii-detector'
 import {
   fetchBedForDischarge,
   fetchDischargeStages,
@@ -42,22 +43,45 @@ export async function dischargeAndResetBed(input: {
   notes?: string
 }): Promise<DischargeAndResetResult> {
   try {
-    const session = await requireRole(['nurse', 'supervisor', 'admin'])
+    const session = await requireWriteRole('beds', {
+      actionType: 'DISCHARGE',
+      entityType: 'bed',
+      entityId: input.bedId,
+    })
 
-    // Ward-level access check (same IDOR pattern as updateBedStage)
-    const userWard = await getUserWard(session.userId)
-    const bedWard = await getBedWard(input.bedId)
-    const hasWardAccess =
-      (!userWard && !bedWard) ||
-      (userWard && bedWard && userWard === bedWard) ||
-      session.role === 'admin'
-
-    if (!hasWardAccess) {
+    // Ward-level access check (centralized in checkWardAccess)
+    const wardError = await checkWardAccess(session.userId, input.bedId, session.role)
+    if (wardError) {
       logger.warn('Unauthorized discharge attempt', {
         userId: session.userId,
         bedId: input.bedId,
+        error: wardError
       })
-      return { success: false, error: 'Access denied to this bed.' }
+      return { success: false, error: wardError }
+    }
+
+    // US-17.7: Backend PII enforcement on notes field
+    if (input.notes) {
+      const pii = detectPii(input.notes)
+      if (pii.hasPii) {
+        await logAudit({
+          actionType: 'PII_BLOCKED',
+          entityType: 'bed',
+          entityId: input.bedId,
+          performedBy: session.userId,
+          metadata: {
+            field: 'notes',
+            detectedCategories: pii.summary,
+            redactedValue: redactPii(input.notes),
+          },
+        })
+        logger.warn('PII detected and blocked in discharge notes', {
+          userId: session.userId,
+          bedId: input.bedId,
+          categories: pii.summary,
+        })
+        return { success: false, error: `Notes contain patient information (${pii.summary}). Remove it before submitting.` }
+      }
     }
 
     const client = await pool.connect()

@@ -1,13 +1,32 @@
 import { NextResponse } from 'next/server';
+import { testConnection, getPoolStats } from '@/shared/lib/db';
 
-// Force dynamic rendering - don't pre-render during build
-// This prevents build-time errors when encrypted env vars aren't available
+// Force dynamic rendering — health data must always be live.
 export const dynamic = 'force-dynamic';
 
+/**
+ * Enhanced health endpoint — EPIC 13: System Performance & Reliability.
+ * Returns application status, DB connectivity, and connection-pool utilisation.
+ * Used by monitoring tools to detect SLA regressions and alert on DB issues.
+ */
 export async function GET() {
-  // Simple health check without database access to avoid decryption during build
+  const timestamp = new Date().toISOString();
+
+  const dbReachable = await testConnection();
+  const poolStats = getPoolStats();
+
+  const status = dbReachable ? 'healthy' : 'degraded';
+  const httpStatus = dbReachable ? 200 : 503;
+
   return NextResponse.json(
-    { status: 'healthy', timestamp: new Date().toISOString() },
-    { status: 200 }
+    {
+      status,
+      timestamp,
+      database: {
+        reachable: dbReachable,
+        pool: poolStats,
+      },
+    },
+    { status: httpStatus }
   );
 }

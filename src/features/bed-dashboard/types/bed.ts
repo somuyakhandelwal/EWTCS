@@ -40,12 +40,16 @@ export interface Stage {
 export interface Bed {
   id: string
   bedNumber: string
+  /** Ward this bed belongs to. Populated by the dashboard query; undefined on lightweight lookups. */
+  wardId?: string | null
   currentStageId: string | null
   currentStage: Stage | null
   patientStartTime: Date | null
   lastStageChange: Date | null
   isOccupied: boolean
   isActive: boolean
+  isTemporary: boolean  // US-6.5: present on all bed rows — false for permanent beds
+  isVirtual: boolean    // US-6.6: true for nurse-created hallway/stretcher patients
   metadata: Record<string, unknown>
   createdAt: Date
   updatedAt: Date
@@ -54,6 +58,7 @@ export interface Bed {
 export interface BedWithElapsedTime extends Bed {
   elapsedTimeMs: number | null
   isDelayed: boolean
+  isEscalated: boolean               // US-15.3: True if elapsed time > escalation threshold
   // US-1.6: Disposition bottleneck fields
   isDispositionBottleneck: boolean
   dispositionElapsedMs: number | null  // time spent in Decision Made stage specifically
@@ -73,11 +78,29 @@ export interface BedStageLog {
   metadata: Record<string, unknown>
 }
 
+/**
+ * Pre-computed stage transition map, keyed by fromStageId (or 'null' for empty beds).
+ * Bundled into BedGridData so offline nurses can see valid stage options without a server call.
+ * Already role-scoped: fetched on behalf of the authenticated user during getBedGridData().
+ */
+export type StageTransitionMap = Record<string, { allowed: string[]; requiresOverride: string[] }>
+
 export interface BedGridData {
   beds: BedWithElapsedTime[]
   stages: Stage[]
   delayThresholdMs: number
+  escalationThresholdMs: number    // US-15.3: threshold above which beds are critically escalated
   bottleneckCount: number  // US-1.6: count of active disposition bottlenecks
+  escalationCount: number  // US-15.3: count of escalated beds
+  /** US-16.2: Role-scoped transition rules for offline context menu — optional for backwards compat */
+  stageTransitionMap?: StageTransitionMap
+  /**
+   * The authenticated user's assigned ward ID.
+   * Set for nurses (and housekeeping) that have a ward assignment; undefined for
+   * admins / supervisors (cross-ward access) and floater nurses (no ward assigned).
+   * Used by the offline layer to block writes to beds outside the user's ward.
+   */
+  userWardId?: string | null
 }
 
 export interface OverrideState {
@@ -108,4 +131,44 @@ export interface DischargeState {
   /** Total elapsed ms for the current patient — displayed in the modal */
   elapsedTimeMs: number | null
   patientStartTime: Date | null
+}
+
+// Turnaround Time (TAT) tracking types (US-2.4)
+
+export interface TatRecord {
+  bedId: string
+  bedNumber: string
+  dischargeStartTime: Date
+  cleaningStartTime: Date | null
+  cleaningEndTime: Date | null
+  tatMs: number
+  cleaningDurationMs: number | null
+}
+
+export interface TatSummary {
+  averageTatMs: number
+  medianTatMs: number | null
+  maxTatMs: number | null
+  minTatMs: number | null
+  totalCompleted: number
+  averageCleaningMs: number | null
+}
+
+// Full-Cycle TAT types (US-3.4: Discharge → Next Admission)
+
+export interface FullCycleTatRecord {
+  bedId: string
+  bedNumber: string
+  previousDischargedAt: Date
+  admittedAt: Date
+  tatMs: number
+}
+
+export interface FullCycleTatSummary {
+  totalCycles: number
+  averageTatMs: number
+  medianTatMs: number | null
+  minTatMs: number | null
+  maxTatMs: number | null
+  p90TatMs: number | null
 }

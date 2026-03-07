@@ -1,7 +1,6 @@
 // Stage Validation Types
 // Epic 2: One-Click Stage Update System (US-2.2)
 // Purpose: Type definitions for stage validation system
-
 /**
  * Represents a transition rule from the database
  */
@@ -13,7 +12,6 @@ export interface TransitionRule {
   reason: string | null
   description: string | null
 }
-
 /**
  * Result of validating a stage transition
  */
@@ -23,7 +21,6 @@ export interface TransitionValidationResult {
   reason: string // Why transition is invalid or why override is needed
   validNextStages: string[] // All valid stage IDs from current stage
 }
-
 /**
  * Stage categorization for transition display
  */
@@ -36,4 +33,4 @@ export interface StageCategories {
 /**
  * User role type for authorization
  */
-export type UserRole = 'nurse' | 'supervisor' | 'admin'
+export type UserRole = 'nurse' | 'supervisor' | 'admin' | 'housekeeping'
