@@ -32,7 +32,7 @@ export async function getActiveAlerts(): Promise<Alert[]> {
   const criticalThresholdMs = delayThresholdMs * CRITICAL_ELAPSED_MULTIPLIER
 
   const [beds, acks] = await Promise.all([
-    getBedsWithElapsedTime(delayThresholdMs),
+    getBedsWithElapsedTime(delayThresholdMs, criticalThresholdMs),
     getActiveAcknowledgments(),
   ])
 

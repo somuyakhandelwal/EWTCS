@@ -17,7 +17,7 @@
  */
 
 import { type NextRequest, NextResponse } from 'next/server'
-import { verifyApiKey } from '@/shared/lib/api-key-auth'
+import { verifyApiKey, type ApiKeyAuthFail } from '@/shared/lib/api-key-auth'
 import { checkRateLimit } from '@/shared/lib/rate-limit'
 import { getReportMetrics, getDailyTrend } from '@/features/reports/lib/report-queries'
 
@@ -28,7 +28,9 @@ const MAX_RANGE_DAYS = 31
 
 export async function GET(request: NextRequest) {
   const auth = verifyApiKey(request)
-  if (!auth.ok) return auth.response
+  if (!auth.ok) {
+    return (auth as ApiKeyAuthFail).response
+  }
 
   // Rate limit: 60 req/min per IP
   const ip = request.headers.get('x-forwarded-for')?.split(',')[0].trim() ?? 'unknown'
