@@ -19,7 +19,6 @@ updates:
       - 'automated'
     commit-message:
       prefix: 'chore'
-      prefix-scope: 'deps'
       include: 'scope'
     rebase-strategy: 'auto'
     allow:

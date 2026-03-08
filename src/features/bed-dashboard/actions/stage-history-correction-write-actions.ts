@@ -10,6 +10,7 @@ import { requireWriteRole } from '@/shared/lib/auth'
 import { logAudit } from '@/shared/lib/audit'
 import { query } from '@/shared/lib/db'
 import { logger } from '@/shared/config/logger'
+import { detectPii, redactPii } from '@/shared/lib/pii-detector'
 import {
   insertHistoryCorrection,
   fetchBedStageLogOriginal,
@@ -54,6 +55,36 @@ export async function submitHistoryCorrection(payload: SubmitCorrectionPayload):
       payload.correctedFields.transition_time !== undefined ||
       payload.correctedFields.to_stage_id !== undefined
     if (!hasField) return { success: false, error: 'At least one field must be corrected.' }
+
+    // US-17.7: Backend PII enforcement on free-text fields
+    const textFields: Array<{ field: string; value: string | undefined }> = [
+      { field: 'correctionReason', value: payload.correctionReason },
+      { field: 'notes', value: payload.correctedFields.notes },
+    ]
+    for (const { field, value } of textFields) {
+      if (!value) continue
+      const pii = detectPii(value)
+      if (pii.hasPii) {
+        await logAudit({
+          actionType: 'PII_BLOCKED',
+          entityType: 'bed_stage_log',
+          entityId: payload.bedStageLogId,
+          performedBy: session.userId,
+          metadata: {
+            field,
+            detectedCategories: pii.summary,
+            redactedValue: redactPii(value),
+          },
+        })
+        logger.warn('PII detected and blocked in stage history correction', {
+          userId: session.userId,
+          logId: payload.bedStageLogId,
+          field,
+          categories: pii.summary,
+        })
+        return { success: false, error: `Field "${field}" contains patient information (${pii.summary}). Remove it before submitting.` }
+      }
+    }
 
     // AC 3: fetch original to build before/after diff
     const original = await fetchBedStageLogOriginal(payload.bedStageLogId)

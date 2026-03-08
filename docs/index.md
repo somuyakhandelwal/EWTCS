@@ -25,6 +25,9 @@ Implementation notes for global contextual help, searchable tips, guided tours, 
 ### [6. Help System QA Checklist](./HELP_SYSTEM_QA.md)
 Manual verification checklist mapping acceptance criteria to test steps.
 
+### [7. Admin Handbook](./ADMIN_HANDBOOK.md)
+Operational handbook for system administrators covering configuration, backup/recovery, troubleshooting, security, and command references.
+
 ---
 
 ## 🎯 Architecture Goals

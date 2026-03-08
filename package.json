@@ -19,6 +19,7 @@
     "db:create": "node scripts/run-migrations.js create",
     "init": "node scripts/init-system.js",
     "db:seed": "node scripts/seed-genuine-data.mjs",
+    "seed:config": "node scripts/seed-config.mjs",
     "db:reset": "node scripts/reset-db.js",
     "validate:env": "node scripts/validate-env-example.js",
     "validate:db": "node scripts/validate-db-connection.js",
@@ -28,7 +29,11 @@
     "validate:all": "npm run validate:env && npm run validate:db && npm run validate:migrations && npm run validate:schema && npm run build",
     "perf:seed": "node scripts/seed-realistic-performance-volume.js",
     "perf:check": "node scripts/run-performance-gate.js",
-    "perf:validate": "npm run perf:seed && npm run perf:check"
+    "perf:validate": "npm run perf:seed && npm run perf:check",
+    "backup:run": "node scripts/db-backup.mjs",
+    "backup:verify": "node scripts/db-backup-verify.mjs",
+    "backup:restore": "node scripts/db-restore.mjs",
+    "backup:setup": "node scripts/setup-backup-cron.mjs"
   },
   "dependencies": {
     "@google/generative-ai": "^0.24.1",
@@ -38,6 +43,7 @@
     "@types/bcrypt": "^6.0.0",
     "@types/uuid": "^10.0.0",
     "bcrypt": "^6.0.0",
+    "bcryptjs": "^3.0.3",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
     "dotenv": "^16.4.7",

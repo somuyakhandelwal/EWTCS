@@ -319,7 +319,7 @@ Understanding labels helps you find the right issues:
 
 ## ✅ Checklist Before Submitting PR
 
-- [ ] Code follows style guidelines
+- [ ] Code follows style guidelines 
 - [ ] No file exceeds 200 lines (except lock files: `package-lock.json`, `yarn.lock`, `pnpm-lock.yaml`)
 - [ ] Self-reviewed my code
 - [ ] Commented complex logic
