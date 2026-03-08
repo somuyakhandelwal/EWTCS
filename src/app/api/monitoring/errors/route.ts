@@ -40,11 +40,11 @@ export async function GET(req: NextRequest) {
   }
 }
 
-// PATCH /api/monitoring/errors — acknowledge an error event (admin only)
+// PATCH /api/monitoring/errors — acknowledge an error event (admin or supervisor)
 // Body: { id: string }
 export async function PATCH(req: NextRequest) {
   const session = await verifyActiveSession()
-  if (!session || session.role !== 'admin') {
+  if (!session || (session.role !== 'admin' && session.role !== 'supervisor')) {
     return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
   }
 

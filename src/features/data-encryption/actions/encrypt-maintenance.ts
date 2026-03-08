@@ -19,8 +19,8 @@
  * @returns Job result with stats
  */
 export async function bulkEncryptTable(
-  table: 'patient_admissions' | 'users' | 'bed_stage_logs' | 'audit_logs',
-  limit: number = 100
+  _table: 'patient_admissions' | 'users' | 'bed_stage_logs' | 'audit_logs',
+  _limit: number = 100
 ): Promise<{
   processed: number;
   failed: number;
@@ -51,7 +51,7 @@ export async function bulkEncryptTable(
  * Returns statistics about encrypted vs plaintext records
  */
 export async function getEncryptionStatus(
-  table: string
+  _table: string
 ): Promise<{
   total: number;
   encrypted: number;
