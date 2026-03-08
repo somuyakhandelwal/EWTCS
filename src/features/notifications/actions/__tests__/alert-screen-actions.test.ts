@@ -1,7 +1,5 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
-// ─── Mocks ────────────────────────────────────────────────────────────────────
-
 vi.mock('@/shared/lib/auth', () => ({ requireRole: vi.fn() }))
 vi.mock('@/shared/config/logger', () => ({
   logger: { info: vi.fn(), warn: vi.fn(), error: vi.fn() },
@@ -20,79 +18,15 @@ vi.mock('@/lib/server/error-store', () => ({
 import { requireRole } from '@/shared/lib/auth'
 import { getBedGridData } from '@/features/bed-dashboard/actions/bed-grid-actions'
 import { readAlertPreferences } from '@/features/notifications/lib/alert-preferences-queries'
-import { getRecentErrors, acknowledgeError } from '@/lib/server/error-store'
-import type { ErrorEvent } from '@/lib/server/error-store'
+import { getRecentErrors } from '@/lib/server/error-store'
 import { DEFAULT_ALERT_PREFERENCES } from '@/features/notifications/lib/default-alert-preferences'
+import { getAlertScreenData } from '@/features/notifications/actions/alert-screen-actions'
 import {
-  getAlertScreenData,
-  acknowledgeSystemAlert,
-  getUnacknowledgedAlertCount,
-} from '@/features/notifications/actions/alert-screen-actions'
-
-// ─── Fixtures ─────────────────────────────────────────────────────────────────
-
-const SUPERVISOR_SESSION = { userId: 'sup-1', role: 'supervisor' }
-
-const DELAY_MS = DEFAULT_ALERT_PREFERENCES.thresholds.delayMinutes * 60 * 1000 + 1000
-const ESCALATION_MS = DEFAULT_ALERT_PREFERENCES.thresholds.escalationMinutes * 60 * 1000 + 1000
-
-function makeBedGridData(override: Partial<{
-  elapsedTimeMs: number | null
-  isDispositionBottleneck: boolean
-  dispositionElapsedMs: number | null
-  isEscalated: boolean
-}> = {}) {
-  const now = new Date()
-  return {
-    success: true,
-    data: {
-      beds: [
-        {
-          id: 'bed-1',
-          bedNumber: 'ER-01',
-          currentStage: { id: 's1', name: 'Triage', displayOrder: 1, colorCode: '#fff', description: null, isActive: true, createdAt: now, updatedAt: now },
-          currentStageId: 's1',
-          elapsedTimeMs: override.elapsedTimeMs ?? 0,
-          isDelayed: (override.elapsedTimeMs ?? 0) > 0,
-          isEscalated: override.isEscalated ?? false,
-          isDispositionBottleneck: override.isDispositionBottleneck ?? false,
-          dispositionElapsedMs: override.dispositionElapsedMs ?? null,
-          dispositionDelayReason: null,
-          dispositionDelayLogId: null,
-          patientStartTime: now,
-          lastStageChange: now,
-          isOccupied: true,
-          isActive: true,
-          isTemporary: false,
-          isVirtual: false,
-          wardId: null,
-          metadata: {},
-          createdAt: now,
-          updatedAt: now,
-        },
-      ],
-      stages: [],
-      delayThresholdMs: DEFAULT_ALERT_PREFERENCES.thresholds.delayMinutes * 60 * 1000,
-      escalationThresholdMs: DEFAULT_ALERT_PREFERENCES.thresholds.escalationMinutes * 60 * 1000,
-      bottleneckCount: 0,
-      escalationCount: 0,
-    },
-    error: undefined,
-  } as unknown as Awaited<ReturnType<typeof getBedGridData>>
-}
+  SUPERVISOR_SESSION, DELAY_MS, ESCALATION_MS,
+  makeBedGridData, SYSTEM_ERROR,
+} from './alert-screen-fixtures'
 
 const EMPTY_ERRORS: Awaited<ReturnType<typeof getRecentErrors>> = []
-
-const SYSTEM_ERROR: ErrorEvent = {
-  id: 'err-1',
-  level: 'ERROR',
-  category: 'database',
-  message: 'Connection pool exhausted',
-  stack: undefined,
-  context: {},
-  acknowledged: false,
-  created_at: new Date().toISOString(),
-}
 
 // ─── Tests ────────────────────────────────────────────────────────────────────
 
@@ -237,63 +171,4 @@ describe('getAlertScreenData', () => {
   })
 })
 
-describe('acknowledgeSystemAlert', () => {
-  beforeEach(() => {
-    vi.clearAllMocks()
-    vi.mocked(requireRole).mockResolvedValue(SUPERVISOR_SESSION as never)
-  })
-
-  it('acknowledges a valid error event', async () => {
-    vi.mocked(acknowledgeError).mockResolvedValue(true)
-
-    const result = await acknowledgeSystemAlert('err-1')
-
-    expect(result.success).toBe(true)
-    expect(acknowledgeError).toHaveBeenCalledWith('err-1')
-  })
-
-  it('returns error if event not found', async () => {
-    vi.mocked(acknowledgeError).mockResolvedValue(false)
-
-    const result = await acknowledgeSystemAlert('missing-id')
-
-    expect(result.success).toBe(false)
-    expect(result.error).toContain('not found')
-  })
-
-  it('blocks unauthorized callers', async () => {
-    vi.mocked(requireRole).mockRejectedValue(new Error('Unauthorized'))
-
-    const result = await acknowledgeSystemAlert('err-1')
-
-    expect(result.success).toBe(false)
-  })
-})
-
-describe('getUnacknowledgedAlertCount', () => {
-  beforeEach(() => {
-    vi.clearAllMocks()
-    vi.mocked(requireRole).mockResolvedValue(SUPERVISOR_SESSION as never)
-    vi.mocked(readAlertPreferences).mockResolvedValue(null)
-    vi.mocked(getRecentErrors).mockResolvedValue(EMPTY_ERRORS)
-  })
-
-  it('returns 0 when no alerts', async () => {
-    vi.mocked(getBedGridData).mockResolvedValue(makeBedGridData({ elapsedTimeMs: 0 }))
-
-    const result = await getUnacknowledgedAlertCount()
-
-    expect(result.success).toBe(true)
-    expect(result.count).toBe(0)
-  })
-
-  it('counts delayed beds + system errors', async () => {
-    vi.mocked(getBedGridData).mockResolvedValue(makeBedGridData({ elapsedTimeMs: DELAY_MS }))
-    vi.mocked(getRecentErrors).mockResolvedValue([SYSTEM_ERROR])
-
-    const result = await getUnacknowledgedAlertCount()
-
-    expect(result.success).toBe(true)
-    expect(result.count).toBe(2) // 1 bed + 1 error
-  })
-})
+// acknowledgeSystemAlert and getUnacknowledgedAlertCount tests are in alert-screen-ack-count.test.ts

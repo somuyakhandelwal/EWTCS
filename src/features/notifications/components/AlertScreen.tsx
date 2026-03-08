@@ -1,23 +1,8 @@
 'use client'
-
-// US-15.4: Supervisor Alert Screen component.
-// Displays all active alerts (delayed beds, escalations, bottlenecks, system errors)
-// in one unified, sortable, acknowledgeable feed. Auto-polls every 30 seconds.
+// US-15.4: Supervisor Alert Screen — unified sortable/filterable alert feed, auto-polls every 30s.
 
 import { useState, useCallback, useEffect } from 'react'
-import {
-  AlertTriangle,
-  AlertCircle,
-  BedDouble,
-  ShieldAlert,
-  RefreshCw,
-  CheckCheck,
-  Clock,
-  ArrowUpDown,
-  Filter,
-  Wifi,
-  WifiOff,
-} from 'lucide-react'
+import { RefreshCw, CheckCheck, ArrowUpDown, Filter, Wifi, WifiOff } from 'lucide-react'
 import { Button } from '@/shared/components/ui/button'
 import {
   getAlertScreenData,
@@ -26,18 +11,12 @@ import {
 import type { AlertItem, AlertItemKind } from '@/features/notifications/types/alert-item'
 import { SEVERITY_RANK } from '@/features/notifications/types/alert-item'
 import type { AlertScreenData } from '@/features/notifications/actions/alert-screen-actions'
-
-// ─── Constants ────────────────────────────────────────────────────────────────
-
-const POLL_INTERVAL_MS = 30_000
-
-type SortKey = 'severity' | 'time'
-type FilterKind = 'all' | AlertItemKind
-
-import { SEVERITY_CONFIG, KIND_LABELS, SeverityBadge, TimeAgo } from './alert-screen-config'
+import { KIND_LABELS } from './alert-screen-config'
 import { AlertRow } from './AlertRow'
 
-// ─── Main component ───────────────────────────────────────────────────────────
+const POLL_INTERVAL_MS = 30_000
+type SortKey = 'severity' | 'time'
+type FilterKind = 'all' | AlertItemKind
 
 interface AlertScreenProps {
   initialData: AlertScreenData | null
