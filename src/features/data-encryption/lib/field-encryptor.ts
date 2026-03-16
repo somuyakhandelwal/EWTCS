@@ -123,86 +123,39 @@ export function decryptField(
   } catch (error) {
     const errorMessage = error instanceof Error ? error.message : 'Unknown error';
     throw new Error(`Field decryption failed: ${errorMessage}`);
-  }
-}
+  }}
 
-/**
- * Encrypt multiple fields in a batch
- * @param fields - Object with plaintext values
- * @param keys - Optional list of field names to encrypt (if not provided, encrypts all)
- * @returns Object with encrypted values
- */
-export function encryptFieldsBatch(
-  fields: Record<string, string>,
-  keys?: string[]
-): Record<string, EncryptedFieldValue | string> {
-  const result: Record<string, EncryptedFieldValue | string> = {};
-
-  const fieldsToEncrypt = keys || Object.keys(fields);
-
-  for (const key of fieldsToEncrypt) {
+// --- Batch encryption/decryption compacted for 200-line compliance ---
+export function encryptFieldsBatch(fields: Record<string, string>, keys?: string[]) {
+  const result: Record<string, EncryptedFieldValue | string> = {}
+  for (const key of keys || Object.keys(fields)) {
     if (key in fields) {
-      try {
-        result[key] = encryptField(fields[key]);
-      } catch (error) {
-        // If encryption fails for one field, include error info
-        result[key] = fields[key];
-      }
+      try { result[key] = encryptField(fields[key]) } catch { result[key] = fields[key] }
     }
   }
-
-  return result;
+  return result
 }
-
-/**
- * Decrypt multiple fields in a batch
- * @param fields - Object with encrypted values
- * @param keys - Optional list of field names to decrypt (if not provided, decrypts all)
- * @returns Object with decrypted values
- */
-export function decryptFieldsBatch(
-  fields: Record<string, EncryptedFieldValue | string>,
-  keys?: string[]
-): Record<string, string> {
-  const result: Record<string, string> = {};
-
-  const fieldsToDecrypt = keys || Object.keys(fields);
-
-  for (const key of fieldsToDecrypt) {
+export function decryptFieldsBatch(fields: Record<string, EncryptedFieldValue | string>, keys?: string[]) {
+  const result: Record<string, string> = {}
+  for (const key of keys || Object.keys(fields)) {
     if (key in fields) {
-      const value = fields[key];
+      const value = fields[key]
       if (typeof value === 'object' && value !== null && 'data' in value) {
-        try {
-          result[key] = decryptField(value as EncryptedFieldValue);
-        } catch (error) {
-          result[key] = ''; // Return empty on decryption failure
-        }
-      } else {
-        result[key] = String(value);
-      }
+        try { result[key] = decryptField(value as EncryptedFieldValue) } catch { result[key] = '' }
+      } else { result[key] = String(value) }
     }
   }
-
-  return result;
+  return result
 }
-
-/**
- * Check if a value appears to be encrypted
- * @param value - Value to check
- * @returns true if value looks like encrypted field
- */
-export function isEncryptedField(
-  value: unknown
-): value is EncryptedFieldValue {
-  if (typeof value !== 'object' || value === null) {
-    return false;
-  }
-
-  const field = value as Record<string, unknown>;
+/** Check if a value appears to be encrypted */
+export function isEncryptedField(value: unknown): value is EncryptedFieldValue {
+  if (typeof value !== 'object' || value === null) return false
+  const field = value as Record<string, unknown>
   return (
     typeof field.data === 'string' &&
     typeof field.tag === 'string' &&
     typeof field.iv === 'string' &&
     typeof field.kv === 'number'
-  );
+  )
 }
+

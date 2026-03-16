@@ -20,4 +20,19 @@ export default [
       "**/*.test.tsx",
     ],
   },
+  {
+    rules: {
+      // Allow intentionally-unused variables/params when prefixed with _
+      "@typescript-eslint/no-unused-vars": [
+        "warn",
+        {
+          vars: "all",
+          varsIgnorePattern: "^_",
+          args: "after-used",
+          argsIgnorePattern: "^_",
+          ignoreRestSiblings: true,
+        },
+      ],
+    },
+  },
 ];

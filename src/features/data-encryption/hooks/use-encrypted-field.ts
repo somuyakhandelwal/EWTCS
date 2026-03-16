@@ -3,7 +3,7 @@
  * React hook for handling encrypted field display and updates
  */
 
-import React, { useState, useCallback, useEffect } from 'react';
+import { useState, useCallback, useEffect } from 'react';
 import { decryptSensitiveField } from '@/features/data-encryption/actions/encrypt-actions';
 import type { EncryptedFieldValue } from '@/features/data-encryption/types/encryption';
 
