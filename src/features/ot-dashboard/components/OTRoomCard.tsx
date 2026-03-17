@@ -3,7 +3,7 @@
 // OT Room Card Component
 // EPIC 23: Operation Theatre (OT) Tracking Module (US-23.1)
 
-import { useState } from 'react'
+import { useState, useTransition } from 'react'
 import { cn } from '@/shared/lib/utils'
 import type { OTRoom } from '../types/ot'
 import { updateOTRoomStatus } from '../actions/ot-actions'
@@ -23,16 +23,30 @@ function formatElapsed(startedAt: Date | null): string {
 }
 
 export function OTRoomCard({ room, onStatusChange }: OTRoomCardProps) {
-  const [loading, setLoading] = useState(false)
+  const [optimisticStatus, setOptimisticStatus] = useState(room.status)
+  const [optimisticStartedAt, setOptimisticStartedAt] = useState(room.startedAt)
+  const [isPending, startTransition] = useTransition()
 
-  const isOngoing = room.status === 'ongoing'
+  const isOngoing = optimisticStatus === 'ongoing'
 
   async function handleToggle() {
-    setLoading(true)
     const newStatus = isOngoing ? 'available' : 'ongoing'
-    await updateOTRoomStatus({ roomId: room.id, status: newStatus })
-    setLoading(false)
-    onStatusChange?.()
+
+    // Optimistic update — UI changes immediately
+    setOptimisticStatus(newStatus)
+    setOptimisticStartedAt(newStatus === 'ongoing' ? new Date() : null)
+
+    const result = await updateOTRoomStatus({ roomId: room.id, status: newStatus })
+
+    if (!result.success) {
+      // Revert on error
+      setOptimisticStatus(room.status)
+      setOptimisticStartedAt(room.startedAt)
+    } else {
+      startTransition(() => {
+        onStatusChange?.()
+      })
+    }
   }
 
   return (
@@ -44,7 +58,6 @@ export function OTRoomCard({ room, onStatusChange }: OTRoomCardProps) {
           : 'border-emerald-500 bg-emerald-500/10'
       )}
     >
-      {/* Room Number */}
       <div className="flex items-center justify-between">
         <span className="text-lg font-bold text-foreground">{room.roomNumber}</span>
         <span
@@ -59,17 +72,15 @@ export function OTRoomCard({ room, onStatusChange }: OTRoomCardProps) {
         </span>
       </div>
 
-      {/* Elapsed time for ongoing */}
-      {isOngoing && room.startedAt && (
+      {isOngoing && optimisticStartedAt && (
         <p className="text-xs text-red-400 font-mono">
-          Duration: {formatElapsed(room.startedAt)}
+          Duration: {formatElapsed(optimisticStartedAt)}
         </p>
       )}
 
-      {/* Toggle Button */}
       <button
         onClick={handleToggle}
-        disabled={loading}
+        disabled={isPending}
         className={cn(
           'w-full rounded-lg py-1.5 text-xs font-semibold transition-colors disabled:opacity-50',
           isOngoing
@@ -77,7 +88,7 @@ export function OTRoomCard({ room, onStatusChange }: OTRoomCardProps) {
             : 'bg-red-600 hover:bg-red-700 text-white'
         )}
       >
-        {loading ? 'Updating...' : isOngoing ? 'Mark Available' : 'Mark Ongoing'}
+        {isPending ? 'Updating...' : isOngoing ? 'Mark Available' : 'Mark Ongoing'}
       </button>
     </div>
   )

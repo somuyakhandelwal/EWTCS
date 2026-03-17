@@ -9,7 +9,7 @@ import { OTRoomCard } from './OTRoomCard'
 import { getOTRooms } from '../actions/ot-actions'
 import type { OTGridData } from '../types/ot'
 
-const POLL_INTERVAL_MS = 15000 // 15 seconds like ER grid
+const POLL_INTERVAL_MS = 15000
 
 interface OTDashboardClientProps {
   initialData: OTGridData
@@ -17,7 +17,7 @@ interface OTDashboardClientProps {
 
 export function OTDashboardClient({ initialData }: OTDashboardClientProps) {
   const [data, setData] = useState<OTGridData>(initialData)
-  const [lastUpdated, setLastUpdated] = useState(new Date())
+  const [lastUpdated, setLastUpdated] = useState<Date | null>(null)
 
   const refresh = useCallback(async () => {
     const result = await getOTRooms()
@@ -27,7 +27,6 @@ export function OTDashboardClient({ initialData }: OTDashboardClientProps) {
     }
   }, [])
 
-  // Polling — same pattern as ER dashboard
   useEffect(() => {
     const interval = setInterval(refresh, POLL_INTERVAL_MS)
     return () => clearInterval(interval)
@@ -35,8 +34,6 @@ export function OTDashboardClient({ initialData }: OTDashboardClientProps) {
 
   return (
     <div className="space-y-6">
-
-      {/* Stats Bar */}
       <div className="grid grid-cols-2 gap-4 sm:grid-cols-3">
         <div className="rounded-lg border border-border bg-card p-4">
           <p className="text-xs text-muted-foreground">Total Rooms</p>
@@ -62,7 +59,6 @@ export function OTDashboardClient({ initialData }: OTDashboardClientProps) {
         </div>
       </div>
 
-      {/* OT Room Grid — 4 columns like ER */}
       <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4">
         {data.rooms.map(room => (
           <OTRoomCard
@@ -73,9 +69,10 @@ export function OTDashboardClient({ initialData }: OTDashboardClientProps) {
         ))}
       </div>
 
-      {/* Last updated */}
       <p className="text-xs text-muted-foreground text-right">
-        Last updated: {lastUpdated.toLocaleTimeString()} · Auto-refreshes every 15s
+        {lastUpdated
+          ? `Last updated: ${lastUpdated.toLocaleTimeString()} · Auto-refreshes every 15s`
+          : 'Auto-refreshes every 15s'}
       </p>
     </div>
   )
