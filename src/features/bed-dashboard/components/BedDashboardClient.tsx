@@ -172,13 +172,7 @@ export function BedDashboardClient({
           isUndoing={isUndoing}
           isOffline={isOffline}
           queuedBedIds={offlineQueue.queuedBedIds}
-          onOpenTriage={(bedId) => {
-            const bed = data.beds.find(b => b.id === bedId)
-            const triageStage = data.stages.find(s => s.name === 'Triage')
-            if (bed && triageStage) {
-              openTriageModal(bed, triageStage)
-            }
-          }}
+          onOpenTriage={(bedId) => { const bed = data.beds.find(b => b.id === bedId); const triageStage = data.stages.find(s => s.name === 'Triage'); if (bed && triageStage) { openTriageModal(bed, triageStage);}}}
         />
       </div>
       {undoError && (
@@ -186,22 +180,10 @@ export function BedDashboardClient({
       )}
 
       <BedDashboardModals
-        overrideState={overrideState}
-        isOverrideSubmitting={isOverrideSubmitting}
-        onOverrideApprove={handleOverrideApprove}
-        onOverrideCancel={closeOverrideModal}
-        confirmationState={confirmationState}
-        updatingBedId={updatingBedId}
-        onConfirmationConfirm={handleConfirmationConfirm}
-        onConfirmationCancel={closeConfirmationModal}
-        dischargeState={dischargeState}
-        isDischargeSubmitting={isDischargeSubmitting}
-        onDischargeConfirm={handleDischargeConfirm}
-        onDischargeCancel={closeDischargeModal}
-        virtualBedModalOpen={virtualBedModalOpen}
-        onVirtualBedClose={() => setVirtualBedModalOpen(false)}
-        onVirtualBedCreated={() => { setVirtualBedModalOpen(false); handleRefresh() }}
-        onVirtualBedSubmit={handleCreateVirtualBed}        triageState={triageState}
+        overrideState={overrideState} isOverrideSubmitting={isOverrideSubmitting} onOverrideApprove={handleOverrideApprove} onOverrideCancel={closeOverrideModal}
+        confirmationState={confirmationState} updatingBedId={updatingBedId} onConfirmationConfirm={handleConfirmationConfirm} onConfirmationCancel={closeConfirmationModal}
+        dischargeState={dischargeState} isDischargeSubmitting={isDischargeSubmitting} onDischargeConfirm={handleDischargeConfirm} onDischargeCancel={closeDischargeModal}
+        virtualBedModalOpen={virtualBedModalOpen} onVirtualBedClose={() => setVirtualBedModalOpen(false)} onVirtualBedCreated={() => { setVirtualBedModalOpen(false); handleRefresh() }} onVirtualBedSubmit={handleCreateVirtualBed}        triageState={triageState}
         onTriageClose={closeTriageModal}
         onTriageSubmit={handleTriageSubmit}      />
       <SyncConflictModal conflicts={syncConflicts} isOpen={syncConflicts.length > 0}
