@@ -46,10 +46,16 @@ npm run validate:schema
 npm run validate:all
 ```
 
-### Runtime Health
+### Runtime Health & System Metrics
 - Probe: `GET /api/health`
 - Healthy: HTTP `200` + `status: healthy`
 - Degraded: HTTP `503` + `status: degraded`
+
+The `/api/health` endpoint additionally returns system-level metrics (Epic 13):
+- **Infrastructure Metrics**: CPU usage (warn > 80%), Memory usage (warn > 80%), Disk usage (warn > 90%)
+- **Load Metrics**: Request rate (per minute), Active users count
+- **Database Status**: Reachability, Connection pool utilization (total, idle, waiting, max)
+These metrics are surfaced live on the Admin Dashboard (`/admin`) and automatically logged for trend analysis.
 
 ## 3) Backup and Recovery
 > Archival is not backup. Keep both.
