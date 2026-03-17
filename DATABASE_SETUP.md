@@ -782,3 +782,6 @@ If you encounter issues not covered here:
 ---
 
 **Ready to build something amazing! 🚀**
+ 
+## Triage Metadata
+Triage metadata (patient UHID, name, key symptom, category) is stored in the `metadata` JSONB column on the `beds` table to avoid breaking schema changes.

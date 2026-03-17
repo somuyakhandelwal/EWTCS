@@ -187,4 +187,5 @@ Release checklist:
 - `src/middleware.ts`
 - `src/app/api/health/route.ts`
 - `src/app/api/cron/archival/route.ts`
-- `SECURITY.md`
+- `SECURITY.md` 
+Triage feature metadata is also included in bed management ops.
