@@ -10,6 +10,7 @@ import { CleaningActions, isCleaningStage } from './CleaningActions'
 import { BedBottleneckInfo } from './BedBottleneckInfo'
 import { BedCardVisualBadges } from './BedCardVisualBadges'
 import { BedCardUndoSection } from './BedCardUndoSection'
+import { BedTriageInfo } from './BedTriageInfo'
 import { cn } from '@/shared/lib/utils'
 import { highlightMatch } from '../lib/highlight-match'
 import { StageIcon } from './StageIcon'
@@ -108,6 +109,7 @@ export const BedCard = memo(function BedCard({
         isBottleneck={isBottleneck}
         acknowledged={acknowledged}
       />
+      
       <CardContent className="p-4 space-y-3">
         <div className="flex items-center justify-between">
           <h3 className={cn('text-2xl font-bold', colorClasses.text)}>
@@ -193,6 +195,7 @@ export const BedCard = memo(function BedCard({
             <p className="text-sm font-medium text-muted-foreground">Available</p>
           </div>
         )}
+        <BedTriageInfo triageInfo={bed.metadata?.triageInfo} />
       </CardContent>
     </Card>
   )

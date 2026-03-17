@@ -6,7 +6,9 @@ import { SupervisorOverrideModal } from './SupervisorOverrideModal'
 import { ConfirmationModal } from './ConfirmationModal'
 import { DischargeModal } from './DischargeModal'
 import { AddVirtualBedModal } from './AddVirtualBedModal'
+import { TriageModal } from './TriageModal'
 import type { OverrideState, ConfirmationState, DischargeState } from '../types/bed'
+import type { TriageState } from '../hooks/useBedStageUpdate'
 
 interface BedDashboardModalsProps {
   // SupervisorOverrideModal
@@ -29,6 +31,15 @@ interface BedDashboardModalsProps {
   onVirtualBedClose: () => void
   onVirtualBedCreated: () => void
   onVirtualBedSubmit: (fd: FormData) => Promise<{ success: boolean; error?: string }>
+  // US-20.2: Triage Modal
+  triageState?: TriageState | null
+  onTriageClose?: () => void
+  onTriageSubmit?: (bedId: string, triageData: {
+    patientUhid: string;
+    patientName: string;
+    keySymptom: string;
+    triageCategory: 'Resuscitation' | 'Emergent' | 'Urgent' | 'Less Urgent' | 'Non-Urgent';
+  }) => Promise<void>
 }
 
 export function BedDashboardModals({
@@ -48,9 +59,20 @@ export function BedDashboardModals({
   onVirtualBedClose,
   onVirtualBedCreated,
   onVirtualBedSubmit,
+  triageState,
+  onTriageClose,
+  onTriageSubmit,
 }: BedDashboardModalsProps) {
   return (
     <>
+      {triageState && onTriageClose && onTriageSubmit && (
+        <TriageModal
+          bed={triageState.bed}
+          isOpen={Boolean(triageState)}
+          onClose={onTriageClose}
+          onSubmit={onTriageSubmit}
+        />
+      )}
       <SupervisorOverrideModal
         isOpen={Boolean(overrideState)}
         bedNumber={overrideState?.bedNumber ?? null}

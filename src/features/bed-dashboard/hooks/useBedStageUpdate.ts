@@ -15,6 +15,11 @@ const SUCCESS_FEEDBACK_MS = 3000
 
 
 
+export interface TriageState {
+  bed: BedWithElapsedTime
+  stage: Stage // the stage they are moving to, or already in
+}
+
 interface UseBedStageUpdateReturn {
   data: BedGridData
   updatingBedId: string | null
@@ -38,6 +43,16 @@ interface UseBedStageUpdateReturn {
   isDischargeSubmitting: boolean
   handleDischargeConfirm: () => Promise<void>
   closeDischargeModal: () => void
+  // US-20.2: Triage workflow
+  triageState: TriageState | null
+  openTriageModal: (bed: BedWithElapsedTime, stage: Stage) => void
+  closeTriageModal: () => void
+  handleTriageSubmit: (bedId: string, triageData: {
+    patientUhid: string;
+    patientName: string;
+    keySymptom: string;
+    triageCategory: 'Resuscitation' | 'Emergent' | 'Urgent' | 'Less Urgent' | 'Non-Urgent';
+  }) => Promise<void>
 }
 
 export function useBedStageUpdate(initialData: BedGridData): UseBedStageUpdateReturn {
@@ -47,8 +62,8 @@ export function useBedStageUpdate(initialData: BedGridData): UseBedStageUpdateRe
   const [updatingStageId, setUpdatingStageId] = useState<string | null>(null)
   const [overrideState, setOverrideState] = useState<OverrideState | null>(null)
   const [confirmationState, setConfirmationState] = useState<ConfirmationState | null>(null)
-  // US-2.3
   const [dischargeState, setDischargeState] = useState<DischargeState | null>(null)
+  const [triageState, setTriageState] = useState<TriageState | null>(null)
 
   const { errorByBedId, setTemporaryError, clearError } = useErrorTimers()
   const { lastUpdatedBedId, lastUpdatedStageId, showSuccessFeedback } =
@@ -122,6 +137,15 @@ export function useBedStageUpdate(initialData: BedGridData): UseBedStageUpdateRe
     setDischargeState(null)
   }, [])
 
+  // US-20.2: Triage workflow
+  const openTriageModal = useCallback((bed: BedWithElapsedTime, stage: Stage) => {
+    setTriageState({ bed, stage })
+  }, [])
+
+  const closeTriageModal = useCallback(() => {
+    setTriageState(null)
+  }, [])
+
   const { isDischargeSubmitting, handleDischargeConfirm } = useDischargeConfirm({
     dischargeState,
     data,
@@ -132,7 +156,7 @@ export function useBedStageUpdate(initialData: BedGridData): UseBedStageUpdateRe
     handleRefresh,
   })
 
-  const { isOverrideSubmitting, handleStageSelect, handleOverrideApprove, handleConfirmationConfirm } = useStageUpdateActions({
+  const { isOverrideSubmitting, handleStageSelect, handleOverrideApprove, handleConfirmationConfirm, performStageUpdate } = useStageUpdateActions({
     data,
     stageById,
     updatingBedId,
@@ -151,7 +175,41 @@ export function useBedStageUpdate(initialData: BedGridData): UseBedStageUpdateRe
     confirmCriticalStages: settings.confirmCriticalStages,
     // US-2.3
     openDischargeModal,
+    // US-20.2
+    openTriageModal,
   })
+
+  // When Triage form submits
+  const handleTriageSubmit = useCallback(async (bedId: string, triageData: {
+    patientUhid: string;
+    patientName: string;
+    keySymptom: string;
+    triageCategory: 'Resuscitation' | 'Emergent' | 'Urgent' | 'Less Urgent' | 'Non-Urgent';
+  }) => {
+    if (!triageState) return
+    const { updateBedTriageInfo } = await import('../actions/triage-actions') // Lazy load
+    const result = await updateBedTriageInfo(bedId, triageData)
+    if (result.success) {
+      // Optimistically update the local triage data
+      setData(prev => ({
+        ...prev,
+        beds: prev.beds.map(b => 
+          b.id === bedId 
+            ? { ...b, metadata: { ...b.metadata, triageInfo: triageData } } 
+            : b
+        )
+      }))
+
+      if (triageState.stage.id !== triageState.bed.currentStageId) {
+        // Now perform the real stage update (bypassing the interceptor)
+        await performStageUpdate(bedId, triageState.stage.id)
+      } else {
+         router.refresh()
+      }
+    } else {
+      setTemporaryError(bedId, result.error || 'Failed to save triage info')
+    }
+  }, [triageState, performStageUpdate, router, setTemporaryError])
 
   return {
     data,
@@ -176,5 +234,11 @@ export function useBedStageUpdate(initialData: BedGridData): UseBedStageUpdateRe
     isDischargeSubmitting,
     handleDischargeConfirm,
     closeDischargeModal,
+    // US-20.2
+    triageState,
+    openTriageModal,
+    closeTriageModal,
+    handleTriageSubmit,
   }
 }
+

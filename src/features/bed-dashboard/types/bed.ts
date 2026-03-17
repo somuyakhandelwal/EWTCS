@@ -50,7 +50,14 @@ export interface Bed {
   isActive: boolean
   isTemporary: boolean  // US-6.5: present on all bed rows — false for permanent beds
   isVirtual: boolean    // US-6.6: true for nurse-created hallway/stretcher patients
-  metadata: Record<string, unknown>
+  metadata: {
+    triageInfo?: {
+      patientUhid?: string
+      patientName?: string
+      keySymptom?: string
+      triageCategory?: 'Resuscitation' | 'Emergent' | 'Urgent' | 'Less Urgent' | 'Non-Urgent'
+    }
+  } & Record<string, unknown>
   createdAt: Date
   updatedAt: Date
 }
