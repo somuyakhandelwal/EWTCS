@@ -13,6 +13,7 @@ import { isCriticalStage } from '../lib/utils'
 
 /** Stage name that triggers the dedicated discharge modal (US-2.3) */
 const DISCHARGE_STAGE_NAME = 'Discharge Process'
+const TRIAGE_STAGE_NAME = 'Triage'
 
 interface StageUpdateActionsDeps {
   data: BedGridData
@@ -33,6 +34,8 @@ interface StageUpdateActionsDeps {
   confirmCriticalStages: boolean
   // US-2.3: Discharge intercept
   openDischargeModal: (bed: BedWithElapsedTime) => void
+  // US-20.2: Triage intercept
+  openTriageModal: (bed: BedWithElapsedTime, stage: Stage) => void
 }
 
 interface StageUpdateActionsResult {
@@ -40,27 +43,31 @@ interface StageUpdateActionsResult {
   handleStageSelect: (bedId: string, stageId: string) => Promise<void>
   handleOverrideApprove: (reason: string) => Promise<void>
   handleConfirmationConfirm: () => Promise<void>
+  performStageUpdate: (bedId: string, stageId: string, options?: { supervisorOverride?: boolean; overrideReason?: string }) => Promise<boolean>
 }
 
-export function useStageUpdateActions({
-  data,
-  stageById,
-  updatingBedId,
-  setUpdatingBedId,
-  setUpdatingStageId,
-  setData,
-  setTemporaryError,
-  clearError,
-  showSuccessFeedback,
-  openOverrideModal,
-  overrideState,
-  closeOverrideModal,
-  openConfirmationModal,
-  confirmationState,
-  closeConfirmationModal,
-  confirmCriticalStages,
-  openDischargeModal,
-}: StageUpdateActionsDeps): StageUpdateActionsResult {
+export function useStageUpdateActions(deps: StageUpdateActionsDeps): StageUpdateActionsResult {
+  const {
+    data,
+    stageById,
+    updatingBedId,
+    setUpdatingBedId,
+    setUpdatingStageId,
+    setData,
+    setTemporaryError,
+    clearError,
+    showSuccessFeedback,
+    openOverrideModal,
+    overrideState,
+    closeOverrideModal,
+    openConfirmationModal,
+    confirmationState,
+    closeConfirmationModal,
+    confirmCriticalStages,
+    openDischargeModal,
+    openTriageModal
+  } = deps
+
   const router = useRouter()
   const [isOverrideSubmitting, setIsOverrideSubmitting] = useState(false)
   const updateTimeoutTimer = useRef<NodeJS.Timeout | null>(null)
@@ -113,6 +120,12 @@ export function useStageUpdateActions({
 
       if (!stage || !bed) return
 
+      // US-20.2: Intercept "Triage" stage update to collect patient details
+      if (stage.name === TRIAGE_STAGE_NAME) {
+        openTriageModal(bed, stage)
+        return
+      }
+
       // US-2.3: Intercept "Discharge Process" on an occupied bed → show discharge modal
       // This takes priority over the generic critical-stage confirmation.
       if (
@@ -131,7 +144,7 @@ export function useStageUpdateActions({
 
       await performStageUpdate(bedId, stageId)
     },
-    [performStageUpdate, stageById, data.beds, openConfirmationModal, confirmCriticalStages, openDischargeModal]
+    [performStageUpdate, stageById, data.beds, openTriageModal, openDischargeModal, openConfirmationModal, confirmCriticalStages]
   )
 
   const handleConfirmationConfirm = useCallback(async () => {
@@ -163,5 +176,5 @@ export function useStageUpdateActions({
     [overrideState, performStageUpdate, closeOverrideModal]
   )
 
-  return { isOverrideSubmitting, handleStageSelect, handleOverrideApprove, handleConfirmationConfirm }
+  return { isOverrideSubmitting, handleStageSelect, handleOverrideApprove, handleConfirmationConfirm, performStageUpdate }
 }

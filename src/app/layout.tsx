@@ -35,6 +35,7 @@ import { GlobalThemeToggle } from "@/shared/components/GlobalThemeToggle"
 import { RouteProgressBar } from "@/shared/components/RouteProgressBar"
 import { PageTransition } from "@/shared/components/PageTransition"
 import { GlobalHelp } from "@/features/help/components/GlobalHelp"
+import { ClientTracker } from "@/shared/components/ClientTracker"
 
 export default function RootLayout({
   children,
@@ -53,6 +54,7 @@ export default function RootLayout({
           disableTransitionOnChange
         >
           <Suspense fallback={null}>
+            <ClientTracker />
             <RouteProgressBar />
           </Suspense>
           <DatabaseStatusBanner />

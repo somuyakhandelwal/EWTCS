@@ -10,10 +10,14 @@ import { useErrorTimers, useSuccessFeedback } from './useBedUpdateState'
 import { useStageUpdateActions } from './useStageUpdateActions'
 import { useDashboardSettings } from './useDashboardSettings'
 import { useDischargeConfirm } from './useDischargeConfirm'
+import { useTriageConfirm } from './useTriageConfirm'
+
+export interface TriageState {
+  bed: BedWithElapsedTime
+  stage: Stage // the stage they are moving to, or already in
+}
 
 const SUCCESS_FEEDBACK_MS = 3000
-
-
 
 interface UseBedStageUpdateReturn {
   data: BedGridData
@@ -33,11 +37,21 @@ interface UseBedStageUpdateReturn {
   closeConfirmationModal: () => void
   settings: { confirmCriticalStages: boolean }
   toggleConfirmation: () => void
-  // US-2.3: Discharge workflow
+  
   dischargeState: DischargeState | null
   isDischargeSubmitting: boolean
   handleDischargeConfirm: () => Promise<void>
   closeDischargeModal: () => void
+
+  triageState: TriageState | null
+  openTriageModal: (bed: BedWithElapsedTime, stage: Stage) => void
+  closeTriageModal: () => void
+  handleTriageSubmit: (bedId: string, triageData: {
+    patientUhid: string;
+    patientName: string;
+    keySymptom: string;
+    triageCategory: 'Resuscitation' | 'Emergent' | 'Urgent' | 'Less Urgent' | 'Non-Urgent';
+  }) => Promise<void>
 }
 
 export function useBedStageUpdate(initialData: BedGridData): UseBedStageUpdateReturn {
@@ -47,21 +61,14 @@ export function useBedStageUpdate(initialData: BedGridData): UseBedStageUpdateRe
   const [updatingStageId, setUpdatingStageId] = useState<string | null>(null)
   const [overrideState, setOverrideState] = useState<OverrideState | null>(null)
   const [confirmationState, setConfirmationState] = useState<ConfirmationState | null>(null)
-  // US-2.3
   const [dischargeState, setDischargeState] = useState<DischargeState | null>(null)
 
   const { errorByBedId, setTemporaryError, clearError } = useErrorTimers()
-  const { lastUpdatedBedId, lastUpdatedStageId, showSuccessFeedback } =
-    useSuccessFeedback(SUCCESS_FEEDBACK_MS)
+  const { lastUpdatedBedId, lastUpdatedStageId, showSuccessFeedback } = useSuccessFeedback(SUCCESS_FEEDBACK_MS)
   const { settings, toggleConfirmation } = useDashboardSettings()
 
-  // Sync displayed data when realtimeData changes (polling or manual realtimeRefresh after undo).
-  // Guard: skip while an update is in-flight to preserve optimistic state.
-  // This fix ensures stage colours and transition options reflect the true server state.
   useEffect(() => {
-    if (!updatingBedId) {
-      setData(initialData)
-    }
+    if (!updatingBedId) setData(initialData)
   }, [initialData, updatingBedId])
 
   const stageById = useMemo(() => {
@@ -72,109 +79,51 @@ export function useBedStageUpdate(initialData: BedGridData): UseBedStageUpdateRe
 
   const handleRefresh = useCallback(async () => router.refresh(), [router])
 
-  const openOverrideModal = useCallback(
-    (bed: BedWithElapsedTime, stage: Stage, reason: string | null) => {
-      setOverrideState({
-        bedId: bed.id,
-        stageId: stage.id,
-        bedNumber: bed.bedNumber,
-        fromStageName: bed.currentStage?.name ?? 'Empty',
-        toStage: stage,
-        reason,
-      })
-    },
-    []
-  )
-
-  const closeOverrideModal = useCallback(() => {
-    setOverrideState(null)
+  const openOverrideModal = useCallback((bed: BedWithElapsedTime, stage: Stage, reason: string | null) => {
+    setOverrideState({ bedId: bed.id, stageId: stage.id, bedNumber: bed.bedNumber, fromStageName: bed.currentStage?.name ?? 'Empty', toStage: stage, reason })
   }, [])
 
-  const openConfirmationModal = useCallback(
-    (bed: BedWithElapsedTime, stage: Stage) => {
-      setConfirmationState({
-        bedId: bed.id,
-        stageId: stage.id,
-        bedNumber: bed.bedNumber,
-        fromStageName: bed.currentStage?.name ?? 'Empty',
-        toStage: stage,
-      })
-    },
-    []
-  )
+  const closeOverrideModal = useCallback(() => setOverrideState(null), [])
 
-  const closeConfirmationModal = useCallback(() => {
-    setConfirmationState(null)
+  const openConfirmationModal = useCallback((bed: BedWithElapsedTime, stage: Stage) => {
+    setConfirmationState({ bedId: bed.id, stageId: stage.id, bedNumber: bed.bedNumber, fromStageName: bed.currentStage?.name ?? 'Empty', toStage: stage })
   }, [])
 
-  // US-2.3: Discharge modal open/close
+  const closeConfirmationModal = useCallback(() => setConfirmationState(null), [])
+
   const openDischargeModal = useCallback((bed: BedWithElapsedTime) => {
-    setDischargeState({
-      bedId: bed.id,
-      bedNumber: bed.bedNumber,
-      fromStageName: bed.currentStage?.name ?? null,
-      elapsedTimeMs: bed.elapsedTimeMs,
-      patientStartTime: bed.patientStartTime,
-    })
+    setDischargeState({ bedId: bed.id, bedNumber: bed.bedNumber, fromStageName: bed.currentStage?.name ?? null, elapsedTimeMs: bed.elapsedTimeMs, patientStartTime: bed.patientStartTime })
   }, [])
 
-  const closeDischargeModal = useCallback(() => {
-    setDischargeState(null)
-  }, [])
+  const closeDischargeModal = useCallback(() => setDischargeState(null), [])
 
   const { isDischargeSubmitting, handleDischargeConfirm } = useDischargeConfirm({
-    dischargeState,
-    data,
-    setData,
-    closeDischargeModal,
-    setTemporaryError,
-    showSuccessFeedback,
-    handleRefresh,
+    dischargeState, data, setData, closeDischargeModal, setTemporaryError, showSuccessFeedback, handleRefresh
   })
 
-  const { isOverrideSubmitting, handleStageSelect, handleOverrideApprove, handleConfirmationConfirm } = useStageUpdateActions({
-    data,
-    stageById,
-    updatingBedId,
-    setUpdatingBedId,
-    setUpdatingStageId,
-    setData,
-    setTemporaryError,
-    clearError,
-    showSuccessFeedback,
-    openOverrideModal,
-    overrideState,
-    closeOverrideModal,
-    openConfirmationModal,
-    confirmationState,
-    closeConfirmationModal,
-    confirmCriticalStages: settings.confirmCriticalStages,
-    // US-2.3
-    openDischargeModal,
+  // US-20.2: Triage workflow
+  const { triageState, openTriageModal, closeTriageModal, handleTriageSubmit: baseHandleTriageSubmit } = useTriageConfirm({
+    setTemporaryError, setData
   })
+
+  const {
+    isOverrideSubmitting, handleStageSelect, handleOverrideApprove, handleConfirmationConfirm, performStageUpdate
+  } = useStageUpdateActions({
+    data, stageById, updatingBedId, setUpdatingBedId, setUpdatingStageId, setData, setTemporaryError,
+    clearError, showSuccessFeedback, openOverrideModal, overrideState, closeOverrideModal,
+    openConfirmationModal, confirmationState, closeConfirmationModal, confirmCriticalStages: settings.confirmCriticalStages,
+    openDischargeModal, openTriageModal
+  })
+  
+  const handleTriageSubmit = useCallback((bedId: string, triageData: { patientUhid: string; patientName: string; keySymptom: string; triageCategory: 'Resuscitation' | 'Emergent' | 'Urgent' | 'Less Urgent' | 'Non-Urgent' }) => {
+    return baseHandleTriageSubmit(bedId, triageData, performStageUpdate)
+  }, [baseHandleTriageSubmit, performStageUpdate])
 
   return {
-    data,
-    updatingBedId,
-    updatingStageId,
-    lastUpdatedBedId,
-    lastUpdatedStageId,
-    errorByBedId,
-    isOverrideSubmitting,
-    overrideState,
-    handleRefresh,
-    handleStageSelect,
-    handleOverrideApprove,
-    closeOverrideModal,
-    confirmationState,
-    handleConfirmationConfirm,
-    closeConfirmationModal,
-    settings,
-    toggleConfirmation,
-    // US-2.3
-    dischargeState,
-    isDischargeSubmitting,
-    handleDischargeConfirm,
-    closeDischargeModal,
+    data, updatingBedId, updatingStageId, lastUpdatedBedId, lastUpdatedStageId, errorByBedId,
+    isOverrideSubmitting, overrideState, handleRefresh, handleStageSelect, handleOverrideApprove,
+    closeOverrideModal, confirmationState, handleConfirmationConfirm, closeConfirmationModal, settings, toggleConfirmation,
+    dischargeState, isDischargeSubmitting, handleDischargeConfirm, closeDischargeModal,
+    triageState, openTriageModal, closeTriageModal, handleTriageSubmit,
   }
 }

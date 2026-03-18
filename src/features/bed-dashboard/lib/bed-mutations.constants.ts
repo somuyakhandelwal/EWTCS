@@ -44,6 +44,10 @@ export const UPDATE_BED_STAGE_SQL = `
         ELSE patient_start_time
       END,
       is_occupied = $3,
+      metadata = CASE 
+        WHEN $2 THEN metadata - 'triageInfo'
+        ELSE metadata
+      END,
       updated_at = NOW()
   WHERE id = $4
   RETURNING patient_start_time as "patientStartTime", is_occupied as "isOccupied", last_stage_change as "lastStageChange"

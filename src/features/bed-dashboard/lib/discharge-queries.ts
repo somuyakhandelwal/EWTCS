@@ -167,6 +167,7 @@ export async function archiveAndResetBed(
          is_occupied        = false,
          patient_start_time = NULL,
          last_stage_change  = NOW(),
+         metadata           = metadata - 'triageInfo',
          updated_at         = NOW()
      WHERE id = $2`,
     [cleaningStageId, bedId]
