@@ -4,7 +4,7 @@
 
 This PR implements US-21.1 by extending triage intake and bed display with required patient demographics for HIS integration.
 
-The work also includes migration hardening and runtime stability improvements observed during validation.
+It also includes runtime chunk-load stabilization improvements identified during validation.
 
 ## Problem Statement
 
@@ -22,37 +22,40 @@ And the dashboard needed to display these details consistently while preventing 
 
 ### 1. Triage Intake and Types
 
-- Added `patientIpdId`, `patientAge`, and `patientGender` to triage payload contracts.
+- Added patientIpdId, patientAge, and patientGender to triage payload contracts.
 - Updated modal form inputs, prefill/reset logic, and client-side guards.
 
 Files:
 
-- `src/features/bed-dashboard/components/TriageModal.tsx`
-- `src/features/bed-dashboard/components/BedDashboardModals.tsx`
-- `src/features/bed-dashboard/hooks/useTriageConfirm.ts`
-- `src/features/bed-dashboard/hooks/useBedStageUpdate.ts`
-- `src/features/bed-dashboard/types/bed.ts`
+- src/features/bed-dashboard/components/TriageModal.tsx
+- src/features/bed-dashboard/components/TriageModalFormFields.tsx
+- src/features/bed-dashboard/components/triage-modal.types.ts
+- src/features/bed-dashboard/components/BedDashboardModals.tsx
+- src/features/bed-dashboard/hooks/useTriageConfirm.ts
+- src/features/bed-dashboard/hooks/useBedStageUpdate.ts
+- src/features/bed-dashboard/types/bed.ts
 
 ### 2. Server Persistence and Validation
 
 - Added normalization and validation for UHID, Name, Age, and optional IPD.
 - Persisted active triage demographics into centralized bed columns.
-- Kept `metadata.triageInfo` synchronized for compatibility.
+- Kept metadata.triageInfo synchronized for compatibility.
 
 File:
 
-- `src/features/bed-dashboard/actions/triage-actions.ts`
+- src/features/bed-dashboard/actions/triage-actions.ts
 
 ### 3. Read Path and UI Display
 
-- Synthesized `metadata.triageInfo` from centralized columns in bed query paths.
+- Synthesized metadata.triageInfo from centralized columns in bed query paths.
 - Updated patient details rendering to include UHID, optional IPD, Age, and Gender.
 
 Files:
 
-- `src/features/bed-dashboard/lib/bed-queries.ts`
-- `src/features/bed-dashboard/lib/bed-bottleneck-queries.ts`
-- `src/features/bed-dashboard/components/BedTriageInfo.tsx`
+- src/features/bed-dashboard/lib/bed-read-queries.ts
+- src/features/bed-dashboard/lib/bed-queries.ts
+- src/features/bed-dashboard/lib/bed-bottleneck-queries.ts
+- src/features/bed-dashboard/components/BedTriageInfo.tsx
 
 ### 4. Reset and Cleanup Safety
 
@@ -61,32 +64,30 @@ Files:
 
 Files:
 
-- `src/features/bed-dashboard/lib/bed-mutations.constants.ts`
-- `src/features/bed-dashboard/lib/discharge-queries.ts`
+- src/features/bed-dashboard/lib/bed-mutations.constants.ts
+- src/features/bed-dashboard/lib/discharge-queries.ts
 
-### 5. Database Migration and Compatibility
+### 5. Database Migration
 
-- Added migration `046_add_patient_demographics_to_beds.sql` for new columns and constraints.
-- Hardened migration for compatibility on mixed local schema states.
-- Made legacy migration `1773770454739_add-triage-columns-to-beds.js` idempotent.
+- Added migration 046_add_patient_demographics_to_beds.sql for new demographics columns and constraints.
+- Preserved existing historical migrations unchanged to comply with pre-merge migration policy.
 
 Files:
 
-- `migrations/046_add_patient_demographics_to_beds.sql`
-- `migrations/1773770454739_add-triage-columns-to-beds.js`
+- migrations/046_add_patient_demographics_to_beds.sql
 
 ### 6. Runtime Chunk Stability
 
 - Reduced root layout chunk pressure by code-splitting non-critical client modules.
 - Replaced framer-motion route wrapper in root transition with lightweight CSS animation.
-- Cleans `.next` in dev script to avoid stale chunk mismatches.
+- Cleans .next in dev script to avoid stale chunk mismatches.
 
 Files:
 
-- `src/app/layout.tsx`
-- `src/shared/components/PageTransition.tsx`
-- `src/app/globals.css`
-- `package.json`
+- src/app/layout.tsx
+- src/shared/components/PageTransition.tsx
+- src/app/globals.css
+- package.json
 
 ## Acceptance Criteria Mapping
 
@@ -98,9 +99,9 @@ Files:
 
 Executed and passing:
 
-- `npm run validate:all`
-- `npx vitest run`
-- `npm run db:status` (0 pending)
+- npm run validate:all
+- npx vitest run
+- npm run db:status (0 pending)
 
 Observed summary:
 
@@ -111,15 +112,15 @@ Observed summary:
 
 ## Risk and Mitigation
 
-- Risk: mixed migration history in local environments.
-  - Mitigation: migration scripts made idempotent for both fresh and partially migrated DBs.
 - Risk: stale client chunk references in local dev.
-  - Mitigation: dev startup clears `.next` and root layout bundle pressure reduced.
+  - Mitigation: dev startup clears .next and root layout bundle pressure reduced.
+- Risk: migration policy checks on existing files.
+  - Mitigation: only a new forward migration is introduced; historical migrations remain immutable.
 
 ## Rollback Notes
 
 - Code rollback: revert this PR.
-- DB rollback: for local/manual rollback, follow comments in `046_add_patient_demographics_to_beds.sql`.
+- DB rollback: for local/manual rollback, follow comments in migrations/046_add_patient_demographics_to_beds.sql.
 
 ## Linked Issue
 

@@ -2,13 +2,9 @@
 -- Purpose: Centralize active patient identity fields for HIS linkage on intake
 
 ALTER TABLE beds
-ADD COLUMN IF NOT EXISTS patient_uhid VARCHAR(100),
 ADD COLUMN IF NOT EXISTS patient_ipd_id VARCHAR(100),
-ADD COLUMN IF NOT EXISTS patient_name VARCHAR(255),
 ADD COLUMN IF NOT EXISTS patient_age INTEGER,
-ADD COLUMN IF NOT EXISTS patient_gender VARCHAR(20),
-ADD COLUMN IF NOT EXISTS key_symptom TEXT,
-ADD COLUMN IF NOT EXISTS triage_category VARCHAR(50);
+ADD COLUMN IF NOT EXISTS patient_gender VARCHAR(20);
 
 DO $$
 BEGIN
@@ -36,13 +32,9 @@ BEGIN
   END IF;
 END $$;
 
-COMMENT ON COLUMN beds.patient_uhid IS 'Hospital UHID entered at triage';
 COMMENT ON COLUMN beds.patient_ipd_id IS 'Optional IPD identifier; may be null before admission is finalized';
-COMMENT ON COLUMN beds.patient_name IS 'Patient name entered at triage';
 COMMENT ON COLUMN beds.patient_age IS 'Patient age in years';
 COMMENT ON COLUMN beds.patient_gender IS 'Patient gender enum: Male/Female/Other/Unknown';
-COMMENT ON COLUMN beds.key_symptom IS 'Primary complaint captured during triage';
-COMMENT ON COLUMN beds.triage_category IS 'Triage priority category (Level 1-5)';
 
 -- Down migration (manual rollback guidance)
 -- ALTER TABLE beds DROP CONSTRAINT IF EXISTS chk_beds_patient_age_range;
