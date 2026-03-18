@@ -106,6 +106,13 @@ export async function middleware(request: NextRequest) {
         }
     }
 
+    if (pathname.startsWith('/triage')) {
+        const triageRoles = ['nurse', 'housekeeping', 'supervisor', 'admin']
+        if (!session || !triageRoles.includes(session.role as string)) {
+            return NextResponse.redirect(new URL('/login', request.url))
+        }
+    }
+
     // Analytics: supervisor, admin, and auditor
     if (pathname.startsWith('/analytics')) {
         if (!session || (session.role !== 'supervisor' && session.role !== 'admin' && session.role !== 'auditor')) {

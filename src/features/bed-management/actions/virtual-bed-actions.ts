@@ -22,6 +22,7 @@ import type { ActionResult } from '../types/action-result'
 /** Revalidate all pages that render bed data */
 function revalidateBedPages() {
     revalidatePath('/dashboard')
+    revalidatePath('/triage')
     revalidatePath('/supervisor')
     revalidatePath('/admin/beds')
 }

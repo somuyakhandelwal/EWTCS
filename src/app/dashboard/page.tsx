@@ -4,6 +4,7 @@ import { BedGridSkeleton } from "@/features/bed-dashboard/components/BedGridSkel
 import { LogoutButton } from "@/features/auth/components/LogoutButton"
 import { KioskBanner } from "@/features/auth/components/KioskBanner"
 import { FeedbackForm } from "@/features/adoption/components/FeedbackForm"
+import { NurseAreaSidebar } from "@/features/bed-dashboard/components/NurseAreaSidebar"
 import { redirect } from "next/navigation"
 import { Suspense } from "react"
 
@@ -34,9 +35,15 @@ export default async function DashboardPage() {
                 </div>
 
                 {/* Bed Grid - Streamed */}
-                <Suspense fallback={<BedGridSkeleton />}>
-                    <BedDashboardContainer role={session.role} />
-                </Suspense>
+                <div className="flex flex-col gap-6 lg:flex-row lg:items-start">
+                    <NurseAreaSidebar activeArea="dashboard" />
+
+                    <div className="min-w-0 flex-1">
+                        <Suspense fallback={<BedGridSkeleton />}>
+                            <BedDashboardContainer role={session.role} areaView="emergency" />
+                        </Suspense>
+                    </div>
+                </div>
 
                 {/* Feedback — hidden on kiosk sessions */}
                 {!session.isKiosk && (

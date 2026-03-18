@@ -2,13 +2,15 @@ import { getBedGridData } from "@/features/bed-dashboard/actions/bed-grid-action
 import { createVirtualBed } from "@/features/bed-management/actions/virtual-bed-actions"
 import { BedDashboardClient } from "./BedDashboardClient"
 import { AlertTriangle } from "lucide-react"
+import type { BedAreaView } from "@/features/bed-dashboard/actions/bed-grid-actions"
 
 interface Props {
     role: string
+    areaView?: BedAreaView
 }
 
-export async function BedDashboardContainer({ role }: Props) {
-    const bedGridResult = await getBedGridData()
+export async function BedDashboardContainer({ role, areaView = 'all' }: Props) {
+    const bedGridResult = await getBedGridData(areaView)
 
     if (!bedGridResult.success || !bedGridResult.data) {
         return (

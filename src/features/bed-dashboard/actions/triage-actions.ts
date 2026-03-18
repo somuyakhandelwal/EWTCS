@@ -86,6 +86,7 @@ export async function updateBedTriageInfo(
     }
 
     revalidatePath('/dashboard')
+    revalidatePath('/triage')
     revalidatePath('/supervisor')
     revalidatePath('/admin')
     return { success: true }

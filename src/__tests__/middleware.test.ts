@@ -94,6 +94,52 @@ describe('middleware analytics role access', () => {
   })
 })
 
+describe('middleware triage route access', () => {
+  beforeEach(() => {
+    vi.clearAllMocks()
+    vi.stubEnv('NODE_ENV', 'test')
+    delete process.env.FORCE_HTTPS
+
+    redirectSpy.mockImplementation((url: URL) => ({
+      type: 'redirect',
+      url: url.toString(),
+      cookies: {
+        delete: vi.fn(),
+      },
+    }))
+
+    nextSpy.mockImplementation(() => ({ type: 'next' }))
+
+    jwtVerifyMock.mockResolvedValue({
+      payload: {
+        role: 'nurse',
+        userId: 'nurse-1',
+        lastActivity: Date.now(),
+      },
+    })
+  })
+
+  it('allows nurse to access /triage', async () => {
+    const response = await middleware(toReq(buildRequest('/triage')))
+
+    expect(nextSpy).toHaveBeenCalledTimes(1)
+    expect(redirectSpy).not.toHaveBeenCalled()
+    expect(response).toEqual({ type: 'next' })
+  })
+
+  it('redirects unauthenticated users away from /triage', async () => {
+    await middleware(toReq(buildRequest('/triage', '')))
+
+    expect(redirectSpy).toHaveBeenCalledTimes(1)
+    const redirectUrl = redirectSpy.mock.calls[0][0] as URL
+    expect(redirectUrl.pathname).toBe('/login')
+  })
+
+  afterEach(() => {
+    vi.unstubAllEnvs()
+  })
+})
+
 describe('middleware HTTPS enforcement', () => {
   beforeEach(() => {
     vi.clearAllMocks()
