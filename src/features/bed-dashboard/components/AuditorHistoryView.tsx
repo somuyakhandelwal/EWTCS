@@ -131,7 +131,6 @@ export function AuditorHistoryView({ readOnly = false, canEdit = false, showCorr
     setExporting(false)
   }
 
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars -- signature required by EditHistoryModal
   const handleCorrectionSaved = (_correctionId: string) => {
     if (!editingRecord) return
     setCorrectedLogIds(prev => new Set([...prev, editingRecord.id]))

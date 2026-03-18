@@ -18,26 +18,26 @@ export default function UserManual() {
     const filteredFeatures = features.filter(f => f.title.toLowerCase().includes(search.toLowerCase()) || f.desc.toLowerCase().includes(search.toLowerCase()));
 
     return (
-        <div className="min-h-screen bg-gray-50 text-gray-900 p-4 md:p-8 print:p-0 print:bg-white">
+        <div className="min-h-screen bg-background text-foreground p-4 md:p-8 print:p-0 print:bg-white print:text-black">
             <div data-help-id="manual-header" className="max-w-6xl mx-auto flex flex-col md:flex-row justify-between items-center mb-8 print:hidden">
                 <div>
-                    <h1 className="text-4xl font-bold text-blue-900">EWTCS User Manual</h1>
-                    <p className="text-gray-600 mt-2">Comprehensive guide to using the system</p>
+                    <h1 className="text-4xl font-bold text-foreground">EWTCS User Manual</h1>
+                    <p className="text-muted-foreground mt-2">Comprehensive guide to using the system</p>
                 </div>
                 <div className="flex flex-col sm:flex-row gap-4 mt-6 md:mt-0 w-full md:w-auto">
                     <div className="relative w-full sm:w-64">
-                        <Search className="absolute left-3 top-3 h-5 w-5 text-gray-400" />
+                        <Search className="absolute left-3 top-3 h-5 w-5 text-muted-foreground" />
                         <input
                             type="text"
                             placeholder="Search manual (e.g., Bed)..."
-                            className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none"
+                            className="w-full pl-10 pr-4 py-2 bg-background text-foreground placeholder:text-muted-foreground border border-border rounded-lg focus:ring-2 focus:ring-ring outline-none"
                             value={search}
                             onChange={(e) => setSearch(e.target.value)}
                         />
                     </div>
                     <button
                         onClick={() => window.print()}
-                        className="flex items-center justify-center gap-2 bg-blue-600 text-white px-5 py-2 rounded-lg shadow hover:bg-blue-700 transition"
+                        className="flex items-center justify-center gap-2 bg-foreground text-background px-5 py-2 rounded-lg shadow hover:bg-foreground/90 transition"
                     >
                         <Printer className="h-5 w-5" /> Print PDF
                     </button>
@@ -46,24 +46,24 @@ export default function UserManual() {
 
             <div data-help-id="manual-content" className="max-w-6xl mx-auto grid grid-cols-1 lg:grid-cols-4 gap-8">
                 <div className="lg:col-span-1 print:hidden">
-                    <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-100 sticky top-8">
-                        <h2 className="text-xl font-bold mb-4 border-b pb-2">Table of Contents</h2>
+                    <div className="bg-card text-card-foreground p-6 rounded-xl shadow-sm border border-border sticky top-8">
+                        <h2 className="text-xl font-bold mb-4 border-b border-border pb-2">Table of Contents</h2>
                         <ul className="space-y-3">
                             {features.map((f, i) => (
                                 <li key={i}>
-                                    <a href={`#feature-${i}`} className="text-blue-600 hover:text-blue-800 font-medium flex items-center gap-2 transition-colors">
+                                    <a href={`#feature-${i}`} className="text-primary hover:text-primary/80 font-medium flex items-center gap-2 transition-colors">
                                         <f.icon className="h-4 w-4" /> {f.title}
                                     </a>
                                 </li>
                             ))}
                         </ul>
                         <div className="mt-8">
-                            <h2 className="text-xl font-bold mb-4 border-b pb-2">Index</h2>
+                            <h2 className="text-xl font-bold mb-4 border-b border-border pb-2">Index</h2>
                             <div className="flex flex-wrap gap-2 text-sm">
                                 {features.flatMap(f => f.title.split(' ')).map((word, i) => (
                                     <button
                                         key={i}
-                                        className="bg-gray-100 text-gray-700 px-3 py-1 rounded-full hover:bg-blue-100 hover:text-blue-700 transition-colors"
+                                        className="bg-muted text-muted-foreground px-3 py-1 rounded-full hover:bg-accent hover:text-accent-foreground transition-colors"
                                         onClick={() => setSearch(word)}
                                     >
                                         {word}
@@ -75,35 +75,35 @@ export default function UserManual() {
                 </div>
 
                 <div className="lg:col-span-3 space-y-8">
-                    <div className="hidden print:block text-center mb-10 border-b-2 border-gray-200 pb-6">
-                        <h1 className="text-4xl font-extrabold text-gray-900">EWTCS User Manual</h1>
-                        <p className="text-xl text-gray-600 mt-2">Complete System Documentation</p>
+                    <div className="hidden print:block text-center mb-10 border-b-2 border-border pb-6">
+                        <h1 className="text-4xl font-extrabold text-foreground print:text-black">EWTCS User Manual</h1>
+                        <p className="text-xl text-muted-foreground mt-2 print:text-gray-600">Complete System Documentation</p>
                     </div>
 
                     {filteredFeatures.length === 0 ? (
-                        <div className="bg-white p-12 text-center rounded-xl shadow-sm border border-gray-100 print:hidden">
-                            <Search className="h-12 w-12 text-gray-300 mx-auto mb-4" />
-                            <p className="text-lg text-gray-500">No results found for &quot;{search}&quot;</p>
+                        <div className="bg-card p-12 text-center rounded-xl shadow-sm border border-border print:hidden">
+                            <Search className="h-12 w-12 text-muted-foreground/40 mx-auto mb-4" />
+                            <p className="text-lg text-muted-foreground">No results found for &quot;{search}&quot;</p>
                             <button
                                 onClick={() => setSearch("")}
-                                className="mt-4 text-blue-600 hover:underline"
+                                className="mt-4 text-primary hover:underline"
                             >
                                 Clear search
                             </button>
                         </div>
                     ) : (
                         filteredFeatures.map((f, i) => (
-                            <div key={i} id={`feature-${i}`} className="bg-white p-6 md:p-8 rounded-xl shadow-sm border border-gray-100 print:shadow-none print:border-none print:p-0 print:mb-12 print:break-inside-avoid">
+                            <div key={i} id={`feature-${i}`} className="bg-card text-card-foreground p-6 md:p-8 rounded-xl shadow-sm border border-border print:shadow-none print:border-none print:p-0 print:mb-12 print:break-inside-avoid">
                                 <div className="flex items-center gap-4 mb-6">
-                                    <div className="bg-blue-100 p-3 rounded-lg text-blue-600 print:bg-transparent print:p-0 print:text-black">
+                                    <div className="bg-primary/10 p-3 rounded-lg text-primary print:bg-transparent print:p-0 print:text-black">
                                         <f.icon className="h-8 w-8" />
                                     </div>
-                                    <h2 className="text-2xl md:text-3xl font-bold text-gray-900">{f.title}</h2>
+                                    <h2 className="text-2xl md:text-3xl font-bold text-card-foreground print:text-black">{f.title}</h2>
                                 </div>
 
-                                <p className="text-gray-700 mb-6 text-lg leading-relaxed">{f.desc}</p>
+                                <p className="text-muted-foreground mb-6 text-lg leading-relaxed">{f.desc}</p>
 
-                                <div className="mb-6 border border-gray-200 rounded-xl overflow-hidden shadow-sm print:border-solid print:border-gray-300">
+                                <div className="mb-6 border border-border rounded-xl overflow-hidden shadow-sm print:border-solid print:border-gray-300">
                                     <Image
                                         src={f.image}
                                         alt={`${f.title} UI`}
@@ -111,16 +111,16 @@ export default function UserManual() {
                                         height={675}
                                         className="w-full h-auto object-cover"
                                     />
-                                    <div className="bg-gray-50 p-3 text-sm text-center text-gray-500 border-t border-gray-200 print:bg-white print:text-gray-700">
+                                    <div className="bg-muted/30 p-3 text-sm text-center text-muted-foreground border-t border-border print:bg-white print:text-gray-700">
                                         Illustration: {f.title} interface and features.
                                     </div>
                                 </div>
 
-                                <div className="bg-blue-50 border-l-4 border-blue-500 p-5 rounded-r-lg print:border-gray-800 print:bg-gray-50">
-                                    <h4 className="font-semibold text-blue-900 flex items-center gap-2 print:text-black">
+                                <div className="bg-primary/5 border-l-4 border-primary p-5 rounded-r-lg print:border-gray-800 print:bg-gray-50">
+                                    <h4 className="font-semibold text-foreground flex items-center gap-2 print:text-black">
                                         <BookOpen className="h-5 w-5" /> Example Use Case
                                     </h4>
-                                    <p className="text-blue-800 mt-2 print:text-gray-700">{f.example}</p>
+                                    <p className="text-foreground/70 mt-2 print:text-gray-700">{f.example}</p>
                                 </div>
                             </div>
                         ))

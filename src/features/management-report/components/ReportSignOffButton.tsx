@@ -8,6 +8,8 @@ import { Button } from '@/shared/components/ui/button'
 import { cn } from '@/shared/lib/utils'
 import { signOffReport } from '../actions/signoff-actions'
 import { SignOffBadge } from './SignOffBadge'
+import { usePiiGuard } from '@/shared/hooks/usePiiGuard'
+import { PiiWarning } from '@/shared/components/ui/PiiWarning'
 import type { ReportSignOff } from '../types/report.types'
 
 interface ReportSignOffButtonProps {
@@ -34,6 +36,8 @@ export function ReportSignOffButton({
     const [error, setError] = useState<string | null>(null)
     const [isPending, startTransition] = useTransition()
 
+    const { hasPii, warningLabels } = usePiiGuard(notes)
+
     function handleOpenConfirm() {
         setConfirming(true)
         setError(null)
@@ -46,6 +50,8 @@ export function ReportSignOffButton({
     }
 
     function handleSubmit() {
+        // US-17.6: Block submission if PII detected in notes
+        if (hasPii) return
         startTransition(async () => {
             const result = await signOffReport({ reportDate, reportType, notes: notes || undefined })
             if (result.success && result.data) {
@@ -92,6 +98,7 @@ export function ReportSignOffButton({
                     rows={2}
                     className="w-full rounded-md border border-border bg-card px-3 py-2 text-sm text-foreground placeholder:text-zinc-600 focus:outline-none focus:ring-2 focus:ring-amber-600 resize-none"
                 />
+                <PiiWarning warningLabels={warningLabels} className="mt-1" />
                 {error && (
                     <div className="flex items-center gap-2 text-red-400 text-xs">
                         <AlertCircle className="h-3.5 w-3.5 shrink-0" />
@@ -102,7 +109,7 @@ export function ReportSignOffButton({
                     <Button
                         size="sm"
                         onClick={handleSubmit}
-                        disabled={isPending}
+                        disabled={isPending || hasPii}
                         className="bg-emerald-700 hover:bg-emerald-600 text-foreground"
                     >
                         {isPending ? (

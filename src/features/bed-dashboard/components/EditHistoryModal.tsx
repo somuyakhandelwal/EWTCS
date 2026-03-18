@@ -18,6 +18,7 @@ import { Button } from '@/shared/components/ui/button'
 import { EditHistoryForm } from './EditHistoryForm'
 import { submitHistoryCorrection } from '../actions/stage-history-correction-write-actions'
 import { getStages } from '@/features/stage-management/actions/stage-actions'
+import { usePiiGuard } from '@/shared/hooks/usePiiGuard'
 import type { AuditorHistoryRecord } from '../lib/auditor-history-queries'
 import type { StageOption } from './EditHistoryForm'
 
@@ -44,6 +45,11 @@ export function EditHistoryModal({ isOpen, onClose, record, onCorrectionSaved }:
   const [submitting, setSubmitting] = useState(false)
   const [formError, setFormError] = useState<string | null>(null)
   const [success, setSuccess] = useState(false)
+
+  // US-17.6: Real-time PII detection on free-text fields
+  const { hasPii: notesPii, warningLabels: notesWarning } = usePiiGuard(notes)
+  const { hasPii: reasonPii, warningLabels: reasonWarning } = usePiiGuard(correctionReason)
+  const hasPii = notesPii || reasonPii
 
   // Load stages and seed toStageId to the record's current "to" stage
   useEffect(() => {
@@ -72,6 +78,8 @@ export function EditHistoryModal({ isOpen, onClose, record, onCorrectionSaved }:
     setFormError(null)
     if (!correctionReason.trim()) { setFormError('A correction reason is required.'); return }
     if (!hasChanges) { setFormError('No fields have been changed.'); return }
+    // US-17.6: Block submission if PII detected
+    if (hasPii) { setFormError('Remove patient information from the form before saving.'); return }
 
     const correctedFields: { notes?: string; transition_time?: string; to_stage_id?: string } = {}
     if (notes !== (record.notes ?? '')) correctedFields.notes = notes
@@ -129,6 +137,8 @@ export function EditHistoryModal({ isOpen, onClose, record, onCorrectionSaved }:
               record={record} stages={stages} toStageId={toStageId}
               notes={notes} transitionTime={transitionTime} correctionReason={correctionReason}
               formError={formError}
+              notesWarning={notesWarning}
+              reasonWarning={reasonWarning}
               onStageChange={setToStageId} onNotesChange={setNotes}
               onTimeChange={setTransitionTime} onReasonChange={setCorrectionReason}
             />
@@ -137,7 +147,7 @@ export function EditHistoryModal({ isOpen, onClose, record, onCorrectionSaved }:
               <div className="flex gap-2 ml-auto">
                 <Button variant="outline" onClick={handleClose} disabled={submitting}>Cancel</Button>
                 <Button onClick={handleSubmit}
-                  disabled={submitting || !hasChanges}
+                  disabled={submitting || !correctionReason.trim() || !hasChanges || hasPii}
                   className="bg-amber-600 hover:bg-amber-500 text-white disabled:opacity-40">
                   {submitting ? 'Saving…' : 'Save Correction'}
                 </Button>

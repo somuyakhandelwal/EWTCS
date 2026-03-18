@@ -35,6 +35,7 @@ interface BedGridProps {
   isOffline?: boolean
   /** US-16.2: beds that have a write queued for sync — shown with an amber badge */
   queuedBedIds?: Set<string>
+  onOpenTriage?: (bedId: string) => void
 }
 
 export function BedGrid({
@@ -55,6 +56,7 @@ export function BedGrid({
   isUndoing = false,
   isOffline = false,
   queuedBedIds,
+  onOpenTriage,
 }: BedGridProps) {
   const {
     menuState,
@@ -166,6 +168,10 @@ export function BedGrid({
           error={menuError}
           onStageSelect={onStageSelect}
           onClose={handleCloseMenu}
+          onOpenTriage={(bedId) => {
+            handleCloseMenu()
+            onOpenTriage?.(bedId)
+          }}
         />
       )}
 

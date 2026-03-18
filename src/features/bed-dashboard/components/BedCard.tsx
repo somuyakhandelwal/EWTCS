@@ -1,5 +1,4 @@
 // Epic 6: US-6.5 temporary (orange) / US-6.6 virtual (purple) beds
-// US-4.3: Blinking animation with acknowledge support
 import { memo, useState, useEffect, useCallback, type MouseEvent } from 'react'
 import { Card, CardContent } from '@/shared/components/ui/card'
 import { Clock } from 'lucide-react'
@@ -10,15 +9,13 @@ import { CleaningActions, isCleaningStage } from './CleaningActions'
 import { BedBottleneckInfo } from './BedBottleneckInfo'
 import { BedCardVisualBadges } from './BedCardVisualBadges'
 import { BedCardUndoSection } from './BedCardUndoSection'
+import { BedTriageInfo } from './BedTriageInfo'
 import { cn } from '@/shared/lib/utils'
 import { highlightMatch } from '../lib/highlight-match'
 import { StageIcon } from './StageIcon'
-
 const ACKNOWLEDGE_PAUSE_MS = 30_000
-
 /** 'nurse' = In Stage timer only. 'supervisor' = In Stage + Patient Total (since admission). */
 export type BedCardViewMode = 'nurse' | 'supervisor'
-
 interface BedCardProps {
   bed: BedWithElapsedTime
   onClick?: (bed: BedWithElapsedTime) => void
@@ -39,7 +36,6 @@ interface BedCardProps {
   /** US-16.2: true when this bed has a write queued for offline sync */
   isQueuedOffline?: boolean
 }
-
 export const BedCard = memo(function BedCard({
   bed, onClick, onContextMenu, onReasonSelect, showUpdated = false, errorMessage = null,
   searchQuery = '', showUndo = false, onUndo, undoTimerSeconds = 0, animationEnabled = true,
@@ -57,7 +53,6 @@ export const BedCard = memo(function BedCard({
   const isCleaning = isCleaningStage(bed.currentStage?.name)
   const isTemporary = bed.isTemporary
   const isVirtual = bed.isVirtual
-
   // US-4.3: Acknowledge — pauses animation for 30s, resumes if still delayed
   const [acknowledged, setAcknowledged] = useState(false)
   useEffect(() => { if (!isDelayed) setAcknowledged(false) }, [isDelayed])
@@ -66,12 +61,10 @@ export const BedCard = memo(function BedCard({
     const t = setTimeout(() => { if (isDelayed) setAcknowledged(false) }, ACKNOWLEDGE_PAUSE_MS)
     return () => clearTimeout(t)
   }, [acknowledged, isDelayed])
-
   const handleClick = useCallback(() => {
     if (isDelayed && !acknowledged) setAcknowledged(true)
     onClick?.(bed)
   }, [isDelayed, acknowledged, onClick, bed])
-
   const showPulse = animationEnabled && !acknowledged
   return (
     <Card
@@ -151,7 +144,6 @@ export const BedCard = memo(function BedCard({
             />
           )}
         </div>
-
         {isOccupied && bed.lastStageChange && (
           <div className="pt-2 border-t border-border space-y-2">
             {/* In Stage timer — shown for both nurse and supervisor */}
@@ -193,6 +185,7 @@ export const BedCard = memo(function BedCard({
             <p className="text-sm font-medium text-muted-foreground">Available</p>
           </div>
         )}
+        <BedTriageInfo triageInfo={bed.metadata?.triageInfo} />
       </CardContent>
     </Card>
   )

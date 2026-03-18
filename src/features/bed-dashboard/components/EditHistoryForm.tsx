@@ -2,13 +2,14 @@
 
 /**
  * EPIC 7 — EditHistoryForm
- * Extracted from EditHistoryModal to keep each file under 200 lines.
+ * Extracted from EditHistoryModal to keep each file under ~150 lines.
  * Renders: original record (read-only), editable stage/timestamp/notes, mandatory reason.
  */
 
 import { Clock, FileText, ShieldCheck, AlertTriangle, ArrowRight } from 'lucide-react'
 import { Input } from '@/shared/components/ui/input'
 import { Label } from '@/shared/components/ui/label'
+import { PiiWarning } from '@/shared/components/ui/PiiWarning'
 import type { AuditorHistoryRecord } from '../lib/auditor-history-queries'
 
 export interface StageOption {
@@ -24,6 +25,10 @@ interface EditHistoryFormProps {
   transitionTime: string
   correctionReason: string
   formError: string | null
+  /** PII warning labels for the notes field (from usePiiGuard in parent) */
+  notesWarning?: string
+  /** PII warning labels for the correction reason field (from usePiiGuard in parent) */
+  reasonWarning?: string
   onStageChange: (v: string) => void
   onNotesChange: (v: string) => void
   onTimeChange: (v: string) => void
@@ -33,6 +38,7 @@ interface EditHistoryFormProps {
 export function EditHistoryForm({
   record, stages, toStageId, notes, transitionTime,
   correctionReason, formError,
+  notesWarning = '', reasonWarning = '',
   onStageChange, onNotesChange, onTimeChange, onReasonChange,
 }: EditHistoryFormProps) {
   return (
@@ -95,6 +101,7 @@ export function EditHistoryForm({
         <textarea value={notes} onChange={(e) => onNotesChange(e.target.value)} rows={2}
           placeholder="Enter corrected notes (leave blank to clear)…"
           className="w-full rounded-md bg-muted border border-border text-foreground text-sm px-3 py-2 placeholder:text-zinc-600 focus:outline-none focus:ring-2 focus:ring-amber-500/40 resize-none" />
+        <PiiWarning warningLabels={notesWarning} className="mt-1" />
       </div>
 
       {/* AC 2: Mandatory correction reason */}
@@ -107,6 +114,7 @@ export function EditHistoryForm({
         <textarea value={correctionReason} onChange={(e) => onReasonChange(e.target.value)} rows={2}
           placeholder="Required — explain why this correction is necessary…"
           className="w-full rounded-md bg-muted border border-amber-700/40 text-foreground text-sm px-3 py-2 placeholder:text-zinc-600 focus:outline-none focus:ring-2 focus:ring-amber-500/40 resize-none" />
+        <PiiWarning warningLabels={reasonWarning} className="mt-1" />
         <p className="text-xs text-muted-foreground">
           Your supervisor ID and this reason are stored in the audit trail alongside the original data.
         </p>

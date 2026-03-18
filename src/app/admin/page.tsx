@@ -15,6 +15,7 @@ import { DailySummaryTrigger } from "@/features/ai-summary/components/DailySumma
 import { DailySummaryHistory } from "@/features/ai-summary/components/DailySummaryHistory"
 import { BackupStatusPanel } from "@/features/data-retention/components/BackupStatusPanel"
 import { SystemHealthPanel } from "@/features/system-health/components/SystemHealthPanel"
+import { MetricsPanel } from "@/features/system-health/components/MetricsPanel"
 
 export default async function AdminDashboard() {
     const session = await verifyActiveSession()
@@ -114,6 +115,9 @@ export default async function AdminDashboard() {
 
                 {/* Kiosk Sessions — US-5.3 */}
                 <KioskSessionsPanel />
+
+                {/* Infrastructure Metrics — EPIC 13 */}
+                <MetricsPanel />
 
                 {/* System Health & Error Monitoring — US-13.5 */}
                 <Card className="bg-card border-border">

@@ -1,4 +1,4 @@
-import { ClipboardList, BarChart2 } from "lucide-react"
+import { ClipboardList, BarChart2, Bell } from "lucide-react"
 import { LogoutButton } from "@/features/auth/components/LogoutButton"
 import { KioskBanner } from "@/features/auth/components/KioskBanner"
 import { redirect } from "next/navigation"
@@ -6,6 +6,7 @@ import { AlertTriangle } from "lucide-react"
 import Link from "next/link"
 import { Tooltip } from "@/shared/components/ui/tooltip"
 import { FeedbackForm } from "@/features/adoption/components/FeedbackForm"
+import { getUnacknowledgedAlertCount } from "@/features/notifications/actions/alert-screen-actions"
 
 import { verifyActiveSession } from "@/shared/lib/active-session"
 import { getBedGridData } from "@/features/bed-dashboard/actions/bed-grid-actions"
@@ -19,7 +20,11 @@ export default async function SupervisorDashboard() {
         redirect('/api/auth/force-logout')
     }
 
-    const bedGridResult = await getBedGridData()
+    const [bedGridResult, alertCountResult] = await Promise.all([
+        getBedGridData(),
+        getUnacknowledgedAlertCount(),
+    ])
+    const unackedAlertCount = alertCountResult.success ? (alertCountResult.count ?? 0) : 0
 
     return (
         <div className="min-h-screen bg-background text-foreground p-3 sm:p-8">
@@ -38,6 +43,20 @@ export default async function SupervisorDashboard() {
                         <div className="p-2 bg-amber-900/20 border border-amber-900/50 rounded-full">
                             <ClipboardList className="h-6 w-6 text-amber-500" />
                         </div>
+                        <Tooltip content="Open alert screen" side="bottom">
+                            <Link
+                                href="/supervisor/alerts"
+                                className="relative flex items-center gap-2 px-4 py-2 rounded-lg bg-muted hover:bg-zinc-700 border border-border hover:border-zinc-500 text-card-foreground hover:text-foreground text-sm font-medium transition-colors"
+                            >
+                                <Bell className="h-4 w-4 text-amber-400" />
+                                Alerts
+                                {unackedAlertCount > 0 && (
+                                    <span className="absolute -top-1.5 -right-1.5 flex h-4 w-4 items-center justify-center rounded-full bg-destructive text-[10px] font-bold text-destructive-foreground">
+                                        {unackedAlertCount > 9 ? '9+' : unackedAlertCount}
+                                    </span>
+                                )}
+                            </Link>
+                        </Tooltip>
                         <Tooltip content="Open analytics dashboard" side="bottom">
                             <Link
                                 href="/analytics"

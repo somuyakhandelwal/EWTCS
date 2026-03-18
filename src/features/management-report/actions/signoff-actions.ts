@@ -9,6 +9,7 @@ import { requireWriteRole, requireRole } from '@/shared/lib/auth'
 import { logAudit } from '@/shared/lib/audit'
 import { logger } from '@/shared/config/logger'
 import { getSignOffForReport, createSignOff } from '../lib/signoff-queries'
+import { detectPii, redactPii } from '@/shared/lib/pii-detector'
 import type { SignOffResult, ReportSignOff } from '../types/report.types'
 
 // ---------------------------------------------------------------------------
@@ -46,6 +47,30 @@ export async function signOffReport(params: SignOffParams): Promise<SignOffResul
         // Validate date format
         if (!/^\d{4}-\d{2}-\d{2}$/.test(params.reportDate)) {
             return { success: false, error: 'Invalid report date format (expected YYYY-MM-DD)' }
+        }
+
+        // US-17.7: Backend PII enforcement on notes field
+        if (params.notes) {
+            const pii = detectPii(params.notes)
+            if (pii.hasPii) {
+                await logAudit({
+                    actionType: 'PII_BLOCKED',
+                    entityType: 'report',
+                    entityId: params.reportDate,
+                    performedBy: session.userId,
+                    metadata: {
+                        field: 'notes',
+                        detectedCategories: pii.summary,
+                        redactedValue: redactPii(params.notes),
+                    },
+                })
+                logger.warn('PII detected and blocked in sign-off notes', {
+                    userId: session.userId,
+                    reportDate: params.reportDate,
+                    categories: pii.summary,
+                })
+                return { success: false, error: `Notes contain patient information (${pii.summary}). Remove it before submitting.` }
+            }
         }
 
         const reportType = params.reportType ?? 'daily'

@@ -1,19 +1,26 @@
 import { getAll } from '@/shared/lib/db-helpers'
 import { getAuditLogs } from '@/shared/lib/audit'
 import { requireAdmin } from './auth'
+import { query } from '@/shared/lib/db'
 import type { UserSummary } from '../types/user'
 
 /**
  * Get all users with their details
  * Epic 5: US-5.3 - User Management
- * 
- * Now uses shared getAll helper for consistency
+ *
+ * Uses an explicit column list — never SELECT * — to prevent
+ * password_hash and other sensitive columns from leaking into
+ * the admin UI at runtime even if TypeScript types are widened.
  */
-export async function getAllUsers() {
+export async function getAllUsers(): Promise<UserSummary[]> {
     await requireAdmin()
 
-    // Using shared db helper for consistency with proper typing
-    return getAll<UserSummary>('users', undefined, [], 'created_at DESC')
+    const { rows } = await query<UserSummary>(
+        `SELECT id, username, role, is_active, created_at, updated_at, ward_id
+         FROM users
+         ORDER BY created_at DESC`
+    )
+    return rows
 }
 
 /**

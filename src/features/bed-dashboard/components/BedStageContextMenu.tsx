@@ -19,6 +19,7 @@ interface BedStageContextMenuProps {
   error?: string | null // Error message when loading stages fails
   onStageSelect: (bedId: string, stageId: string) => void
   onClose: () => void
+  onOpenTriage?: (bedId: string) => void // US-20.2
 }
 
 export function BedStageContextMenu({
@@ -33,6 +34,7 @@ export function BedStageContextMenu({
   error,
   onStageSelect,
   onClose,
+  onOpenTriage,
 }: BedStageContextMenuProps) {
   const getActionLabel = (fromStageName: string, toStageName: string) => {
     if (fromStageName === 'Discharge Process' && toStageName === 'Cleaning') {
@@ -76,6 +78,20 @@ export function BedStageContextMenu({
     })
   }, [bed, stages, isUpdating, updatingStageId, validNextStages, overrideRequiredStages, onStageSelect])
 
+  // US-20.2: Inject the "Update Triage Details" option at the top if the bed is in Triage (or occupied)
+  const fullItems = useMemo(() => {
+    const result = [...items]
+    if (bed?.currentStage?.name === 'Triage' && onOpenTriage) {
+      result.unshift({
+        id: 'update-triage',
+        label: 'Update Triage Details',
+        onSelect: () => onOpenTriage(bed.id),
+        className: 'text-blue-600 dark:text-blue-400 font-semibold mb-2 border-b pb-2 rounded-none' // stand out
+      })
+    }
+    return result
+  }, [items, bed?.currentStage?.name, bed?.id, onOpenTriage])
+
   if (!bed) {
     return null
   }
@@ -98,7 +114,7 @@ export function BedStageContextMenu({
     <ContextMenu
       isOpen={isOpen}
       position={position}
-      items={error ? [] : items}
+      items={error ? [] : fullItems}
       onClose={onClose}
       header={bed ? `Update ${bed.bedNumber}` : "Update Bed"}
       error={error}
