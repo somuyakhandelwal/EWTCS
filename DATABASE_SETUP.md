@@ -250,7 +250,7 @@ These values represent the active patient currently occupying a bed and are rese
 
 ### US-22.1 Symptoms / Complaint Limit
 
-Migration `047_enforce_symptom_40_char_limit.sql` enforces strict complaint length rules for triage intake:
+Migrations `047_enforce_symptom_40_char_limit.sql` and `1774000000000_enforce_symptom_40_char_limit_after_triage.sql` enforce strict complaint length rules for triage intake across upgrade and clean-install paths:
 
 - `beds.key_symptom` is enforced as `VARCHAR(40)`
 - Constraint `chk_beds_key_symptom_max_40` ensures length never exceeds 40 chars

@@ -1,7 +1,6 @@
--- Migration 047: Enforce US-22.1 symptom/complaint length limit
--- Project intake model stores active complaint on beds.key_symptom
--- Note: In a fresh install, timestamped migration 1773770454739 creates key_symptom
--- after this file. This migration therefore no-ops safely when the column is absent.
+-- Migration 1774000000000: Enforce US-22.1 symptom/complaint length after triage columns exist
+-- This guarantees clean-install ordering where 1773770454739_add-triage-columns-to-beds
+-- creates beds.key_symptom before we enforce the 40-char rule.
 
 DO $$
 BEGIN
