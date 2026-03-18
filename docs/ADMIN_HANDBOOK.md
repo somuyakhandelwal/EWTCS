@@ -168,6 +168,23 @@ Dev runtime note:
 - Triage complaint field (`beds.key_symptom`) is now strictly limited to 40 characters.
 - Deployment action: run `npm run db:migrate` before application startup after pulling this release.
 
+### EPIC 25 — Enhanced Dashboard Metrics (Department Metrics)
+- New migration: `1773338271566_create_department_metrics_tables.js`
+- Creates three new tables for cross-department operational visibility:
+  - `er_intake` — Emergency / Triage: bed occupancy status (`occupied`/`vacant`) and `triage_time_minutes`
+  - `ot_procedures` — Operation Theater: per-procedure `status` (`in_progress`/`completed`), `patient_name`, `room_id`
+  - `cath_lab_procedures` — Cath Lab: per-procedure `procedure_type` (`CAG`/`PTCA`) and `status` (`active`/`completed`)
+- Server action: `src/features/bed-dashboard/actions/department-metrics.ts` (`getDepartmentMetrics`)
+- UI component: `src/features/bed-dashboard/components/DepartmentMetricsView.tsx`
+- Deployment steps:
+  1. Run `npm run db:migrate` to create the three tables.
+  2. Optionally seed sample data: `node scripts/seed-metrics.js`
+  3. Confirm tables are present: `npm run validate:schema`
+- Metrics surfaced:
+  - **Triage**: occupied bed count, total bed count, average triage time (minutes)
+  - **OT**: surgeries in-progress, completed, utilization rate (%)
+  - **Cath Lab**: active procedures, CAG count, PTCA count
+
 ### Validation, Tests, and Ops
 ```bash
 npm run validate:env
