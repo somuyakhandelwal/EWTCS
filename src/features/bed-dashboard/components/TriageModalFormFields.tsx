@@ -1,7 +1,11 @@
 import { Input } from '@/shared/components/ui/input'
 import { Label } from '@/shared/components/ui/label'
 import type { RefObject } from 'react'
-import type { PatientGenderType, TriageCategoryType } from './triage-modal.types'
+import {
+  SYMPTOM_MAX_LENGTH,
+  type PatientGenderType,
+  type TriageCategoryType,
+} from './triage-modal.types'
 
 interface TriageModalFormFieldsProps {
   firstInputRef: RefObject<HTMLSelectElement | null>
@@ -40,6 +44,8 @@ export function TriageModalFormFields({
   setPatientGender,
   setKeySymptom,
 }: TriageModalFormFieldsProps) {
+  const symptomLength = keySymptom.length
+
   return (
     <>
       <div className="space-y-2">
@@ -133,16 +139,21 @@ export function TriageModalFormFields({
       </div>
 
       <div className="space-y-2 flex flex-col border-0">
-        <Label htmlFor="keySymptom">Key Symptom</Label>
+        <Label htmlFor="keySymptom">Symptoms / Complaint</Label>
         <textarea
           id="keySymptom"
           value={keySymptom}
-          onChange={(e) => setKeySymptom(e.target.value)}
-          placeholder="Primary complaint..."
+          onChange={(e) => setKeySymptom(e.target.value.slice(0, SYMPTOM_MAX_LENGTH))}
+          maxLength={SYMPTOM_MAX_LENGTH}
+          placeholder="e.g. Chest pain, Road traffic accident trauma"
           rows={3}
           disabled={isSubmitting}
           className="flex w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 resize-none"
         />
+        <div className="flex items-center justify-between text-[10px] text-muted-foreground">
+          <span>Examples: Chest pain, Road traffic accident trauma</span>
+          <span>{symptomLength}/{SYMPTOM_MAX_LENGTH}</span>
+        </div>
       </div>
     </>
   )

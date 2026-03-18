@@ -53,7 +53,7 @@ export function BedTriageInfo({ triageInfo }: BedTriageInfoProps) {
           )}
           {triageInfo.keySymptom && (
             <div className="text-muted-foreground line-clamp-2" title={triageInfo.keySymptom}>
-              {triageInfo.keySymptom}
+              Symptoms / Complaint: {triageInfo.keySymptom}
             </div>
           )}
         </div>

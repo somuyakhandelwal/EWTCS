@@ -248,6 +248,15 @@ Migration `046_add_patient_demographics_to_beds.sql` adds active triage demograp
 
 These values represent the active patient currently occupying a bed and are reset during discharge/non-patient transitions.
 
+### US-22.1 Symptoms / Complaint Limit
+
+Migration `047_enforce_symptom_40_char_limit.sql` enforces strict complaint length rules for triage intake:
+
+- `beds.key_symptom` is enforced as `VARCHAR(40)`
+- Constraint `chk_beds_key_symptom_max_40` ensures length never exceeds 40 chars
+
+UI and server validation also enforce this same 40-character limit to keep behavior consistent end-to-end.
+
 ### Default Stages
 
 | Stage | Order | Color | Description |

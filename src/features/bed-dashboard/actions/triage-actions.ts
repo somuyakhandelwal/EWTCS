@@ -3,6 +3,7 @@
 import { revalidatePath } from 'next/cache'
 import { query } from '@/shared/lib/db'
 import { requireWriteRole } from '@/shared/lib/auth'
+import { SYMPTOM_MAX_LENGTH } from '../components/triage-modal.types'
 
 // Store triage info into beds.metadata JSONB
 export async function updateBedTriageInfo(
@@ -35,6 +36,13 @@ export async function updateBedTriageInfo(
 
     if (!Number.isFinite(normalizedAge) || normalizedAge <= 0 || normalizedAge > 130) {
       return { success: false, error: 'Patient age must be between 1 and 130.' }
+    }
+
+    if (normalizedKeySymptom.length > SYMPTOM_MAX_LENGTH) {
+      return {
+        success: false,
+        error: `Symptoms / Complaint must be ${SYMPTOM_MAX_LENGTH} characters or fewer.`,
+      }
     }
 
     const triageInfo = {
