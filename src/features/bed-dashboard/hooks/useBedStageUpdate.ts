@@ -48,7 +48,10 @@ interface UseBedStageUpdateReturn {
   closeTriageModal: () => void
   handleTriageSubmit: (bedId: string, triageData: {
     patientUhid: string;
+    patientIpdId?: string | null;
     patientName: string;
+    patientAge: number;
+    patientGender: 'Male' | 'Female' | 'Other' | 'Unknown';
     keySymptom: string;
     triageCategory: 'Resuscitation' | 'Emergent' | 'Urgent' | 'Less Urgent' | 'Non-Urgent';
   }) => Promise<void>
@@ -115,7 +118,15 @@ export function useBedStageUpdate(initialData: BedGridData): UseBedStageUpdateRe
     openDischargeModal, openTriageModal
   })
   
-  const handleTriageSubmit = useCallback((bedId: string, triageData: { patientUhid: string; patientName: string; keySymptom: string; triageCategory: 'Resuscitation' | 'Emergent' | 'Urgent' | 'Less Urgent' | 'Non-Urgent' }) => {
+  const handleTriageSubmit = useCallback((bedId: string, triageData: {
+    patientUhid: string;
+    patientIpdId?: string | null;
+    patientName: string;
+    patientAge: number;
+    patientGender: 'Male' | 'Female' | 'Other' | 'Unknown';
+    keySymptom: string;
+    triageCategory: 'Resuscitation' | 'Emergent' | 'Urgent' | 'Less Urgent' | 'Non-Urgent';
+  }) => {
     return baseHandleTriageSubmit(bedId, triageData, performStageUpdate)
   }, [baseHandleTriageSubmit, performStageUpdate])
 

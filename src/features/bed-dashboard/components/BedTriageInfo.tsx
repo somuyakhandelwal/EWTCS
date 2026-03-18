@@ -3,7 +3,10 @@ import { cn } from '@/shared/lib/utils'
 interface BedTriageInfoProps {
   triageInfo?: {
     patientUhid?: string
+    patientIpdId?: string
     patientName?: string
+    patientAge?: number
+    patientGender?: 'Male' | 'Female' | 'Other' | 'Unknown'
     keySymptom?: string
     triageCategory?: 'Resuscitation' | 'Emergent' | 'Urgent' | 'Less Urgent' | 'Non-Urgent'
   }
@@ -31,15 +34,21 @@ export function BedTriageInfo({ triageInfo }: BedTriageInfoProps) {
             {triageInfo.triageCategory}
           </span>
         )}
-        {triageInfo.patientUhid && (
-          <span className="text-muted-foreground font-mono text-[10px]">{triageInfo.patientUhid}</span>
-        )}
+        {triageInfo.patientUhid && <span className="text-muted-foreground font-mono text-[10px]">UHID: {triageInfo.patientUhid}</span>}
+        {triageInfo.patientIpdId && <span className="text-muted-foreground font-mono text-[10px]">IPD: {triageInfo.patientIpdId}</span>}
       </div>
       {(triageInfo.patientName || triageInfo.keySymptom) && (
         <div className="space-y-0.5 mt-1">
           {triageInfo.patientName && (
             <div className="font-medium text-foreground truncate" title={triageInfo.patientName}>
               {triageInfo.patientName}
+            </div>
+          )}
+          {(typeof triageInfo.patientAge === 'number' || triageInfo.patientGender) && (
+            <div className="text-muted-foreground text-[10px]">
+              {typeof triageInfo.patientAge === 'number' ? `Age: ${triageInfo.patientAge}` : 'Age: -'}
+              {' | '}
+              {triageInfo.patientGender ? `Gender: ${triageInfo.patientGender}` : 'Gender: -'}
             </div>
           )}
           {triageInfo.keySymptom && (

@@ -9,7 +9,10 @@ export async function updateBedTriageInfo(
   bedId: string,
   triageData: {
     patientUhid: string
+    patientIpdId?: string | null
     patientName: string
+    patientAge: number
+    patientGender: 'Male' | 'Female' | 'Other' | 'Unknown'
     keySymptom: string
     triageCategory: 'Resuscitation' | 'Emergent' | 'Urgent' | 'Less Urgent' | 'Non-Urgent'
   }
@@ -20,27 +23,59 @@ export async function updateBedTriageInfo(
       return { success: false, error: 'Unauthorized' }
     }
 
-    // Since we're merging metadata, we do a jsonb_set or just read/write.
-    // For simplicity, we'll read current metadata, modify, and write,
-    // or use Postgres jsonb_set logic.
-    // Let's read first (safer to preserve existing metadata).
-    const bedResult = await query<{ metadata: Record<string, unknown> }>('SELECT metadata FROM beds WHERE id = $1', [bedId])
-    if (bedResult.rows.length === 0) {
+    const normalizedUhid = triageData.patientUhid.trim()
+    const normalizedName = triageData.patientName.trim()
+    const normalizedIpdId = triageData.patientIpdId?.trim() || null
+    const normalizedKeySymptom = triageData.keySymptom.trim()
+    const normalizedAge = Math.floor(triageData.patientAge)
+
+    if (!normalizedUhid || !normalizedName) {
+      return { success: false, error: 'UHID and patient name are required.' }
+    }
+
+    if (!Number.isFinite(normalizedAge) || normalizedAge <= 0 || normalizedAge > 130) {
+      return { success: false, error: 'Patient age must be between 1 and 130.' }
+    }
+
+    const triageInfo = {
+      patientUhid: normalizedUhid,
+      ...(normalizedIpdId ? { patientIpdId: normalizedIpdId } : {}),
+      patientName: normalizedName,
+      patientAge: normalizedAge,
+      patientGender: triageData.patientGender,
+      keySymptom: normalizedKeySymptom,
+      triageCategory: triageData.triageCategory,
+    }
+
+    const updateResult = await query<{ id: string }>(
+      `UPDATE beds
+       SET patient_uhid = $1,
+           patient_ipd_id = $2,
+           patient_name = $3,
+           patient_age = $4,
+           patient_gender = $5,
+           key_symptom = $6,
+           triage_category = $7,
+           metadata = jsonb_set(COALESCE(metadata, '{}'::jsonb), '{triageInfo}', $8::jsonb, true),
+           updated_at = NOW()
+       WHERE id = $9
+       RETURNING id`,
+      [
+        normalizedUhid,
+        normalizedIpdId,
+        normalizedName,
+        normalizedAge,
+        triageData.patientGender,
+        normalizedKeySymptom || null,
+        triageData.triageCategory,
+        JSON.stringify(triageInfo),
+        bedId,
+      ]
+    )
+
+    if (updateResult.rows.length === 0) {
       return { success: false, error: 'Bed not found' }
     }
-
-    const currentMetadata = bedResult.rows[0].metadata || {}
-    const newMetadata = {
-      ...currentMetadata,
-      triageInfo: {
-        patientUhid: triageData.patientUhid,
-        patientName: triageData.patientName,
-        keySymptom: triageData.keySymptom,
-        triageCategory: triageData.triageCategory
-      }
-    }
-
-    await query('UPDATE beds SET metadata = $1, updated_at = NOW() WHERE id = $2', [newMetadata, bedId])
 
     revalidatePath('/dashboard')
     revalidatePath('/supervisor')
