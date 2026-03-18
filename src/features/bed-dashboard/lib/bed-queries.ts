@@ -20,7 +20,30 @@ export async function getAllBeds(): Promise<Bed[]> {
         b.is_active as "isActive",
         b.is_temporary as "isTemporary",
         b.is_virtual as "isVirtual",
-        b.metadata,
+        CASE
+          WHEN b.patient_uhid IS NOT NULL
+            OR b.patient_ipd_id IS NOT NULL
+            OR b.patient_name IS NOT NULL
+            OR b.patient_age IS NOT NULL
+            OR b.patient_gender IS NOT NULL
+            OR b.key_symptom IS NOT NULL
+            OR b.triage_category IS NOT NULL
+          THEN jsonb_set(
+            COALESCE(b.metadata, '{}'::jsonb),
+            '{triageInfo}',
+            jsonb_strip_nulls(jsonb_build_object(
+              'patientUhid', b.patient_uhid,
+              'patientIpdId', b.patient_ipd_id,
+              'patientName', b.patient_name,
+              'patientAge', b.patient_age,
+              'patientGender', b.patient_gender,
+              'keySymptom', b.key_symptom,
+              'triageCategory', b.triage_category
+            )),
+            true
+          )
+          ELSE b.metadata
+        END as "metadata",
         b.created_at as "createdAt",
         b.updated_at as "updatedAt",
         json_build_object(
@@ -59,7 +82,30 @@ export async function getBedById(bedId: string): Promise<Bed | null> {
         b.is_active as "isActive",
         b.is_temporary as "isTemporary",
         b.is_virtual as "isVirtual",
-        b.metadata,
+        CASE
+          WHEN b.patient_uhid IS NOT NULL
+            OR b.patient_ipd_id IS NOT NULL
+            OR b.patient_name IS NOT NULL
+            OR b.patient_age IS NOT NULL
+            OR b.patient_gender IS NOT NULL
+            OR b.key_symptom IS NOT NULL
+            OR b.triage_category IS NOT NULL
+          THEN jsonb_set(
+            COALESCE(b.metadata, '{}'::jsonb),
+            '{triageInfo}',
+            jsonb_strip_nulls(jsonb_build_object(
+              'patientUhid', b.patient_uhid,
+              'patientIpdId', b.patient_ipd_id,
+              'patientName', b.patient_name,
+              'patientAge', b.patient_age,
+              'patientGender', b.patient_gender,
+              'keySymptom', b.key_symptom,
+              'triageCategory', b.triage_category
+            )),
+            true
+          )
+          ELSE b.metadata
+        END as "metadata",
         b.created_at as "createdAt",
         b.updated_at as "updatedAt",
         json_build_object(
@@ -102,7 +148,30 @@ export async function getBedByNumber(bedNumber: string): Promise<Bed | null> {
         b.is_active as "isActive",
         b.is_temporary as "isTemporary",
         b.is_virtual as "isVirtual",
-        b.metadata,
+        CASE
+          WHEN b.patient_uhid IS NOT NULL
+            OR b.patient_ipd_id IS NOT NULL
+            OR b.patient_name IS NOT NULL
+            OR b.patient_age IS NOT NULL
+            OR b.patient_gender IS NOT NULL
+            OR b.key_symptom IS NOT NULL
+            OR b.triage_category IS NOT NULL
+          THEN jsonb_set(
+            COALESCE(b.metadata, '{}'::jsonb),
+            '{triageInfo}',
+            jsonb_strip_nulls(jsonb_build_object(
+              'patientUhid', b.patient_uhid,
+              'patientIpdId', b.patient_ipd_id,
+              'patientName', b.patient_name,
+              'patientAge', b.patient_age,
+              'patientGender', b.patient_gender,
+              'keySymptom', b.key_symptom,
+              'triageCategory', b.triage_category
+            )),
+            true
+          )
+          ELSE b.metadata
+        END as "metadata",
         b.created_at as "createdAt",
         b.updated_at as "updatedAt"
       FROM beds b

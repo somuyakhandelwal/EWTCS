@@ -6,6 +6,7 @@ import type { Bed } from '../types/bed'
 import { X, Activity } from 'lucide-react'
 
 type TriageCategoryType = 'Resuscitation' | 'Emergent' | 'Urgent' | 'Less Urgent' | 'Non-Urgent'
+type PatientGenderType = 'Male' | 'Female' | 'Other' | 'Unknown'
 
 interface TriageModalProps {
   bed: Bed | null
@@ -13,7 +14,10 @@ interface TriageModalProps {
   onClose: () => void
   onSubmit: (bedId: string, triageData: {
     patientUhid: string
+    patientIpdId?: string | null
     patientName: string
+    patientAge: number
+    patientGender: PatientGenderType
     keySymptom: string
     triageCategory: TriageCategoryType
   }) => Promise<void>
@@ -21,7 +25,10 @@ interface TriageModalProps {
 
 export function TriageModal({ bed, isOpen, onClose, onSubmit }: TriageModalProps) {
   const [patientUhid, setPatientUhid] = useState('')
+  const [patientIpdId, setPatientIpdId] = useState('')
   const [patientName, setPatientName] = useState('')
+  const [patientAge, setPatientAge] = useState('')
+  const [patientGender, setPatientGender] = useState<PatientGenderType | ''>('')
   const [keySymptom, setKeySymptom] = useState('')
   const [triageCategory, setTriageCategory] = useState<TriageCategoryType | ''>('')
   const [isSubmitting, setIsSubmitting] = useState(false)
@@ -31,14 +38,24 @@ export function TriageModal({ bed, isOpen, onClose, onSubmit }: TriageModalProps
   useEffect(() => {
     if (isOpen && bed) {
       setPatientUhid(bed.metadata?.triageInfo?.patientUhid || '')
+      setPatientIpdId(bed.metadata?.triageInfo?.patientIpdId || '')
       setPatientName(bed.metadata?.triageInfo?.patientName || '')
+      setPatientAge(
+        typeof bed.metadata?.triageInfo?.patientAge === 'number'
+          ? String(bed.metadata?.triageInfo?.patientAge)
+          : ''
+      )
+      setPatientGender(bed.metadata?.triageInfo?.patientGender || '')
       setKeySymptom(bed.metadata?.triageInfo?.keySymptom || '')
       setTriageCategory(bed.metadata?.triageInfo?.triageCategory || '')
       
       setTimeout(() => firstInputRef.current?.focus(), 50)
     } else {
       setPatientUhid('')
+      setPatientIpdId('')
       setPatientName('')
+      setPatientAge('')
+      setPatientGender('')
       setKeySymptom('')
       setTriageCategory('')
     }
@@ -55,12 +72,18 @@ export function TriageModal({ bed, isOpen, onClose, onSubmit }: TriageModalProps
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    if (!bed || !triageCategory) return
+    if (!bed || !triageCategory || !patientGender) return
+    const parsedAge = Number(patientAge)
+    if (!Number.isFinite(parsedAge) || parsedAge <= 0) return
+
     setIsSubmitting(true)
     try {
       await onSubmit(bed.id, {
-        patientUhid,
-        patientName,
+        patientUhid: patientUhid.trim(),
+        patientIpdId: patientIpdId.trim() ? patientIpdId.trim() : null,
+        patientName: patientName.trim(),
+        patientAge: Math.floor(parsedAge),
+        patientGender,
         keySymptom,
         triageCategory: triageCategory as TriageCategoryType
       })
@@ -139,6 +162,17 @@ export function TriageModal({ bed, isOpen, onClose, onSubmit }: TriageModalProps
           </div>
 
           <div className="space-y-2">
+            <Label htmlFor="patientIpdId">IPD ID <span className="text-muted-foreground text-xs">(optional)</span></Label>
+            <Input
+              id="patientIpdId"
+              value={patientIpdId}
+              onChange={(e) => setPatientIpdId(e.target.value)}
+              placeholder="e.g. IPD-2026-0091"
+              disabled={isSubmitting}
+            />
+          </div>
+
+          <div className="space-y-2">
             <Label htmlFor="patientName">Patient Name</Label>
             <Input
               id="patientName"
@@ -147,6 +181,41 @@ export function TriageModal({ bed, isOpen, onClose, onSubmit }: TriageModalProps
               placeholder="Doe, John"
               disabled={isSubmitting}
             />
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <Label htmlFor="patientAge">Age <span className="text-destructive">*</span></Label>
+              <Input
+                id="patientAge"
+                type="number"
+                min={0}
+                max={130}
+                value={patientAge}
+                onChange={(e) => setPatientAge(e.target.value)}
+                placeholder="e.g. 42"
+                disabled={isSubmitting}
+                required
+              />
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="patientGender">Gender <span className="text-destructive">*</span></Label>
+              <select
+                id="patientGender"
+                value={patientGender}
+                onChange={(e) => setPatientGender(e.target.value as PatientGenderType)}
+                required
+                disabled={isSubmitting}
+                className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 appearance-none"
+              >
+                <option value="" disabled>Select gender...</option>
+                <option value="Male">Male</option>
+                <option value="Female">Female</option>
+                <option value="Other">Other</option>
+                <option value="Unknown">Unknown</option>
+              </select>
+            </div>
           </div>
 
           <div className="space-y-2 flex flex-col border-0">
@@ -175,7 +244,7 @@ export function TriageModal({ bed, isOpen, onClose, onSubmit }: TriageModalProps
             <Button
               type="submit"
               className="flex-1"
-              disabled={!triageCategory || isSubmitting}
+              disabled={!triageCategory || !patientGender || !patientAge || isSubmitting}
             >
               {isSubmitting ? 'Saving...' : 'Save Triage Details'}
             </Button>

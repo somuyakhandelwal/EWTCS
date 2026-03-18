@@ -22,7 +22,10 @@ export function useTriageConfirm({ setTemporaryError, setData }: UseTriageConfir
 
   const handleTriageSubmit = useCallback(async (bedId: string, triageData: {
     patientUhid: string;
+    patientIpdId?: string | null;
     patientName: string;
+    patientAge: number;
+    patientGender: 'Male' | 'Female' | 'Other' | 'Unknown';
     keySymptom: string;
     triageCategory: 'Resuscitation' | 'Emergent' | 'Urgent' | 'Less Urgent' | 'Non-Urgent';
   }, performStageUpdate: (bedId: string, stageId: string) => Promise<boolean>) => {

@@ -53,7 +53,10 @@ export interface Bed {
   metadata: {
     triageInfo?: {
       patientUhid?: string
+      patientIpdId?: string
       patientName?: string
+      patientAge?: number
+      patientGender?: 'Male' | 'Female' | 'Other' | 'Unknown'
       keySymptom?: string
       triageCategory?: 'Resuscitation' | 'Emergent' | 'Urgent' | 'Less Urgent' | 'Non-Urgent'
     }

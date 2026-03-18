@@ -3,7 +3,7 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "dev": "next dev",
+    "dev": "node -e \"try{require('fs').rmSync('.next',{recursive:true,force:true})}catch(e){}\" && next dev",
     "build": "node -e \"try{require('fs').rmSync('.next',{recursive:true,force:true})}catch(e){}\" && next build",
     "start": "node scripts/run-migrations.js up && next start",
     "lint": "next lint",

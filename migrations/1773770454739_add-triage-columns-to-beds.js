@@ -9,12 +9,13 @@ export const shorthands = undefined;
  * @returns {Promise<void> | void}
  */
 export const up = (pgm) => {
-  pgm.addColumns('beds', {
-    patient_uhid: { type: 'varchar(100)' },
-    patient_name: { type: 'varchar(255)' },
-    key_symptom: { type: 'text' },
-    triage_category: { type: 'varchar(50)' }
-  });
+  pgm.sql(`
+    ALTER TABLE beds
+      ADD COLUMN IF NOT EXISTS patient_uhid varchar(100),
+      ADD COLUMN IF NOT EXISTS patient_name varchar(255),
+      ADD COLUMN IF NOT EXISTS key_symptom text,
+      ADD COLUMN IF NOT EXISTS triage_category varchar(50);
+  `);
 };
 
 /**

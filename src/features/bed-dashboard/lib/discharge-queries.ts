@@ -166,6 +166,13 @@ export async function archiveAndResetBed(
      SET current_stage_id  = $1,
          is_occupied        = false,
          patient_start_time = NULL,
+         patient_uhid       = NULL,
+         patient_ipd_id     = NULL,
+         patient_name       = NULL,
+         patient_age        = NULL,
+         patient_gender     = NULL,
+         key_symptom        = NULL,
+         triage_category    = NULL,
          last_stage_change  = NOW(),
          metadata           = metadata - 'triageInfo',
          updated_at         = NOW()

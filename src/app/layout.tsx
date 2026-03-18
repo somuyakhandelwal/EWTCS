@@ -1,8 +1,28 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
+import dynamic from "next/dynamic";
+import { Suspense } from "react";
 import "./globals.css";
 import { initializeSystem } from "@/shared/config/init";
 import { DatabaseStatusBanner } from "@/shared/components/ui/DatabaseStatusBanner"
+import { ThemeProvider } from "@/shared/components/ThemeProvider"
+import { PageTransition } from "@/shared/components/PageTransition"
+
+const ClientTracker = dynamic(
+  () => import("@/shared/components/ClientTracker").then((mod) => mod.ClientTracker)
+)
+
+const RouteProgressBar = dynamic(
+  () => import("@/shared/components/RouteProgressBar").then((mod) => mod.RouteProgressBar)
+)
+
+const GlobalHelp = dynamic(
+  () => import("@/features/help/components/GlobalHelp").then((mod) => mod.GlobalHelp)
+)
+
+const GlobalThemeToggle = dynamic(
+  () => import("@/shared/components/GlobalThemeToggle").then((mod) => mod.GlobalThemeToggle)
+)
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -28,14 +48,6 @@ export const viewport = {
 if (typeof window === "undefined") {
   void initializeSystem();
 }
-
-import { Suspense } from "react"
-import { ThemeProvider } from "@/shared/components/ThemeProvider"
-import { GlobalThemeToggle } from "@/shared/components/GlobalThemeToggle"
-import { RouteProgressBar } from "@/shared/components/RouteProgressBar"
-import { PageTransition } from "@/shared/components/PageTransition"
-import { GlobalHelp } from "@/features/help/components/GlobalHelp"
-import { ClientTracker } from "@/shared/components/ClientTracker"
 
 export default function RootLayout({
   children,

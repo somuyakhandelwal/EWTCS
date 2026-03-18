@@ -50,7 +50,30 @@ export async function getBedsWithElapsedTime(
         bt.is_active AS "isActive",
         bt.is_temporary AS "isTemporary",
         bt.is_virtual AS "isVirtual",
-        bt.metadata,
+        CASE
+          WHEN bt.patient_uhid IS NOT NULL
+            OR bt.patient_ipd_id IS NOT NULL
+            OR bt.patient_name IS NOT NULL
+            OR bt.patient_age IS NOT NULL
+            OR bt.patient_gender IS NOT NULL
+            OR bt.key_symptom IS NOT NULL
+            OR bt.triage_category IS NOT NULL
+          THEN jsonb_set(
+            COALESCE(bt.metadata, '{}'::jsonb),
+            '{triageInfo}',
+            jsonb_strip_nulls(jsonb_build_object(
+              'patientUhid', bt.patient_uhid,
+              'patientIpdId', bt.patient_ipd_id,
+              'patientName', bt.patient_name,
+              'patientAge', bt.patient_age,
+              'patientGender', bt.patient_gender,
+              'keySymptom', bt.key_symptom,
+              'triageCategory', bt.triage_category
+            )),
+            true
+          )
+          ELSE bt.metadata
+        END AS "metadata",
         bt.created_at AS "createdAt",
         bt.updated_at AS "updatedAt",
         json_build_object(
