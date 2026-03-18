@@ -10,6 +10,10 @@ export function handleUserRedirect(role: string): never {
         redirect('/supervisor')
     } else if (role === 'auditor') {
         redirect('/analytics')
+    } else if (role === 'cardiologist') {
+        redirect('/cath-lab')
+    } else if (role === 'cath_lab_nurse') {
+        redirect('/cath-lab')
     } else {
         redirect('/dashboard')
     }
