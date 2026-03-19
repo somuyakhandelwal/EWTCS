@@ -141,27 +141,54 @@ const run = async () => {
         const healClient = new Client({ connectionString: databaseUrl });
         try {
             await healClient.connect();
+
+            // Fix: use parameterized queries — prevents SQL injection if names
+            // ever come from an external source, and makes each rename auditable.
             // 007/009 swap introduced by PRs #161/#162
-            await healClient.query(
-                "UPDATE pgmigrations SET name = '007_create_bed_stage_log_corrections' WHERE id = 7 AND name <> '007_create_bed_stage_log_corrections'"
+            const { rowCount: r7 } = await healClient.query(
+                `UPDATE pgmigrations SET name = $1 WHERE id = 7 AND name <> $1`,
+                ['007_create_bed_stage_log_corrections']
             );
-            await healClient.query(
-                "UPDATE pgmigrations SET name = '009_token_blacklist' WHERE id = 9 AND name <> '009_token_blacklist'"
+            if (r7 > 0) console.log('[migrations] self-heal: fixed migration id=7 name');
+
+            const { rowCount: r9 } = await healClient.query(
+                `UPDATE pgmigrations SET name = $1 WHERE id = 9 AND name <> $1`,
+                ['009_token_blacklist']
             );
-            // 015-021 renumbering: teammates created duplicate 015 files; during conflict resolution
-            // migrations were temporarily numbered 019-025 before settling on the final 015-021 sequence.
-            // Heal any DB that went through the intermediate state.
+            if (r9 > 0) console.log('[migrations] self-heal: fixed migration id=9 name');
+
+            // 015-021 renumbering: teammates created duplicate 015 files; during conflict
+            // resolution migrations were temporarily numbered 019-025 before settling on
+            // the final 015-021 sequence. Heal any DB that went through the interim state.
+            //
+            // ⚠️  KNOWN DUPLICATE MIGRATION NUMBER PAIRS (non-deterministic apply order):
+            //   015_add_password_reset.sql       ‖ 015_add_tat_to_admissions.sql (→ 016)
+            //   038_add_delay_reason_options.sql  ‖ 038_create_alert_preferences.sql
+            //   040_create_user_feedback.sql      ‖ 040_enable_pgcrypto.sql
+            //   046_add_patient_demographics.sql  ‖ 046_create_cath_lab_procedures.sql
+            //   047_add_cath_lab_roles.sql        ‖ 047_add_doctor_roles.sql ‖ 047_enforce_symptom.sql
+            // TODO: renumber each duplicate with `npm run db:create <name>` and add
+            //       the old-name → new-name pair to the renames list below.
             const renames = [
-                ['019_add_password_reset', '015_add_password_reset'], ['020_add_tat_to_admissions', '016_add_tat_to_admissions'],
-                ['021_add_temporary_beds', '017_add_temporary_beds'], ['022_create_shifts', '018_create_shifts'],
-                ['023_add_shift_id_to_logs', '019_add_shift_id_to_logs'], ['024_create_system_settings', '020_create_system_settings'],
-                ['025_create_stage_delay_thresholds', '021_create_stage_delay_thresholds'], ['015_add_housekeeping_role_and_stages', '024_add_housekeeping_role_and_stages'],
-                ['022_create_daily_summaries', '023_create_daily_summaries'],
+                ['019_add_password_reset',            '015_add_password_reset'            ],
+                ['020_add_tat_to_admissions',         '016_add_tat_to_admissions'         ],
+                ['021_add_temporary_beds',            '017_add_temporary_beds'            ],
+                ['022_create_shifts',                 '018_create_shifts'                 ],
+                ['023_add_shift_id_to_logs',          '019_add_shift_id_to_logs'          ],
+                ['024_create_system_settings',        '020_create_system_settings'        ],
+                ['025_create_stage_delay_thresholds', '021_create_stage_delay_thresholds' ],
+                ['015_add_housekeeping_role_and_stages', '024_add_housekeeping_role_and_stages'],
+                ['022_create_daily_summaries',        '023_create_daily_summaries'        ],
             ];
             for (const [oldName, newName] of renames) {
-                await healClient.query(
-                    `UPDATE pgmigrations SET name = '${newName}' WHERE name = '${oldName}'`
+                // Parameterized: $1 = newName, $2 = oldName
+                const { rowCount } = await healClient.query(
+                    `UPDATE pgmigrations SET name = $1 WHERE name = $2`,
+                    [newName, oldName]
                 );
+                if (rowCount > 0) {
+                    console.log(`[migrations] self-heal: renamed "${oldName}" → "${newName}"`);
+                }
             }
         } catch {
             // pgmigrations may not exist yet on a fresh install — safe to ignore
