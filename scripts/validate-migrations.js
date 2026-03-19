@@ -11,6 +11,8 @@ const path = require('path');
 const fs = require('fs');
 const dotenv = require('dotenv');
 
+const LEGACY_DUPLICATE_PREFIXES = new Set(['015', '038', '040', '047']);
+
 // Load environment files
 const loadEnvFiles = () => {
   const nodeEnv = process.env.NODE_ENV || 'development';
@@ -68,15 +70,22 @@ const validateMigrations = async () => {
   }
 
   const duplicates = Array.from(numberToNames.entries()).filter(([, names]) => names.length > 1);
-  if (duplicates.length > 0) {
-    // Pre-existing duplicates on main are not blocked here — the CI migration-validation
-    // job enforces uniqueness only for newly added migrations in a PR.
-    // A dedicated migration-cleanup PR is required to resolve pre-existing duplicates.
-    console.warn('⚠️  WARNING: Duplicate migration number prefixes detected (pre-existing):');
-    for (const [number, names] of duplicates) {
+  const legacyDuplicates = duplicates.filter(([number]) => LEGACY_DUPLICATE_PREFIXES.has(number));
+  const unexpectedDuplicates = duplicates.filter(([number]) => !LEGACY_DUPLICATE_PREFIXES.has(number));
+
+  if (legacyDuplicates.length > 0) {
+    console.log('ℹ️  Legacy duplicate migration prefixes detected (allowed for backward compatibility):');
+    for (const [number, names] of legacyDuplicates) {
+      console.log(`  ${number}: ${names.join(', ')}`);
+    }
+  }
+
+  if (unexpectedDuplicates.length > 0) {
+    console.warn('⚠️  WARNING: New duplicate migration number prefixes detected:');
+    for (const [number, names] of unexpectedDuplicates) {
       console.warn(`  ${number}: ${names.join(', ')}`);
     }
-    console.warn('These should be resolved in a dedicated migration-cleanup PR.');
+    console.warn('Use unique numeric prefixes for new migration files.');
   }
 
   console.log(`📁 Found ${migrationFiles.length} migration files\n`);
@@ -135,7 +144,7 @@ const validateMigrations = async () => {
       process.exit(1);
     }
 
-    // Verify migration order (informational only)
+    // Verify migration order when explicitly requested.
     const expectedOrder = [...appliedMigrations].sort();
     const actualOrder = appliedMigrations;
 
@@ -147,11 +156,15 @@ const validateMigrations = async () => {
       }
     }
 
-    if (orderMismatch) {
+    const strictOrderCheckEnabled = process.env.VALIDATE_MIGRATION_ORDER === 'true';
+
+    if (orderMismatch && strictOrderCheckEnabled) {
       console.log('\nℹ️  NOTE: Migration apply timestamps differ from filename order.');
       console.log('This is informational when pending migrations = 0.');
-      console.log('Expected order:', expectedOrder);
-      console.log('Applied order:', actualOrder);
+      console.log(`Expected first migration: ${expectedOrder[0]}`);
+      console.log(`Applied first migration: ${actualOrder[0]}`);
+      console.log(`Expected last migration: ${expectedOrder[expectedOrder.length - 1]}`);
+      console.log(`Applied last migration: ${actualOrder[actualOrder.length - 1]}`);
     }
 
     console.log('\n✅ All migrations validated successfully');

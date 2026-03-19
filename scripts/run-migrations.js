@@ -56,6 +56,40 @@ const validatePostgresUrl = (url) => {
     }
 };
 
+const shouldHideMigrationNoise = (line) => {
+    const trimmed = line.trim();
+    if (!trimmed) {
+        return false;
+    }
+
+    if (/^Can't determine timestamp for \d+$/i.test(trimmed)) {
+        return true;
+    }
+
+    const noisyFragments = [
+        'MODULE_TYPELESS_PACKAGE_JSON',
+        'Reparsing as ES module because module syntax was detected.',
+        'This incurs a performance overhead.',
+        'To eliminate this warning, add "type": "module"',
+        '(Use `node --trace-warnings ...` to show where the warning was created)',
+    ];
+
+    return noisyFragments.some((fragment) => trimmed.includes(fragment));
+};
+
+const writeFilteredOutput = (buffer, outputStream) => {
+    const text = (buffer || '').toString();
+    if (!text) {
+        return;
+    }
+
+    const lines = text.split(/\r?\n/).filter((line) => !shouldHideMigrationNoise(line));
+    const formatted = lines.join('\n').trim();
+    if (formatted) {
+        outputStream.write(`${formatted}\n`);
+    }
+};
+
 const resolveDatabaseUrl = () => {
     const encrypted = process.env.DATABASE_URL_ENCRYPTED;
     const plaintext = process.env.DATABASE_URL;
@@ -125,7 +159,7 @@ const run = async () => {
     
     // Filter to only include .js migrations (SQL migrations are handled separately above).
     // node-pg-migrate expects a regex string for ignore-pattern.
-    args.push(effectiveCommand, '--migrations-dir', migrationsDir, '--verbose', '--ignore-pattern', '\\.sql$');
+    args.push(effectiveCommand, '--migrations-dir', migrationsDir, '--ignore-pattern', '\\.sql$');
 
     if (command === 'up' || command === 'down') {
         args.push('--no-check-order');
@@ -157,9 +191,13 @@ const run = async () => {
     console.log(`[migrations] command: node-pg-migrate ${args.join(' ')}`);
 
     const result = spawnSync(process.execPath, [binPath, ...args], {
-        stdio: 'inherit',
+        stdio: ['ignore', 'pipe', 'pipe'],
         env: process.env,
+        encoding: 'utf8',
     });
+
+    writeFilteredOutput(result.stdout, process.stdout);
+    writeFilteredOutput(result.stderr, process.stderr);
 
     if (result.error) {
         console.error(result.error.message);
