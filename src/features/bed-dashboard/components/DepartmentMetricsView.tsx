@@ -59,7 +59,20 @@ export function DepartmentMetricsView() {
     )
   }
 
-  if (!metrics) return null
+  if (!metrics) {
+    return (
+      <Card className="mb-6 border-amber-300 bg-amber-50 dark:border-amber-800 dark:bg-amber-950/40">
+        <CardHeader className="pb-2">
+          <CardTitle className="text-base text-amber-900 dark:text-amber-200">
+            Department metrics unavailable
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="text-sm text-amber-800 dark:text-amber-300">
+          {error ?? 'Unable to load consolidated metrics. Retrying automatically every 30 seconds.'}
+        </CardContent>
+      </Card>
+    )
+  }
 
   return (
     <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6" data-help-id="consolidated-metrics">

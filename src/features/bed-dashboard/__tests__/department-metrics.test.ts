@@ -41,7 +41,7 @@ describe('department-metrics', () => {
         {
           in_progress: '2',
           completed: '5',
-          total_surgeries: '7'
+          total_rooms: '16'
         }
       ],
       rowCount: 1,
@@ -77,7 +77,7 @@ describe('department-metrics', () => {
     
     expect(result.data?.ot.inProgress).toBe(2)
     expect(result.data?.ot.completed).toBe(5)
-    expect(result.data?.ot.utilizationRate).toBe(29) // Math.round(2 / 7 * 100) = 29
+    expect(result.data?.ot.utilizationRate).toBe(13) // Math.round(2 / 16 * 100) = 13
     
     expect(result.data?.cathLab.activeProcedures).toBe(1)
     expect(result.data?.cathLab.cagCount).toBe(2)

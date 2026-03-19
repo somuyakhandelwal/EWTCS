@@ -2,6 +2,18 @@
 const fs = require('fs');
 const path = require('path');
 
+const extractUpMigrationSql = (rawSql) => {
+    // Execute only the up section when files include both up and down blocks.
+    const downMarkerRegex = /^\s*--\s*Down\s+Migration\b.*$/im;
+    const match = rawSql.match(downMarkerRegex);
+
+    if (!match || typeof match.index !== 'number') {
+        return rawSql;
+    }
+
+    return rawSql.slice(0, match.index);
+};
+
 const applySqlMigrations = async (databaseUrl, migrationsDir) => {
     const { Client } = require('pg');
     const client = new Client({ connectionString: databaseUrl });
@@ -24,7 +36,10 @@ const applySqlMigrations = async (databaseUrl, migrationsDir) => {
             .sort((a, b) => {
                 const numA = parseInt(a.match(/^\d{3}/)[0], 10);
                 const numB = parseInt(b.match(/^\d{3}/)[0], 10);
-                return numA - numB;
+                if (numA !== numB) {
+                    return numA - numB;
+                }
+                return a.localeCompare(b);
             });
 
         console.log(`[migrations] Found ${sqlFiles.length} SQL migration files`);
@@ -43,7 +58,17 @@ const applySqlMigrations = async (databaseUrl, migrationsDir) => {
 
             // Read and execute the SQL file
             const filePath = path.join(migrationsDir, file);
-            const sql = fs.readFileSync(filePath, 'utf-8');
+            const rawSql = fs.readFileSync(filePath, 'utf-8');
+            const sql = extractUpMigrationSql(rawSql).trim();
+
+            if (!sql) {
+                console.log(`[migrations]   ↷ ${file} (no up migration SQL found)`);
+                await client.query(
+                    'INSERT INTO pgmigrations (name) VALUES ($1)',
+                    [file.replace('.sql', '')]
+                );
+                continue;
+            }
 
             console.log(`[migrations]   → Applying ${file}`);
 

@@ -5,36 +5,67 @@ import { logger } from '@/shared/config/logger'
 
 export async function getDepartmentMetrics() {
   try {
-    // 1. Triage metrics: Bed occupancy, average triage time
+    // 1. Triage metrics: occupied triage beds and average time spent in triage.
     const intakeRes = await query(`
-      SELECT 
-        COUNT(*) FILTER (WHERE occupancy_status = 'occupied') as occupied_beds,
-        COUNT(*) as total_beds,
-        ROUND(AVG(triage_time_minutes), 1) as avg_triage_time
-      FROM er_intake
+      WITH triage_stage AS (
+        SELECT id
+        FROM stages
+        WHERE LOWER(name) = 'triage'
+        LIMIT 1
+      ),
+      triage_beds AS (
+        SELECT b.id, b.is_occupied
+        FROM beds b
+        JOIN triage_stage ts ON b.current_stage_id = ts.id
+        WHERE b.is_active = true
+      ),
+      recent_intake AS (
+        SELECT DISTINCT bed_id
+        FROM er_intake
+        WHERE bed_id IS NOT NULL
+          AND registered_at >= NOW() - INTERVAL '7 days'
+      ),
+      triage_durations AS (
+        SELECT bsl.bed_id, bsl.duration_in_previous_stage_ms
+        FROM bed_stage_logs bsl
+        JOIN triage_stage ts ON bsl.from_stage_id = ts.id
+        WHERE bsl.duration_in_previous_stage_ms IS NOT NULL
+      )
+      SELECT
+        (SELECT COUNT(*) FROM triage_beds WHERE is_occupied = true) AS occupied_beds,
+        (SELECT COUNT(*) FROM triage_beds) AS total_beds,
+        COALESCE(
+          ROUND(AVG(td.duration_in_previous_stage_ms) / 60000.0, 1),
+          0
+        ) AS avg_triage_time
+      FROM triage_durations td
+      JOIN recent_intake ri ON ri.bed_id = td.bed_id
     `)
     const triageMetrics = intakeRes.rows[0] || { occupied_beds: 0, total_beds: 0, avg_triage_time: 0 }
     
-    // 2. OT metrics: Surgeries in progress, completed, utilization rate
+    // 2. OT metrics: in-progress/completed surgeries and room utilization.
     const otRes = await query(`
-      SELECT 
-        COUNT(*) FILTER (WHERE status = 'in_progress') as in_progress,
-        COUNT(*) FILTER (WHERE status = 'completed') as completed,
-        COUNT(*) as total_surgeries
+      WITH room_capacity AS (
+        SELECT COUNT(*) AS total_rooms
+        FROM ot_rooms
+      )
+      SELECT
+        COUNT(*) FILTER (WHERE status = 'IN_PROGRESS') AS in_progress,
+        COUNT(*) FILTER (WHERE status = 'COMPLETED') AS completed,
+        (SELECT total_rooms FROM room_capacity) AS total_rooms
       FROM ot_procedures
     `)
-    const otMetrics = otRes.rows[0] || { in_progress: 0, completed: 0, total_surgeries: 0 }
-    // Utilization could be considered as total in progress vs something, or just return basic stats
-    const utilizationRate = otMetrics.total_surgeries > 0 
-      ? Math.round((Number(otMetrics.in_progress) / Number(otMetrics.total_surgeries)) * 100)
+    const otMetrics = otRes.rows[0] || { in_progress: 0, completed: 0, total_rooms: 0 }
+    const utilizationRate = Number(otMetrics.total_rooms) > 0
+      ? Math.round((Number(otMetrics.in_progress) / Number(otMetrics.total_rooms)) * 100)
       : 0
 
     // 3. Cath Lab metrics: Active procedures, CAG/PTCA counts
     const cathRes = await query(`
-      SELECT 
-        COUNT(*) FILTER (WHERE status = 'active') as active_procedures,
-        COUNT(*) FILTER (WHERE procedure_type = 'CAG') as cag_count,
-        COUNT(*) FILTER (WHERE procedure_type = 'PTCA') as ptca_count
+      SELECT
+        COUNT(*) FILTER (WHERE status = 'IN_PROGRESS') AS active_procedures,
+        COUNT(*) FILTER (WHERE UPPER(procedure_type) = 'CAG') AS cag_count,
+        COUNT(*) FILTER (WHERE UPPER(procedure_type) = 'PTCA') AS ptca_count
       FROM cath_lab_procedures
     `)
     const cathMetrics = cathRes.rows[0] || { active_procedures: 0, cag_count: 0, ptca_count: 0 }

@@ -123,9 +123,9 @@ const run = async () => {
     const args = [];
     const effectiveCommand = command === 'status' ? 'up' : command;
     
-    // Filter to only include .js migrations (SQL migrations are handled separately above)
-    // node-pg-migrate uses glob patterns for ignore-pattern, not regex
-    args.push(effectiveCommand, '--migrations-dir', migrationsDir, '--verbose', '--ignore-pattern', '*.sql');
+    // Filter to only include .js migrations (SQL migrations are handled separately above).
+    // node-pg-migrate expects a regex string for ignore-pattern.
+    args.push(effectiveCommand, '--migrations-dir', migrationsDir, '--verbose', '--ignore-pattern', '\\.sql$');
 
     if (command === 'up' || command === 'down') {
         args.push('--no-check-order');

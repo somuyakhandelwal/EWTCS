@@ -74,19 +74,20 @@ describe('DepartmentMetricsView', () => {
     setIntervalSpy.mockRestore()
   })
 
-  it('renders null if metrics loading failed', async () => {
+  it('renders an error card if metrics loading failed', async () => {
     vi.mocked(getDepartmentMetrics).mockResolvedValue({
       success: false,
       error: 'Error'
     })
 
-    const { container } = render(<DepartmentMetricsView />)
+    render(<DepartmentMetricsView />)
 
     await waitFor(() => {
-      // Excludes the loader, components returns null
+      // Excludes the loader, component should show fallback card
       expect(document.querySelector('.animate-spin')).toBeNull()
     })
 
-    expect(container.firstChild).toBeNull()
+    expect(screen.getByText('Department metrics unavailable')).toBeDefined()
+    expect(screen.getByText('Error')).toBeDefined()
   })
 })
