@@ -5,7 +5,7 @@ const { spawnSync } = require('child_process');
 const { createDecipheriv, scryptSync } = require('crypto');
 const dotenv = require('dotenv');
 const { printStatus } = require('./migration-status');
-
+const { healMigrations } = require('./migration-healer');
 const SALT = 'EWTCS_SALT_2026';
 const DEFAULT_ENV = 'development';
 
@@ -133,68 +133,9 @@ const run = async () => {
         args.push('--single-transaction');
     }
 
-    // Self-heal: correct any mis-named pgmigrations rows so node-pg-migrate's order-check passes.
-    // All updates are idempotent — rows already at the correct name are unaffected.
-    // Fresh installs have no pgmigrations table yet; the catch handles that safely.
+    // Pre-hook: Heal any legacy database drift bugs before advancing
     if (command === 'up') {
-        const { Client } = require('pg');
-        const healClient = new Client({ connectionString: databaseUrl });
-        try {
-            await healClient.connect();
-
-            // Fix: use parameterized queries — prevents SQL injection if names
-            // ever come from an external source, and makes each rename auditable.
-            // 007/009 swap introduced by PRs #161/#162
-            const { rowCount: r7 } = await healClient.query(
-                `UPDATE pgmigrations SET name = $1 WHERE id = 7 AND name <> $1`,
-                ['007_create_bed_stage_log_corrections']
-            );
-            if (r7 > 0) console.log('[migrations] self-heal: fixed migration id=7 name');
-
-            const { rowCount: r9 } = await healClient.query(
-                `UPDATE pgmigrations SET name = $1 WHERE id = 9 AND name <> $1`,
-                ['009_token_blacklist']
-            );
-            if (r9 > 0) console.log('[migrations] self-heal: fixed migration id=9 name');
-
-            // 015-021 renumbering: teammates created duplicate 015 files; during conflict
-            // resolution migrations were temporarily numbered 019-025 before settling on
-            // the final 015-021 sequence. Heal any DB that went through the interim state.
-            //
-            // ⚠️  KNOWN DUPLICATE MIGRATION NUMBER PAIRS (non-deterministic apply order):
-            //   015_add_password_reset.sql       ‖ 015_add_tat_to_admissions.sql (→ 016)
-            //   038_add_delay_reason_options.sql  ‖ 038_create_alert_preferences.sql
-            //   040_create_user_feedback.sql      ‖ 040_enable_pgcrypto.sql
-            //   046_add_patient_demographics.sql  ‖ 046_create_cath_lab_procedures.sql
-            //   047_add_cath_lab_roles.sql        ‖ 047_add_doctor_roles.sql ‖ 047_enforce_symptom.sql
-            // TODO: renumber each duplicate with `npm run db:create <name>` and add
-            //       the old-name → new-name pair to the renames list below.
-            const renames = [
-                ['019_add_password_reset',            '015_add_password_reset'            ],
-                ['020_add_tat_to_admissions',         '016_add_tat_to_admissions'         ],
-                ['021_add_temporary_beds',            '017_add_temporary_beds'            ],
-                ['022_create_shifts',                 '018_create_shifts'                 ],
-                ['023_add_shift_id_to_logs',          '019_add_shift_id_to_logs'          ],
-                ['024_create_system_settings',        '020_create_system_settings'        ],
-                ['025_create_stage_delay_thresholds', '021_create_stage_delay_thresholds' ],
-                ['015_add_housekeeping_role_and_stages', '024_add_housekeeping_role_and_stages'],
-                ['022_create_daily_summaries',        '023_create_daily_summaries'        ],
-            ];
-            for (const [oldName, newName] of renames) {
-                // Parameterized: $1 = newName, $2 = oldName
-                const { rowCount } = await healClient.query(
-                    `UPDATE pgmigrations SET name = $1 WHERE name = $2`,
-                    [newName, oldName]
-                );
-                if (rowCount > 0) {
-                    console.log(`[migrations] self-heal: renamed "${oldName}" → "${newName}"`);
-                }
-            }
-        } catch {
-            // pgmigrations may not exist yet on a fresh install — safe to ignore
-        } finally {
-            await healClient.end().catch(() => { });
-        }
+        await healMigrations(databaseUrl);
     }
 
     console.log(`[migrations] start: ${new Date().toISOString()}`);

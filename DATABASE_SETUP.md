@@ -182,7 +182,9 @@ npm run db:seed
 This will create:
 - ✅ Admin user (username: `admin`, password: `Admin@123`)
 - ✅ 8 patient workflow stages (Empty, Triage, Registration, etc.)
-- ✅ 20 sample emergency beds (ER-01 through ER-20)
+- ✅ 30 Emergency Ward beds (`ER-01` to `ER-30`)
+- ✅ 6 Triage Area beds (`TRIAGE-01` to `TRIAGE-06`)
+- ✅ 16 Operation Theatre rooms (`OT-01` to `OT-16`)
 
 **Expected output:**
 ```
