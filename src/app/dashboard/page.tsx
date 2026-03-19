@@ -6,6 +6,7 @@ import { KioskBanner } from "@/features/auth/components/KioskBanner"
 import { FeedbackForm } from "@/features/adoption/components/FeedbackForm"
 import { redirect } from "next/navigation"
 import { Suspense } from "react"
+import { DepartmentMetricsView } from "@/features/bed-dashboard/components/DepartmentMetricsView"
 
 export default async function DashboardPage() {
     const session = await verifyActiveSession()
@@ -32,6 +33,9 @@ export default async function DashboardPage() {
                         <LogoutButton />
                     </div>
                 </div>
+
+                {/* Consolidated Department Metrics */}
+                <DepartmentMetricsView />
 
                 {/* Bed Grid - Streamed */}
                 <Suspense fallback={<BedGridSkeleton />}>

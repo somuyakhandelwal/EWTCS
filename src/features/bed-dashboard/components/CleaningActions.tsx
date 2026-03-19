@@ -4,7 +4,7 @@
 
 'use client'
 
-import { memo } from 'react'
+import { memo, useEffect, useState } from 'react'
 import { Timer } from 'lucide-react'
 import { formatElapsedTime } from '../lib/utils'
 import { cn } from '@/shared/lib/utils'
@@ -24,9 +24,20 @@ export function isCleaningStage(stageName: string | undefined | null): boolean {
 export const CleaningActions = memo(function CleaningActions({
   lastStageChange,
 }: CleaningActionsProps) {
-  const cleaningDurationMs = lastStageChange
-    ? Date.now() - new Date(lastStageChange).getTime()
-    : null
+  // Keep cleaningDurationMs as null during SSR to avoid hydration mismatch.
+  // Date.now() changes every millisecond, so computing it server-side produces
+  // a different aria-label than the client recomputes during hydration.
+  const [cleaningDurationMs, setCleaningDurationMs] = useState<number | null>(null)
+
+  useEffect(() => {
+    if (!lastStageChange) return
+    const startMs = new Date(lastStageChange).getTime()
+    // Calculate immediately, then refresh every second for a live timer
+    const tick = () => setCleaningDurationMs(Date.now() - startMs)
+    tick()
+    const id = setInterval(tick, 1000)
+    return () => clearInterval(id)
+  }, [lastStageChange])
 
   if (cleaningDurationMs === null) return null
 
@@ -44,3 +55,4 @@ export const CleaningActions = memo(function CleaningActions({
     </div>
   )
 })
+

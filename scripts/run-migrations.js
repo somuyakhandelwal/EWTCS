@@ -5,6 +5,8 @@ const { spawnSync } = require('child_process');
 const { createDecipheriv, scryptSync } = require('crypto');
 const dotenv = require('dotenv');
 const { printStatus } = require('./migration-status');
+const { applySqlMigrations } = require('./sql-migrations');
+const { healDatabaseMigrations } = require('./heal-migrations');
 
 const SALT = 'EWTCS_SALT_2026';
 const DEFAULT_ENV = 'development';
@@ -108,9 +110,22 @@ const run = async () => {
     const binPath = require.resolve('node-pg-migrate/bin/node-pg-migrate');
     const migrationsDir = path.resolve(process.cwd(), 'migrations');
 
+    // Apply SQL migrations first (before JS migrations)
+    if (command === 'up') {
+        try {
+            await applySqlMigrations(databaseUrl, migrationsDir);
+        } catch (error) {
+            console.error(`[migrations] SQL migrations failed: ${error.message}`);
+            process.exit(1);
+        }
+    }
+
     const args = [];
     const effectiveCommand = command === 'status' ? 'up' : command;
-    args.push(effectiveCommand, '--migrations-dir', migrationsDir, '--verbose');
+    
+    // Filter to only include .js migrations (SQL migrations are handled separately above)
+    // node-pg-migrate uses glob patterns for ignore-pattern, not regex
+    args.push(effectiveCommand, '--migrations-dir', migrationsDir, '--verbose', '--ignore-pattern', '*.sql');
 
     if (command === 'up' || command === 'down') {
         args.push('--no-check-order');
@@ -134,40 +149,8 @@ const run = async () => {
     }
 
     // Self-heal: correct any mis-named pgmigrations rows so node-pg-migrate's order-check passes.
-    // All updates are idempotent — rows already at the correct name are unaffected.
-    // Fresh installs have no pgmigrations table yet; the catch handles that safely.
     if (command === 'up') {
-        const { Client } = require('pg');
-        const healClient = new Client({ connectionString: databaseUrl });
-        try {
-            await healClient.connect();
-            // 007/009 swap introduced by PRs #161/#162
-            await healClient.query(
-                "UPDATE pgmigrations SET name = '007_create_bed_stage_log_corrections' WHERE id = 7 AND name <> '007_create_bed_stage_log_corrections'"
-            );
-            await healClient.query(
-                "UPDATE pgmigrations SET name = '009_token_blacklist' WHERE id = 9 AND name <> '009_token_blacklist'"
-            );
-            // 015-021 renumbering: teammates created duplicate 015 files; during conflict resolution
-            // migrations were temporarily numbered 019-025 before settling on the final 015-021 sequence.
-            // Heal any DB that went through the intermediate state.
-            const renames = [
-                ['019_add_password_reset', '015_add_password_reset'], ['020_add_tat_to_admissions', '016_add_tat_to_admissions'],
-                ['021_add_temporary_beds', '017_add_temporary_beds'], ['022_create_shifts', '018_create_shifts'],
-                ['023_add_shift_id_to_logs', '019_add_shift_id_to_logs'], ['024_create_system_settings', '020_create_system_settings'],
-                ['025_create_stage_delay_thresholds', '021_create_stage_delay_thresholds'], ['015_add_housekeeping_role_and_stages', '024_add_housekeeping_role_and_stages'],
-                ['022_create_daily_summaries', '023_create_daily_summaries'],
-            ];
-            for (const [oldName, newName] of renames) {
-                await healClient.query(
-                    `UPDATE pgmigrations SET name = '${newName}' WHERE name = '${oldName}'`
-                );
-            }
-        } catch {
-            // pgmigrations may not exist yet on a fresh install — safe to ignore
-        } finally {
-            await healClient.end().catch(() => { });
-        }
+        await healDatabaseMigrations(databaseUrl);
     }
 
     console.log(`[migrations] start: ${new Date().toISOString()}`);

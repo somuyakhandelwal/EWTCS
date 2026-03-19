@@ -49,7 +49,8 @@ const validateMigrations = async () => {
     process.exit(1);
   }
 
-  // Get all migration files
+  // Get all migration files (JS/TS/SQL).
+  // All formats are supported by node-pg-migrate and tracked in pgmigrations.
   const migrationFiles = fs
     .readdirSync(migrationsDir)
     .filter((file) => file.endsWith('.js') || file.endsWith('.ts') || file.endsWith('.sql'))
