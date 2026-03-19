@@ -56,6 +56,16 @@ const validateMigrations = async () => {
     .map((file) => path.parse(file).name)
     .sort();
 
+  const invalidNaming = migrationFiles.filter(
+    (name) => !/^\d{3}_.+/.test(name) && !/^\d{13}_.+/.test(name)
+  );
+  if (invalidNaming.length > 0) {
+    console.error('❌ ERROR: Invalid migration filename format detected.');
+    console.error('Migrations must use either NNN_description or TIMESTAMP_description.');
+    invalidNaming.forEach((name) => console.error(`  ✗ ${name}`));
+    process.exit(1);
+  }
+
   const numberToNames = new Map();
   for (const name of migrationFiles) {
     const match = name.match(/^(\d+)_/);
@@ -76,6 +86,24 @@ const validateMigrations = async () => {
       console.warn(`  ${number}: ${names.join(', ')}`);
     }
     console.warn('These should be resolved in a dedicated migration-cleanup PR.');
+  }
+
+  const numericMigrations = migrationFiles
+    .map((name) => ({ name, match: name.match(/^(\d{3})_/) }))
+    .filter((entry) => entry.match)
+    .map((entry) => ({ name: entry.name, number: Number(entry.match[1]) }));
+
+  if (numericMigrations.length > 0) {
+    const latestNumber = Math.max(...numericMigrations.map((entry) => entry.number));
+    const latestPrefix = String(latestNumber).padStart(3, '0');
+    const latestConflicts = numericMigrations.filter((entry) => entry.number === latestNumber);
+
+    if (latestConflicts.length > 1) {
+      console.error(`❌ ERROR: Latest numeric migration prefix ${latestPrefix} is duplicated.`);
+      console.error('Create the next migration with a new incremented prefix to avoid ordering conflicts.');
+      latestConflicts.forEach((entry) => console.error(`  ✗ ${entry.name}`));
+      process.exit(1);
+    }
   }
 
   console.log(`📁 Found ${migrationFiles.length} migration files\n`);

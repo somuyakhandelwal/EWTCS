@@ -6,7 +6,7 @@ Administrator runbook for configuration, maintenance, backup/recovery, security,
 - Owner: Platform / System Administration
 - Scope: Configuration, backups, troubleshooting, security, command references
 - Versioning: Git-tracked; update required in release PRs when operations change
-- Last Updated: 2026-03-03
+- Last Updated: 2026-03-18
 
 ## 1) System Overview
 EWTCS is a Next.js + PostgreSQL emergency-ward operations platform.
@@ -151,6 +151,22 @@ npm run db:reset
 npm run db:reconcile
 npm run audit:verify
 ```
+
+### US-21.1 Operational Notes
+- New migration: `046_add_patient_demographics_to_beds.sql`
+- Added bed demographics columns used by triage and dashboard views:
+	- `patient_ipd_id`
+	- `patient_age`
+	- `patient_gender`
+- Deployment action: run `npm run db:migrate` before serving traffic after updating to this release.
+
+Dev runtime note:
+- `npm run dev` now clears `.next` before startup to reduce stale chunk load errors during local development.
+
+### US-22.1 Operational Notes
+- New migrations: `047_enforce_symptom_40_char_limit.sql`, `1774000000000_enforce_symptom_40_char_limit_after_triage.sql`
+- Triage complaint field (`beds.key_symptom`) is now strictly limited to 40 characters.
+- Deployment action: run `npm run db:migrate` before application startup after pulling this release.
 
 ### Validation, Tests, and Ops
 ```bash

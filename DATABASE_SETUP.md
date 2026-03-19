@@ -234,6 +234,29 @@ Visit [http://localhost:3000/login](http://localhost:3000/login) and log in:
 | `token_blacklist` | Invalidated JWT tokens | token_hash, expires_at |
 | `kiosk_sessions` | Kiosk mode session tracking | id, ward_id, created_at, expires_at |
 
+### US-21.1 Triage Demographics (beds table)
+
+Migration `046_add_patient_demographics_to_beds.sql` adds active triage demographic columns to `beds`:
+
+- `patient_uhid` (varchar)
+- `patient_ipd_id` (varchar, optional)
+- `patient_name` (varchar)
+- `patient_age` (integer, constrained to 1-130)
+- `patient_gender` (varchar, constrained to Male/Female/Other/Unknown)
+- `key_symptom` (text)
+- `triage_category` (varchar)
+
+These values represent the active patient currently occupying a bed and are reset during discharge/non-patient transitions.
+
+### US-22.1 Symptoms / Complaint Limit
+
+Migrations `047_enforce_symptom_40_char_limit.sql` and `1774000000000_enforce_symptom_40_char_limit_after_triage.sql` enforce strict complaint length rules for triage intake across upgrade and clean-install paths:
+
+- `beds.key_symptom` is enforced as `VARCHAR(40)`
+- Constraint `chk_beds_key_symptom_max_40` ensures length never exceeds 40 chars
+
+UI and server validation also enforce this same 40-character limit to keep behavior consistent end-to-end.
+
 ### Default Stages
 
 | Stage | Order | Color | Description |

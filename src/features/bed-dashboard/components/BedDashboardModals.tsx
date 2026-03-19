@@ -36,7 +36,10 @@ interface BedDashboardModalsProps {
   onTriageClose?: () => void
   onTriageSubmit?: (bedId: string, triageData: {
     patientUhid: string;
+    patientIpdId?: string | null;
     patientName: string;
+    patientAge: number;
+    patientGender: 'Male' | 'Female' | 'Other' | 'Unknown';
     keySymptom: string;
     triageCategory: 'Resuscitation' | 'Emergent' | 'Urgent' | 'Less Urgent' | 'Non-Urgent';
   }) => Promise<void>

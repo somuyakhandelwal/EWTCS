@@ -44,6 +44,7 @@ export async function overrideLogShift(input: {
       by: session.userId,
     })
     revalidatePath('/dashboard')
+    revalidatePath('/triage')
     return { success: true }
   } catch (err) {
     logger.error('overrideLogShift failed', err as Error)
