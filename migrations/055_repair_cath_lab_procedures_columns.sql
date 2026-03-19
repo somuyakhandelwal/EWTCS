@@ -6,8 +6,10 @@
 -- Up Migration
 
 ALTER TABLE IF EXISTS cath_lab_procedures
+    ADD COLUMN IF NOT EXISTS id UUID,
     ADD COLUMN IF NOT EXISTS bed_id UUID,
     ADD COLUMN IF NOT EXISTS patient_uhid VARCHAR(100),
+    ADD COLUMN IF NOT EXISTS patient_uid VARCHAR(100),
     ADD COLUMN IF NOT EXISTS cardiologist_id UUID,
     ADD COLUMN IF NOT EXISTS procedure_type VARCHAR(100),
     ADD COLUMN IF NOT EXISTS procedure_code VARCHAR(20),
@@ -36,15 +38,37 @@ ALTER TABLE IF EXISTS cath_lab_procedures
     ADD COLUMN IF NOT EXISTS updated_at TIMESTAMP WITH TIME ZONE;
 
 ALTER TABLE cath_lab_procedures
+    ALTER COLUMN id SET DEFAULT uuid_generate_v4(),
     ALTER COLUMN created_at SET DEFAULT CURRENT_TIMESTAMP,
     ALTER COLUMN updated_at SET DEFAULT CURRENT_TIMESTAMP,
     ALTER COLUMN status SET DEFAULT 'SCHEDULED';
 
 UPDATE cath_lab_procedures
 SET
+    id = COALESCE(id, uuid_generate_v4()),
+    patient_uid = COALESCE(patient_uid, patient_uhid),
     created_at = COALESCE(created_at, CURRENT_TIMESTAMP),
     updated_at = COALESCE(updated_at, CURRENT_TIMESTAMP),
     status = COALESCE(status, 'SCHEDULED');
+
+ALTER TABLE cath_lab_procedures
+    ALTER COLUMN id SET NOT NULL;
+
+DO $$
+BEGIN
+    IF NOT EXISTS (
+        SELECT 1
+        FROM pg_constraint c
+        JOIN pg_class t ON c.conrelid = t.oid
+        JOIN pg_namespace n ON t.relnamespace = n.oid
+        WHERE n.nspname = 'public'
+          AND t.relname = 'cath_lab_procedures'
+          AND c.contype = 'p'
+    ) THEN
+        ALTER TABLE cath_lab_procedures
+            ADD CONSTRAINT pk_cath_lab_procedures PRIMARY KEY (id);
+    END IF;
+END $$;
 
 DO $$
 BEGIN
@@ -64,8 +88,13 @@ DO $$
 BEGIN
     IF NOT EXISTS (
         SELECT 1
-        FROM pg_constraint
-        WHERE conname = 'fk_cath_lab_procedures_bed_id'
+        FROM pg_constraint c
+        JOIN pg_class t ON c.conrelid = t.oid
+        JOIN pg_namespace n ON t.relnamespace = n.oid
+        WHERE n.nspname = 'public'
+          AND t.relname = 'cath_lab_procedures'
+          AND c.contype = 'f'
+          AND pg_get_constraintdef(c.oid) LIKE 'FOREIGN KEY (bed_id)%REFERENCES beds(id)%'
     ) THEN
         ALTER TABLE cath_lab_procedures
             ADD CONSTRAINT fk_cath_lab_procedures_bed_id
@@ -77,8 +106,13 @@ DO $$
 BEGIN
     IF NOT EXISTS (
         SELECT 1
-        FROM pg_constraint
-        WHERE conname = 'fk_cath_lab_procedures_cardiologist_id'
+        FROM pg_constraint c
+        JOIN pg_class t ON c.conrelid = t.oid
+        JOIN pg_namespace n ON t.relnamespace = n.oid
+        WHERE n.nspname = 'public'
+          AND t.relname = 'cath_lab_procedures'
+          AND c.contype = 'f'
+          AND pg_get_constraintdef(c.oid) LIKE 'FOREIGN KEY (cardiologist_id)%REFERENCES users(id)%'
     ) THEN
         ALTER TABLE cath_lab_procedures
             ADD CONSTRAINT fk_cath_lab_procedures_cardiologist_id
@@ -114,6 +148,7 @@ END $$;
 
 CREATE INDEX IF NOT EXISTS idx_cath_lab_procedures_bed_id ON cath_lab_procedures(bed_id);
 CREATE INDEX IF NOT EXISTS idx_cath_lab_procedures_patient_uhid ON cath_lab_procedures(patient_uhid);
+CREATE INDEX IF NOT EXISTS idx_cath_lab_procedures_patient_uid ON cath_lab_procedures(patient_uid);
 CREATE INDEX IF NOT EXISTS idx_cath_lab_procedures_cardiologist_id ON cath_lab_procedures(cardiologist_id);
 CREATE INDEX IF NOT EXISTS idx_cath_lab_procedures_status ON cath_lab_procedures(status);
 CREATE INDEX IF NOT EXISTS idx_cath_lab_procedures_scheduled_start ON cath_lab_procedures(scheduled_start);

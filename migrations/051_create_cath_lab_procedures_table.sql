@@ -69,7 +69,8 @@ CREATE TABLE IF NOT EXISTS cath_lab_procedures (
 
 -- Safety repair for environments where a partial table existed before this migration
 ALTER TABLE IF EXISTS cath_lab_procedures
-    ADD COLUMN IF NOT EXISTS bed_id UUID;
+    ADD COLUMN IF NOT EXISTS bed_id UUID,
+    ADD COLUMN IF NOT EXISTS patient_uhid VARCHAR(100);
 
 DO $$
 BEGIN
