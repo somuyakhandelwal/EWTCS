@@ -27,7 +27,7 @@ CREATE TABLE IF NOT EXISTS cath_lab_procedures (
     scheduled_start TIMESTAMP WITH TIME ZONE,
     actual_start_time TIMESTAMP WITH TIME ZONE,
     actual_end_time TIMESTAMP WITH TIME ZONE,
-    duration_minutes INTEGER,  -- Calculated: (actual_end_time - actual_start_time) / 60
+    duration_minutes INTEGER CHECK (duration_minutes IS NULL OR duration_minutes >= 0),  -- Calculated: (actual_end_time - actual_start_time) / 60
     
     -- Status tracking
     status VARCHAR(20) NOT NULL DEFAULT 'SCHEDULED'
@@ -60,8 +60,34 @@ CREATE TABLE IF NOT EXISTS cath_lab_procedures (
     
     -- Timestamps
     created_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT CURRENT_TIMESTAMP
+    updated_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT CURRENT_TIMESTAMP,
+
+    -- Timeline validation
+    CONSTRAINT chk_cath_lab_procedures_time_order
+        CHECK (actual_end_time IS NULL OR actual_start_time IS NULL OR actual_end_time >= actual_start_time)
 );
+
+-- Safety repair for environments where a partial table existed before this migration
+ALTER TABLE IF EXISTS cath_lab_procedures
+    ADD COLUMN IF NOT EXISTS bed_id UUID;
+
+DO $$
+BEGIN
+    IF NOT EXISTS (
+        SELECT 1
+        FROM pg_constraint c
+        JOIN pg_class t ON c.conrelid = t.oid
+        JOIN pg_namespace n ON t.relnamespace = n.oid
+        WHERE n.nspname = 'public'
+          AND t.relname = 'cath_lab_procedures'
+          AND c.contype = 'f'
+          AND pg_get_constraintdef(c.oid) LIKE 'FOREIGN KEY (bed_id)%REFERENCES beds(id)%'
+    ) THEN
+        ALTER TABLE cath_lab_procedures
+            ADD CONSTRAINT fk_cath_lab_procedures_bed_id
+            FOREIGN KEY (bed_id) REFERENCES beds(id) ON DELETE SET NULL;
+    END IF;
+END $$;
 
 -- Create indexes for common queries
 CREATE INDEX IF NOT EXISTS idx_cath_lab_procedures_bed_id ON cath_lab_procedures(bed_id);
