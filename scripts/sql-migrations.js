@@ -14,6 +14,44 @@ const extractUpMigrationSql = (rawSql) => {
     return rawSql.slice(0, match.index);
 };
 
+const repairLegacyCathLabTable = async (client) => {
+    const tableExistsResult = await client.query(`
+        SELECT to_regclass('public.cath_lab_procedures') AS table_name
+    `);
+
+    if (!tableExistsResult.rows[0]?.table_name) {
+        return;
+    }
+
+    // Legacy/provisional schemas may have this table without the canonical bed_id.
+    // Repair it before 051 index creation so SQL migration execution stays stable.
+    await client.query(`
+        ALTER TABLE cath_lab_procedures
+            ADD COLUMN IF NOT EXISTS bed_id UUID,
+            ADD COLUMN IF NOT EXISTS patient_uhid VARCHAR(100),
+            ADD COLUMN IF NOT EXISTS cardiologist_id UUID,
+            ADD COLUMN IF NOT EXISTS status VARCHAR(20),
+            ADD COLUMN IF NOT EXISTS scheduled_start TIMESTAMP WITH TIME ZONE,
+            ADD COLUMN IF NOT EXISTS actual_start_time TIMESTAMP WITH TIME ZONE,
+            ADD COLUMN IF NOT EXISTS procedure_type VARCHAR(100)
+    `);
+
+    await client.query(`
+        DO $$
+        BEGIN
+            IF NOT EXISTS (
+                SELECT 1
+                FROM pg_constraint
+                WHERE conname = 'fk_cath_lab_procedures_bed_id'
+            ) THEN
+                ALTER TABLE cath_lab_procedures
+                    ADD CONSTRAINT fk_cath_lab_procedures_bed_id
+                    FOREIGN KEY (bed_id) REFERENCES beds(id) ON DELETE SET NULL;
+            END IF;
+        END $$;
+    `);
+};
+
 const applySqlMigrations = async (databaseUrl, migrationsDir) => {
     const { Client } = require('pg');
     const client = new Client({ connectionString: databaseUrl });
@@ -29,6 +67,8 @@ const applySqlMigrations = async (databaseUrl, migrationsDir) => {
                 run_on TIMESTAMP NOT NULL DEFAULT NOW()
             )
         `);
+
+        await repairLegacyCathLabTable(client);
 
         // Get all .sql migration files, sorted numerically
         const sqlFiles = fs.readdirSync(migrationsDir)

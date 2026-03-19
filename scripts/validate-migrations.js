@@ -9,33 +9,14 @@
 const { Client } = require('pg');
 const path = require('path');
 const fs = require('fs');
-const dotenv = require('dotenv');
+const { loadEnvironment } = require('./lib-env');
 
 const LEGACY_DUPLICATE_PREFIXES = new Set(['015', '038', '040', '047']);
-
-// Load environment files
-const loadEnvFiles = () => {
-  const nodeEnv = process.env.NODE_ENV || 'development';
-  const baseFiles = ['.env', `.env.${nodeEnv}`];
-
-  baseFiles.forEach((file) => {
-    const fullPath = path.resolve(process.cwd(), file);
-    if (fs.existsSync(fullPath)) {
-      const override = file !== '.env';
-      dotenv.config({ path: fullPath, override });
-    }
-  });
-
-  const localPath = path.resolve(process.cwd(), '.env.local');
-  if (fs.existsSync(localPath)) {
-    dotenv.config({ path: localPath, override: true });
-  }
-};
 
 const validateMigrations = async () => {
   console.log('🔍 Validating database migrations...\n');
 
-  loadEnvFiles();
+  loadEnvironment();
 
   const databaseUrl = process.env.DATABASE_URL;
 
