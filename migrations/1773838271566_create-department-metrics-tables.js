@@ -1,44 +1,9 @@
 exports.up = (pgm) => {
-    // SQL migrations 048/050/051 own the canonical schemas for these tables.
-    // Keep this migration idempotent for environments where these tables exist.
-    pgm.createTable(
-        'er_intake',
-        {
-            id: 'id',
-            bed_id: { type: 'uuid', notNull: false },
-            occupancy_status: { type: 'varchar(50)', notNull: false },
-            triage_time_minutes: { type: 'integer', notNull: false, default: 0 },
-            recorded_at: { type: 'timestamp', default: pgm.func('current_timestamp') },
-        },
-        { ifNotExists: true }
-    );
-
-    pgm.createTable(
-        'ot_procedures',
-        {
-            id: 'id',
-            patient_name: { type: 'varchar(100)' },
-            status: { type: 'varchar(50)', notNull: false },
-            room_id: { type: 'varchar(50)' },
-            recorded_at: { type: 'timestamp', default: pgm.func('current_timestamp') },
-        },
-        { ifNotExists: true }
-    );
-
-    pgm.createTable(
-        'cath_lab_procedures',
-        {
-            id: 'id',
-            procedure_type: { type: 'varchar(50)', notNull: false },
-            status: { type: 'varchar(50)', notNull: false },
-            recorded_at: { type: 'timestamp', default: pgm.func('current_timestamp') },
-        },
-        { ifNotExists: true }
-    );
+    // Canonical schemas are defined by SQL migrations 048/050/051.
+    // Keep this JS migration as a no-op to avoid creating partial table shapes.
+    pgm.sql('SELECT 1;');
 };
 
-exports.down = (pgm) => {
-    pgm.dropTable('cath_lab_procedures');
-    pgm.dropTable('ot_procedures');
-    pgm.dropTable('er_intake');
+exports.down = (_pgm) => {
+    // No-op rollback: canonical SQL migrations own these tables.
 };
