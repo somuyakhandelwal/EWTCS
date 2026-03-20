@@ -705,24 +705,34 @@ SELECT bed_number, is_occupied FROM beds ORDER BY bed_number;
 
 ### Expected Table Count
 
-Run `\dt` in psql — you should see **19 tables** (includes EPIC 25 department metrics tables):
+Run `\dt` in psql — you should see **29 tables** (includes archival and metrics tables):
+- alert_preferences
+- archival_runs
 - audit_logs
-- bed_stage_log_corrections
+- audit_logs_archive
 - bed_stage_logs
+- bed_stage_logs_archive
 - beds
 - cath_lab_procedures
+- daily_summaries
+- delay_reason_options
+- diagnosis
 - disposition_delay_reasons
 - er_intake
+- error_events
 - kiosk_sessions
 - ot_procedures
-- password_reset_tokens
+- ot_rooms
 - patient_admissions
+- patient_admissions_archive
+- pgmigrations
 - shifts
 - stage_delay_thresholds
 - stage_transitions
 - stages
 - system_settings
 - token_blacklist
+- user_feedback
 - users
 - wards
 

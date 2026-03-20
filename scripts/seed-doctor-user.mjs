@@ -27,8 +27,8 @@ async function seedDoctor() {
     const passwordHash = await bcrypt.hash('Nurse@123', 12)
 
     await client.query(
-      `INSERT INTO users (username, password_hash, role, is_active, created_at, updated_at)
-       VALUES ($1, $2, 'doctor', true, NOW(), NOW())`,
+      `INSERT INTO users (username, password_hash, role, created_at, updated_at)
+       VALUES ($1, $2, 'doctor', NOW(), NOW())`,
       ['doctor1', passwordHash]
     )
 

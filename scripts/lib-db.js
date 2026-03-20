@@ -163,7 +163,7 @@ async function setupAdminUser(databaseUrl) {
     if (doctorCheck.rows.length === 0) {
       await client.query(
         `INSERT INTO users (username, password_hash, role, created_at, updated_at)
-         VALUES ($1, $2, 'doctor', true, NOW(), NOW())`,
+         VALUES ($1, $2, 'doctor', NOW(), NOW())`,
         ['doctor1', doctorPassword]
       );
       log.success('Test doctor user created: doctor1 (password: Nurse@123)');
