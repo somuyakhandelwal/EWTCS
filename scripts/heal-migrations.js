@@ -25,7 +25,9 @@ const healDatabaseMigrations = async (databaseUrl) => {
             ['022_create_daily_summaries', '023_create_daily_summaries'],
             ['038_create_alert_preferences', '052_create_alert_preferences'], ['040_enable_pgcrypto', '053_enable_pgcrypto'],
             ['047_enforce_symptom_40_char_limit', '054_enforce_symptom_40_char_limit'],
-            ['046_create_cath_lab_procedures', '051_create_cath_lab_procedures_table'],
+            ['046_create_cath_lab_procedures', '056_create_cath_lab_procedures'],
+            ['051_create_cath_lab_procedures_table', '057_create_cath_lab_procedures_table'],
+            ['055_repair_cath_lab_procedures_columns', '058_repair_cath_lab_procedures_columns'],
         ];
         for (const [oldName, newName] of renames) {
             await healClient.query(
