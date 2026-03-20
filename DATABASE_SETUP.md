@@ -236,6 +236,7 @@ Visit [http://localhost:3000/login](http://localhost:3000/login) and log in:
 | `er_intake` | Emergency intake tracking | id, bed_id, occupancy_status, triage_time_minutes |
 | `ot_procedures` | Operation theater procedures | id, patient_name, status, room_id |
 | `cath_lab_procedures` | Cath lab procedures | id, procedure_type, status |
+| `diagnosis` | Clinical diagnosis records (US-22.2) | id, bed_id, doctor_id, patient_uhid, diagnosis_text, diagnosed_at |
 
 ### US-21.1 Triage Demographics (beds table)
 
@@ -704,7 +705,7 @@ SELECT bed_number, is_occupied FROM beds ORDER BY bed_number;
 
 ### Expected Table Count
 
-Run `\dt` in psql — you should see **18 tables** (includes EPIC 25 department metrics tables):
+Run `\dt` in psql — you should see **19 tables** (includes EPIC 25 department metrics tables):
 - audit_logs
 - bed_stage_log_corrections
 - bed_stage_logs
