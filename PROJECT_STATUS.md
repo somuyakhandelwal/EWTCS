@@ -1,8 +1,8 @@
 # EWTCS Project Status
 
 **Emergency Ward Bed Status Monitoring & AI Daily Report System**  
-**Last Updated:** February 20, 2026 (US-12 Report Sign-Off Complete)  
-**Version:** 1.3 (Phase 1 + Phase 2 + Audit Compliance + Report Sign-Off Complete)
+**Last Updated:** March 20, 2026  
+**Version:** 2.0 (Phase 1 + Phase 2 + Phase 3 Core + EPIC 20 Department Modules)
 
 ---
 
@@ -47,11 +47,12 @@ The core system is **fully operational** and **production-ready**. Phase 2 real-
 - [x] Delay detection and red alerts (>3 hours)
 - [x] Filter functionality (show delayed beds only)
 - [x] One-click stage updates with validation
-- [x] **Search by bed number and stage name** (US-1.2) ← NEW
-- [x] **Debounced search with result highlighting** ← NEW
-- [x] **Real-time bed updates with intelligent polling** (US-1.2) ← NEW
-- [x] **Connection status indicator with auto-reconnect** ← NEW
-- [x] **Disposition bottleneck tracking** (US-1.6) ← NEW
+- [x] Search by bed number and stage name (US-1.2)
+- [x] Debounced search with result highlighting
+- [x] Real-time bed updates with intelligent polling (US-1.2)
+- [x] Connection status indicator with auto-reconnect
+- [x] Disposition bottleneck tracking (US-1.6)
+- [x] Patient demographics on beds (UHID, name, age, gender, symptom, triage — US-21.1)
 - [x] **Bed history modal with stage transition log** ← NEW
 
 ### Time Tracking & Analytics (EPIC 3)
@@ -72,31 +73,46 @@ The core system is **fully operational** and **production-ready**. Phase 2 real-
 - [x] Supervisor override capability for restricted transitions
 - [x] Correction system for logged transitions
 
+### Department Modules (EPIC 20) 🔄 IN PROGRESS
+- [x] OT Room management — 16 rooms with full UI dashboard and status tracking
+- [x] Cath Lab — full feature module with forms, queries, schemas, tests, and `/cath-lab` page (US-24.1)
+- [ ] ER Intake — ⚠️ DB table ready, metrics query exists, but **no intake form UI** (US-20.1)
+- [ ] Diagnosis — ⚠️ DB table ready, encryption config exists, but **no UI or server actions** (US-20.2)
+- [ ] OT Procedures — ⚠️ DB table ready, metrics query exists, but **no procedure form UI** (US-20.3)
+
+### Data Encryption (EPIC 17) ✅
+- [x] AES-256-GCM encryption for PHI columns (patient names, notes, complaints)
+- [x] Encrypted columns on beds, users, audit_logs, bed_stage_logs
+- [x] Dual plaintext/encrypted column pattern for migration path
+
 ### Infrastructure & DevOps
-- [x] PostgreSQL database with 22 migrations
+- [x] PostgreSQL database with 65 migrations
 - [x] Automated setup wizard (`npm run setup`)
 - [x] Environment variable validation
 - [x] Database seeding scripts
-- [x] Feature-first architecture
+- [x] Feature-first architecture (20 feature modules)
 - [x] TypeScript throughout
 - [x] ESLint code quality checks
-- [x] Vitest v3 + Testing Library testing framework (365 tests, 23 suites)
-- [x] Admin pages for bed and stage management (US-6.1) ← NEW
-- [x] Stage color configuration (EPIC 4) ← NEW
+- [x] Vitest v3 + Testing Library testing framework
+- [x] Admin pages for bed and stage management (US-6.1)
+- [x] Stage color configuration (EPIC 4)
+- [x] Automated database backups with encryption (US-13.4)
+- [x] Security scanning and PII detection
+- [x] In-app help system with contextual tips
 
 ---
 
 ## 📊 System Statistics (Current)
 
-- **Database Tables:** 12 (users, beds, stages, bed_stage_logs, bed_stage_log_corrections, stage_transitions, disposition_delay_reasons, audit_logs, token_blacklist, ward_access_control, report_signoffs, pgmigrations)
-- **Migrations Applied:** 22/22
-- **Emergency Beds:** 12 configured (expandable to 50+)
+- **Database Tables:** 25+ (users, beds, stages, wards, bed_stage_logs, bed_stage_log_corrections, stage_transitions, disposition_delay_reasons, audit_logs, token_blacklist, kiosk_sessions, patient_admissions, shifts, system_settings, stage_delay_thresholds, daily_summaries, report_signoffs, ot_rooms, ot_procedures, er_intake, diagnosis, cath_lab_procedures, alert_preferences, error_events, user_feedback, archival tables)
+- **Migrations Applied:** 65
+- **Emergency Beds:** 50 configured (expandable)
 - **Workflow Stages:** 8 stages
-- **User Roles:** 4 (Admin, Supervisor, Nurse, Auditor)
-- **Test Users:** 4 (admin1, supervisor1, nurse, nurse1)
-- **Test Coverage:** 365 tests across 23 test files (100% passing)
-- **API Endpoints:** 15+ (authentication, bed management, analytics, user management, auditor, sign-off)
-- **Application Routes:** 11 (/, /login, /dashboard, /admin, /admin/beds, /admin/stages, /analytics, /supervisor, /api/health, /api/auth/logout, middleware)
+- **User Roles:** 7 (Admin, Supervisor, Nurse, Housekeeping, Auditor, Cardiologist, Cath Lab Nurse)
+- **Test Users:** 5+ (admin1, supervisor1, nurse, nurse1, auditor1)
+- **Feature Modules:** 20 (auth, bed-dashboard, bed-management, cath-lab, data-encryption, data-retention, export, help, import, management-report, notifications, ot-dashboard, security-scanning, shift-management, stage-management, system-health, user-management, ward-management, ai-summary, adoption)
+- **API Endpoints:** 18 route handlers + Server Actions
+- **Application Routes:** 15+ pages with middleware-protected access
 
 ---
 
@@ -137,12 +153,17 @@ All Phase 2 core features are now complete:
 
 | Component | Technology | Version |
 |-----------|-----------|---------|
-| Framework | Next.js | 15.5 |
+| Framework | Next.js (App Router) | 15.1.12 |
 | Language | TypeScript | 5.0+ |
+| Runtime | React | 19 |
 | Database | PostgreSQL | 14+ |
-| ORM/Query | node-postgres (pg) | Latest |
-| UI Library | shadcn/ui + Tailwind CSS | Latest |
-| Authentication | Custom (bcrypt + JWT) | N/A |
+| DB Driver | node-postgres (pg) | Latest |
+| Migrations | node-pg-migrate | 7.x |
+| UI Library | Radix UI + Tailwind CSS | Latest |
+| Authentication | Custom JWT (jose + bcrypt) | N/A |
+| AI/ML | Google Gemini (@google/generative-ai) | Latest |
+| Charts | Recharts | Latest |
+| Testing | Vitest + Testing Library | 3.x |
 | Node.js | Runtime | 18.x+ |
 
 ---
@@ -152,15 +173,21 @@ All Phase 2 core features are now complete:
 ```
 EWTCS/
 ├── src/
-│   ├── app/                    # Next.js routes
-│   ├── features/               # Feature modules
+│   ├── app/                    # Next.js App Router pages & API routes
+│   ├── features/               # 20 feature modules
 │   │   ├── auth/              # Authentication
 │   │   ├── bed-dashboard/     # Bed management & analytics
-│   │   └── user-management/   # User CRUD operations
-│   └── shared/                 # Shared utilities & UI
-├── migrations/                 # Database migrations (10 files)
-├── scripts/                    # Setup & utility scripts
-├── docs/                       # Documentation & archives
+│   │   ├── cath-lab/          # Cath lab procedures (EPIC 20)
+│   │   ├── ot-dashboard/      # OT room tracking
+│   │   ├── data-encryption/   # AES-256 PHI encryption
+│   │   ├── data-retention/    # Archival & retention
+│   │   ├── ai-summary/        # Gemini daily reports
+│   │   ├── system-health/     # Error monitoring
+│   │   └── ...                # 12 more modules
+│   └── shared/                 # Shared utilities, UI components & libs
+├── migrations/                 # Database migrations (65 files)
+├── scripts/                    # Setup, backup, encryption utilities
+├── docs/                       # Documentation, training, infrastructure
 └── public/                     # Static assets
 ```
 
@@ -171,8 +198,8 @@ EWTCS/
 | Test Type | Status | Details |
 |-----------|--------|---------|
 | Manual Testing | ✅ Passed | All features tested manually |
-| Database Migrations | ✅ Passed | All 22 migrations applied successfully |
-| Automated Tests | ✅ Passed | 365 tests across 23 suites (Vitest v3.2.4) |
+| Database Migrations | ✅ Passed | All 65 migrations applied successfully |
+| Automated Tests | ✅ Passed | Vitest v3 test suite |
 | TypeScript Compilation | ✅ Passed | No type errors |
 | ESLint Validation | ✅ Passed | Code quality checks pass |
 | Environment Validation | ✅ Passed | All required variables validated |
@@ -198,12 +225,21 @@ EWTCS/
 | QUICKSTART.md | ✅ Current | 5-minute setup guide |
 | DATABASE_SETUP.md | ✅ Current | Database configuration guide |
 | CONFIGURATION.md | ✅ Current | Environment & deployment setup |
+| INSTALLATION_GUIDE.md | ✅ Current | Production deployment guide |
 | CONTRIBUTING.md | ✅ Current | Contribution guidelines |
 | CODE_OF_CONDUCT.md | ✅ Current | Community standards |
+| SECURITY.md | ✅ Current | Vulnerability reporting policy |
 | .env.example | ✅ Current | Environment variable template |
-| src/features/README.md | ✅ Current | Feature architecture guide |
-| src/features/bed-dashboard/ANALYTICS_README.md | ✅ Current | Analytics system documentation |
+| docs/ARCHITECTURE.md | ✅ Current | System architecture overview |
+| docs/DATABASE.md | ✅ Current | Complete database schema map |
+| docs/API_ROUTES.md | ✅ Current | API route documentation |
+| docs/AUTH_FLOW.md | ✅ Current | Auth & session flow |
+| docs/DATA_FLOW.md | ✅ Current | Data flow diagrams |
+| docs/ENCRYPTION_DESIGN.md | ✅ Current | AES-256 encryption design |
+| docs/ADMIN_HANDBOOK.md | ✅ Current | Admin operations runbook |
 | docs/README.md | ✅ Current | Documentation index |
+| docs/training/ | ✅ Current | Training materials (10 files) |
+| docs/infrastructure/ | ✅ Current | Deployment & security guides |
 | docs/archive/ | 📦 Archived | PRD and User Stories (historical reference) |
 
 ---
@@ -243,11 +279,11 @@ EWTCS/
 
 ## 🎯 Next Milestones
 
-1. **Phase 2 Q1 2026:** Real-time updates and mobile optimization
-2. **Phase 3 Q2 2026:** AI reporting and advanced analytics
-3. **Phase 4 Q3-Q4 2026:** External integrations and multi-ward support
+1. **Phase 4 Q2-Q3 2026:** Lab/radiology integration, mobile app, multi-ward expansion
+2. **Phase 5 Q4 2026:** EMR/EHR integration, patient transfer workflows
 
 ---
 
-**Project is production-ready for Phase 1 deployment.**  
-**All core features are operational and tested.**
+**Project is production-ready with Phase 1 + Phase 2 + Phase 3 core features deployed.**  
+**All core features are operational and tested.**  
+**Last Updated:** March 20, 2026
