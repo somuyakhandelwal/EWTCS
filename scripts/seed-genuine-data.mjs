@@ -49,17 +49,23 @@ async function seed() {
     );
     if (!shifts.length) throw new Error('No shifts — run migrations first.');
 
+    // Bug 1 Fix: look up users by role, not by hardcoded usernames.
+    // This means any user with role='nurse' is included, even if their
+    // username differs — and future roles (doctor, cardiologist) are
+    // automatically picked up without modifying this file.
     const { rows: users } = await client.query(
-      `SELECT id, username FROM users ORDER BY created_at`
+      `SELECT id, username, role FROM users ORDER BY created_at`
     );
-    const nurse        = users.find(u => u.username === 'nurse');
-    const supervisor   = users.find(u => u.username === 'supervisor');
-    const housekeeping = users.find(u => u.username === 'housekeeping');
-    const admin        = users.find(u => u.username === 'admin');
-    if (!nurse) throw new Error('"nurse" user not found — run npm run init first.');
+    const nurse        = users.find(u => u.role === 'nurse');
+    const supervisor   = users.find(u => u.role === 'supervisor');
+    const housekeeping = users.find(u => u.role === 'housekeeping');
+    const admin        = users.find(u => u.role === 'admin');
+    // Collect all doctor/cardiologist users for future Cath Lab seeding.
+    const clinicalStaff = users.filter(u => ['doctor', 'cardiologist'].includes(u.role));
+    if (!nurse) throw new Error('No user with role="nurse" found — run npm run init first.');
 
-    const staff    = [nurse, supervisor, admin].filter(Boolean).map(u => u.id);
-    const allStaff = [nurse, supervisor, admin, housekeeping].filter(Boolean).map(u => u.id);
+    const staff    = [nurse, supervisor, admin, ...clinicalStaff].filter(Boolean).map(u => u.id);
+    const allStaff = [nurse, supervisor, admin, housekeeping, ...clinicalStaff].filter(Boolean).map(u => u.id);
 
     // 2. Assign wards to staff ────────────────────────────────────────────────
     // Fix: resolve by ward code — positional lookup (wards[0]) silently breaks
@@ -74,10 +80,17 @@ async function seed() {
     console.log('✅  Ward assignments updated (staff → Emergency Ward ER)');
 
     // 3. Clear existing bed data ──────────────────────────────────────────────
-    // Fix: freeze the allowlist — table names MUST be compile-time constants.
-    // PostgreSQL cannot parameterize identifiers ($1 only works for values),
-    // so string interpolation here is only safe when the set is immutable.
-    // Never derive these names from user input, ENV vars, or config files.
+    // Bug 2 Fix: hard abort if running in production to prevent accidental data
+    // loss on staging replicas or production environments. This is a seed script
+    // and must NEVER run on a live database.
+    if (process.env.NODE_ENV === 'production') {
+      throw new Error(
+        'SAFETY ABORT: npm run db:seed must NOT run in production. ' +
+        'Set NODE_ENV=development to seed a dev/staging database.'
+      );
+    }
+    // Table names are frozen compile-time constants — never derive from user
+    // input, ENV vars, or config files (PostgreSQL cannot parameterize identifiers).
     const SEED_TABLES = Object.freeze([
       'disposition_delay_reasons', 'patient_admissions', 'bed_stage_logs', 'beds',
     ]);
