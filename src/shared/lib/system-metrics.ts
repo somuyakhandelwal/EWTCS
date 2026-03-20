@@ -45,7 +45,7 @@ export async function getSystemMetrics() {
     const diskTotal = stats.blocks * stats.bsize;
     const diskFree = stats.bfree * stats.bsize;
     if (diskTotal > 0) diskUsage = ((diskTotal - diskFree) / diskTotal) * 100;
-  } catch (_error) {
+  } catch {
     diskUsage = 0; // fallback if unsupported
   }
 

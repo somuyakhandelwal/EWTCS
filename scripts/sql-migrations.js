@@ -104,7 +104,7 @@ const applySqlMigrations = async (databaseUrl, migrationsDir) => {
             if (!sql) {
                 console.log(`[migrations]   ↷ ${file} (no up migration SQL found)`);
                 await client.query(
-                    'INSERT INTO pgmigrations (name) VALUES ($1)',
+                    'INSERT INTO pgmigrations (name, run_on) VALUES ($1, NOW())',
                     [file.replace('.sql', '')]
                 );
                 continue;
@@ -115,7 +115,7 @@ const applySqlMigrations = async (databaseUrl, migrationsDir) => {
             try {
                 await client.query(sql);
                 await client.query(
-                    'INSERT INTO pgmigrations (name) VALUES ($1)',
+                    'INSERT INTO pgmigrations (name, run_on) VALUES ($1, NOW())',
                     [file.replace('.sql', '')]
                 );
                 console.log(`[migrations]   ✓ ${file}`);
