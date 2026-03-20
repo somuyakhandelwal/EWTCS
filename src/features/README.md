@@ -98,6 +98,14 @@ feature-name/
 - UI components for vulnerability and SLA status display
 - See: `docs/SECURITY_SCANNING.md` and `docs/SECURITY_TEAM_RUNBOOK.md`
 
+### `cath-lab/`
+**EPIC 24: Cath Lab Module (US-24.1) ✅**
+- Dedicated cardiology procedure logging workflow
+- Procedure type support for `CAG` and `PTCA`
+- Procedure fields: patient ID, cardiologist, start/end time, and outcome
+- Validation + audit trail integration for new procedure logs
+- Distinct route and workflow from OT module (`/cath-lab`)
+
 ## Future Features
 
 Based on EPICS.md, upcoming features may include:

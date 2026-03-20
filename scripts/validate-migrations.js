@@ -9,31 +9,14 @@
 const { Client } = require('pg');
 const path = require('path');
 const fs = require('fs');
-const dotenv = require('dotenv');
+const { loadEnvironment } = require('./lib-env');
 
-// Load environment files
-const loadEnvFiles = () => {
-  const nodeEnv = process.env.NODE_ENV || 'development';
-  const baseFiles = ['.env', `.env.${nodeEnv}`];
-
-  baseFiles.forEach((file) => {
-    const fullPath = path.resolve(process.cwd(), file);
-    if (fs.existsSync(fullPath)) {
-      const override = file !== '.env';
-      dotenv.config({ path: fullPath, override });
-    }
-  });
-
-  const localPath = path.resolve(process.cwd(), '.env.local');
-  if (fs.existsSync(localPath)) {
-    dotenv.config({ path: localPath, override: true });
-  }
-};
+const LEGACY_DUPLICATE_PREFIXES = new Set(['015', '038', '040', '047']);
 
 const validateMigrations = async () => {
   console.log('🔍 Validating database migrations...\n');
 
-  loadEnvFiles();
+  loadEnvironment();
 
   const databaseUrl = process.env.DATABASE_URL;
 
@@ -49,12 +32,23 @@ const validateMigrations = async () => {
     process.exit(1);
   }
 
-  // Get all migration files
+  // Get all migration files (JS/TS/SQL).
+  // All formats are supported by node-pg-migrate and tracked in pgmigrations.
   const migrationFiles = fs
     .readdirSync(migrationsDir)
     .filter((file) => file.endsWith('.js') || file.endsWith('.ts') || file.endsWith('.sql'))
     .map((file) => path.parse(file).name)
     .sort();
+
+  const invalidNaming = migrationFiles.filter(
+    (name) => !/^\d{3}_.+/.test(name) && !/^\d{13}_.+/.test(name)
+  );
+  if (invalidNaming.length > 0) {
+    console.error('❌ ERROR: Invalid migration filename format detected.');
+    console.error('Migrations must use either NNN_description or TIMESTAMP_description.');
+    invalidNaming.forEach((name) => console.error(`  ✗ ${name}`));
+    process.exit(1);
+  }
 
   const numberToNames = new Map();
   for (const name of migrationFiles) {
@@ -67,15 +61,40 @@ const validateMigrations = async () => {
   }
 
   const duplicates = Array.from(numberToNames.entries()).filter(([, names]) => names.length > 1);
-  if (duplicates.length > 0) {
-    // Pre-existing duplicates on main are not blocked here — the CI migration-validation
-    // job enforces uniqueness only for newly added migrations in a PR.
-    // A dedicated migration-cleanup PR is required to resolve pre-existing duplicates.
-    console.warn('⚠️  WARNING: Duplicate migration number prefixes detected (pre-existing):');
-    for (const [number, names] of duplicates) {
+  const legacyDuplicates = duplicates.filter(([number]) => LEGACY_DUPLICATE_PREFIXES.has(number));
+  const unexpectedDuplicates = duplicates.filter(([number]) => !LEGACY_DUPLICATE_PREFIXES.has(number));
+
+  if (legacyDuplicates.length > 0) {
+    console.log('ℹ️  Legacy duplicate migration prefixes detected (allowed for backward compatibility):');
+    for (const [number, names] of legacyDuplicates) {
+      console.log(`  ${number}: ${names.join(', ')}`);
+    }
+  }
+
+  if (unexpectedDuplicates.length > 0) {
+    console.warn('⚠️  WARNING: New duplicate migration number prefixes detected:');
+    for (const [number, names] of unexpectedDuplicates) {
       console.warn(`  ${number}: ${names.join(', ')}`);
     }
-    console.warn('These should be resolved in a dedicated migration-cleanup PR.');
+    console.warn('Use unique numeric prefixes for new migration files.');
+  }
+
+  const numericMigrations = migrationFiles
+    .map((name) => ({ name, match: name.match(/^(\d{3})_/) }))
+    .filter((entry) => entry.match)
+    .map((entry) => ({ name: entry.name, number: Number(entry.match[1]) }));
+
+  if (numericMigrations.length > 0) {
+    const latestNumber = Math.max(...numericMigrations.map((entry) => entry.number));
+    const latestPrefix = String(latestNumber).padStart(3, '0');
+    const latestConflicts = numericMigrations.filter((entry) => entry.number === latestNumber);
+
+    if (latestConflicts.length > 1) {
+      console.error(`❌ ERROR: Latest numeric migration prefix ${latestPrefix} is duplicated.`);
+      console.error('Create the next migration with a new incremented prefix to avoid ordering conflicts.');
+      latestConflicts.forEach((entry) => console.error(`  ✗ ${entry.name}`));
+      process.exit(1);
+    }
   }
 
   console.log(`📁 Found ${migrationFiles.length} migration files\n`);
@@ -134,7 +153,7 @@ const validateMigrations = async () => {
       process.exit(1);
     }
 
-    // Verify migration order (informational only)
+    // Verify migration order when explicitly requested.
     const expectedOrder = [...appliedMigrations].sort();
     const actualOrder = appliedMigrations;
 
@@ -146,11 +165,15 @@ const validateMigrations = async () => {
       }
     }
 
-    if (orderMismatch) {
+    const strictOrderCheckEnabled = process.env.VALIDATE_MIGRATION_ORDER === 'true';
+
+    if (orderMismatch && strictOrderCheckEnabled) {
       console.log('\nℹ️  NOTE: Migration apply timestamps differ from filename order.');
       console.log('This is informational when pending migrations = 0.');
-      console.log('Expected order:', expectedOrder);
-      console.log('Applied order:', actualOrder);
+      console.log(`Expected first migration: ${expectedOrder[0]}`);
+      console.log(`Applied first migration: ${actualOrder[0]}`);
+      console.log(`Expected last migration: ${expectedOrder[expectedOrder.length - 1]}`);
+      console.log(`Applied last migration: ${actualOrder[actualOrder.length - 1]}`);
     }
 
     console.log('\n✅ All migrations validated successfully');

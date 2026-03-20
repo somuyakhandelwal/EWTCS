@@ -5,20 +5,52 @@ import { logger } from '@/shared/config/logger'
 import type { BedGridData } from '../types/bed'
 import { getUserWard } from '../lib/bed-queries'
 import { requireRole } from '@/shared/lib/auth'
+import { query } from '@/shared/lib/db'
 import { getStageTransitionMap } from '../lib/stage-validation'
 import type { UserRole } from '../lib/stage-validation-types'
 import { getGlobalThresholdMs, getGlobalEscalationThresholdMs } from '@/shared/lib/threshold'
 import { perfStart, perfEnd, logPerf, PERF_SLA } from '@/shared/lib/perf-monitor'
 
+export type BedAreaView = 'all' | 'emergency' | 'triage'
+
+async function getTriageWardIds(): Promise<Set<string>> {
+  const result = await query<{ id: string }>(
+    `
+    SELECT id
+    FROM wards
+    WHERE is_active = true
+      AND (
+        UPPER(code) = 'TRIAGE'
+        OR LOWER(name) LIKE '%triage%'
+      )
+    `
+  )
+
+  return new Set(result.rows.map((row) => row.id))
+}
+
+function filterBedsByArea(data: BedGridData['beds'], areaView: BedAreaView, triageWardIds: Set<string>) {
+  if (areaView === 'all' || triageWardIds.size === 0) {
+    return data
+  }
+
+  if (areaView === 'triage') {
+    return data.filter((bed) => bed.wardId && triageWardIds.has(bed.wardId))
+  }
+
+  return data.filter((bed) => !bed.wardId || !triageWardIds.has(bed.wardId))
+}
+
 /**
- * Get all beds with current status and elapsed time
- * Used by the nurse dashboard to display the bed grid
+ * Get all beds with current status and elapsed time.
+ * areaView='emergency' excludes triage-ward beds; areaView='triage' includes only triage-ward beds.
  */
-export async function getBedGridData(): Promise<{
+export async function getBedGridData(areaView: BedAreaView = 'all'): Promise<{
   success: boolean
   data?: BedGridData
   error?: string
-}> {
+}>
+{
   try {
     // Auth guard: all roles can fetch the dashboard, but must be authenticated
     const session = await requireRole(['nurse', 'supervisor', 'admin', 'housekeeping'])
@@ -35,20 +67,23 @@ export async function getBedGridData(): Promise<{
 
     // Fetch beds, stages, transition map, and caller's ward assignment in parallel
     // US-16.2: stageTransitionMap is cached with BedGridData so offline nurses see stage options
-    const [allBeds, stages, transitionMapRaw, userWard] = await Promise.all([
+    const [allBeds, stages, transitionMapRaw, userWard, triageWardIds] = await Promise.all([
       getBedsWithElapsedTime(delayThresholdMs, escalationThresholdMs),
       getAllStages(),
       getStageTransitionMap(session.role as UserRole),
       getUserWard(session.userId),
+      getTriageWardIds(),
     ])
 
     // Ward-scope the bed list for nurses and housekeeping.
     // Admins/supervisors see every ward; floater nurses (no ward assigned) also see all.
     const wardScopedRoles = new Set<string>(['nurse', 'housekeeping'])
-    const beds =
+    const wardScopedBeds =
       wardScopedRoles.has(session.role) && userWard
         ? allBeds.filter(b => b.wardId === userWard || b.isVirtual || b.isTemporary)
         : allBeds
+
+    const beds = filterBedsByArea(wardScopedBeds, areaView, triageWardIds)
 
     // Convert Map → plain Record (JSON-serialisable for localStorage cache).
     // US-16.2: replicate the online "no rule = allowed by default" behaviour so the
@@ -88,7 +123,12 @@ export async function getBedGridData(): Promise<{
       userWardId: wardScopedRoles.has(session.role) ? userWard : undefined,
     }
 
-    logger.info('Bed grid data fetched successfully', { bedCount: beds.length, stageCount: stages.length })
+    logger.info('Bed grid data fetched successfully', {
+      bedCount: beds.length,
+      stageCount: stages.length,
+      areaView,
+      triageWardCount: triageWardIds.size,
+    })
 
     // EPIC 13: log latency sample — WARN is emitted if > 2 s SLA.
     logPerf('dashboard.getBedGridData', perfEnd(perfMark), PERF_SLA.DASHBOARD_MS)

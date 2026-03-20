@@ -4,9 +4,11 @@
 import { verifyActiveSession } from '@/shared/lib/active-session'
 import { OTDashboardContainer } from '@/features/ot-dashboard/components/OTDashboardContainer'
 import { LogoutButton } from '@/features/auth/components/LogoutButton'
+import Link from 'next/link'
 import { redirect } from 'next/navigation'
 import { Suspense } from 'react'
 import { Activity } from 'lucide-react'
+import { Button } from '@/shared/components/ui/button'
 
 export const dynamic = 'force-dynamic'
 
@@ -50,6 +52,9 @@ export default async function OTDashboardPage() {
             </div>
           </div>
           <div className="self-end sm:self-auto flex items-center gap-4">
+            <Link href="/cath-lab">
+              <Button variant="outline">Open Cath Lab Logging</Button>
+            </Link>
             <LogoutButton />
           </div>
         </div>

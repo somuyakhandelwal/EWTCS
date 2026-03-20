@@ -1,5 +1,7 @@
 import type { Bed } from '../types/bed'
 
+export const SYMPTOM_MAX_LENGTH = 40
+
 export type TriageCategoryType =
   | 'Resuscitation'
   | 'Emergent'
@@ -15,6 +17,7 @@ export interface TriageData {
   patientName: string
   patientAge: number
   patientGender: PatientGenderType
+  /** US-22.1: Symptoms / Complaint field (strict 40-char limit) */
   keySymptom: string
   triageCategory: TriageCategoryType
 }
