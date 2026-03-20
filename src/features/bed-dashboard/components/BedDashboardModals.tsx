@@ -1,14 +1,16 @@
 'use client'
 // Extracted from BedDashboardClient to keep it within the 200-line budget.
-// Renders all four modals: SupervisorOverride, Confirmation, Discharge, AddVirtualBed.
+// Renders all modals: SupervisorOverride, Confirmation, Discharge, AddVirtualBed, Triage, Diagnosis.
 
 import { SupervisorOverrideModal } from './SupervisorOverrideModal'
 import { ConfirmationModal } from './ConfirmationModal'
 import { DischargeModal } from './DischargeModal'
 import { AddVirtualBedModal } from './AddVirtualBedModal'
 import { TriageModal } from './TriageModal'
+import { DiagnosisModal } from '@/features/diagnosis/components/DiagnosisModal'
 import type { OverrideState, ConfirmationState, DischargeState } from '../types/bed'
 import type { TriageState } from '../hooks/useBedStageUpdate'
+import type { DiagnosisState } from '@/shared/types/diagnosis.types'
 
 interface BedDashboardModalsProps {
   // SupervisorOverrideModal
@@ -43,6 +45,10 @@ interface BedDashboardModalsProps {
     keySymptom: string;
     triageCategory: 'Resuscitation' | 'Emergent' | 'Urgent' | 'Less Urgent' | 'Non-Urgent';
   }) => Promise<void>
+  // EPIC 22: Diagnosis Modal
+  diagnosisState?: DiagnosisState | null
+  onDiagnosisClose?: () => void
+  onDiagnosisSuccess?: () => void
 }
 
 export function BedDashboardModals({
@@ -65,6 +71,9 @@ export function BedDashboardModals({
   triageState,
   onTriageClose,
   onTriageSubmit,
+  diagnosisState,
+  onDiagnosisClose,
+  onDiagnosisSuccess,
 }: BedDashboardModalsProps) {
   return (
     <>
@@ -76,6 +85,12 @@ export function BedDashboardModals({
           onSubmit={onTriageSubmit}
         />
       )}
+      <DiagnosisModal
+        diagnosisState={diagnosisState ?? null}
+        isOpen={Boolean(diagnosisState)}
+        onClose={onDiagnosisClose ?? (() => { })}
+        onSuccess={onDiagnosisSuccess}
+      />
       <SupervisorOverrideModal
         isOpen={Boolean(overrideState)}
         bedNumber={overrideState?.bedNumber ?? null}

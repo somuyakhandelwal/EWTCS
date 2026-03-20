@@ -57,20 +57,15 @@ export function saveToCache(data: BedGridData): void {
 
   const serialised = JSON.stringify(entry)
 
-  // AC: Cache size is limited to prevent browser issues
+  // AC: Cache size is limited to prevent browser issues — skip silently if exceeded
   if (serialised.length > realtimeConfig.cacheMaxSizeBytes) {
-    console.warn(
-      `[EWTCS] Cache write skipped: payload (${serialised.length} bytes) exceeds ` +
-        `limit (${realtimeConfig.cacheMaxSizeBytes} bytes).`
-    )
     return
   }
 
   try {
     localStorage.setItem(realtimeConfig.cacheKey, serialised)
-  } catch (err) {
-    // QuotaExceededError — storage is full; log and continue without caching
-    console.warn('[EWTCS] Cache write failed (storage quota exceeded):', err)
+  } catch {
+    // QuotaExceededError — storage is full; continue without caching
   }
 }
 

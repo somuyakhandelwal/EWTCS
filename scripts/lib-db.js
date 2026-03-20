@@ -156,6 +156,18 @@ async function setupAdminUser(databaseUrl) {
         );
       }
     }
+
+    // EPIC 22: Doctor test user (username: doctor1, password: Nurse@123)
+    const doctorPassword = await bcrypt.hash('Nurse@123', 10);
+    const doctorCheck = await client.query('SELECT id FROM users WHERE username = $1', ['doctor1']);
+    if (doctorCheck.rows.length === 0) {
+      await client.query(
+        `INSERT INTO users (username, password_hash, role, created_at, updated_at)
+         VALUES ($1, $2, 'doctor', true, NOW(), NOW())`,
+        ['doctor1', doctorPassword]
+      );
+      log.success('Test doctor user created: doctor1 (password: Nurse@123)');
+    }
     // -------------------------------------
 
     log.success('Admin user setup complete');

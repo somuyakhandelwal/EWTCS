@@ -108,7 +108,7 @@ export async function updateBedStage(input: UpdateBedStageInput): Promise<{
           actualStageId: bed.currentStageId,
           enqueuedAt: result.data.enqueuedAt,
         },
-      }).catch(() => {})
+      }).catch(() => { })
       return { success: false, conflict: true, serverStageId: bed.currentStageId ?? '' }
     }
 

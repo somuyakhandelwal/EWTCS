@@ -1,5 +1,6 @@
 'use client'
 // US-16.1 – US-16.4: Offline & Network Failure Mode (cache, optimistic UI, sync, conflicts)
+// EPIC 22: Doctor Diagnosis Modal integration
 
 import { useCallback, useState, useTransition } from 'react'
 import { MapPin } from 'lucide-react'
@@ -14,6 +15,7 @@ import { SyncStatusBanner } from './SyncStatusBanner'
 import { SyncConflictModal } from './SyncConflictModal'
 import { useSyncConflictHandler } from '../hooks/useSyncConflictHandler'
 import type { BedGridData, DispositionDelayReason } from '../types/bed'
+import type { DiagnosisState } from '@/shared/types/diagnosis.types'
 import { useRealtimeBedUpdates } from '../hooks/useRealtimeBedUpdates'
 import { useBedStageUpdate } from '../hooks/useBedStageUpdate'
 import { useUndoManager } from '../hooks/useUndoManager'
@@ -28,12 +30,15 @@ interface BedDashboardClientProps {
   canRecordDispositionReasons?: boolean
   /** Server action for creating virtual beds — injected from app layer (no cross-feature import) */
   onCreateVirtualBed: (fd: FormData) => Promise<{ success: boolean; error?: string }>
+  /** Current user role — forwarded to BedCard for EPIC 22 doctor button */
+  role?: string
 }
 
 export function BedDashboardClient({
   initialData,
   canRecordDispositionReasons = true,
   onCreateVirtualBed,
+  role,
 }: BedDashboardClientProps) {
   const {
     data: realtimeData,
@@ -122,6 +127,12 @@ export function BedDashboardClient({
 
   const tatSummary = useTatSummary(24)
   const [virtualBedModalOpen, setVirtualBedModalOpen] = useState(false)
+  const [diagnosisState, setDiagnosisState] = useState<DiagnosisState | null>(null)
+
+  const openDiagnosisModal = (bedId: string, bedNumber: string, patientUhid: string, keySymptom?: string | null) => {
+    setDiagnosisState({ bedId, bedNumber, patientUhid, keySymptom })
+  }
+  const closeDiagnosisModal = () => setDiagnosisState(null)
 
   return (
     <div className="space-y-4">
@@ -172,7 +183,19 @@ export function BedDashboardClient({
           isUndoing={isUndoing}
           isOffline={isOffline}
           queuedBedIds={offlineQueue.queuedBedIds}
-          onOpenTriage={(bedId) => { const bed = data.beds.find(b => b.id === bedId); const triageStage = data.stages.find(s => s.name === 'Triage'); if (bed && triageStage) { openTriageModal(bed, triageStage);}}}
+          onOpenTriage={(bedId) => { const bed = data.beds.find(b => b.id === bedId); const triageStage = data.stages.find(s => s.name === 'Triage'); if (bed && triageStage) { openTriageModal(bed, triageStage); } }}
+          onOpenDiagnosis={(bedId) => {
+            const bed = data.beds.find((b) => b.id === bedId)
+            if (bed) {
+              openDiagnosisModal(
+                bed.id,
+                bed.bedNumber,
+                bed.metadata?.triageInfo?.patientUhid ?? '',
+                bed.metadata?.triageInfo?.keySymptom ?? null,
+              )
+            }
+          }}
+          role={role}
         />
       </div>
       {undoError && (
@@ -183,9 +206,13 @@ export function BedDashboardClient({
         overrideState={overrideState} isOverrideSubmitting={isOverrideSubmitting} onOverrideApprove={handleOverrideApprove} onOverrideCancel={closeOverrideModal}
         confirmationState={confirmationState} updatingBedId={updatingBedId} onConfirmationConfirm={handleConfirmationConfirm} onConfirmationCancel={closeConfirmationModal}
         dischargeState={dischargeState} isDischargeSubmitting={isDischargeSubmitting} onDischargeConfirm={handleDischargeConfirm} onDischargeCancel={closeDischargeModal}
-        virtualBedModalOpen={virtualBedModalOpen} onVirtualBedClose={() => setVirtualBedModalOpen(false)} onVirtualBedCreated={() => { setVirtualBedModalOpen(false); handleRefresh() }} onVirtualBedSubmit={handleCreateVirtualBed}        triageState={triageState}
+        virtualBedModalOpen={virtualBedModalOpen} onVirtualBedClose={() => setVirtualBedModalOpen(false)} onVirtualBedCreated={() => { setVirtualBedModalOpen(false); handleRefresh() }} onVirtualBedSubmit={handleCreateVirtualBed} triageState={triageState}
         onTriageClose={closeTriageModal}
-        onTriageSubmit={handleTriageSubmit}      />
+        onTriageSubmit={handleTriageSubmit}
+        diagnosisState={diagnosisState}
+        onDiagnosisClose={closeDiagnosisModal}
+        onDiagnosisSuccess={handleRefresh}
+      />
       <SyncConflictModal conflicts={syncConflicts} isOpen={syncConflicts.length > 0}
         isApplying={isApplyingConflict} onKeepServer={handleKeepServer}
         onForceApply={handleForceApply} onClose={clearConflicts} />

@@ -1,9 +1,16 @@
--- Migration 051: Create Cath Lab Procedures Table
+-- Migration 051: Create Cath Lab Procedures Table (Full Schema)
 -- Purpose: EPIC 20 - ER Triage & Patient Intake (US-20.4)
 -- Stores: Cardiac catheterization procedures with diagnostic and intervention data
 -- Acceptance Criteria 4: New cath_lab_procedures table with cardiologist and outcomes
+--
+-- NOTE: Migration 046 created a simpler, incompatible version of this table.
+-- We drop it here and recreate with the full schema.
 
 -- Up Migration
+
+-- Drop the simplified table from migration 046 (and its enum type) before recreating.
+DROP TABLE IF EXISTS cath_lab_procedures;
+DROP TYPE IF EXISTS cath_lab_procedure_type;
 
 CREATE TABLE IF NOT EXISTS cath_lab_procedures (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),

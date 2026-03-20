@@ -25,7 +25,7 @@ export function recordRequest(userId?: string) {
 export async function getSystemMetrics() {
   const now = Date.now();
   const elapsedMinutes = (now - lastReset) / 60000;
-  
+
   // Reset window every hour to get a fresh rate
   if (elapsedMinutes > 60) {
     requestCount = 0;

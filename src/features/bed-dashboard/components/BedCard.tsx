@@ -1,7 +1,8 @@
 // Epic 6: US-6.5 temporary (orange) / US-6.6 virtual (purple) beds
+// EPIC 22: Doctor Diagnosis button and nurse DiagnosisPanel
 import { memo, useState, useEffect, useCallback, type MouseEvent } from 'react'
 import { Card, CardContent } from '@/shared/components/ui/card'
-import { Clock } from 'lucide-react'
+import { Clock, Stethoscope } from 'lucide-react'
 import type { BedWithElapsedTime, DispositionDelayReason } from '../types/bed'
 import { getStageColorClasses, getDelayColorClasses } from '../lib/utils'
 import { useElapsedTime } from '../hooks/useElapsedTime'
@@ -13,6 +14,7 @@ import { BedTriageInfo } from './BedTriageInfo'
 import { cn } from '@/shared/lib/utils'
 import { highlightMatch } from '../lib/highlight-match'
 import { StageIcon } from './StageIcon'
+import { DiagnosisPanel } from '@/features/diagnosis/components/DiagnosisPanel'
 const ACKNOWLEDGE_PAUSE_MS = 30_000
 /** 'nurse' = In Stage timer only. 'supervisor' = In Stage + Patient Total (since admission). */
 export type BedCardViewMode = 'nurse' | 'supervisor'
@@ -35,11 +37,15 @@ interface BedCardProps {
   viewMode?: BedCardViewMode
   /** US-16.2: true when this bed has a write queued for offline sync */
   isQueuedOffline?: boolean
+  /** EPIC 22: callback to open diagnosis modal (only rendered for doctor role) */
+  onOpenDiagnosis?: ((bedId: string) => void) | undefined
+  /** The current user's role (used to show doctor-specific actions) */
+  role?: string
 }
 export const BedCard = memo(function BedCard({
   bed, onClick, onContextMenu, onReasonSelect, showUpdated = false, errorMessage = null,
   searchQuery = '', showUndo = false, onUndo, undoTimerSeconds = 0, animationEnabled = true,
-  isUndoing = false, isQueuedOffline = false,
+  isUndoing = false, isQueuedOffline = false, onOpenDiagnosis, role,
 }: BedCardProps) {
   const rawStageName = bed.currentStage?.name || 'Empty'
   const stageName = rawStageName === 'Cleaning' ? 'In Cleaning' : rawStageName
@@ -186,6 +192,22 @@ export const BedCard = memo(function BedCard({
           </div>
         )}
         <BedTriageInfo triageInfo={bed.metadata?.triageInfo} />
+        {/* EPIC 22: Doctor button (doctor role only, in occupied beds) */}
+        {onOpenDiagnosis && role === 'doctor' && bed.isOccupied && (
+          <button
+            type="button"
+            onClick={(e) => { e.stopPropagation(); onOpenDiagnosis(bed.id) }}
+            className="mt-1 w-full flex items-center justify-center gap-1.5 rounded-md border border-primary/30 bg-primary/5 px-3 py-1.5 text-xs font-semibold text-primary hover:bg-primary/10 transition-colors"
+            aria-label={`Record diagnosis for bed ${bed.bedNumber}`}
+          >
+            <Stethoscope className="h-3.5 w-3.5" aria-hidden="true" />
+            Record Diagnosis
+          </button>
+        )}
+        {/* EPIC 22: Diagnosis summary (visible to all appropriate roles) */}
+        {bed.isOccupied && (
+          <DiagnosisPanel bedId={bed.id} />
+        )}
       </CardContent>
     </Card>
   )
