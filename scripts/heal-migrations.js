@@ -30,7 +30,62 @@ const healDatabaseMigrations = async (databaseUrl) => {
         for (const [oldName, newName] of renames) {
             await healClient.query(
                 `UPDATE pgmigrations SET name = '${newName}' WHERE name = '${oldName}'`
-            );
+            ).catch(() => {});
+        }
+
+        // Heal user_role enum (ALTER TYPE ... ADD VALUE cannot be in a transaction)
+        const roles = ['doctor', 'cardiologist', 'cath_lab_nurse'];
+        for (const role of roles) {
+            await healClient.query(
+                `ALTER TYPE user_role ADD VALUE IF NOT EXISTS '${role}'`
+            ).catch(() => {});
+        }
+
+        // Final verification for report_signoffs migration dependency bug
+        // Migration 030 uses gen_random_uuid() which may fail if pgcrypto (040) isn't there yet.
+        const signoffCheck = await healClient.query(`
+            SELECT EXISTS (
+                SELECT FROM information_schema.tables 
+                WHERE table_name = 'report_signoffs'
+            )
+        `);
+        if (!signoffCheck.rows[0].exists) {
+            // Re-apply signoffs table if it failed during 030 but was marked applied
+            await healClient.query(`
+                CREATE TABLE IF NOT EXISTS report_signoffs (
+                    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+                    report_date DATE NOT NULL,
+                    report_type VARCHAR(50) NOT NULL DEFAULT 'daily',
+                    status VARCHAR(20) NOT NULL DEFAULT 'approved' CHECK (status IN ('approved', 'superseded')),
+                    signed_off_by UUID NOT NULL REFERENCES users(id) ON DELETE RESTRICT,
+                    signed_off_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+                    notes TEXT,
+                    superseded_by UUID REFERENCES report_signoffs(id) ON DELETE RESTRICT,
+                    created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+                )
+            `).catch(() => {});
+        }
+
+        // Repair bed_stage_log_corrections if missing (Migration 007)
+        const correctionCheck = await healClient.query(`
+            SELECT EXISTS (
+                SELECT FROM information_schema.tables 
+                WHERE table_name = 'bed_stage_log_corrections'
+            )
+        `);
+        if (!correctionCheck.rows[0].exists) {
+            await healClient.query(`
+                CREATE TABLE IF NOT EXISTS bed_stage_log_corrections (
+                    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+                    bed_stage_log_id UUID NOT NULL REFERENCES bed_stage_logs(id) ON DELETE CASCADE,
+                    corrected_by_user_id UUID NOT NULL REFERENCES users(id),
+                    correction_time TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT CURRENT_TIMESTAMP,
+                    old_duration_ms BIGINT,
+                    new_duration_ms BIGINT,
+                    reason TEXT,
+                    metadata JSONB DEFAULT '{}'::jsonb
+                )
+            `).catch(() => {});
         }
     } catch {
         // pgmigrations may not exist yet on a fresh install — safe to ignore

@@ -81,7 +81,7 @@ async function verifyUsersTable(databaseUrl) {
 async function setupAdminUser(databaseUrl) {
   log.step(5, 'Setting up admin user...');
   const client = new Client({ connectionString: databaseUrl });
-  const bcrypt = require('bcrypt');
+  const bcrypt = require('bcryptjs');
   try {
     await client.connect();
     const adminUsername = process.env.ADMIN_USERNAME || 'admin';
