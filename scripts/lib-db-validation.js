@@ -35,7 +35,9 @@ const EXPECTED_TABLES = [
   'token_blacklist',
   'user_feedback',
   'users',
-  'wards'
+  'wards',
+  // Canonical table from migration 007
+  'bed_stage_log_corrections'
 ];
 
 /**
