@@ -37,7 +37,9 @@ const EXPECTED_TABLES = [
   'users',
   'wards',
   // Canonical table from migration 007
-  'bed_stage_log_corrections'
+  'bed_stage_log_corrections',
+  // Canonical table from migration 030
+  'report_signoffs'
 ];
 
 /**

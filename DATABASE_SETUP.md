@@ -705,7 +705,7 @@ SELECT bed_number, is_occupied FROM beds ORDER BY bed_number;
 
 ### Expected Table Count
 
-Run `\dt` in psql — you should see **30 tables** (includes archival, metrics, and audit tables):
+Run `\dt` in psql — you should see **31 tables** (includes archival, metrics, and audit tables):
 - alert_preferences
 - archival_runs
 - audit_logs
@@ -727,6 +727,7 @@ Run `\dt` in psql — you should see **30 tables** (includes archival, metrics, 
 - patient_admissions
 - patient_admissions_archive
 - pgmigrations
+- report_signoffs
 - shifts
 - stage_delay_thresholds
 - stage_transitions
