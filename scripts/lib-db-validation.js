@@ -14,7 +14,11 @@ const EXPECTED_TABLES = [
   'bed_stage_logs',
   'wards',
   'token_blacklist',
-  'pgmigrations'
+  'pgmigrations',
+  // EPIC 25: Department metrics tables (migration 1773838271566_create-department-metrics-tables)
+  'er_intake',
+  'ot_procedures',
+  'cath_lab_procedures'
 ];
 
 /**
