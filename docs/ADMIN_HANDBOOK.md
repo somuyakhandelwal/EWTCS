@@ -6,7 +6,7 @@ Administrator runbook for configuration, maintenance, backup/recovery, security,
 - Owner: Platform / System Administration
 - Scope: Configuration, backups, troubleshooting, security, command references
 - Versioning: Git-tracked; update required in release PRs when operations change
-- Last Updated: 2026-03-18 (EPIC 25 — Enhanced Dashboard Metrics)
+- Last Updated: 2026-03-20 (EPIC 20 — Architecture and Database Sync)
 
 ## 1) System Overview
 EWTCS is a Next.js + PostgreSQL emergency-ward operations platform.
@@ -179,6 +179,11 @@ Dev runtime note:
   - **Triage**: occupied bed count, total bed count, average triage time (minutes)
   - **OT**: surgeries in-progress, completed, utilization rate (%)
   - **Cath Lab**: active procedures, CAG count, PTCA count
+
+### EPIC 20 — Department Modules (ER, Diagnosis, OT, Cath Lab)
+- **Schema Additions**: Four new tables (`er_intake`, `diagnosis`, `ot_procedures`, `cath_lab_procedures`).
+- **Validation**: `DATABASE_SETUP.md` schema checks now expect 25+ tables.
+- **Roles**: Added `doctor`, `cardiologist`, and `cath_lab_nurse` to identity enums and route guards.
 
 ### US-22.1 Operational Notes
 - New migrations: `047_enforce_symptom_40_char_limit.sql`, `1774000000000_enforce_symptom_40_char_limit_after_triage.sql`
