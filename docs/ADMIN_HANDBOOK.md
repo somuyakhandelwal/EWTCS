@@ -6,7 +6,7 @@ Administrator runbook for configuration, maintenance, backup/recovery, security,
 - Owner: Platform / System Administration
 - Scope: Configuration, backups, troubleshooting, security, command references
 - Versioning: Git-tracked; update required in release PRs when operations change
-- Last Updated: 2026-03-18
+- Last Updated: 2026-03-18 (EPIC 25 — Enhanced Dashboard Metrics)
 
 ## 1) System Overview
 EWTCS is a Next.js + PostgreSQL emergency-ward operations platform.
@@ -163,6 +163,23 @@ npm run audit:verify
 Dev runtime note:
 - `npm run dev` now clears `.next` before startup to reduce stale chunk load errors during local development.
 
+### EPIC 25 — Enhanced Dashboard Metrics (Department Metrics)
+- New migration: `1773838271566_create-department-metrics-tables.js`
+- Creates three new tables for cross-department operational visibility:
+  - `er_intake` — Emergency / Triage: bed occupancy status (`occupied`/`vacant`) and `triage_time_minutes`
+  - `ot_procedures` — Operation Theater: per-procedure `status` (`in_progress`/`completed`), `patient_name`, `room_id`
+  - `cath_lab_procedures` — Cath Lab: per-procedure `procedure_type` (`CAG`/`PTCA`) and `status` (`active`/`completed`)
+- Server action: `src/features/bed-dashboard/actions/department-metrics.ts` (`getDepartmentMetrics`)
+- UI component: `src/features/bed-dashboard/components/DepartmentMetricsView.tsx`
+- Deployment steps:
+  1. Run `npm run db:migrate` to create the three tables.
+  2. Optionally seed sample data: `node scripts/seed-metrics.js`
+  3. Confirm tables are present: `npm run validate:schema`
+- Metrics surfaced:
+  - **Triage**: occupied bed count, total bed count, average triage time (minutes)
+  - **OT**: surgeries in-progress, completed, utilization rate (%)
+  - **Cath Lab**: active procedures, CAG count, PTCA count
+
 ### US-22.1 Operational Notes
 - New migrations: `047_enforce_symptom_40_char_limit.sql`, `1774000000000_enforce_symptom_40_char_limit_after_triage.sql`
 - Triage complaint field (`beds.key_symptom`) is now strictly limited to 40 characters.
@@ -209,5 +226,4 @@ Release checklist:
 - `src/middleware.ts`
 - `src/app/api/health/route.ts`
 - `src/app/api/cron/archival/route.ts`
-- `SECURITY.md` 
-Triage feature metadata is also included in bed management ops.
+- `SECURITY.md`

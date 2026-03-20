@@ -222,7 +222,7 @@ Visit [http://localhost:3000/login](http://localhost:3000/login) and log in:
 | `users` | Authentication & user management | id, username, role, password_hash, ward_id |
 | `audit_logs` | Security & compliance logging | id, action_type, performed_by, timestamp |
 | `stages` | Patient workflow stages | id, name, display_order, color_code |
-| `beds` | Emergency ward beds | id, bed_number, current_stage_id, is_occupied, ward_id |
+| `beds` | Emergency ward beds | id, bed_number, current_stage_id, is_occupied, ward_id, patient_uhid, patient_name, key_symptom, triage_category |
 | `bed_stage_logs` | Bed transition history | id, bed_id, from_stage_id, to_stage_id, transition_time |
 | `stage_transitions` | Workflow rules for stage updates | from_stage_id, to_stage_id, is_allowed, requires_supervisor_override |
 | `wards` | Hospital ward definitions | id, name, code, description, is_active |
@@ -233,6 +233,9 @@ Visit [http://localhost:3000/login](http://localhost:3000/login) and log in:
 | `disposition_delay_reasons` | Open delay reason log per bed | id, bed_id, reason, recorded_at, resolved_at |
 | `token_blacklist` | Invalidated JWT tokens | token_hash, expires_at |
 | `kiosk_sessions` | Kiosk mode session tracking | id, ward_id, created_at, expires_at |
+| `er_intake` | Emergency intake tracking | id, bed_id, occupancy_status, triage_time_minutes |
+| `ot_procedures` | Operation theater procedures | id, patient_name, status, room_id |
+| `cath_lab_procedures` | Cath lab procedures | id, procedure_type, status |
 
 ### US-21.1 Triage Demographics (beds table)
 
@@ -611,6 +614,7 @@ UPDATE beds SET ward_id = (SELECT id FROM wards WHERE code = 'EWA'), ward_name =
 | `030_create_report_signoffs` | EPIC 12 — `report_signoffs` table for immutable supervisor sign-offs on daily reports |
 | `031_archive_bed_stage_logs` | EPIC 3 — `bed_stage_logs_archive` table for historical stage-transition retention (>90 days) |
 | `seed_config_jmch` | Updated JMCH hospital seed configuration with customized workflow stages |
+| `1773770454739_add-triage-columns-to-beds` | US-21.1 — adds `patient_uhid`, `patient_name`, `key_symptom`, and `triage_category` as typed columns directly on the `beds` table for active triage data |
 
 ---
 
@@ -700,13 +704,16 @@ SELECT bed_number, is_occupied FROM beds ORDER BY bed_number;
 
 ### Expected Table Count
 
-Run `\dt` in psql — you should see **15 tables**:
+Run `\dt` in psql — you should see **18 tables** (includes EPIC 25 department metrics tables):
 - audit_logs
 - bed_stage_log_corrections
 - bed_stage_logs
 - beds
+- cath_lab_procedures
 - disposition_delay_reasons
+- er_intake
 - kiosk_sessions
+- ot_procedures
 - password_reset_tokens
 - patient_admissions
 - shifts
@@ -806,5 +813,15 @@ If you encounter issues not covered here:
 
 **Ready to build something amazing! 🚀**
  
-## Triage Metadata
-Triage metadata (patient UHID, name, key symptom, category) is stored in the `metadata` JSONB column on the `beds` table to avoid breaking schema changes.
+## Triage Columns on `beds` (Migration `1773770454739_add-triage-columns-to-beds`)
+
+Active triage data for the patient currently occupying a bed is stored as dedicated typed columns on the `beds` table:
+
+| Column | Type | Description |
+|---|---|---|
+| `patient_uhid` | `varchar(100)` | Unique Hospital ID of the active patient |
+| `patient_name` | `varchar(255)` | Full name of the active patient |
+| `key_symptom` | `text` | Presenting complaint / key symptom |
+| `triage_category` | `varchar(50)` | Triage priority category (e.g. Red, Yellow, Green) |
+
+These values are reset to `NULL` when a patient is discharged or the bed transitions to a non-patient stage.

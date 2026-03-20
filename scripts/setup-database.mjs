@@ -1,94 +1,93 @@
-/**
- * Database setup helpers for EWTCS
- * Handles database creation and .env.local generation
- */
+#!/usr/bin/env node
 
-import { execSync } from 'child_process';
-import { existsSync, readFileSync, writeFileSync, copyFileSync } from 'fs';
+import { randomBytes } from 'crypto';
+import { copyFileSync, existsSync, readFileSync, writeFileSync } from 'fs';
 import { join } from 'path';
-import { log, execSilent, askInput } from './setup-utils.mjs';
+import pg from 'pg';
+import { log } from './setup-utils.mjs';
 
-/**
- * Prompt for database configuration and create the database if needed.
- * @param {number} step - Current step number
- * @param {number} totalSteps - Total number of steps
- * @returns {Promise<{host: string, port: string, user: string, password: string, dbName: string}>}
- */
-export async function setupDatabase(step, totalSteps) {
-  log.step(step, totalSteps, 'Configuring database...');
+const { Client } = pg;
 
-  const host     = await askInput('PostgreSQL host',     'localhost');
-  const port     = await askInput('PostgreSQL port',     '5432');
-  const user     = await askInput('PostgreSQL username', 'postgres');
-  const password = await askInput('PostgreSQL password', '');
-  const dbName   = await askInput('Database name',       'ewtcs_db');
-
-  // Attempt to create the database (ignore error if it already exists)
-  log.info(`Creating database "${dbName}" if it does not exist...`);
-  try {
-    const env = { ...process.env };
-    if (password) env.PGPASSWORD = password;
-
-    execSync(
-      `psql -h ${host} -p ${port} -U ${user} -c "CREATE DATABASE \\"${dbName}\\";" postgres`,
-      { stdio: 'pipe', env }
-    );
-    log.success(`Database "${dbName}" created`);
-  } catch (err) {
-    const msg = err.stderr?.toString() ?? '';
-    if (msg.includes('already exists')) {
-      log.success(`Database "${dbName}" already exists`);
-    } else {
-      log.warning(`Could not create database automatically: ${msg.trim()}`);
-      log.info('You may need to create it manually and update DATABASE_URL in .env.local');
-    }
-  }
-
-  return { host, port, user, password, dbName };
+function parseDatabaseUrl(databaseUrl) {
+  const parsed = new URL(databaseUrl);
+  return {
+    dbName: parsed.pathname.replace(/^\//, ''),
+    username: decodeURIComponent(parsed.username || 'postgres'),
+    password: decodeURIComponent(parsed.password || ''),
+    host: parsed.hostname || 'localhost',
+    port: parsed.port || '5432',
+    ssl: parsed.searchParams.get('sslmode') === 'require',
+  };
 }
 
-/**
- * Create .env.local from .env.example (or a template) if it does not already exist.
- * @param {number} step - Current step number
- * @param {number} totalSteps - Total number of steps
- * @param {string} rootDir - Absolute path to the project root
- * @param {{host: string, port: string, user: string, password: string, dbName: string}} dbConfig
- */
+function readDatabaseUrlFromEnvFile(filePath) {
+  if (!existsSync(filePath)) return null;
+  const text = readFileSync(filePath, 'utf-8');
+  const match = text.match(/^DATABASE_URL=(.*)$/m);
+  return match ? match[1].trim() : null;
+}
+
+export async function setupDatabase(step, totalSteps) {
+  log.step(step, totalSteps, 'Ensuring database exists...');
+
+  const rootDir = process.cwd();
+  const envLocal = join(rootDir, '.env.local');
+  const envExample = join(rootDir, '.env.example');
+
+  const databaseUrl =
+    process.env.DATABASE_URL ||
+    readDatabaseUrlFromEnvFile(envLocal) ||
+    readDatabaseUrlFromEnvFile(envExample);
+
+  if (!databaseUrl) {
+    log.error('DATABASE_URL not found in environment or env files.');
+    process.exit(1);
+  }
+
+  const dbConfig = parseDatabaseUrl(databaseUrl);
+
+  const adminUrl = `postgresql://${encodeURIComponent(dbConfig.username)}:${encodeURIComponent(dbConfig.password)}@${dbConfig.host}:${dbConfig.port}/postgres`;
+  const client = new Client({ connectionString: adminUrl, ssl: dbConfig.ssl ? { rejectUnauthorized: false } : false });
+
+  try {
+    await client.connect();
+
+    const existsResult = await client.query('SELECT 1 FROM pg_database WHERE datname = $1', [dbConfig.dbName]);
+    if (existsResult.rowCount === 0) {
+      const safeDbName = dbConfig.dbName.replace(/"/g, '""');
+      await client.query(`CREATE DATABASE "${safeDbName}"`);
+      log.success(`Database created: ${dbConfig.dbName}`);
+    } else {
+      log.success(`Database already exists: ${dbConfig.dbName}`);
+    }
+  } catch (error) {
+    log.error(`Database setup failed: ${error.message}`);
+    process.exit(1);
+  } finally {
+    await client.end();
+  }
+
+  return { ...dbConfig, databaseUrl };
+}
+
 export async function createEnvFile(step, totalSteps, rootDir, dbConfig) {
-  log.step(step, totalSteps, 'Creating .env.local...');
+  log.step(step, totalSteps, 'Preparing .env.local...');
 
-  const envLocalPath   = join(rootDir, '.env.local');
-  const envExamplePath = join(rootDir, '.env.example');
+  const envLocal = join(rootDir, '.env.local');
+  const envExample = join(rootDir, '.env.example');
 
-  if (existsSync(envLocalPath)) {
-    log.success('.env.local already exists – skipping');
-    return;
+  if (!existsSync(envLocal)) {
+    copyFileSync(envExample, envLocal);
   }
 
-  const { host, port, user, password, dbName } = dbConfig;
-  const databaseUrl = `postgresql://${user}:${password}@${host}:${port}/${dbName}`;
+  let content = readFileSync(envLocal, 'utf-8');
+  content = content.replace(/^DATABASE_URL=.*$/m, `DATABASE_URL=${dbConfig.databaseUrl}`);
 
-  if (existsSync(envExamplePath)) {
-    // Copy example and replace the DATABASE_URL placeholder
-    let content = readFileSync(envExamplePath, 'utf-8');
-    content = content.replace(
-      /DATABASE_URL=.*/,
-      `DATABASE_URL=${databaseUrl}`
-    );
-    writeFileSync(envLocalPath, content, 'utf-8');
-    log.success('.env.local created from .env.example');
-  } else {
-    // Generate a minimal .env.local
-    const content = [
-      '# Environment configuration – generated by npm run setup',
-      `DATABASE_URL=${databaseUrl}`,
-      'NEXTAUTH_SECRET=change_me_to_a_random_secret',
-      'NEXTAUTH_URL=http://localhost:3000',
-      '',
-    ].join('\n');
-
-    writeFileSync(envLocalPath, content, 'utf-8');
-    log.success('.env.local created with default settings');
-    log.warning('Remember to update NEXTAUTH_SECRET before deploying!');
+  if (/^SESSION_SECRET=your-secret-key/m.test(content)) {
+    const secret = randomBytes(32).toString('hex');
+    content = content.replace(/^SESSION_SECRET=.*$/m, `SESSION_SECRET=${secret}`);
   }
+
+  writeFileSync(envLocal, content, 'utf-8');
+  log.success('.env.local configured');
 }
