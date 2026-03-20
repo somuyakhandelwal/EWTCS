@@ -3,16 +3,12 @@
 // EPIC 22: Doctor Diagnosis Modal integration
 
 import { useCallback, useState, useTransition } from 'react'
-import { MapPin } from 'lucide-react'
-import { Button } from '@/shared/components/ui/button'
-import { Tooltip } from '@/shared/components/ui/tooltip'
 import { BedGrid } from './BedGrid'
 import { ConnectionStatus } from './ConnectionStatus'
 import { OfflineBanner } from './OfflineBanner'
-import { DashboardSettings } from './DashboardSettings'
+import { BedDashboardActionBar } from './BedDashboardActionBar'
 import { BedDashboardModals } from './BedDashboardModals'
 import { SyncStatusBanner } from './SyncStatusBanner'
-import { SyncConflictModal } from './SyncConflictModal'
 import { useSyncConflictHandler } from '../hooks/useSyncConflictHandler'
 import type { BedGridData, DispositionDelayReason } from '../types/bed'
 import type { DiagnosisState } from '@/shared/types/diagnosis.types'
@@ -124,16 +120,13 @@ export function BedDashboardClient({
   const { undoState, undoError, handleUndo, isUndoing } = useUndoManager(
     lastUpdatedBedId, lastUpdatedStageId, realtimeRefresh, isOffline
   )
-
   const tatSummary = useTatSummary(24)
   const [virtualBedModalOpen, setVirtualBedModalOpen] = useState(false)
   const [diagnosisState, setDiagnosisState] = useState<DiagnosisState | null>(null)
-
   const openDiagnosisModal = (bedId: string, bedNumber: string, patientUhid: string, keySymptom?: string | null) => {
     setDiagnosisState({ bedId, bedNumber, patientUhid, keySymptom })
   }
   const closeDiagnosisModal = () => setDiagnosisState(null)
-
   return (
     <div className="space-y-4">
       <OfflineBanner
@@ -145,26 +138,13 @@ export function BedDashboardClient({
       {!isOffline && (
         <SyncStatusBanner isDraining={offlineQueue.isDraining} pendingCount={offlineQueue.pendingCount} syncResult={syncResult} onRetry={retryDrain} />
       )}
-
-      {/* Action Bar (Virtual Bed / Settings / Connection) */}
-      <div className="flex justify-end items-center gap-2" data-help-id="dashboard-actions">
-        <Tooltip content="Create temporary virtual bed" side="left">
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => setVirtualBedModalOpen(true)}
-            className="flex items-center gap-1.5 h-8 px-3 rounded-lg border-status-virtual/30 bg-status-virtual/5 text-status-virtual hover:bg-status-virtual/10 transition-colors font-semibold"
-            title="Add virtual (hallway/stretcher) bed"
-            aria-label="Add virtual hallway or stretcher bed"
-          >
-            <MapPin className="h-3.5 w-3.5" aria-hidden="true" />
-            <span className="text-xs font-medium">Add Virtual Bed</span>
-          </Button>
-        </Tooltip>
-        <DashboardSettings enabled={settings.confirmCriticalStages} onToggle={toggleConfirmation} />
-        <ConnectionStatus status={connectionStatus} onReconnect={reconnect} />
-      </div>
-
+      <BedDashboardActionBar
+        onAddVirtualBed={() => setVirtualBedModalOpen(true)}
+        confirmCriticalStages={settings.confirmCriticalStages}
+        onToggleConfirmation={toggleConfirmation}
+        connectionStatus={connectionStatus}
+        onReconnect={reconnect}
+      />
       <div data-help-id="dashboard-grid">
         <BedGrid
           data={displayData}
@@ -187,21 +167,13 @@ export function BedDashboardClient({
           onOpenDiagnosis={(bedId) => {
             const bed = data.beds.find((b) => b.id === bedId)
             if (bed) {
-              openDiagnosisModal(
-                bed.id,
-                bed.bedNumber,
-                bed.metadata?.triageInfo?.patientUhid ?? '',
-                bed.metadata?.triageInfo?.keySymptom ?? null,
-              )
+              openDiagnosisModal(bed.id, bed.bedNumber, bed.metadata?.triageInfo?.patientUhid ?? '', bed.metadata?.triageInfo?.keySymptom ?? null)
             }
           }}
           role={role}
         />
       </div>
-      {undoError && (
-        <div className="text-center text-xs text-red-500 font-semibold mt-2">{undoError}</div>
-      )}
-
+      {undoError && <div className="text-center text-xs text-red-500 font-semibold mt-2">{undoError}</div>}
       <BedDashboardModals
         overrideState={overrideState} isOverrideSubmitting={isOverrideSubmitting} onOverrideApprove={handleOverrideApprove} onOverrideCancel={closeOverrideModal}
         confirmationState={confirmationState} updatingBedId={updatingBedId} onConfirmationConfirm={handleConfirmationConfirm} onConfirmationCancel={closeConfirmationModal}
@@ -212,10 +184,12 @@ export function BedDashboardClient({
         diagnosisState={diagnosisState}
         onDiagnosisClose={closeDiagnosisModal}
         onDiagnosisSuccess={handleRefresh}
+        syncConflicts={syncConflicts}
+        isApplyingConflict={isApplyingConflict}
+        onKeepServer={handleKeepServer}
+        onForceApply={handleForceApply}
+        onClearConflicts={clearConflicts}
       />
-      <SyncConflictModal conflicts={syncConflicts} isOpen={syncConflicts.length > 0}
-        isApplying={isApplyingConflict} onKeepServer={handleKeepServer}
-        onForceApply={handleForceApply} onClose={clearConflicts} />
     </div>
   )
 }

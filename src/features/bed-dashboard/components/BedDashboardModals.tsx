@@ -8,6 +8,8 @@ import { DischargeModal } from './DischargeModal'
 import { AddVirtualBedModal } from './AddVirtualBedModal'
 import { TriageModal } from './TriageModal'
 import { DiagnosisModal } from '@/features/diagnosis/components/DiagnosisModal'
+import { SyncConflictModal } from './SyncConflictModal'
+import type { SyncConflict } from './SyncConflictModal'
 import type { OverrideState, ConfirmationState, DischargeState } from '../types/bed'
 import type { TriageState } from '../hooks/useBedStageUpdate'
 import type { DiagnosisState } from '@/shared/types/diagnosis.types'
@@ -49,6 +51,12 @@ interface BedDashboardModalsProps {
   diagnosisState?: DiagnosisState | null
   onDiagnosisClose?: () => void
   onDiagnosisSuccess?: () => void
+  // SyncConflictModal
+  syncConflicts: SyncConflict[]
+  isApplyingConflict: boolean
+  onKeepServer: (entryId: string) => void
+  onForceApply: (entryId: string) => Promise<void>
+  onClearConflicts: () => void
 }
 
 export function BedDashboardModals({
@@ -74,6 +82,11 @@ export function BedDashboardModals({
   diagnosisState,
   onDiagnosisClose,
   onDiagnosisSuccess,
+  syncConflicts,
+  isApplyingConflict,
+  onKeepServer,
+  onForceApply,
+  onClearConflicts,
 }: BedDashboardModalsProps) {
   return (
     <>
@@ -122,6 +135,14 @@ export function BedDashboardModals({
         onClose={onVirtualBedClose}
         onCreated={onVirtualBedCreated}
         onSubmit={onVirtualBedSubmit}
+      />
+      <SyncConflictModal
+        conflicts={syncConflicts}
+        isOpen={syncConflicts.length > 0}
+        isApplying={isApplyingConflict}
+        onKeepServer={onKeepServer}
+        onForceApply={onForceApply}
+        onClose={onClearConflicts}
       />
     </>
   )

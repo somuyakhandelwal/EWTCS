@@ -8,13 +8,23 @@ import { submitDiagnosis } from '../actions/diagnosis-actions'
 import type { DiagnosisState } from '../types/diagnosis.types'
 import type { SeverityType } from '../schemas/diagnosis-schemas'
 
+/**
+ * Props for the DiagnosisModal component.
+ */
 interface DiagnosisModalProps {
+  /** The current diagnosis state for the bed, if any */
   diagnosisState: DiagnosisState | null
+  /** Whether the modal is visible */
   isOpen: boolean
+  /** Callback to close the modal */
   onClose: () => void
+  /** Callback to trigger on successful submission */
   onSuccess?: () => void
 }
 
+/**
+ * Doctor-only modal for entering and submitting patient diagnoses.
+ */
 export function DiagnosisModal({
   diagnosisState,
   isOpen,

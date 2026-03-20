@@ -13,22 +13,41 @@ const SEVERITY_LABELS: Record<SeverityType, string> = {
   CRITICAL: '🔴 Critical',
 }
 
+/**
+ * Props for the DiagnosisFormFields component.
+ */
 interface DiagnosisFormFieldsProps {
+  /** The patient's Unique Hospital Identity Number */
   patientUhid: string
+  /** Observed symptoms (max 40 chars) */
   symptomsObserved: string
+  /** The text of the diagnosis */
   diagnosisText: string
+  /** Standardized diagnosis code (e.g., ICD-10) */
   diagnosisCode: string
+  /** Severity level assigned by the doctor */
   severity: SeverityType | ''
+  /** The doctor's recommended next clinical action */
   recommendedAction: string
+  /** Whether the form is currently being submitted */
   isSubmitting: boolean
+  /** Callback for patient UHID changes */
   onPatientUhidChange: (v: string) => void
+  /** Callback for symptoms changes */
   onSymptomsChange: (v: string) => void
+  /** Callback for diagnosis text changes */
   onDiagnosisTextChange: (v: string) => void
+  /** Callback for diagnosis code changes */
   onDiagnosisCodeChange: (v: string) => void
+  /** Callback for severity selection changes */
   onSeverityChange: (v: SeverityType) => void
+  /** Callback for recommended action changes */
   onRecommendedActionChange: (v: string) => void
 }
 
+/**
+ * Component for the form fields used in the DiagnosisModal.
+ */
 export function DiagnosisFormFields({
   patientUhid,
   symptomsObserved,

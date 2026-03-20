@@ -12,7 +12,11 @@ const SEVERITY_COLORS: Record<SeverityType, string> = {
   CRITICAL: 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-300',
 }
 
+/**
+ * Props for the DiagnosisPanel component.
+ */
 interface DiagnosisPanelProps {
+  /** The UUID of the bed to display the diagnosis for */
   bedId: string
 }
 

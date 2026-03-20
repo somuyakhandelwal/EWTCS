@@ -13,6 +13,10 @@ import type { DiagnosisRecord, DiagnosisActionResult } from '../types/diagnosis.
 /**
  * EPIC 22 — US-22.1
  * Submit a new diagnosis record for a bed. Doctor role only.
+ *
+ * @param bedId - The UUID of the bed being updated with a diagnosis
+ * @param formData - The validated diagnosis data from the client form
+ * @returns A promise resolving to an object containing success status and the new diagnosis ID or an error message
  */
 export async function submitDiagnosis(
   bedId: string,
@@ -92,6 +96,9 @@ export async function submitDiagnosis(
  * EPIC 22 — US-22.1 (read side)
  * Fetch the most recent diagnosis for a bed.
  * Accessible to all authenticated roles (nurse, supervisor, admin, auditor, doctor).
+ *
+ * @param bedId - The UUID of the bed to retrieve the diagnosis for
+ * @returns A promise resolving to the most recent DiagnosisRecord or null if not found
  */
 export async function getDiagnosisForBed(
   bedId: string,

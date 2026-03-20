@@ -18,7 +18,8 @@ const EXPECTED_TABLES = [
   // EPIC 25: Department metrics tables (migration 1773838271566_create-department-metrics-tables)
   'er_intake',
   'ot_procedures',
-  'cath_lab_procedures'
+  'cath_lab_procedures',
+  'diagnosis'
 ];
 
 /**
