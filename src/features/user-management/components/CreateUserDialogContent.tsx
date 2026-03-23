@@ -131,6 +131,8 @@ export function CreateUserDialogContent({
               <option value="supervisor">Supervisor</option>
               <option value="admin">Admin</option>
               <option value="auditor">Auditor</option>
+               <option value="cardiologist">Cardiologist</option>
+               <option value="cath_lab_nurse">Cath Lab Nurse</option>
             </select>
             {state?.errors?.role && <p className="text-sm text-red-500">{state.errors.role[0]}</p>}
           </div>

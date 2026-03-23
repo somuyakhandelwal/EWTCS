@@ -106,9 +106,24 @@ export async function middleware(request: NextRequest) {
         }
     }
 
+    if (pathname.startsWith('/triage')) {
+        const triageRoles = ['nurse', 'housekeeping', 'supervisor', 'admin']
+        if (!session || !triageRoles.includes(session.role as string)) {
+            return NextResponse.redirect(new URL('/login', request.url))
+        }
+    }
+
     // Analytics: supervisor, admin, and auditor
     if (pathname.startsWith('/analytics')) {
         if (!session || (session.role !== 'supervisor' && session.role !== 'admin' && session.role !== 'auditor')) {
+            return NextResponse.redirect(new URL('/login', request.url))
+        }
+    }
+
+    // Cath Lab: dedicated cardiology procedure logging workflow
+    if (pathname.startsWith('/cath-lab')) {
+        const cathLabRoles = ['cardiologist', 'cath_lab_nurse', 'nurse', 'supervisor', 'admin']
+        if (!session || !cathLabRoles.includes(session.role as string)) {
             return NextResponse.redirect(new URL('/login', request.url))
         }
     }
@@ -119,6 +134,9 @@ export async function middleware(request: NextRequest) {
             if (session.role === 'admin') return NextResponse.redirect(new URL('/admin', request.url))
             if (session.role === 'supervisor') return NextResponse.redirect(new URL('/supervisor', request.url))
             if (session.role === 'auditor') return NextResponse.redirect(new URL('/analytics', request.url))
+            if (session.role === 'cardiologist' || session.role === 'cath_lab_nurse') {
+                return NextResponse.redirect(new URL('/cath-lab', request.url))
+            }
             // nurse and housekeeping both use the bed grid dashboard
             if (session.role === 'nurse' || session.role === 'housekeeping') {
                 return NextResponse.redirect(new URL('/dashboard', request.url))
@@ -135,7 +153,8 @@ export async function middleware(request: NextRequest) {
         const isPublicApi =
             pathname.startsWith('/api/auth/') ||
             pathname.startsWith('/api/health') ||
-            pathname.startsWith('/api/cron/')
+            pathname.startsWith('/api/cron/') ||
+            pathname.startsWith('/api/external/')
         if (!isPublicApi && !session) {
             return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
         }

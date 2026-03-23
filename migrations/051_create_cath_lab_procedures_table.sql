@@ -27,7 +27,7 @@ CREATE TABLE IF NOT EXISTS cath_lab_procedures (
     scheduled_start TIMESTAMP WITH TIME ZONE,
     actual_start_time TIMESTAMP WITH TIME ZONE,
     actual_end_time TIMESTAMP WITH TIME ZONE,
-    duration_minutes INTEGER,  -- Calculated: (actual_end_time - actual_start_time) / 60
+    duration_minutes INTEGER CHECK (duration_minutes IS NULL OR duration_minutes >= 0),  -- Calculated: (actual_end_time - actual_start_time) / 60
     
     -- Status tracking
     status VARCHAR(20) NOT NULL DEFAULT 'SCHEDULED'
@@ -60,8 +60,86 @@ CREATE TABLE IF NOT EXISTS cath_lab_procedures (
     
     -- Timestamps
     created_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT CURRENT_TIMESTAMP
+    updated_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT CURRENT_TIMESTAMP,
+
+    -- Timeline validation
+    CONSTRAINT chk_cath_lab_procedures_time_order
+        CHECK (actual_end_time IS NULL OR actual_start_time IS NULL OR actual_end_time >= actual_start_time)
 );
+
+-- Safety repair for environments where a partial table existed before this migration
+ALTER TABLE IF EXISTS cath_lab_procedures
+    ADD COLUMN IF NOT EXISTS id UUID,
+    ADD COLUMN IF NOT EXISTS bed_id UUID,
+    ADD COLUMN IF NOT EXISTS patient_uhid VARCHAR(100),
+    ADD COLUMN IF NOT EXISTS cardiologist_id UUID,
+    ADD COLUMN IF NOT EXISTS procedure_type VARCHAR(100),
+    ADD COLUMN IF NOT EXISTS procedure_code VARCHAR(20),
+    ADD COLUMN IF NOT EXISTS clinical_indication TEXT,
+    ADD COLUMN IF NOT EXISTS clinical_indication_encrypted JSONB,
+    ADD COLUMN IF NOT EXISTS scheduled_start TIMESTAMP WITH TIME ZONE,
+    ADD COLUMN IF NOT EXISTS actual_start_time TIMESTAMP WITH TIME ZONE,
+    ADD COLUMN IF NOT EXISTS actual_end_time TIMESTAMP WITH TIME ZONE,
+    ADD COLUMN IF NOT EXISTS duration_minutes INTEGER,
+    ADD COLUMN IF NOT EXISTS status VARCHAR(20),
+    ADD COLUMN IF NOT EXISTS findings TEXT,
+    ADD COLUMN IF NOT EXISTS findings_encrypted JSONB,
+    ADD COLUMN IF NOT EXISTS interventions_performed TEXT,
+    ADD COLUMN IF NOT EXISTS interventions_performed_encrypted JSONB,
+    ADD COLUMN IF NOT EXISTS stenosis_location VARCHAR(100),
+    ADD COLUMN IF NOT EXISTS stenosis_location_encrypted JSONB,
+    ADD COLUMN IF NOT EXISTS stenosis_percentage INTEGER,
+    ADD COLUMN IF NOT EXISTS stenosis_percentage_encrypted JSONB,
+    ADD COLUMN IF NOT EXISTS outcome TEXT,
+    ADD COLUMN IF NOT EXISTS outcome_encrypted JSONB,
+    ADD COLUMN IF NOT EXISTS complications TEXT,
+    ADD COLUMN IF NOT EXISTS complications_encrypted JSONB,
+    ADD COLUMN IF NOT EXISTS clinical_notes TEXT,
+    ADD COLUMN IF NOT EXISTS clinical_notes_encrypted JSONB,
+    ADD COLUMN IF NOT EXISTS created_at TIMESTAMP WITH TIME ZONE,
+    ADD COLUMN IF NOT EXISTS updated_at TIMESTAMP WITH TIME ZONE;
+
+ALTER TABLE cath_lab_procedures
+    ALTER COLUMN id SET DEFAULT uuid_generate_v4(),
+    ALTER COLUMN status SET DEFAULT 'SCHEDULED',
+    ALTER COLUMN created_at SET DEFAULT CURRENT_TIMESTAMP,
+    ALTER COLUMN updated_at SET DEFAULT CURRENT_TIMESTAMP;
+
+DO $$
+BEGIN
+    IF NOT EXISTS (
+        SELECT 1
+        FROM pg_constraint c
+        JOIN pg_class t ON c.conrelid = t.oid
+        JOIN pg_namespace n ON t.relnamespace = n.oid
+        WHERE n.nspname = 'public'
+          AND t.relname = 'cath_lab_procedures'
+          AND c.contype = 'f'
+          AND pg_get_constraintdef(c.oid) LIKE 'FOREIGN KEY (bed_id)%REFERENCES beds(id)%'
+    ) THEN
+        ALTER TABLE cath_lab_procedures
+            ADD CONSTRAINT fk_cath_lab_procedures_bed_id
+            FOREIGN KEY (bed_id) REFERENCES beds(id) ON DELETE SET NULL;
+    END IF;
+END $$;
+
+DO $$
+BEGIN
+    IF NOT EXISTS (
+        SELECT 1
+        FROM pg_constraint c
+        JOIN pg_class t ON c.conrelid = t.oid
+        JOIN pg_namespace n ON t.relnamespace = n.oid
+        WHERE n.nspname = 'public'
+          AND t.relname = 'cath_lab_procedures'
+          AND c.contype = 'f'
+          AND pg_get_constraintdef(c.oid) LIKE 'FOREIGN KEY (cardiologist_id)%REFERENCES users(id)%'
+    ) THEN
+        ALTER TABLE cath_lab_procedures
+            ADD CONSTRAINT fk_cath_lab_procedures_cardiologist_id
+            FOREIGN KEY (cardiologist_id) REFERENCES users(id);
+    END IF;
+END $$;
 
 -- Create indexes for common queries
 CREATE INDEX IF NOT EXISTS idx_cath_lab_procedures_bed_id ON cath_lab_procedures(bed_id);
@@ -118,4 +196,3 @@ COMMENT ON COLUMN cath_lab_procedures.status IS
 
 -- Down Migration
 -- DROP TABLE IF EXISTS cath_lab_procedures;
-

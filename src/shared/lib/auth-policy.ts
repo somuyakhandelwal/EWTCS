@@ -65,6 +65,18 @@ export const rolePolicies: Policy = {
     },
     housekeeping: {
         beds: ['read', 'write'],
+    },
+    cardiologist: {
+        beds: ['read'],
+        reports: ['read', 'write'],
+        summary: ['read', 'write'],
+        users: ['read'],
+    },
+    cath_lab_nurse: {
+        beds: ['read', 'write'],
+        reports: ['read'],
+        summary: ['read', 'write'],
+        users: ['read'],
     }
 }
 

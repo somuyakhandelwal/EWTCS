@@ -17,6 +17,7 @@ import type { ActionResult } from '../types/action-result'
 function revalidateBedPages() {
     revalidatePath('/admin/beds')
     revalidatePath('/dashboard')
+    revalidatePath('/triage')
     revalidatePath('/supervisor')
 }
 

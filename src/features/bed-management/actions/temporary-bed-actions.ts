@@ -23,6 +23,7 @@ import type { ActionResult } from '../types/action-result'
 function revalidateBedPages() {
     revalidatePath('/supervisor')
     revalidatePath('/dashboard')
+    revalidatePath('/triage')
     revalidatePath('/admin/beds')
 }
 

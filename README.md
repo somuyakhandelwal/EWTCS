@@ -96,7 +96,7 @@ The setup script will:
 ✅ Create database
 ✅ Configure environment variables (.env.local)
 ✅ Run migrations
-✅ Seed initial data
+✅ Seed initial data (30 ER beds, 6 Triage beds, 16 OT rooms)
 ✅ Provide next steps
 
 **Default Credentials After Setup:**

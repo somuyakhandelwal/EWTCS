@@ -114,6 +114,7 @@ export async function updateStage(input: UpdateStageInput) {
 
   revalidatePath('/admin/stages');
   revalidatePath('/dashboard');
+  revalidatePath('/triage');
 }
 
 // Delete a stage (only non-default stages can be deleted)

@@ -1,10 +1,20 @@
 import { NextResponse } from 'next/server'
 import { getBedPerformanceReport } from '@/features/management-report/lib/bed-performance-queries'
 import { isRateLimited } from '@/shared/lib/rate-limit'
+import { getClientIpFromHeaders } from '@/shared/lib/request-ip'
+import { logger } from '@/shared/config/logger'
 
-const API_KEY = process.env.EXTERNAL_API_KEY || 'default-hospital-api-key'
+const API_KEY = process.env.EXTERNAL_API_KEY
 
 export async function GET(request: Request) {
+    if (!API_KEY) {
+        logger.error('EXTERNAL_API_KEY is not configured for external reports API')
+        return NextResponse.json(
+            { error: 'External API is not configured on this environment.' },
+            { status: 503 }
+        )
+    }
+
     const apiKey = request.headers.get('x-api-key')
     if (!apiKey || apiKey !== API_KEY) {
         return NextResponse.json(
@@ -25,8 +35,9 @@ export async function GET(request: Request) {
     const endDate = endStr ? new Date(endStr) : new Date()
 
     // Rate Limiting
-    const ip = request.headers.get('x-forwarded-for') || '127.0.0.1'
-    const identifier = `external-reports-${ip}`
+    const ip = getClientIpFromHeaders(request.headers) || 'unknown-ip'
+    const userAgent = request.headers.get('user-agent') || 'unknown-ua'
+    const identifier = `external-reports-${ip}-${userAgent}`
 
     // Limit to 30 requests per minute
     if (isRateLimited(identifier, 30, 60 * 1000)) {

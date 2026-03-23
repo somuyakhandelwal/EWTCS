@@ -63,6 +63,7 @@ export async function setGlobalThresholdAction(input: {
     revalidateTag(SETTINGS_CACHE_TAG)
     revalidatePath('/admin/stages')
     revalidatePath('/dashboard')
+    revalidatePath('/triage')
     return { success: true }
   } catch (err) {
     const message = err instanceof Error ? err.message : 'Failed to update threshold'
@@ -101,6 +102,7 @@ export async function setStageThresholdAction(input: {
     logger.info('Stage threshold updated', { stageId: input.stageId, totalMinutes })
     revalidatePath('/admin/stages')
     revalidatePath('/dashboard')
+    revalidatePath('/triage')
     return { success: true }
   } catch (err) {
     logger.error('setStageThresholdAction failed', err as Error)
@@ -127,6 +129,7 @@ export async function clearStageThresholdAction(
     logger.info('Stage threshold cleared', { stageId, performedBy: session.userId })
     revalidatePath('/admin/stages')
     revalidatePath('/dashboard')
+    revalidatePath('/triage')
     return { success: true }
   } catch (err) {
     logger.error('clearStageThresholdAction failed', err as Error)
