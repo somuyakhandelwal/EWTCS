@@ -1,14 +1,11 @@
 'use server'
 
-// OT Dashboard Actions
-// EPIC 23: Operation Theatre (OT) Tracking Module (US-23.1)
-
 import pool from '@/shared/lib/db'
 import { requireWriteRole } from '@/shared/lib/auth'
 import { logger } from '@/shared/config/logger'
 import type { OTRoom, OTGridData } from '../types/ot'
+import { runProcedureTransition } from '../lib/ot-procedure-mutations'
 
-/** Fetch all 16 OT rooms with current status */
 export async function getOTRooms(): Promise<{ success: boolean; data?: OTGridData; error?: string }> {
   try {
     const result = await pool.query<{
@@ -16,10 +13,20 @@ export async function getOTRooms(): Promise<{ success: boolean; data?: OTGridDat
       room_number: string
       status: 'available' | 'ongoing'
       started_at: Date | null
+      active_procedure_name: string | null
       updated_at: Date
     }>(
-      `SELECT id, room_number, status, started_at, updated_at
-       FROM ot_rooms
+      `SELECT
+          r.id,
+          r.room_number,
+          r.status,
+          r.started_at,
+          r.updated_at,
+          p.procedure_name AS active_procedure_name
+       FROM ot_rooms r
+       LEFT JOIN ot_procedures p
+         ON p.ot_id = r.id
+        AND p.status = 'IN_PROGRESS'
        ORDER BY room_number ASC`
     )
 
@@ -28,6 +35,7 @@ export async function getOTRooms(): Promise<{ success: boolean; data?: OTGridDat
       roomNumber: r.room_number,
       status: r.status,
       startedAt: r.started_at,
+      activeProcedureName: r.active_procedure_name,
       updatedAt: r.updated_at,
     }))
 
@@ -45,10 +53,10 @@ export async function getOTRooms(): Promise<{ success: boolean; data?: OTGridDat
   }
 }
 
-/** Update OT room status (Ongoing / Available) */
 export async function updateOTRoomStatus(input: {
   roomId: string
   status: 'available' | 'ongoing'
+  procedureName?: string
 }): Promise<{ success: boolean; error?: string }> {
   try {
     const session = await requireWriteRole(['nurse', 'supervisor', 'admin'], {
@@ -57,20 +65,41 @@ export async function updateOTRoomStatus(input: {
       entityId: input.roomId,
     })
 
-    await pool.query(
-      `UPDATE ot_rooms
-       SET status     = $1,
-           started_at = CASE WHEN $1 = 'ongoing' THEN NOW() ELSE NULL END,
-           updated_by = $2,
-           updated_at = NOW()
-       WHERE id = $3`,
-      [input.status, session.userId, input.roomId]
-    )
+    const client = await pool.connect()
+    try {
+      await client.query('BEGIN')
+
+      const transitionError = await runProcedureTransition(client, input, {
+        userId: session.userId,
+      })
+      if (transitionError) {
+        await client.query('ROLLBACK')
+        return transitionError
+      }
+
+      await client.query(
+        `UPDATE ot_rooms
+         SET status = $1,
+             started_at = CASE WHEN $1 = 'ongoing' THEN NOW() ELSE NULL END,
+             updated_by = $2,
+             updated_at = NOW()
+         WHERE id = $3`,
+        [input.status, session.userId, input.roomId]
+      )
+
+      await client.query('COMMIT')
+    } catch (txError) {
+      await client.query('ROLLBACK')
+      throw txError
+    } finally {
+      client.release()
+    }
 
     logger.info('OT room status updated', {
       roomId: input.roomId,
       status: input.status,
       updatedBy: session.userId,
+      procedureName: input.procedureName || null,
     })
 
     return { success: true }

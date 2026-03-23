@@ -11,6 +11,16 @@ const path = require('path');
 const fs = require('fs');
 const dotenv = require('dotenv');
 
+// Legacy duplicates are already applied in production-like environments.
+// Do not rename historical files in-place; instead guard against NEW duplicates.
+const ALLOWED_LEGACY_DUPLICATES = {
+  '015': ['015_add_password_reset', '015_add_tat_to_admissions'],
+  '038': ['038_add_delay_reason_options', '038_create_alert_preferences'],
+  '040': ['040_create_user_feedback', '040_enable_pgcrypto'],
+  '046': ['046_add_patient_demographics_to_beds', '046_create_cath_lab_procedures'],
+  '047': ['047_add_cath_lab_roles', '047_add_doctor_and_cardiologist_roles', '047_enforce_symptom_40_char_limit'],
+};
+
 // Load environment files
 const loadEnvFiles = () => {
   const nodeEnv = process.env.NODE_ENV || 'development';
@@ -78,14 +88,40 @@ const validateMigrations = async () => {
 
   const duplicates = Array.from(numberToNames.entries()).filter(([, names]) => names.length > 1);
   if (duplicates.length > 0) {
-    // Pre-existing duplicates on main are not blocked here — the CI migration-validation
-    // job enforces uniqueness only for newly added migrations in a PR.
-    // A dedicated migration-cleanup PR is required to resolve pre-existing duplicates.
-    console.warn('⚠️  WARNING: Duplicate migration number prefixes detected (pre-existing):');
+    const unexpectedDuplicates = [];
+    const legacyDuplicates = [];
+
     for (const [number, names] of duplicates) {
-      console.warn(`  ${number}: ${names.join(', ')}`);
+      const allowedNames = ALLOWED_LEGACY_DUPLICATES[number];
+      const normalizedActual = [...names].sort();
+      const normalizedAllowed = allowedNames ? [...allowedNames].sort() : null;
+      const isAllowedLegacy =
+        Array.isArray(normalizedAllowed) &&
+        normalizedAllowed.length === normalizedActual.length &&
+        normalizedAllowed.every((name, idx) => name === normalizedActual[idx]);
+
+      if (isAllowedLegacy) {
+        legacyDuplicates.push([number, names]);
+      } else {
+        unexpectedDuplicates.push([number, names]);
+      }
     }
-    console.warn('These should be resolved in a dedicated migration-cleanup PR.');
+
+    if (unexpectedDuplicates.length > 0) {
+      console.error('❌ ERROR: Unexpected duplicate migration number prefixes detected.');
+      for (const [number, names] of unexpectedDuplicates) {
+        console.error(`  ${number}: ${names.join(', ')}`);
+      }
+      console.error('Use a new unique numeric prefix (or timestamp) for new migrations.');
+      process.exit(1);
+    }
+
+    if (legacyDuplicates.length > 0) {
+      console.log('ℹ️  Known legacy duplicate prefixes detected (allowed):');
+      for (const [number, names] of legacyDuplicates) {
+        console.log(`  ${number}: ${names.join(', ')}`);
+      }
+    }
   }
 
   const numericMigrations = migrationFiles
