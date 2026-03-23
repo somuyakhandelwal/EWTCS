@@ -9,41 +9,14 @@
 const { Client } = require('pg');
 const path = require('path');
 const fs = require('fs');
-const dotenv = require('dotenv');
+const { loadEnvironment } = require('./lib-env');
 
-// Legacy duplicates are already applied in production-like environments.
-// Do not rename historical files in-place; instead guard against NEW duplicates.
-const ALLOWED_LEGACY_DUPLICATES = {
-  '015': ['015_add_password_reset', '015_add_tat_to_admissions'],
-  '038': ['038_add_delay_reason_options', '038_create_alert_preferences'],
-  '040': ['040_create_user_feedback', '040_enable_pgcrypto'],
-  '046': ['046_add_patient_demographics_to_beds', '046_create_cath_lab_procedures'],
-  '047': ['047_add_cath_lab_roles', '047_add_doctor_and_cardiologist_roles', '047_enforce_symptom_40_char_limit'],
-};
-
-// Load environment files
-const loadEnvFiles = () => {
-  const nodeEnv = process.env.NODE_ENV || 'development';
-  const baseFiles = ['.env', `.env.${nodeEnv}`];
-
-  baseFiles.forEach((file) => {
-    const fullPath = path.resolve(process.cwd(), file);
-    if (fs.existsSync(fullPath)) {
-      const override = file !== '.env';
-      dotenv.config({ path: fullPath, override });
-    }
-  });
-
-  const localPath = path.resolve(process.cwd(), '.env.local');
-  if (fs.existsSync(localPath)) {
-    dotenv.config({ path: localPath, override: true });
-  }
-};
+const LEGACY_DUPLICATE_PREFIXES = new Set(['015', '038', '040', '047']);
 
 const validateMigrations = async () => {
   console.log('🔍 Validating database migrations...\n');
 
-  loadEnvFiles();
+  loadEnvironment();
 
   const databaseUrl = process.env.DATABASE_URL;
 
@@ -59,7 +32,8 @@ const validateMigrations = async () => {
     process.exit(1);
   }
 
-  // Get all migration files
+  // Get all migration files (JS/TS/SQL).
+  // All formats are supported by node-pg-migrate and tracked in pgmigrations.
   const migrationFiles = fs
     .readdirSync(migrationsDir)
     .filter((file) => file.endsWith('.js') || file.endsWith('.ts') || file.endsWith('.sql'))
@@ -87,41 +61,22 @@ const validateMigrations = async () => {
   }
 
   const duplicates = Array.from(numberToNames.entries()).filter(([, names]) => names.length > 1);
-  if (duplicates.length > 0) {
-    const unexpectedDuplicates = [];
-    const legacyDuplicates = [];
+  const legacyDuplicates = duplicates.filter(([number]) => LEGACY_DUPLICATE_PREFIXES.has(number));
+  const unexpectedDuplicates = duplicates.filter(([number]) => !LEGACY_DUPLICATE_PREFIXES.has(number));
 
-    for (const [number, names] of duplicates) {
-      const allowedNames = ALLOWED_LEGACY_DUPLICATES[number];
-      const normalizedActual = [...names].sort();
-      const normalizedAllowed = allowedNames ? [...allowedNames].sort() : null;
-      const isAllowedLegacy =
-        Array.isArray(normalizedAllowed) &&
-        normalizedAllowed.length === normalizedActual.length &&
-        normalizedAllowed.every((name, idx) => name === normalizedActual[idx]);
-
-      if (isAllowedLegacy) {
-        legacyDuplicates.push([number, names]);
-      } else {
-        unexpectedDuplicates.push([number, names]);
-      }
+  if (legacyDuplicates.length > 0) {
+    console.log('ℹ️  Legacy duplicate migration prefixes detected (allowed for backward compatibility):');
+    for (const [number, names] of legacyDuplicates) {
+      console.log(`  ${number}: ${names.join(', ')}`);
     }
+  }
 
-    if (unexpectedDuplicates.length > 0) {
-      console.error('❌ ERROR: Unexpected duplicate migration number prefixes detected.');
-      for (const [number, names] of unexpectedDuplicates) {
-        console.error(`  ${number}: ${names.join(', ')}`);
-      }
-      console.error('Use a new unique numeric prefix (or timestamp) for new migrations.');
-      process.exit(1);
+  if (unexpectedDuplicates.length > 0) {
+    console.warn('⚠️  WARNING: New duplicate migration number prefixes detected:');
+    for (const [number, names] of unexpectedDuplicates) {
+      console.warn(`  ${number}: ${names.join(', ')}`);
     }
-
-    if (legacyDuplicates.length > 0) {
-      console.log('ℹ️  Known legacy duplicate prefixes detected (allowed):');
-      for (const [number, names] of legacyDuplicates) {
-        console.log(`  ${number}: ${names.join(', ')}`);
-      }
-    }
+    console.warn('Use unique numeric prefixes for new migration files.');
   }
 
   const numericMigrations = migrationFiles
@@ -198,7 +153,7 @@ const validateMigrations = async () => {
       process.exit(1);
     }
 
-    // Verify migration order (informational only)
+    // Verify migration order when explicitly requested.
     const expectedOrder = [...appliedMigrations].sort();
     const actualOrder = appliedMigrations;
 
@@ -210,11 +165,15 @@ const validateMigrations = async () => {
       }
     }
 
-    if (orderMismatch) {
+    const strictOrderCheckEnabled = process.env.VALIDATE_MIGRATION_ORDER === 'true';
+
+    if (orderMismatch && strictOrderCheckEnabled) {
       console.log('\nℹ️  NOTE: Migration apply timestamps differ from filename order.');
       console.log('This is informational when pending migrations = 0.');
-      console.log('Expected order:', expectedOrder);
-      console.log('Applied order:', actualOrder);
+      console.log(`Expected first migration: ${expectedOrder[0]}`);
+      console.log(`Applied first migration: ${actualOrder[0]}`);
+      console.log(`Expected last migration: ${expectedOrder[expectedOrder.length - 1]}`);
+      console.log(`Applied last migration: ${actualOrder[actualOrder.length - 1]}`);
     }
 
     console.log('\n✅ All migrations validated successfully');

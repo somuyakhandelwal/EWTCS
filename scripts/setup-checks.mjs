@@ -1,42 +1,45 @@
-import { execSync } from 'child_process';
-import { log } from './setup-utils.mjs';
+#!/usr/bin/env node
 
-function majorVersion(version) {
-  const value = String(version || '').replace(/^v/, '');
-  const major = Number(value.split('.')[0]);
-  return Number.isFinite(major) ? major : 0;
+import { execOutput, execSilent, log } from './setup-utils.mjs';
+
+function parseMajorVersion(versionString) {
+  const cleaned = versionString.replace(/^v/, '');
+  const major = Number.parseInt(cleaned.split('.')[0], 10);
+  return Number.isFinite(major) ? major : null;
 }
 
-/**
- * Validate Node.js version.
- * @returns {Promise<string>} Node.js version string
- */
 export async function checkNodeVersion(step, totalSteps) {
   log.step(step, totalSteps, 'Checking Node.js version...');
 
-  const version = process.version.replace(/^v/, '');
-  const major = majorVersion(process.version);
+  const version = process.version;
+  const major = parseMajorVersion(version);
 
-  if (major < 18) {
-    log.error(`Node.js 18+ is required. Current: ${version}`);
+  if (!major) {
+    log.error(`Unable to parse Node.js version: ${version}`);
     process.exit(1);
   }
 
-  log.success(`Node.js ${version} detected`);
+  if (major < 20) {
+    log.error(`Node.js ${version} detected. Minimum required: v20.x`);
+    process.exit(1);
+  }
+
+  log.success(`Node.js ${version} is compatible`);
   return version;
 }
 
-/**
- * Validate PostgreSQL client availability.
- */
 export async function checkPostgreSQL(step, totalSteps) {
   log.step(step, totalSteps, 'Checking PostgreSQL tools...');
 
-  try {
-    const versionOutput = execSync('psql --version', { encoding: 'utf-8' }).trim();
-    log.success(versionOutput);
-  } catch {
-    log.error('psql not found. Install PostgreSQL and ensure psql is on PATH.');
+  const hasPsql = execSilent('psql --version');
+  const hasPgIsReady = execSilent('pg_isready --version');
+
+  if (!hasPsql && !hasPgIsReady) {
+    log.error('PostgreSQL CLI tools not found in PATH (psql/pg_isready).');
+    log.info('Install PostgreSQL and ensure command-line tools are available.');
     process.exit(1);
   }
+
+  const version = execOutput('psql --version') || execOutput('pg_isready --version') || 'PostgreSQL tools detected';
+  log.success(version);
 }
