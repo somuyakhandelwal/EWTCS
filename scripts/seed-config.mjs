@@ -93,21 +93,22 @@ export const DELAY_REASONS = [
 ];
 
 /**
- * Live-state distribution plan.
- * Ensures every stage has at least one occupied bed when the seed completes,
- * giving the dashboard an immediately readable spread across all stages.
+ * Live-state distribution plan — scaled for 30 ER beds.
+ * 27 beds are placed into active stages; 3 remain Empty (realistic vacancy).
+ * Ensures every stage has multiple occupied beds for a readable dashboard.
  * count × hours-ago range — overdue/bottleneck flags drive delay inserts.
  */
 export const LIVE_PLAN = [
-  { stage: 'Triage',                count: 2, minH: 0.05, maxH: 0.4  },
-  { stage: 'Triage',                count: 1, minH: 0.4,  maxH: 0.9, overdue: true },
-  { stage: 'Registration',          count: 2, minH: 0.1,  maxH: 0.7  },
-  { stage: 'Doctor Assessment',     count: 2, minH: 0.2,  maxH: 1.2  },
-  { stage: 'Doctor Assessment',     count: 1, minH: 1.2,  maxH: 1.8, overdue: true },
-  { stage: 'Treatment/Observation', count: 2, minH: 1.0,  maxH: 4.0  },
-  { stage: 'Treatment/Observation', count: 1, minH: 6.0,  maxH: 10.0, overdue: true },
-  { stage: 'Decision Made',         count: 1, minH: 0.3,  maxH: 1.5  },
+  { stage: 'Triage',                count: 4, minH: 0.05, maxH: 0.4  },
+  { stage: 'Triage',                count: 2, minH: 0.4,  maxH: 0.9, overdue: true },
+  { stage: 'Registration',          count: 3, minH: 0.1,  maxH: 0.7  },
+  { stage: 'Doctor Assessment',     count: 3, minH: 0.2,  maxH: 1.2  },
+  { stage: 'Doctor Assessment',     count: 2, minH: 1.2,  maxH: 1.8, overdue: true },
+  { stage: 'Treatment/Observation', count: 4, minH: 1.0,  maxH: 4.0  },
+  { stage: 'Treatment/Observation', count: 2, minH: 6.0,  maxH: 10.0, overdue: true },
+  { stage: 'Decision Made',         count: 2, minH: 0.3,  maxH: 1.5  },
   { stage: 'Decision Made',         count: 1, minH: 2.5,  maxH: 5.0, bottleneck: true },
-  { stage: 'Discharge Process',     count: 1, minH: 0.1,  maxH: 0.7  },
-  { stage: 'Cleaning',              count: 1, minH: 0.05, maxH: 0.4  },
+  { stage: 'Discharge Process',     count: 2, minH: 0.1,  maxH: 0.7  },
+  { stage: 'Cleaning',              count: 2, minH: 0.05, maxH: 0.4  },
+  // Total: 27 beds active — 3 remain Empty (realistic for a busy 30-bed ER ward)
 ];
