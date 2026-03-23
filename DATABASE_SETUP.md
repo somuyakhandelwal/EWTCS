@@ -707,7 +707,7 @@ SELECT bed_number, is_occupied FROM beds ORDER BY bed_number;
 
 ### Expected Table Count
 
-Run `\dt` in psql — you should see **31+ tables** (includes EPIC 20 department modules, archival, metrics, and audit tables):
+Run `\dt` in psql — you should see **32 tables** (includes EPIC 20 department modules, archival, metrics, and audit tables):
 - alert_preferences
 - archival_runs
 - audit_logs
@@ -740,7 +740,6 @@ Run `\dt` in psql — you should see **31+ tables** (includes EPIC 20 department
 - user_feedback
 - users
 - wards
-- archival tables (patient_admissions_archive, audit_logs_archive, bed_stage_logs_archive, archival_runs)
 
 ---
 
