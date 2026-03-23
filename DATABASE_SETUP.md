@@ -182,7 +182,9 @@ npm run db:seed
 This will create:
 - ✅ Admin user (username: `admin`, password: `Admin@123`)
 - ✅ 8 patient workflow stages (Empty, Triage, Registration, etc.)
-- ✅ 20 sample emergency beds (ER-01 through ER-20)
+- ✅ 30 Emergency Ward beds (`ER-01` to `ER-30`)
+- ✅ 6 Triage Area beds (`TRIAGE-01` to `TRIAGE-06`)
+- ✅ 16 Operation Theatre rooms (`OT-01` to `OT-16`)
 
 **Expected output:**
 ```
@@ -704,26 +706,34 @@ SELECT bed_number, is_occupied FROM beds ORDER BY bed_number;
 
 ### Expected Table Count
 
-Run `\dt` in psql — you should see **18 tables** (includes EPIC 25 department metrics tables):
+Run `\dt` in psql — you should see **25+ tables** (includes EPIC 20 department modules and archival tables):
 - audit_logs
+- alert_preferences
 - bed_stage_log_corrections
 - bed_stage_logs
 - beds
 - cath_lab_procedures
+- daily_summaries
+- diagnosis
 - disposition_delay_reasons
 - er_intake
+- error_events
 - kiosk_sessions
 - ot_procedures
+- ot_rooms
 - password_reset_tokens
 - patient_admissions
+- report_signoffs
 - shifts
 - stage_delay_thresholds
 - stage_transitions
 - stages
 - system_settings
 - token_blacklist
+- user_feedback
 - users
 - wards
+- archival tables (patient_admissions_archive, audit_logs_archive, bed_stage_logs_archive, archival_runs)
 
 ---
 
