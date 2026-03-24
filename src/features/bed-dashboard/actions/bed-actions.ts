@@ -8,9 +8,9 @@ import { checkWardAccess } from '../lib/bed-queries'
 import { requireWriteRole } from '@/shared/lib/auth'
 import { logAudit } from '@/shared/lib/audit'
 import { validateTransition } from '../lib/stage-validation'
+import { validatePii } from '../lib/pii-utils'
 import { headers } from 'next/headers'
 import { getClientIpFromHeaders } from '@/shared/lib/request-ip'
-import { detectPii, redactPii } from '@/shared/lib/pii-detector'
 
 /**
  * Update bed stage (US-2.1, US-2.2)
@@ -49,39 +49,12 @@ export async function updateBedStage(input: UpdateBedStageInput): Promise<{
       }
     }
 
-    // US-17.7: Backend PII enforcement — reject if PII detected in free-text fields
-    // This runs regardless of frontend validation to prevent bypass via direct API calls.
-    const freeTextFields: Array<{ field: string; value: string | undefined }> = [
+    // US-17.7: Backend PII enforcement
+    const piiError = await validatePii(result.data.bedId, session.userId, [
       { field: 'notes', value: result.data.notes },
       { field: 'overrideReason', value: result.data.overrideReason },
-    ]
-    for (const { field, value } of freeTextFields) {
-      if (!value) continue
-      const pii = detectPii(value)
-      if (pii.hasPii) {
-        await logAudit({
-          actionType: 'PII_BLOCKED',
-          entityType: 'bed',
-          entityId: result.data.bedId,
-          performedBy: session.userId,
-          metadata: {
-            field,
-            detectedCategories: pii.summary,
-            redactedValue: redactPii(value),
-          },
-        })
-        logger.warn('PII detected and blocked in bed stage update', {
-          userId: session.userId,
-          bedId: result.data.bedId,
-          field,
-          categories: pii.summary,
-        })
-        return {
-          success: false,
-          error: `Field "${field}" contains patient information (${pii.summary}). Remove it before submitting.`,
-        }
-      }
-    }
+    ])
+    if (piiError) return { success: false, error: piiError }
 
     // IDOR FIX: Ward-level access control (checkWardAccess in bed-queries.ts)
     const wardError = await checkWardAccess(session.userId, result.data.bedId, session.role)
@@ -108,7 +81,7 @@ export async function updateBedStage(input: UpdateBedStageInput): Promise<{
           actualStageId: bed.currentStageId,
           enqueuedAt: result.data.enqueuedAt,
         },
-      }).catch(() => {})
+      }).catch(() => { })
       return { success: false, conflict: true, serverStageId: bed.currentStageId ?? '' }
     }
 

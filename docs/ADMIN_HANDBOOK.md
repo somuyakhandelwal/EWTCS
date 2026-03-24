@@ -6,7 +6,7 @@ Administrator runbook for configuration, maintenance, backup/recovery, security,
 - Owner: Platform / System Administration
 - Scope: Configuration, backups, troubleshooting, security, command references
 - Versioning: Git-tracked; update required in release PRs when operations change
-- Last Updated: 2026-03-18
+- Last Updated: 2026-03-20 (EPIC 20 — Architecture and Database Sync)
 
 ## 1) System Overview
 EWTCS is a Next.js + PostgreSQL emergency-ward operations platform.
@@ -163,10 +163,43 @@ npm run audit:verify
 Dev runtime note:
 - `npm run dev` now clears `.next` before startup to reduce stale chunk load errors during local development.
 
+### EPIC 25 — Enhanced Dashboard Metrics (Department Metrics)
+- New migration: `1773838271566_create-department-metrics-tables.js`
+- Creates three new tables for cross-department operational visibility:
+  - `er_intake` — Emergency / Triage: bed occupancy status (`occupied`/`vacant`) and `triage_time_minutes`
+  - `ot_procedures` — Operation Theater: per-procedure `status` (`in_progress`/`completed`), `patient_name`, `room_id`
+  - `cath_lab_procedures` — Cath Lab: per-procedure `procedure_type` (`CAG`/`PTCA`) and `status` (`active`/`completed`)
+- Server action: `src/features/bed-dashboard/actions/department-metrics.ts` (`getDepartmentMetrics`)
+- UI component: `src/features/bed-dashboard/components/DepartmentMetricsView.tsx`
+- Deployment steps:
+  1. Run `npm run db:migrate` to create the three tables.
+  2. Optionally seed sample data: `node scripts/seed-metrics.js`
+  3. Confirm tables are present: `npm run validate:schema`
+- Metrics surfaced:
+  - **Triage**: occupied bed count, total bed count, average triage time (minutes)
+  - **OT**: surgeries in-progress, completed, utilization rate (%)
+  - **Cath Lab**: active procedures, CAG count, PTCA count
+
+### EPIC 20 — Department Modules (ER, Diagnosis, OT, Cath Lab)
+- **Schema Additions**: Four new tables (`er_intake`, `diagnosis`, `ot_procedures`, `cath_lab_procedures`).
+- **Validation**: `DATABASE_SETUP.md` schema checks now expect 25+ tables.
+- **Roles**: Added `doctor`, `cardiologist`, and `cath_lab_nurse` to identity enums and route guards.
+### EPIC 20 — Emergency Ward Capacity Expansion
+- New migrations: `056_seed_emergency_ward.sql`, `057_extend_cath_lab_procedures.sql`
+- Ensures the default development and test environment provides 30 ER beds, 6 Triage beds, and 16 OT rooms out of the box when running `npm run db:seed`.
+- Adds a strictly guarded safe-abort to the database seeder to prevent destructive `TRUNCATE CASCADE` logic from ever mutating production instances.
+- Deployment action: run `npm run db:migrate` then `npm run db:seed` structurally in any staging environment to hydrate testing interfaces.
+
 ### US-22.1 Operational Notes
 - New migrations: `047_enforce_symptom_40_char_limit.sql`, `1774000000000_enforce_symptom_40_char_limit_after_triage.sql`
 - Triage complaint field (`beds.key_symptom`) is now strictly limited to 40 characters.
 - Deployment action: run `npm run db:migrate` before application startup after pulling this release.
+
+### US-22.2 Operational Notes (Doctor Evaluation & Diagnosis)
+- New migration: `049_create_diagnosis_table.sql`
+- Role: `doctor` role enabled for clinical documentation.
+- Feature: Doctors can now record clinical diagnoses linked to patient UHID and Bed ID.
+- Deployment action: run `npm run db:migrate` and ensure the `doctor` role is assigned to clinical users via the admin dashboard.
 
 ### Validation, Tests, and Ops
 ```bash
@@ -209,5 +242,4 @@ Release checklist:
 - `src/middleware.ts`
 - `src/app/api/health/route.ts`
 - `src/app/api/cron/archival/route.ts`
-- `SECURITY.md` 
-Triage feature metadata is also included in bed management ops.
+- `SECURITY.md`

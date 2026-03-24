@@ -36,6 +36,10 @@ interface BedGridProps {
   /** US-16.2: beds that have a write queued for sync — shown with an amber badge */
   queuedBedIds?: Set<string>
   onOpenTriage?: (bedId: string) => void
+  /** EPIC 22: open diagnosis modal for a bed (doctor role) */
+  onOpenDiagnosis?: (bedId: string) => void
+  /** Current user role — forwarded to BedCard for EPIC 22 */
+  role?: string
 }
 
 export function BedGrid({
@@ -57,6 +61,8 @@ export function BedGrid({
   isOffline = false,
   queuedBedIds,
   onOpenTriage,
+  onOpenDiagnosis,
+  role,
 }: BedGridProps) {
   const {
     menuState,
@@ -150,6 +156,8 @@ export function BedGrid({
               onUndo={undoState?.bedId === bed.id ? onUndo : undefined}
               isUndoing={undoState?.bedId === bed.id ? isUndoing : false}
               isQueuedOffline={queuedBedIds?.has(bed.id) ?? false}
+              onOpenDiagnosis={onOpenDiagnosis}
+              role={role}
             />
           ))}
         </div>

@@ -27,6 +27,7 @@ export async function BedDashboardContainer({ role, areaView = 'all' }: Props) {
             initialData={bedGridResult.data}
             canRecordDispositionReasons={role !== 'housekeeping'}
             onCreateVirtualBed={createVirtualBed}
+            role={role}
         />
     )
 }

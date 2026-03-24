@@ -1,23 +1,8 @@
-export type AlertTypeKey =
-  | 'delayedBeds'
-  | 'escalations'
-  | 'dispositionBottlenecks'
-  | 'systemErrors'
-
-export interface AlertTypePreferences {
-  delayedBeds: boolean
-  escalations: boolean
-  dispositionBottlenecks: boolean
-  systemErrors: boolean
-}
-
-export interface AlertThresholdPreferences {
-  delayMinutes: number
-  escalationMinutes: number
-  bottleneckCount: number
-}
-
-export interface AlertPreferences {
-  enabledAlertTypes: AlertTypePreferences
-  thresholds: AlertThresholdPreferences
-}
+// Re-exports shared AlertPreferences types — keeps the original import path working
+// and avoids cross-feature imports into bed-dashboard.
+export type {
+  AlertTypeKey,
+  AlertTypePreferences,
+  AlertThresholdPreferences,
+  AlertPreferences,
+} from '@/shared/types/alert-preferences.types'

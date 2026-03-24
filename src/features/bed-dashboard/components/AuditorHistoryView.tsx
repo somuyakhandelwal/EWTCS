@@ -45,18 +45,18 @@ interface AuditorHistoryViewProps {
 export function AuditorHistoryView({ readOnly = false, canEdit = false, showCorrections = false, canOverrideShift = false }: AuditorHistoryViewProps) {
   const shouldFetchCorrections = canEdit || showCorrections
 
-  const [rows, setRows]             = useState<AuditorHistoryRecord[]>([])
+  const [rows, setRows] = useState<AuditorHistoryRecord[]>([])
   const [totalCount, setTotalCount] = useState(0)
-  const [loading, setLoading]       = useState(true)
-  const [exporting, setExporting]   = useState(false)
-  const [error, setError]           = useState<string | null>(null)
-  const [page, setPage]             = useState(1)
-  const [sortBy, setSortBy]         = useState<AuditorHistorySortBy>('transitionTime')
-  const [sortOrder, setSortOrder]   = useState<'asc' | 'desc'>('desc')
-  const [filters, setFilters]       = useState({ ...DEFAULT_AUDITOR_HISTORY_FILTERS })
-  const [correctedLogIds, setCorrectedLogIds]     = useState<Set<string>>(new Set())
+  const [loading, setLoading] = useState(true)
+  const [exporting, setExporting] = useState(false)
+  const [error, setError] = useState<string | null>(null)
+  const [page, setPage] = useState(1)
+  const [sortBy, setSortBy] = useState<AuditorHistorySortBy>('transitionTime')
+  const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('desc')
+  const [filters, setFilters] = useState({ ...DEFAULT_AUDITOR_HISTORY_FILTERS })
+  const [correctedLogIds, setCorrectedLogIds] = useState<Set<string>>(new Set())
   const [correctedStageMap, setCorrectedStageMap] = useState<Record<string, string>>({})
-  const [editingRecord, setEditingRecord]         = useState<AuditorHistoryRecord | null>(null)
+  const [editingRecord, setEditingRecord] = useState<AuditorHistoryRecord | null>(null)
   // US-8.2 AC-4: shifts for the inline override selector
   const [shifts, setShifts] = useState<Shift[]>([])
 
@@ -67,11 +67,11 @@ export function AuditorHistoryView({ readOnly = false, canEdit = false, showCorr
     setError(null)
     const payload = buildAuditorHistoryPayload({ filters, page, sortBy, sortOrder })
     const noCorrections = Promise.resolve({ success: true as const, data: [] as string[] })
-    const noStageMap    = Promise.resolve({ success: true as const, data: {} as Record<string, string> })
+    const noStageMap = Promise.resolve({ success: true as const, data: {} as Record<string, string> })
 
     const [historyResult, correctedIdsResult, stageMapResult] = await Promise.all([
       fetchAuditorBedHistory(payload),
-      shouldFetchCorrections ? getCorrectedLogIds()   : noCorrections,
+      shouldFetchCorrections ? getCorrectedLogIds() : noCorrections,
       shouldFetchCorrections ? getCorrectedStageMap() : noStageMap,
     ])
 
@@ -96,7 +96,7 @@ export function AuditorHistoryView({ readOnly = false, canEdit = false, showCorr
   // US-8.2 AC-4: fetch shifts once when override is available
   useEffect(() => {
     if (!canOverrideShift) return
-    getShiftsAction().then(r => { if (r.success && r.shifts) setShifts(r.shifts) }).catch(() => {})
+    getShiftsAction().then(r => { if (r.success && r.shifts) setShifts(r.shifts) }).catch(() => { })
   }, [canOverrideShift])
 
   // US-8.2 AC-4: supervisor reassigns the shift on a log entry, then refreshes
@@ -122,7 +122,7 @@ export function AuditorHistoryView({ readOnly = false, canEdit = false, showCorr
     })
     if (!result.success || !result.data) { setError(result.error ?? 'Failed to export'); setExporting(false); return }
     const blob = new Blob([result.data], { type: 'text/csv' })
-    const url  = URL.createObjectURL(blob)
+    const url = URL.createObjectURL(blob)
     const link = document.createElement('a')
     link.href = url
     link.download = `bed-stage-history-${new Date().toISOString().split('T')[0]}.csv`

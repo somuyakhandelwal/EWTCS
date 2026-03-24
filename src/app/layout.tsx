@@ -1,5 +1,4 @@
 import type { Metadata } from "next";
-import { Geist, Geist_Mono } from "next/font/google";
 import dynamic from "next/dynamic";
 import { Suspense } from "react";
 import "./globals.css";
@@ -24,15 +23,7 @@ const GlobalThemeToggle = dynamic(
   () => import("@/shared/components/GlobalThemeToggle").then((mod) => mod.GlobalThemeToggle)
 )
 
-const geistSans = Geist({
-  variable: "--font-geist-sans",
-  subsets: ["latin"],
-});
-
-const geistMono = Geist_Mono({
-  variable: "--font-geist-mono",
-  subsets: ["latin"],
-});
+const fontClasses = "font-sans antialiased";
 
 export const metadata: Metadata = {
   title: "EWTCS - Emergency Ward Bed Status Monitoring",
@@ -57,7 +48,7 @@ export default function RootLayout({
   return (
     <html lang="en" suppressHydrationWarning>
       <body
-        className={`${geistSans.variable} ${geistMono.variable} antialiased`}
+        className={fontClasses}
       >
         <ThemeProvider
           attribute="class"

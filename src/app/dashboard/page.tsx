@@ -7,6 +7,7 @@ import { FeedbackForm } from "@/features/adoption/components/FeedbackForm"
 import { NurseAreaSidebar } from "@/features/bed-dashboard/components/NurseAreaSidebar"
 import { redirect } from "next/navigation"
 import { Suspense } from "react"
+import { DepartmentMetricsView } from "@/features/bed-dashboard/components/DepartmentMetricsView"
 
 export default async function DashboardPage() {
     const session = await verifyActiveSession()
@@ -33,6 +34,9 @@ export default async function DashboardPage() {
                         <LogoutButton />
                     </div>
                 </div>
+
+                {/* Consolidated Department Metrics */}
+                <DepartmentMetricsView />
 
                 {/* Bed Grid - Streamed */}
                 <div className="flex flex-col gap-6 lg:flex-row lg:items-start">

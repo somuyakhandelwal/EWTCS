@@ -4,6 +4,7 @@
 // when the network is unavailable.
 
 import { realtimeConfig } from '@/shared/config/realtime'
+import { logger } from '@/shared/config/logger'
 import type { BedGridData } from '../types/bed'
 
 /** Shape stored in localStorage */
@@ -36,15 +37,6 @@ function isStorageAvailable(): boolean {
 // ─────────────────────────────────────────────
 // Public API
 // ─────────────────────────────────────────────
-
-/**
- * Persist a BedGridData snapshot to localStorage.
- *
- * Silently skips if:
- * - localStorage is unavailable (SSR / private browsing)
- * - caching is disabled via `NEXT_PUBLIC_CACHE_ENABLED=false`
- * - the serialised payload exceeds `cacheMaxSizeBytes`
- */
 export function saveToCache(data: BedGridData): void {
   if (!realtimeConfig.cacheEnabled) return
   if (!isStorageAvailable()) return
@@ -59,18 +51,18 @@ export function saveToCache(data: BedGridData): void {
 
   // AC: Cache size is limited to prevent browser issues
   if (serialised.length > realtimeConfig.cacheMaxSizeBytes) {
-    console.warn(
-      `[EWTCS] Cache write skipped: payload (${serialised.length} bytes) exceeds ` +
-        `limit (${realtimeConfig.cacheMaxSizeBytes} bytes).`
-    )
+    logger.warn('Cache write skipped: payload exceeds size limit', {
+      sizeBytes: serialised.length,
+      limitBytes: realtimeConfig.cacheMaxSizeBytes
+    })
     return
   }
 
   try {
     localStorage.setItem(realtimeConfig.cacheKey, serialised)
-  } catch (err) {
-    // QuotaExceededError — storage is full; log and continue without caching
-    console.warn('[EWTCS] Cache write failed (storage quota exceeded):', err)
+  } catch (error) {
+    // QuotaExceededError — storage is full; continue without caching
+    logger.warn('Cache write failed: localStorage quota exceeded', { error })
   }
 }
 

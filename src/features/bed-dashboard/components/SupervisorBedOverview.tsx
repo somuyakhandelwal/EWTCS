@@ -21,7 +21,7 @@ import { getBedGridData } from '../actions/bed-grid-actions'
 import { getBedStatistics } from '../lib/utils'
 import { VirtualBedsSection } from './VirtualBedsSection'
 import { SupervisorTemporaryBeds } from './SupervisorTemporaryBeds'
-import type { AlertPreferences } from '@/features/notifications/types/alert-preferences'
+import type { AlertPreferences } from '@/shared/types/alert-preferences.types'
 
 interface SupervisorBedOverviewProps {
   initialData: BedGridData

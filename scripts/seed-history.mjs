@@ -7,15 +7,18 @@
 import { rand, randInt, pick, addMins, shiftFor } from './seed-helpers.mjs';
 import { ARCHETYPES, DELAY_REASONS, pickArchetype } from './seed-config.mjs';
 
-/** Ward-level archetype biases — creates visible per-ward differences. */
-function wardBiasFor(wardId, wards) {
-  const idx = wards.findIndex(w => w.id === wardId);
-  const sets = [
-    ['STANDARD', 'FAST_TRACK', 'QUICK_OUT'],   // Ward 0: lighter cases
-    ['COMPLEX',  'LONG_STAY',  'CRITICAL'],     // Ward 1: heavier cases
-    ['FAST_TRACK','CRITICAL',  'STANDARD'],     // Ward 2: mixed
-  ];
-  return sets[idx] ?? sets[0];
+/**
+ * Returns the weighted archetype bias list for a ward, keyed by ward code.
+ * Fix: map by ward CODE not array index — index breaks silently when new wards
+ * are added (e.g. EPIC 20 added Emergency Ward ER, shifting all indices).
+ * ER gets a full clinical mix so COMPLEX & LONG_STAY appear in analytics.
+ */
+function wardBiasFor(wardCode) {
+  const biasMap = {
+    'ER':     ['STANDARD', 'FAST_TRACK', 'COMPLEX', 'LONG_STAY'],
+    'TRIAGE': ['FAST_TRACK', 'QUICK_OUT', 'STANDARD'],
+  };
+  return biasMap[wardCode] ?? ['STANDARD', 'FAST_TRACK', 'QUICK_OUT'];
 }
 
 /**
@@ -29,9 +32,11 @@ export async function seedHistory(client, { beds, wards, SM, shifts, staff, allS
   let totalDelays = 0;
 
   for (const bed of beds) {
-    const bias   = wardBiasFor(bed.ward_id, wards);
-    const target = randInt(18, 30);
-    let cursor   = new Date(START.getTime() + rand(0, 3) * 3600000);
+    // Resolve ward code (wards[] now includes code — added in seed-genuine-data.mjs)
+    const wardCode = wards.find(w => w.id === bed.ward_id)?.code ?? 'ER';
+    const bias     = wardBiasFor(wardCode);
+    const target   = randInt(18, 30);
+    let cursor     = new Date(START.getTime() + rand(0, 3) * 3600000);
 
     for (let a = 0; a < target; a++) {
       if (cursor.getTime() > NOW.getTime() - 6 * 3600000) break;

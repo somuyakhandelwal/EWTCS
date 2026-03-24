@@ -53,7 +53,7 @@ export async function getBedGridData(areaView: BedAreaView = 'all'): Promise<{
 {
   try {
     // Auth guard: all roles can fetch the dashboard, but must be authenticated
-    const session = await requireRole(['nurse', 'supervisor', 'admin', 'housekeeping'])
+    const session = await requireRole(['nurse', 'supervisor', 'admin', 'housekeeping', 'doctor'])
 
     // EPIC 13: track end-to-end latency for Dashboard SLA monitoring (<2 s).
     const perfMark = perfStart()

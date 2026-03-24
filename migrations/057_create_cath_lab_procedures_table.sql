@@ -1,9 +1,16 @@
--- Migration 051: Create Cath Lab Procedures Table
+-- Migration 051: Create Cath Lab Procedures Table (Full Schema)
 -- Purpose: EPIC 20 - ER Triage & Patient Intake (US-20.4)
 -- Stores: Cardiac catheterization procedures with diagnostic and intervention data
 -- Acceptance Criteria 4: New cath_lab_procedures table with cardiologist and outcomes
+--
+-- NOTE: Migration 046 created a simpler, incompatible version of this table.
+-- We drop it here and recreate with the full schema.
 
 -- Up Migration
+
+-- Drop the simplified table from migration 046 (and its enum type) before recreating.
+DROP TABLE IF EXISTS cath_lab_procedures;
+DROP TYPE IF EXISTS cath_lab_procedure_type;
 
 CREATE TABLE IF NOT EXISTS cath_lab_procedures (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
@@ -27,7 +34,7 @@ CREATE TABLE IF NOT EXISTS cath_lab_procedures (
     scheduled_start TIMESTAMP WITH TIME ZONE,
     actual_start_time TIMESTAMP WITH TIME ZONE,
     actual_end_time TIMESTAMP WITH TIME ZONE,
-    duration_minutes INTEGER,  -- Calculated: (actual_end_time - actual_start_time) / 60
+    duration_minutes INTEGER CHECK (duration_minutes IS NULL OR duration_minutes >= 0),  -- Calculated: (actual_end_time - actual_start_time) / 60
     
     -- Status tracking
     status VARCHAR(20) NOT NULL DEFAULT 'SCHEDULED'
@@ -60,7 +67,11 @@ CREATE TABLE IF NOT EXISTS cath_lab_procedures (
     
     -- Timestamps
     created_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT CURRENT_TIMESTAMP
+    updated_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT CURRENT_TIMESTAMP,
+
+    -- Timeline validation
+    CONSTRAINT chk_cath_lab_procedures_time_order
+        CHECK (actual_end_time IS NULL OR actual_start_time IS NULL OR actual_end_time >= actual_start_time)
 );
 
 -- Create indexes for common queries
@@ -118,4 +129,3 @@ COMMENT ON COLUMN cath_lab_procedures.status IS
 
 -- Down Migration
 -- DROP TABLE IF EXISTS cath_lab_procedures;
-
