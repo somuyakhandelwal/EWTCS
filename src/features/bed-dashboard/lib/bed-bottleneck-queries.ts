@@ -3,6 +3,7 @@
 import { query } from '@/shared/lib/db'
 import { logger } from '@/shared/config/logger'
 import type { BedWithElapsedTime } from '../types/bed'
+import { TRIAGE_INFO_METADATA_PROJECTION } from './bed-sql-constants'
 
 /** Bottleneck threshold: flag Decision Made beds after 30 minutes */
 const DISPOSITION_BOTTLENECK_THRESHOLD_MS = 30 * 60 * 1000
@@ -20,19 +21,19 @@ export async function getBedsWithElapsedTime(
     const result = await query<BedWithElapsedTime>(
       `
       WITH bed_timings AS (
-        SELECT 
+        SELECT
           b.*,
           s.name AS stage_name,
           COALESCE(sdt.threshold_minutes * 60000.0, $1) AS effective_threshold_ms,
-          CASE 
-            WHEN b.is_occupied AND b.patient_start_time IS NOT NULL 
-            THEN EXTRACT(EPOCH FROM (CURRENT_TIMESTAMP - b.patient_start_time)) * 1000 
-            ELSE NULL 
+          CASE
+            WHEN b.is_occupied AND b.patient_start_time IS NOT NULL
+            THEN EXTRACT(EPOCH FROM (CURRENT_TIMESTAMP - b.patient_start_time)) * 1000
+            ELSE NULL
           END AS computed_elapsed_ms,
-          CASE 
-            WHEN b.is_occupied AND b.last_stage_change IS NOT NULL 
-            THEN EXTRACT(EPOCH FROM (CURRENT_TIMESTAMP - b.last_stage_change)) * 1000 
-            ELSE NULL 
+          CASE
+            WHEN b.is_occupied AND b.last_stage_change IS NOT NULL
+            THEN EXTRACT(EPOCH FROM (CURRENT_TIMESTAMP - b.last_stage_change)) * 1000
+            ELSE NULL
           END AS computed_stage_elapsed_ms
         FROM beds b
         LEFT JOIN stages s ON b.current_stage_id = s.id
@@ -50,30 +51,7 @@ export async function getBedsWithElapsedTime(
         bt.is_active AS "isActive",
         bt.is_temporary AS "isTemporary",
         bt.is_virtual AS "isVirtual",
-        CASE
-          WHEN bt.patient_uhid IS NOT NULL
-            OR bt.patient_ipd_id IS NOT NULL
-            OR bt.patient_name IS NOT NULL
-            OR bt.patient_age IS NOT NULL
-            OR bt.patient_gender IS NOT NULL
-            OR bt.key_symptom IS NOT NULL
-            OR bt.triage_category IS NOT NULL
-          THEN jsonb_set(
-            COALESCE(bt.metadata, '{}'::jsonb),
-            '{triageInfo}',
-            jsonb_strip_nulls(jsonb_build_object(
-              'patientUhid', bt.patient_uhid,
-              'patientIpdId', bt.patient_ipd_id,
-              'patientName', bt.patient_name,
-              'patientAge', bt.patient_age,
-              'patientGender', bt.patient_gender,
-              'keySymptom', bt.key_symptom,
-              'triageCategory', bt.triage_category
-            )),
-            true
-          )
-          ELSE bt.metadata
-        END AS "metadata",
+        ${TRIAGE_INFO_METADATA_PROJECTION.replace(/\bb\./g, 'bt.')},
         bt.created_at AS "createdAt",
         bt.updated_at AS "updatedAt",
         json_build_object(
