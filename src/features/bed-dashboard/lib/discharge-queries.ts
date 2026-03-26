@@ -72,13 +72,11 @@ export async function insertDischargeLogs(
 ): Promise<void> {
   const { bedId, bed, dischargeStageId, cleaningStageId, changedByUserId, notes, now } = params
 
-  // Step 1: current → Discharge Process (skip if already there)
   if (bed.currentStageId !== dischargeStageId) {
     const durationInPreviousStageMs = bed.lastStageChange
       ? now.getTime() - new Date(bed.lastStageChange).getTime()
       : null
     await client.query(
-      // US-8.2: auto-tag shift_id via inline subquery (midnight-safe)
       `INSERT INTO bed_stage_logs
          (bed_id, from_stage_id, to_stage_id, changed_by_user_id,
           duration_in_previous_stage_ms, notes, shift_id)
@@ -87,8 +85,6 @@ export async function insertDischargeLogs(
     )
   }
 
-  // Step 2: Discharge Process → Cleaning (auto-advanced, 0ms duration)
-  // US-8.2: auto-tag shift_id via inline subquery (midnight-safe)
   await client.query(
     `INSERT INTO bed_stage_logs
        (bed_id, from_stage_id, to_stage_id, changed_by_user_id,
@@ -113,7 +109,6 @@ export async function archiveAndResetBed(
 ): Promise<string | null> {
   const { bedId, admittedAt, now, totalDurationMs, cleaningStageId, userId, notes } = params
 
-  // US-3.4: Lookup previous discharge for this bed to compute Turnaround Time
   const prevDischarge = await client.query<{ discharged_at: Date }>(
     `SELECT discharged_at
      FROM patient_admissions
@@ -126,9 +121,7 @@ export async function archiveAndResetBed(
     ? admittedAt.getTime() - new Date(prevDischarge.rows[0].discharged_at).getTime()
     : null
 
-  // Step 3: Archive to patient_admissions (includes US-3.4 TAT + US-8.2 shift_id)
   const admissionResult = await client.query<{ id: string }>(
-    // US-8.2: tag the admission with the shift active at discharge time
     `INSERT INTO patient_admissions
        (bed_id, admitted_at, discharged_at, total_duration_ms, discharged_by_user_id,
         notes, tat_from_previous_discharge_ms, shift_id)
@@ -137,7 +130,6 @@ export async function archiveAndResetBed(
     [bedId, admittedAt, now, totalDurationMs, userId, notes, tatFromPreviousDischargeMs]
   )
 
-  // Step 4: Reset bed — cleared patient_start_time is safe here because stay is archived
   await client.query(
     `UPDATE beds
      SET current_stage_id  = $1,
@@ -157,7 +149,6 @@ export async function archiveAndResetBed(
     [cleaningStageId, bedId]
   )
 
-  // Step 5: Close any open disposition delay reasons
   await client.query(
     `UPDATE disposition_delay_reasons
      SET resolved_at = NOW()
