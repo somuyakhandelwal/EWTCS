@@ -483,7 +483,7 @@ Doctor diagnostic assessments (EPIC 20 — US-20.2).
 
 **Indexes:** `idx_diagnosis_bed_id`, `idx_diagnosis_patient_uhid`, `idx_diagnosis_doctor_id`, `idx_diagnosis_diagnosed_at`, `idx_diagnosis_severity`
 
-**Security Note:** Plaintext PHI columns were removed by `058_drop_diagnosis_plaintext_columns.sql`. Diagnosis PHI must be stored in `*_encrypted` JSONB columns only.
+**Security Note:** Plaintext PHI columns were removed by `059_drop_diagnosis_plaintext_columns.sql`. Diagnosis PHI must be stored in `*_encrypted` JSONB columns only.
 
 ---
 

@@ -1,4 +1,4 @@
--- Migration 058: Drop diagnosis plaintext PHI columns after encrypted backfill
+-- Migration 059: Drop diagnosis plaintext PHI columns after encrypted backfill
 -- Purpose: EPIC-DB1 (DB1-01) - enforce encrypted-only PHI storage for diagnosis table
 
 -- Up Migration
@@ -11,6 +11,23 @@ DECLARE
     pending_backfill_count INTEGER := 0;
 BEGIN
     IF to_regclass('public.diagnosis') IS NULL THEN
+        RETURN;
+    END IF;
+
+    -- If plaintext columns are already gone (e.g., previously applied under another migration name),
+    -- there is nothing to backfill or drop.
+    IF NOT EXISTS (
+        SELECT 1
+        FROM information_schema.columns
+        WHERE table_schema = 'public'
+          AND table_name = 'diagnosis'
+          AND column_name IN (
+            'symptoms_observed',
+            'clinical_findings',
+            'diagnosis_text',
+            'recommended_action'
+          )
+    ) THEN
         RETURN;
     END IF;
 
@@ -34,7 +51,7 @@ BEGIN
 
     IF pending_backfill_count > 0 AND (encryption_key IS NULL OR btrim(encryption_key) = '') THEN
         RAISE EXCEPTION
-            'Migration 058 requires app.encryption_key to backfill % plaintext diagnosis rows before dropping columns.',
+            'Migration 059 requires app.encryption_key to backfill % plaintext diagnosis rows before dropping columns.',
             pending_backfill_count
             USING HINT = 'Run with PGOPTIONS="-c app.encryption_key=<64-char-hex-key>" npm run db:migrate';
     END IF;
@@ -104,7 +121,7 @@ BEGIN
                OR (diagnosis_text IS NOT NULL AND btrim(diagnosis_text) <> '' AND diagnosis_text_encrypted IS NULL)
                OR (recommended_action IS NOT NULL AND btrim(recommended_action) <> '' AND recommended_action_encrypted IS NULL)
         ) THEN
-            RAISE EXCEPTION 'Migration 058 backfill failed: encrypted diagnosis columns still missing values.';
+            RAISE EXCEPTION 'Migration 059 backfill failed: encrypted diagnosis columns still missing values.';
         END IF;
     END IF;
 
