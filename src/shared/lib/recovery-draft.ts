@@ -1,3 +1,5 @@
+import { logRecoveryEventAction } from '@/shared/actions/recovery-log-actions'
+
 interface RecoveryEnvelope<T> {
   version: number
   updatedAt: number
@@ -95,6 +97,15 @@ export function clearRecoveryDraft(key: string): void {
 
 export function appendRecoveryLog(event: string, context?: Record<string, unknown>): void {
   if (!isBrowser()) return
+
+  try {
+    // Fire-and-forget DB persistence; localStorage remains the durable client fallback.
+    void logRecoveryEventAction(event, context).catch(() => {
+      // Ignore background persistence failures.
+    })
+  } catch {
+    // Ignore background persistence setup failures.
+  }
 
   try {
     const raw = localStorage.getItem(RECOVERY_LOG_KEY)

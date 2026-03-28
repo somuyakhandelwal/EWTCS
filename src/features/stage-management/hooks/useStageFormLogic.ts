@@ -8,11 +8,13 @@ import {
   appendRecoveryLog,
   clearRecoveryDraft,
   loadRecoveryDraft,
-  saveRecoveryDraft,
 } from '@/shared/lib/recovery-draft'
+import { clearStageDraft, loadStageDraft, saveStageDraft } from '../actions/stage-draft-actions'
 
 const SAVE_RETRIES = 2
 const DRAFT_VERSION = 1
+const DRAFT_DEBOUNCE_MS = 500
+const CURRENT_USER = '__current__'
 
 const normalizeStageColor = (value?: string) =>
   value?.toLowerCase() === 'grey' ? 'gray' : value
@@ -70,7 +72,9 @@ export function useStageFormLogic({
   const [saveState, setSaveState] = useState<SaveState>('idle')
   const [restoredNotice, setRestoredNotice] = useState(false)
   const savedTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+  const draftSaveTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
   const draftKey = stage ? `ewtcs:stage-form-draft:${stage.id}` : 'ewtcs:stage-form-draft:new'
+  const stageDraftId = stage?.id ?? 'new'
 
   const validateInput = useCallback(() => {
     if (!name.trim()) return 'Stage name is required'
@@ -106,6 +110,9 @@ export function useStageFormLogic({
         onSaved({ ...stage, name, color_code: color, description: desc,
           threshold_minutes: totalThresholdMins })
         clearRecoveryDraft(draftKey)
+        void clearStageDraft(CURRENT_USER, stageDraftId).catch(() => {
+          appendRecoveryLog('stage_form_draft_clear_failed', { stageId: stageDraftId })
+        })
         appendRecoveryLog('stage_form_saved', { stageId: stage.id })
         setSaveState('saved')
         if (savedTimerRef.current) clearTimeout(savedTimerRef.current)
@@ -116,6 +123,9 @@ export function useStageFormLogic({
           display_order: 99, is_default: false, is_active: true,
           threshold_minutes: null, created_at: '', updated_at: '' })
         clearRecoveryDraft(draftKey)
+        void clearStageDraft(CURRENT_USER, stageDraftId).catch(() => {
+          appendRecoveryLog('stage_form_draft_clear_failed', { stageId: stageDraftId })
+        })
         appendRecoveryLog('stage_form_saved', { stageId: 'new' })
         setSaveState('saved')
       }
@@ -124,25 +134,48 @@ export function useStageFormLogic({
       setError(e instanceof Error ? e.message : 'Something went wrong')
       appendRecoveryLog('stage_form_save_failed', { stageId: stage?.id ?? 'new' })
     } finally { setLoading(false) }
-  }, [color, desc, draftKey, getThresholdMinutes, name, onSaved, stage, validateInput])
+  }, [color, desc, draftKey, getThresholdMinutes, name, onSaved, stage, stageDraftId, validateInput])
 
-  // Restore draft on mount
   useEffect(() => {
-    const restored = loadRecoveryDraft<StageFormDraft>(draftKey, { version: DRAFT_VERSION })
-    if (!restored || typeof window === 'undefined') return
-    const shouldRestore = window.confirm('Unsaved stage form changes were found. Restore them now?')
-    if (!shouldRestore) {
-      clearRecoveryDraft(draftKey)
-      appendRecoveryLog('stage_form_restore_rejected', { stageId: stage?.id ?? 'new' })
-      return
-    }
-    setName(restored.data.name); setColor(restored.data.color); setDesc(restored.data.desc)
-    setThresholdHours(restored.data.thresholdHours); setThresholdMins(restored.data.thresholdMins)
-    setRestoredNotice(true)
-    appendRecoveryLog('stage_form_restored', { stageId: stage?.id ?? 'new' })
-  }, [draftKey, stage?.id])
+    let cancelled = false
 
-  // Persist dirty drafts to localStorage
+    const restoreDraft = async () => {
+      let nextDraft: StageFormDraft | null = null
+      try {
+        const serverDraft = await loadStageDraft(CURRENT_USER, stageDraftId)
+        if (serverDraft && typeof serverDraft === 'object') {
+          nextDraft = serverDraft as StageFormDraft
+        }
+      } catch {
+        appendRecoveryLog('stage_form_db_draft_load_failed', { stageId: stageDraftId })
+      }
+
+      if (!nextDraft) {
+        const localDraft = loadRecoveryDraft<StageFormDraft>(draftKey, { version: DRAFT_VERSION })
+        nextDraft = localDraft?.data ?? null
+      }
+
+      if (!nextDraft || cancelled || typeof window === 'undefined') return
+      const shouldRestore = window.confirm('Unsaved stage form changes were found. Restore them now?')
+      if (!shouldRestore) {
+        clearRecoveryDraft(draftKey)
+        void clearStageDraft(CURRENT_USER, stageDraftId).catch(() => {
+          appendRecoveryLog('stage_form_draft_clear_failed', { stageId: stageDraftId })
+        })
+        appendRecoveryLog('stage_form_restore_rejected', { stageId: stage?.id ?? 'new' })
+        return
+      }
+
+      setName(nextDraft.name); setColor(nextDraft.color); setDesc(nextDraft.desc)
+      setThresholdHours(nextDraft.thresholdHours); setThresholdMins(nextDraft.thresholdMins)
+      setRestoredNotice(true)
+      appendRecoveryLog('stage_form_restored', { stageId: stage?.id ?? 'new' })
+    }
+
+    void restoreDraft()
+    return () => { cancelled = true }
+  }, [draftKey, stage?.id, stageDraftId])
+
   useEffect(() => {
     const baseline: StageFormDraft = {
       name: stage?.name ?? '',
@@ -152,16 +185,38 @@ export function useStageFormLogic({
       thresholdMins: stageThresholdMins ? stageThresholdMins % 60 : '',
     }
     const current: StageFormDraft = { name, color, desc, thresholdHours, thresholdMins }
+
+    if (draftSaveTimerRef.current) {
+      clearTimeout(draftSaveTimerRef.current)
+      draftSaveTimerRef.current = null
+    }
+
     if (JSON.stringify(baseline) !== JSON.stringify(current)) {
-      saveRecoveryDraft(draftKey, current, { version: DRAFT_VERSION })
+      draftSaveTimerRef.current = setTimeout(() => {
+        void saveStageDraft(CURRENT_USER, stageDraftId, current).catch(() => {
+          appendRecoveryLog('stage_form_draft_save_failed', { stageId: stageDraftId })
+        })
+      }, DRAFT_DEBOUNCE_MS)
     } else {
       clearRecoveryDraft(draftKey)
+      void clearStageDraft(CURRENT_USER, stageDraftId).catch(() => {
+        appendRecoveryLog('stage_form_draft_clear_failed', { stageId: stageDraftId })
+      })
+    }
+
+    return () => {
+      if (draftSaveTimerRef.current) {
+        clearTimeout(draftSaveTimerRef.current)
+        draftSaveTimerRef.current = null
+      }
     }
   }, [color, desc, draftKey, name, stage?.color_code, stage?.description,
-      stage?.name, stageThresholdMins, thresholdHours, thresholdMins])
+      stage?.name, stageDraftId, stageThresholdMins, thresholdHours, thresholdMins])
 
-  // Cleanup timers on unmount
-  useEffect(() => () => { if (savedTimerRef.current) clearTimeout(savedTimerRef.current) }, [])
+  useEffect(() => () => {
+    if (savedTimerRef.current) clearTimeout(savedTimerRef.current)
+    if (draftSaveTimerRef.current) clearTimeout(draftSaveTimerRef.current)
+  }, [])
 
   return {
     name, setName, color, setColor, desc, setDesc,
