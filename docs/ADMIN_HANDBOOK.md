@@ -6,7 +6,7 @@ Administrator runbook for configuration, maintenance, backup/recovery, security,
 - Owner: Platform / System Administration
 - Scope: Configuration, backups, troubleshooting, security, command references
 - Versioning: Git-tracked; update required in release PRs when operations change
-- Last Updated: 2026-03-20 (EPIC 20 — Architecture and Database Sync)
+- Last Updated: 2026-03-29 (DB5-02 — Preferences Persistence + DB script resilience)
 
 ## 1) System Overview
 EWTCS is a Next.js + PostgreSQL emergency-ward operations platform.
@@ -151,6 +151,21 @@ npm run db:reset
 npm run db:reconcile
 npm run audit:verify
 ```
+
+### DB5-02 Operational Notes (Persist Dashboard and Filter Preferences)
+- New migration: `1743241500000_create_user_settings.sql`
+- Added table: `user_settings` (`user_id` PK/FK to `users`, `preferences JSONB`, `updated_at`)
+- Purpose: Persist per-user UI preferences (dashboard, filters, help panel) across sessions/devices.
+- Deployment action: run `npm run db:migrate` before serving traffic.
+- Validation action:
+  - `npm run validate:db`
+  - `npm run validate:migrations`
+  - `npm run validate:schema`
+
+Ops script behavior updates (local/dev):
+- `scripts/setup-database.mjs` and `scripts/validate-db-connection.js` now unwrap nested connection errors and report actionable `ECONNREFUSED` details.
+- `scripts/reset-db.js` now handles connection-refused scenarios gracefully instead of failing with opaque promise errors.
+- If PostgreSQL is not running locally, start the Windows PostgreSQL service first, then re-run setup/validation commands.
 
 ### US-21.1 Operational Notes
 - New migration: `046_add_patient_demographics_to_beds.sql`
