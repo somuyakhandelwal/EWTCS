@@ -72,12 +72,12 @@ const applySqlMigrations = async (databaseUrl, migrationsDir) => {
 
         // Get all .sql migration files, sorted numerically
         const sqlFiles = fs.readdirSync(migrationsDir)
-            .filter(f => /^\d{3}_.*\.sql$/.test(f))
+            .filter(f => /^\d+_.*\.sql$/.test(f))
             .sort((a, b) => {
-                const numA = parseInt(a.match(/^\d{3}/)[0], 10);
-                const numB = parseInt(b.match(/^\d{3}/)[0], 10);
+                const numA = BigInt(a.match(/^\d+/)[0]);
+                const numB = BigInt(b.match(/^\d+/)[0]);
                 if (numA !== numB) {
-                    return numA - numB;
+                    return numA < numB ? -1 : 1;
                 }
                 return a.localeCompare(b);
             });
@@ -104,7 +104,7 @@ const applySqlMigrations = async (databaseUrl, migrationsDir) => {
             if (!sql) {
                 console.log(`[migrations]   ↷ ${file} (no up migration SQL found)`);
                 await client.query(
-                    'INSERT INTO pgmigrations (name) VALUES ($1)',
+                    'INSERT INTO pgmigrations (name, run_on) VALUES ($1, NOW())',
                     [file.replace('.sql', '')]
                 );
                 continue;
@@ -115,7 +115,7 @@ const applySqlMigrations = async (databaseUrl, migrationsDir) => {
             try {
                 await client.query(sql);
                 await client.query(
-                    'INSERT INTO pgmigrations (name) VALUES ($1)',
+                    'INSERT INTO pgmigrations (name, run_on) VALUES ($1, NOW())',
                     [file.replace('.sql', '')]
                 );
                 console.log(`[migrations]   ✓ ${file}`);

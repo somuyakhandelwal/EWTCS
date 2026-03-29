@@ -1,4 +1,7 @@
 /**
+ * @vitest-environment jsdom
+ */
+/**
  * offline-cache.test.ts
  * US-16.1: Cache Data Locally
  * Unit tests for the offline-cache utility — saveToCache, loadFromCache,
@@ -68,18 +71,21 @@ describe('saveToCache', () => {
     expect(entry.data.bottleneckCount).toBe(3)
   })
 
-  it('skips write and warns when payload exceeds the size limit', async () => {
+  it('skips write and logs warning when payload exceeds the size limit', async () => {
     // Temporarily lower the limit via the mocked module to trigger the guard
     const mod = await import('@/shared/config/realtime')
     const config = mod.realtimeConfig as unknown as Record<string, unknown>
     const originalMax = config.cacheMaxSizeBytes
     config.cacheMaxSizeBytes = 5 // 5 bytes — any realistic payload exceeds this
 
-    const warnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {})
+    const { logger } = await import('@/shared/config/logger')
+    const warnSpy = vi.spyOn(logger, 'warn').mockImplementation(() => {})
+    
     saveToCache(makeMinimalBedGridData())
 
     expect(warnSpy).toHaveBeenCalledWith(
-      expect.stringContaining('Cache write skipped')
+      expect.stringContaining('Cache write skipped'),
+      expect.any(Object)
     )
     expect(localStorage.getItem(CACHE_KEY)).toBeNull()
 

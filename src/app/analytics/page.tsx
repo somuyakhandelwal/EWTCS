@@ -1,7 +1,7 @@
 import { verifyActiveSession } from '@/shared/lib/active-session'
 import { redirect } from 'next/navigation'
 import { logAudit } from '@/shared/lib/audit'
-import { AnalyticsPageContent } from '@/features/bed-dashboard/components/AnalyticsPageContent'
+import { AnalyticsPageContent } from './components/AnalyticsPageContent'
 import '@/app/analytics/print.css'
 
 export default async function AnalyticsPage() {

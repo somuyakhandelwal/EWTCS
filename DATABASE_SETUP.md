@@ -238,6 +238,7 @@ Visit [http://localhost:3000/login](http://localhost:3000/login) and log in:
 | `er_intake` | Emergency intake tracking | id, bed_id, occupancy_status, triage_time_minutes |
 | `ot_procedures` | Operation theater procedures | id, patient_name, status, room_id |
 | `cath_lab_procedures` | Cath lab procedures | id, procedure_type, status |
+| `diagnosis` | Clinical diagnosis records (US-22.2) | id, bed_id, doctor_id, patient_uhid, diagnosis_text, diagnosed_at |
 
 ### US-21.1 Triage Demographics (beds table)
 
@@ -706,14 +707,18 @@ SELECT bed_number, is_occupied FROM beds ORDER BY bed_number;
 
 ### Expected Table Count
 
-Run `\dt` in psql — you should see **25+ tables** (includes EPIC 20 department modules and archival tables):
-- audit_logs
+Run `\dt` in psql — you should see **32 tables** (includes EPIC 20 department modules, archival, metrics, and audit tables):
 - alert_preferences
+- archival_runs
+- audit_logs
+- audit_logs_archive
 - bed_stage_log_corrections
 - bed_stage_logs
+- bed_stage_logs_archive
 - beds
 - cath_lab_procedures
 - daily_summaries
+- delay_reason_options
 - diagnosis
 - disposition_delay_reasons
 - er_intake
@@ -723,6 +728,8 @@ Run `\dt` in psql — you should see **25+ tables** (includes EPIC 20 department
 - ot_rooms
 - password_reset_tokens
 - patient_admissions
+- patient_admissions_archive
+- pgmigrations
 - report_signoffs
 - shifts
 - stage_delay_thresholds
@@ -733,7 +740,6 @@ Run `\dt` in psql — you should see **25+ tables** (includes EPIC 20 department
 - user_feedback
 - users
 - wards
-- archival tables (patient_admissions_archive, audit_logs_archive, bed_stage_logs_archive, archival_runs)
 
 ---
 

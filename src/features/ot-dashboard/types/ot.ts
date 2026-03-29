@@ -8,6 +8,7 @@ export interface OTRoom {
   roomNumber: string
   status: OTRoomStatus
   startedAt: Date | null
+  activeProcedureName: string | null
   updatedAt: Date
 }
 

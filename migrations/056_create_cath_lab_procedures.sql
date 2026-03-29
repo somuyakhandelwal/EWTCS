@@ -23,12 +23,32 @@ CREATE TABLE IF NOT EXISTS cath_lab_procedures (
   CONSTRAINT chk_cath_lab_outcome_not_blank CHECK (length(trim(outcome)) > 0)
 );
 
-CREATE INDEX IF NOT EXISTS idx_cath_lab_procedures_start_time
-  ON cath_lab_procedures(start_time DESC);
-CREATE INDEX IF NOT EXISTS idx_cath_lab_procedures_type
-  ON cath_lab_procedures(procedure_type);
-CREATE INDEX IF NOT EXISTS idx_cath_lab_procedures_cardiologist
-  ON cath_lab_procedures(cardiologist);
+DO $$
+BEGIN
+  IF EXISTS (
+    SELECT 1 FROM information_schema.columns 
+    WHERE table_name = 'cath_lab_procedures' AND column_name = 'start_time'
+  ) THEN
+    CREATE INDEX IF NOT EXISTS idx_cath_lab_procedures_start_time
+      ON cath_lab_procedures(start_time DESC);
+  END IF;
+
+  IF EXISTS (
+    SELECT 1 FROM information_schema.columns 
+    WHERE table_name = 'cath_lab_procedures' AND column_name = 'procedure_type'
+  ) THEN
+    CREATE INDEX IF NOT EXISTS idx_cath_lab_procedures_type
+      ON cath_lab_procedures(procedure_type);
+  END IF;
+
+  IF EXISTS (
+    SELECT 1 FROM information_schema.columns 
+    WHERE table_name = 'cath_lab_procedures' AND column_name = 'cardiologist'
+  ) THEN
+    CREATE INDEX IF NOT EXISTS idx_cath_lab_procedures_cardiologist
+      ON cath_lab_procedures(cardiologist);
+  END IF;
+END $$;
 
 COMMENT ON TABLE cath_lab_procedures IS 'Cath lab specific procedure logs for CAG/PTCA throughput tracking (US-24.1)';
 COMMENT ON COLUMN cath_lab_procedures.patient_id IS 'Hospital patient identifier (MRN/UHID/registration id as provided at procedure time)';

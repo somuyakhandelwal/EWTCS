@@ -195,6 +195,12 @@ Dev runtime note:
 - Triage complaint field (`beds.key_symptom`) is now strictly limited to 40 characters.
 - Deployment action: run `npm run db:migrate` before application startup after pulling this release.
 
+### US-22.2 Operational Notes (Doctor Evaluation & Diagnosis)
+- New migration: `049_create_diagnosis_table.sql`
+- Role: `doctor` role enabled for clinical documentation.
+- Feature: Doctors can now record clinical diagnoses linked to patient UHID and Bed ID.
+- Deployment action: run `npm run db:migrate` and ensure the `doctor` role is assigned to clinical users via the admin dashboard.
+
 ### Validation, Tests, and Ops
 ```bash
 npm run validate:env
