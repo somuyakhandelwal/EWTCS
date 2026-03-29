@@ -30,6 +30,7 @@ export const ALLOWED_TABLES = new Set([
   'report_signoffs',               // migration 030
   'patient_admissions_archive',    // migration 028
   'audit_logs_archive',            // migration 028
+  'user_settings',                 // DB5-02: user preference persistence
 ])
 
 /**

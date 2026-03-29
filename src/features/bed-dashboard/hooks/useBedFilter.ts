@@ -1,29 +1,27 @@
 // US-1.4: Filter and Sort Hook
-// Manages "show delayed only" + "sort by delay" state with session persistence
+// DB5-02: Migrated from sessionStorage ('ewtcs:bedFilter') → DB via server action.
+// Initial values come from SSR (BedDashboardContainer fetches preferences server-side).
+// searchQuery remains ephemeral (not persisted — transient intent, not a preference).
 
-import { useState, useMemo, useCallback, useEffect } from 'react'
+'use client'
+
+import { useState, useMemo, useCallback, useEffect, useRef } from 'react'
 import type { BedWithElapsedTime } from '../types/bed'
+import { updateUserSettings } from '@/features/bed-dashboard/actions/user-settings-actions'
+import type { SortOrder } from '@/shared/types/user-preferences.types'
 
-export type SortOrder = 'none' | 'desc'
+export type { SortOrder }
 
-const SESSION_KEY = 'ewtcs:bedFilter'
+const DEBOUNCE_MS = 300
 
-interface PersistedState {
+interface InitialFilter {
   showDelayedOnly: boolean
   sortOrder: SortOrder
 }
 
-function loadFromSession(): PersistedState {
-  if (typeof window === 'undefined') {
-    return { showDelayedOnly: false, sortOrder: 'none' }
-  }
-  try {
-    const raw = sessionStorage.getItem(SESSION_KEY)
-    if (!raw) return { showDelayedOnly: false, sortOrder: 'none' }
-    return JSON.parse(raw) as PersistedState
-  } catch {
-    return { showDelayedOnly: false, sortOrder: 'none' }
-  }
+const DEFAULT_FILTER: InitialFilter = {
+  showDelayedOnly: false,
+  sortOrder: 'none',
 }
 
 export interface UseBedFilterResult {
@@ -40,33 +38,50 @@ export interface UseBedFilterResult {
 
 /**
  * Manages bed filter and sort state for the dashboard.
- * State persists for the duration of the browser session via sessionStorage.
+ * Persistent state (showDelayedOnly, sortOrder) syncs to user_settings in DB.
+ * searchQuery is ephemeral — lost on navigation (intentional: it's a transient filter).
  *
- * AC: Search by bed/status, Show Delayed Only filter, Sort by delay duration, Session persistence, Clear filter
+ * @param beds - The full list of beds to filter
+ * @param initialFilter - Server-fetched initial values (SSR, no flash).
+ *   Defaults to { showDelayedOnly: false, sortOrder: 'none' } when not provided.
  */
-export function useBedFilter(beds: BedWithElapsedTime[]): UseBedFilterResult {
+export function useBedFilter(
+  beds: BedWithElapsedTime[],
+  initialFilter: InitialFilter = DEFAULT_FILTER
+): UseBedFilterResult {
   const [showDelayedOnly, setShowDelayedOnly] = useState<boolean>(
-    () => loadFromSession().showDelayedOnly
+    initialFilter.showDelayedOnly
   )
-  const [sortOrder, setSortOrder] = useState<SortOrder>(
-    () => loadFromSession().sortOrder
-  )
+  const [sortOrder, setSortOrder] = useState<SortOrder>(initialFilter.sortOrder)
   const [searchQuery, setSearchQuery] = useState('')
 
-  // Persist to sessionStorage whenever filter/sort state changes
+  // Keep in sync if parent re-renders with a new initial value
   useEffect(() => {
-    try {
-      sessionStorage.setItem(SESSION_KEY, JSON.stringify({ showDelayedOnly, sortOrder }))
-    } catch {
-      // sessionStorage unavailable — degrade gracefully
+    setShowDelayedOnly(initialFilter.showDelayedOnly)
+    setSortOrder(initialFilter.sortOrder)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [initialFilter.showDelayedOnly, initialFilter.sortOrder])
+
+  // Debounced DB write
+  const debounceTimer = useRef<NodeJS.Timeout | null>(null)
+  const persistToDb = useCallback((patch: Partial<InitialFilter>) => {
+    if (debounceTimer.current) clearTimeout(debounceTimer.current)
+    debounceTimer.current = setTimeout(() => {
+      void updateUserSettings(patch)
+    }, DEBOUNCE_MS)
+  }, [])
+
+  useEffect(() => {
+    return () => {
+      if (debounceTimer.current) clearTimeout(debounceTimer.current)
     }
-  }, [showDelayedOnly, sortOrder])
+  }, [])
 
   const displayedBeds = useMemo(() => {
-    // 1. Initial filter (Delayed Only)
+    // 1. Delayed-only filter
     let filtered = showDelayedOnly ? beds.filter((b) => b.isDelayed) : beds
 
-    // 2. Search filter
+    // 2. Search filter (ephemeral, not persisted)
     if (searchQuery.trim()) {
       const q = searchQuery.toLowerCase()
       filtered = filtered.filter(bed =>
@@ -75,7 +90,7 @@ export function useBedFilter(beds: BedWithElapsedTime[]): UseBedFilterResult {
       )
     }
 
-    // 3. Sorting
+    // 3. Sort by elapsed time descending
     if (sortOrder === 'desc') {
       return [...filtered].sort((a, b) => {
         const aMs = a.elapsedTimeMs ?? 0
@@ -89,18 +104,28 @@ export function useBedFilter(beds: BedWithElapsedTime[]): UseBedFilterResult {
 
   const isFilterActive = showDelayedOnly || sortOrder !== 'none' || searchQuery !== ''
 
-  const toggleDelayedFilter = useCallback(() => setShowDelayedOnly((prev) => !prev), [])
+  const toggleDelayedFilter = useCallback(() => {
+    setShowDelayedOnly(prev => {
+      const next = !prev
+      persistToDb({ showDelayedOnly: next })
+      return next
+    })
+  }, [persistToDb])
 
-  const toggleSortOrder = useCallback(
-    () => setSortOrder((prev) => (prev === 'none' ? 'desc' : 'none')),
-    []
-  )
+  const toggleSortOrder = useCallback(() => {
+    setSortOrder(prev => {
+      const next: SortOrder = prev === 'none' ? 'desc' : 'none'
+      persistToDb({ sortOrder: next })
+      return next
+    })
+  }, [persistToDb])
 
   const clearFilter = useCallback(() => {
     setShowDelayedOnly(false)
     setSortOrder('none')
     setSearchQuery('')
-  }, [])
+    persistToDb({ showDelayedOnly: false, sortOrder: 'none' })
+  }, [persistToDb])
 
   return {
     showDelayedOnly,
