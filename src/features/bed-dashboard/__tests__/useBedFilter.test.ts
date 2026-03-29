@@ -1,7 +1,15 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest'
+import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
 import { renderHook, act } from '@testing-library/react'
 import { useBedFilter } from '../hooks/useBedFilter'
 import type { BedWithElapsedTime } from '../types/bed'
+
+const { updateUserSettingsMock } = vi.hoisted(() => ({
+  updateUserSettingsMock: vi.fn(),
+}))
+
+vi.mock('@/features/bed-dashboard/actions/user-settings-actions', () => ({
+  updateUserSettings: updateUserSettingsMock,
+}))
 
 // ── Helpers ────────────────────────────────────────────────────────────────
 
@@ -34,8 +42,6 @@ function makeBed(
   }
 }
 
-const SESSION_KEY = 'ewtcs:bedFilter'
-
 const BEDS: BedWithElapsedTime[] = [
   makeBed('01', true, 12_600_000),  // 3h 30m — delayed
   makeBed('02', false, 2_700_000),  // 45m     — on time
@@ -47,8 +53,12 @@ const BEDS: BedWithElapsedTime[] = [
 // ── Setup ──────────────────────────────────────────────────────────────────
 
 beforeEach(() => {
-  sessionStorage.clear()
   vi.clearAllMocks()
+  vi.useFakeTimers()
+})
+
+afterEach(() => {
+  vi.useRealTimers()
 })
 
 // ── Tests — Initial state / Show Delayed Only / Sort → useBedFilter-state.test.ts ────
@@ -69,34 +79,39 @@ describe('useBedFilter — clear, persistence and edge cases', () => {
     })
   })
 
-  describe('AC: Filter state persists during session', () => {
-    it('should save state to sessionStorage when filter is toggled', () => {
+  describe('AC: Filter state persists in DB', () => {
+    it('should persist delayed filter to DB when filter is toggled', () => {
       const { result } = renderHook(() => useBedFilter(BEDS))
 
       act(() => { result.current.toggleDelayedFilter() })
+      act(() => { vi.advanceTimersByTime(301) })
 
-      const stored = JSON.parse(sessionStorage.getItem(SESSION_KEY) ?? '{}')
-      expect(stored.showDelayedOnly).toBe(true)
+      expect(updateUserSettingsMock).toHaveBeenCalledTimes(1)
+      expect(updateUserSettingsMock).toHaveBeenCalledWith({ showDelayedOnly: true })
     })
 
-    it('should save state to sessionStorage when sort is toggled', () => {
+    it('should persist sort order to DB when sort is toggled', () => {
       const { result } = renderHook(() => useBedFilter(BEDS))
 
       act(() => { result.current.toggleSortOrder() })
+      act(() => { vi.advanceTimersByTime(301) })
 
-      const stored = JSON.parse(sessionStorage.getItem(SESSION_KEY) ?? '{}')
-      expect(stored.sortOrder).toBe('desc')
+      expect(updateUserSettingsMock).toHaveBeenCalledTimes(1)
+      expect(updateUserSettingsMock).toHaveBeenCalledWith({ sortOrder: 'desc' })
     })
 
-    it('should save cleared state to sessionStorage after clearFilter', () => {
+    it('should persist cleared filter state to DB after clearFilter', () => {
       const { result } = renderHook(() => useBedFilter(BEDS))
 
       act(() => { result.current.toggleDelayedFilter() })
       act(() => { result.current.clearFilter() })
+      act(() => { vi.advanceTimersByTime(301) })
 
-      const stored = JSON.parse(sessionStorage.getItem(SESSION_KEY) ?? '{}')
-      expect(stored.showDelayedOnly).toBe(false)
-      expect(stored.sortOrder).toBe('none')
+      expect(updateUserSettingsMock).toHaveBeenCalledTimes(1)
+      expect(updateUserSettingsMock).toHaveBeenCalledWith({
+        showDelayedOnly: false,
+        sortOrder: 'none',
+      })
     })
   })
 

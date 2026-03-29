@@ -8,7 +8,6 @@ import { useRouter } from 'next/navigation'
 import type { BedGridData, BedWithElapsedTime, Stage, OverrideState, ConfirmationState, DischargeState } from '../types/bed'
 import { useErrorTimers, useSuccessFeedback } from './useBedUpdateState'
 import { useStageUpdateActions } from './useStageUpdateActions'
-import { useDashboardSettings } from './useDashboardSettings'
 import { useDischargeConfirm } from './useDischargeConfirm'
 import { useTriageConfirm } from './useTriageConfirm'
 
@@ -18,6 +17,11 @@ export interface TriageState {
 }
 
 const SUCCESS_FEEDBACK_MS = 3000
+
+interface UseBedStageUpdateOptions {
+  /** DB5-02: confirmCriticalStages is now owned by BedDashboardClient (SSR initial value). */
+  confirmCriticalStages?: boolean
+}
 
 interface UseBedStageUpdateReturn {
   data: BedGridData
@@ -35,14 +39,10 @@ interface UseBedStageUpdateReturn {
   confirmationState: ConfirmationState | null
   handleConfirmationConfirm: () => Promise<void>
   closeConfirmationModal: () => void
-  settings: { confirmCriticalStages: boolean }
-  toggleConfirmation: () => void
-  
   dischargeState: DischargeState | null
   isDischargeSubmitting: boolean
   handleDischargeConfirm: () => Promise<void>
   closeDischargeModal: () => void
-
   triageState: TriageState | null
   openTriageModal: (bed: BedWithElapsedTime, stage: Stage) => void
   closeTriageModal: () => void
@@ -57,7 +57,10 @@ interface UseBedStageUpdateReturn {
   }) => Promise<void>
 }
 
-export function useBedStageUpdate(initialData: BedGridData): UseBedStageUpdateReturn {
+export function useBedStageUpdate(
+  initialData: BedGridData,
+  { confirmCriticalStages = true }: UseBedStageUpdateOptions = {}
+): UseBedStageUpdateReturn {
   const router = useRouter()
   const [data, setData] = useState<BedGridData>(initialData)
   const [updatingBedId, setUpdatingBedId] = useState<string | null>(null)
@@ -68,7 +71,7 @@ export function useBedStageUpdate(initialData: BedGridData): UseBedStageUpdateRe
 
   const { errorByBedId, setTemporaryError, clearError } = useErrorTimers()
   const { lastUpdatedBedId, lastUpdatedStageId, showSuccessFeedback } = useSuccessFeedback(SUCCESS_FEEDBACK_MS)
-  const { settings, toggleConfirmation } = useDashboardSettings()
+  // DB5-02: confirmCriticalStages is now passed from BedDashboardClient (owns SSR initial value)
 
   useEffect(() => {
     if (!updatingBedId) setData(initialData)
@@ -114,7 +117,7 @@ export function useBedStageUpdate(initialData: BedGridData): UseBedStageUpdateRe
   } = useStageUpdateActions({
     data, stageById, updatingBedId, setUpdatingBedId, setUpdatingStageId, setData, setTemporaryError,
     clearError, showSuccessFeedback, openOverrideModal, overrideState, closeOverrideModal,
-    openConfirmationModal, confirmationState, closeConfirmationModal, confirmCriticalStages: settings.confirmCriticalStages,
+    openConfirmationModal, confirmationState, closeConfirmationModal, confirmCriticalStages,
     openDischargeModal, openTriageModal
   })
   
@@ -133,7 +136,7 @@ export function useBedStageUpdate(initialData: BedGridData): UseBedStageUpdateRe
   return {
     data, updatingBedId, updatingStageId, lastUpdatedBedId, lastUpdatedStageId, errorByBedId,
     isOverrideSubmitting, overrideState, handleRefresh, handleStageSelect, handleOverrideApprove,
-    closeOverrideModal, confirmationState, handleConfirmationConfirm, closeConfirmationModal, settings, toggleConfirmation,
+    closeOverrideModal, confirmationState, handleConfirmationConfirm, closeConfirmationModal,
     dischargeState, isDischargeSubmitting, handleDischargeConfirm, closeDischargeModal,
     triageState, openTriageModal, closeTriageModal, handleTriageSubmit,
   }
