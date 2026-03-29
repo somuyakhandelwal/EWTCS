@@ -32,7 +32,7 @@ Core capabilities:
 | **Language** | TypeScript | ^5 |
 | **Styling** | Tailwind CSS | ^3.4.17 |
 | **Database** | PostgreSQL | Via `pg` (^8.11.3) connection pool |
-| **ORM/Migrations** | Raw SQL + `node-pg-migrate` | ^8.0.4 — 65 migration files |
+| **ORM/Migrations** | Raw SQL + `node-pg-migrate` | ^8.0.4 — 68 migration files |
 | **Authentication** | Custom JWT via `jose` | HS256, httpOnly cookies |
 | **Password Hashing** | `bcrypt` / `bcryptjs` | ^6.0.0 / ^3.0.3 |
 | **Validation** | `zod` | ^4.3.6 |
@@ -50,7 +50,7 @@ Core capabilities:
 
 ```
 EWTCS/
-├── migrations/             # 65 SQL migration files (001_init → 055 + timestamped), run via node-pg-migrate
+├── migrations/             # 68 SQL migration files (001_init → 058 + timestamped), run via node-pg-migrate
 ├── scripts/                # DB setup, seeding, backup, validation, and deployment scripts
 ├── src/
 │   ├── app/                # Next.js App Router
@@ -66,11 +66,13 @@ EWTCS/
 │   │   ├── triage/         # Triage view
 │   │   ├── manual/         # User manual / help pages
 │   │   └── _components/    # Shared layout components (header, sidebar, etc.)
-│   ├── features/           # 20 feature modules (domain-driven structure)
+│   ├── features/           # 22 feature modules (domain-driven structure)
 │   │   ├── auth/           # Auth logic (kiosk, password reset, login helpers)
-│   │   ├── bed-dashboard/  # Core bed grid: queries, actions, components
+│   │   ├── bed-dashboard/  # Core bed grid: queries, actions, components, dept metrics
 │   │   ├── bed-management/ # Bed CRUD operations
-│   │   ├── cath-lab/       # Cath lab procedures (CAG/PTCA) — full feature
+│   │   ├── cath-lab/       # Cath lab procedures (CAG/PTCA) — full feature (EPIC 24)
+│   │   ├── ot-dashboard/   # OT room status management — full feature (EPIC 23)
+│   │   ├── diagnosis/      # Doctor diagnosis records — schema + actions (EPIC 20)
 │   │   ├── ward-management/# Ward CRUD and access control
 │   │   ├── stage-management/# Stage configuration and transition rules
 │   │   ├── user-management/# User CRUD and role management
@@ -82,7 +84,6 @@ EWTCS/
 │   │   ├── export/         # CSV/PDF export
 │   │   ├── import/         # Data import
 │   │   ├── notifications/  # Alert preferences and notification system
-│   │   ├── ot-dashboard/   # OT room status management
 │   │   ├── adoption/       # User feedback / adoption tracking
 │   │   ├── security-scanning/# PII detection, security scanning
 │   │   ├── system-health/  # System metrics and health monitoring
@@ -159,7 +160,7 @@ EWTCS/
    - Enforces HTTPS redirect in production/staging.
    - Verifies JWT `session` cookie via `jose`.
    - Checks inactivity timeout (30 min default, configurable).
-   - Applies role-based route guards (admin, supervisor, nurse, housekeeping, auditor, cardiologist, cath_lab_nurse).
+   - Applies role-based route guards (admin, supervisor, nurse, housekeeping, auditor, doctor, cardiologist, cath_lab_nurse).
    - Validates kiosk session IP binding.
 4. **Handler** processes the request:
    - **Server Actions** (for mutations like stage updates, user management).

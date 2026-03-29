@@ -501,7 +501,7 @@ OT surgical procedure tracking (EPIC 20 — US-20.3).
 | `patient_uhid` | VARCHAR(100) | | Hospital patient ID |
 | `procedure_name` | VARCHAR(100) | NOT NULL | Procedure name |
 | `procedure_code` | VARCHAR(20) | | ICD-9 procedure code |
-| `surgeon_id` | UUID | FK → users(id), NOT NULL | Primary surgeon |
+| `surgeon_id` | UUID | FK → users(id) | Primary surgeon (nullable — allows nurse-initiated procedures) |
 | `anesthetist_id` | UUID | FK → users(id) | Anesthetist |
 | `scheduled_start` | TIMESTAMPTZ | | Planned start time |
 | `actual_start_time` | TIMESTAMPTZ | | Actual start |
@@ -519,11 +519,13 @@ OT surgical procedure tracking (EPIC 20 — US-20.3).
 
 **Indexes:** `idx_ot_procedures_ot_id`, `idx_ot_procedures_status`, `idx_ot_procedures_bed_id`, `idx_ot_procedures_patient_uhid`, `idx_ot_procedures_surgeon_id`, `idx_ot_procedures_scheduled_start`, `idx_ot_procedures_actual_start_time`, composite `idx_ot_procedures_ot_status_start`
 
+**Unique Constraint:** `idx_ot_procedures_one_active_per_room` — enforces at most one `IN_PROGRESS` procedure per OT room at any time.
+
 ---
 
 ## 25. `cath_lab_procedures` ✅ Fully Implemented
 
-Cardiac catheterization procedures (EPIC 20 — US-20.4 / US-24.1).
+Cardiac catheterization procedures (EPIC 24 — US-24.1). Full schema replaces earlier minimal version from migration 056.
 
 | Column | Type | Constraints | Description |
 |--------|------|-------------|-------------|
