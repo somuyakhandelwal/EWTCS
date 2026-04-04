@@ -16,6 +16,7 @@
     "audit:verify": "node scripts/verify-audit-immutability.js",
     "db:rollback": "node scripts/run-migrations.js down 1",
     "db:status": "node scripts/run-migrations.js status",
+    "db:tatus": "node scripts/run-migrations.js status",
     "db:create": "node scripts/run-migrations.js create",
     "init": "node scripts/init-system.js",
     "db:seed": "node scripts/seed-genuine-data.mjs",
@@ -40,6 +41,7 @@
     "@radix-ui/react-context-menu": "^2.2.16",
     "@radix-ui/react-label": "^2.1.8",
     "@radix-ui/react-slot": "^1.2.4",
+    "@tailwindcss/postcss": "^4.2.2",
     "@types/bcrypt": "^6.0.0",
     "@types/uuid": "^10.0.0",
     "bcrypt": "^6.0.0",
@@ -95,7 +97,7 @@
     "@eslint-community/eslint-utils": "^4.4.1",
     "minimatch": ">=10.2.1",
     "@eslint/eslintrc": {
-      "minimatch": "3.1.2"
+      "minimatch": "^3.1.4"
     }
   }
 }

@@ -24,12 +24,14 @@ export const ALLOWED_TABLES = new Set([
   'shifts',                        // migration 018
   'system_settings',               // migration 020
   'stage_delay_thresholds',        // migration 021
-  'daily_summaries',               // migration 023
+  'daily_summaries_mv',            // migration 052
+  'daily_summary_reviews',         // migration 052
   'virtual_beds',                  // migration 027
   'archival_runs',                 // migration 028
   'report_signoffs',               // migration 030
   'patient_admissions_archive',    // migration 028
   'audit_logs_archive',            // migration 028
+  'user_settings',                 // DB5-02: user preference persistence
 ])
 
 /**

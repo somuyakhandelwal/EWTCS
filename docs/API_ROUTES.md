@@ -25,8 +25,11 @@ All API routes are located under `src/app/api/`. Authentication is enforced via 
 | admin | `/admin` |
 | supervisor | `/supervisor` |
 | auditor | `/analytics` |
+| cardiologist | `/cath-lab` |
+| cath_lab_nurse | `/cath-lab` |
 | nurse | `/dashboard` |
 | housekeeping | `/dashboard` |
+| doctor | `/dashboard` |
 
 ---
 

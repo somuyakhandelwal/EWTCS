@@ -2,7 +2,7 @@
 
 **Emergency Ward Bed Status Monitoring & AI Daily Report System**  
 **Last Updated:** March 20, 2026  
-**Version:** 2.0 (Phase 1 + Phase 2 + Phase 3 Core + EPIC 20 Department Modules)
+**Version:** 2.0 (Phase 1 + Phase 2 + Phase 3 Core + EPIC 20 + EPIC 23 + EPIC 24)
 
 ---
 
@@ -73,11 +73,11 @@ The core system is **fully operational** and **production-ready**. Phase 2 real-
 - [x] Supervisor override capability for restricted transitions
 - [x] Correction system for logged transitions
 
-### Department Modules (EPIC 20) 🔄 IN PROGRESS
-- [x] OT Room management — 16 rooms with full UI dashboard and status tracking
-- [x] Cath Lab — full feature module with forms, queries, schemas, tests, and `/cath-lab` page (US-24.1)
+### Department Modules (EPIC 20/23/24) 🔄 IN PROGRESS
+- [x] OT Room management — 16 rooms with full UI dashboard and status tracking (EPIC 23)
+- [x] Cath Lab — full feature module with forms, queries, schemas, tests, and `/cath-lab` page (EPIC 24 / US-24.1)
 - [ ] ER Intake — ⚠️ DB table ready, metrics query exists, but **no intake form UI** (US-20.1)
-- [ ] Diagnosis — ⚠️ DB table ready, encryption config exists, but **no UI or server actions** (US-20.2)
+- [ ] Diagnosis — ⚠️ DB table ready, actions skeleton exists, but **no UI** (US-20.2)
 - [ ] OT Procedures — ⚠️ DB table ready, metrics query exists, but **no procedure form UI** (US-20.3)
 
 ### Data Encryption (EPIC 17) ✅
@@ -86,11 +86,11 @@ The core system is **fully operational** and **production-ready**. Phase 2 real-
 - [x] Dual plaintext/encrypted column pattern for migration path
 
 ### Infrastructure & DevOps
-- [x] PostgreSQL database with 65 migrations
+- [x] PostgreSQL database with 68 migrations (includes duplicate-numbered repair migrations; applied state is tracked by `node-pg-migrate` via filename)
 - [x] Automated setup wizard (`npm run setup`)
 - [x] Environment variable validation
 - [x] Database seeding scripts
-- [x] Feature-first architecture (20 feature modules)
+- [x] Feature-first architecture (22 feature modules)
 - [x] TypeScript throughout
 - [x] ESLint code quality checks
 - [x] Vitest v3 + Testing Library testing framework
@@ -105,12 +105,12 @@ The core system is **fully operational** and **production-ready**. Phase 2 real-
 ## 📊 System Statistics (Current)
 
 - **Database Tables:** 25+ (users, beds, stages, wards, bed_stage_logs, bed_stage_log_corrections, stage_transitions, disposition_delay_reasons, audit_logs, token_blacklist, kiosk_sessions, patient_admissions, shifts, system_settings, stage_delay_thresholds, daily_summaries, report_signoffs, ot_rooms, ot_procedures, er_intake, diagnosis, cath_lab_procedures, alert_preferences, error_events, user_feedback, archival tables)
-- **Migrations Applied:** 65
+- **Migrations Applied:** 68 (includes duplicate-numbered repair migrations; applied state tracked by filename)
 - **Emergency Beds:** 50 configured (expandable)
 - **Workflow Stages:** 8 stages
-- **User Roles:** 7 (Admin, Supervisor, Nurse, Housekeeping, Auditor, Cardiologist, Cath Lab Nurse)
+- **User Roles:** 8 (Admin, Supervisor, Nurse, Housekeeping, Auditor, Doctor, Cardiologist, Cath Lab Nurse)
 - **Test Users:** 5+ (admin1, supervisor1, nurse, nurse1, auditor1)
-- **Feature Modules:** 20 (auth, bed-dashboard, bed-management, cath-lab, data-encryption, data-retention, export, help, import, management-report, notifications, ot-dashboard, security-scanning, shift-management, stage-management, system-health, user-management, ward-management, ai-summary, adoption)
+- **Feature Modules:** 22 (auth, bed-dashboard, bed-management, cath-lab, diagnosis, data-encryption, data-retention, export, help, import, management-report, notifications, ot-dashboard, security-scanning, shift-management, stage-management, system-health, user-management, ward-management, ai-summary, adoption, ...)
 - **API Endpoints:** 18 route handlers + Server Actions
 - **Application Routes:** 15+ pages with middleware-protected access
 
@@ -185,7 +185,7 @@ EWTCS/
 │   │   ├── system-health/     # Error monitoring
 │   │   └── ...                # 12 more modules
 │   └── shared/                 # Shared utilities, UI components & libs
-├── migrations/                 # Database migrations (65 files)
+├── migrations/                 # Database migrations (68 files, some duplicate-numbered repair migrations are expected)
 ├── scripts/                    # Setup, backup, encryption utilities
 ├── docs/                       # Documentation, training, infrastructure
 └── public/                     # Static assets
@@ -198,7 +198,7 @@ EWTCS/
 | Test Type | Status | Details |
 |-----------|--------|---------|
 | Manual Testing | ✅ Passed | All features tested manually |
-| Database Migrations | ✅ Passed | All 65 migrations applied successfully |
+| Database Migrations | ✅ Passed | All 68 migration files applied successfully |
 | Automated Tests | ✅ Passed | Vitest v3 test suite |
 | TypeScript Compilation | ✅ Passed | No type errors |
 | ESLint Validation | ✅ Passed | Code quality checks pass |

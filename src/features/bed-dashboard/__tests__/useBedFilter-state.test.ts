@@ -1,7 +1,15 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest'
+import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
 import { renderHook, act } from '@testing-library/react'
 import { useBedFilter } from '../hooks/useBedFilter'
 import type { BedWithElapsedTime } from '../types/bed'
+
+const { updateUserSettingsMock } = vi.hoisted(() => ({
+  updateUserSettingsMock: vi.fn(),
+}))
+
+vi.mock('@/features/bed-dashboard/actions/user-settings-actions', () => ({
+  updateUserSettings: updateUserSettingsMock,
+}))
 
 // ── Helpers ────────────────────────────────────────────────────────────────
 
@@ -34,8 +42,6 @@ function makeBed(
   }
 }
 
-const SESSION_KEY = 'ewtcs:bedFilter'
-
 const BEDS: BedWithElapsedTime[] = [
   makeBed('01', true, 12_600_000),  // 3h 30m — delayed
   makeBed('02', false, 2_700_000),  // 45m     — on time
@@ -47,8 +53,12 @@ const BEDS: BedWithElapsedTime[] = [
 // ── Setup ──────────────────────────────────────────────────────────────────
 
 beforeEach(() => {
-  sessionStorage.clear()
   vi.clearAllMocks()
+  vi.useFakeTimers()
+})
+
+afterEach(() => {
+  vi.useRealTimers()
 })
 
 // ── Tests ──────────────────────────────────────────────────────────────────
@@ -64,25 +74,23 @@ describe('useBedFilter — state and sorting', () => {
       expect(result.current.isFilterActive).toBe(false)
     })
 
-    it('should restore showDelayedOnly from sessionStorage', () => {
-      sessionStorage.setItem(SESSION_KEY, JSON.stringify({ showDelayedOnly: true, sortOrder: 'none' }))
-
-      const { result } = renderHook(() => useBedFilter(BEDS))
+    it('should initialize showDelayedOnly from provided initial filter', () => {
+      const { result } = renderHook(() =>
+        useBedFilter(BEDS, { showDelayedOnly: true, sortOrder: 'none' })
+      )
 
       expect(result.current.showDelayedOnly).toBe(true)
     })
 
-    it('should restore sortOrder from sessionStorage', () => {
-      sessionStorage.setItem(SESSION_KEY, JSON.stringify({ showDelayedOnly: false, sortOrder: 'desc' }))
-
-      const { result } = renderHook(() => useBedFilter(BEDS))
+    it('should initialize sortOrder from provided initial filter', () => {
+      const { result } = renderHook(() =>
+        useBedFilter(BEDS, { showDelayedOnly: false, sortOrder: 'desc' })
+      )
 
       expect(result.current.sortOrder).toBe('desc')
     })
 
-    it('should fall back to defaults when sessionStorage contains invalid JSON', () => {
-      sessionStorage.setItem(SESSION_KEY, 'not-valid-json{{{')
-
+    it('should fall back to defaults when no initial filter is provided', () => {
       const { result } = renderHook(() => useBedFilter(BEDS))
 
       expect(result.current.showDelayedOnly).toBe(false)

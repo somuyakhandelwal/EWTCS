@@ -31,7 +31,8 @@ Start here if you're new to the project:
 ### Technical Documentation
 - **[Architecture Overview](ARCHITECTURE.md)** - System architecture, tech stack, folder structure, data flow, environment variables
 - **[Database Schema Map](DATABASE.md)** - Complete database schema with all tables, fields, types, constraints, relationships, and Mermaid ER diagram
-- **[API Routes Map](API_ROUTES.md)** - All 18 API routes with methods, authentication, request/response shapes
+- **[API Routes Map](API_ROUTES.md)** - All API routes with methods, authentication, request/response shapes
+- **[Migration Reference](MIGRATIONS.md)** - Full inventory of all 68 migration files, known duplicate numbers explained, and guidance for adding new migrations
 - **[Auth & Session Flow](AUTH_FLOW.md)** - JWT auth strategy, login flow, RBAC, session management, Mermaid sequence diagram
 - **[Data Flow Diagrams](DATA_FLOW.md)** - 7 Mermaid flowcharts covering patient lifecycle, stage validation, AI summary, archival, monitoring, external API
 - **[Analytics System](../src/features/bed-dashboard/ANALYTICS_README.md)** - Stage analytics and reporting documentation
@@ -150,4 +151,5 @@ Current state overview:
 
 ---
 
-**Last Updated:** March 20, 2026
+**Last Updated:** March 29, 2026
+

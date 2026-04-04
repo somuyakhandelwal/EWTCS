@@ -42,7 +42,7 @@ function useTourTarget(step: HelpTourStep | null, enabled: boolean) {
 }
 
 export function GlobalHelp() {
-  const { context, isOpen, openHelp, closeHelp, toggleHelp } = useHelpState()
+  const { context, isOpen, prefsLoaded, openHelp, closeHelp, toggleHelp } = useHelpState()
   const [search, setSearch] = useState('')
   const [tourIndex, setTourIndex] = useState(0)
   const [tourRunning, setTourRunning] = useState(false)
@@ -53,9 +53,11 @@ export function GlobalHelp() {
     setTourRunning(false)
   }, [context.routeKey])
 
+  // Guard: don't emit telemetry for the initial state-load transition (before DB prefs are applied)
   useEffect(() => {
+    if (!prefsLoaded) return
     void trackHelpEvent({ eventType: isOpen ? 'open' : 'close', routeKey: context.routeKey })
-  }, [context.routeKey, isOpen])
+  }, [context.routeKey, isOpen, prefsLoaded])
 
   useEffect(() => {
     if (!isOpen || search.trim().length < 2) return

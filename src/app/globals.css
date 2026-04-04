@@ -1,7 +1,9 @@
 @import "tailwindcss";
+@config "../../tailwind.config.ts";
 
 @layer base {
   :root {
+    /* Soft off-white for light mode background to reduce glare */
     --background: 210 40% 98%;
     --foreground: 222 47% 11%;
     --card: 0 0% 100%;
@@ -23,6 +25,7 @@
     --ring: 221 83% 53%;
     --radius: 0.5rem;
 
+    /* Semantic Status Colors */
     --status-empty: 215 16% 47%;
     --status-cleaning: 38 92% 50%;
     --status-occupied: 221 83% 53%;
@@ -36,6 +39,7 @@
   }
 
   .dark {
+    /* Deep neutral gray for dark mode background */
     --background: 0 0% 7%;
     --foreground: 0 0% 98%;
     --card: 0 0% 9%;
@@ -56,6 +60,7 @@
     --input: 0 0% 20%;
     --ring: 0 0% 83%;
 
+    /* Semantic Status Colors (Dark mode adjusted if needed) */
     --status-empty: 215 20% 65%;
     --status-cleaning: 48 96% 53%;
     --status-occupied: 217 91% 60%;
@@ -75,8 +80,7 @@
   }
 
   body {
-    background-color: hsl(var(--background));
-    color: hsl(var(--foreground));
+    @apply bg-background text-foreground;
     font-feature-settings: "rlig" 1, "calt" 1;
   }
 }
