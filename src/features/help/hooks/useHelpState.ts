@@ -36,7 +36,6 @@ export function useHelpState() {
         if (!cancelled) setPrefsLoaded(true)
       })
     return () => { cancelled = true }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []) // Run once on mount only
 
   // Persist help panel state to DB — discrete action, no debounce needed

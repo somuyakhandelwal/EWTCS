@@ -24,12 +24,14 @@ describe('archival-run-helpers', () => {
       patientAdmissionsYears: 7,
       auditLogsYears: 2,
       bedStageLogDays: 120,
+      offlineQueueDays: 45,
       requiresApproval: true,
     })
 
     expect(cutoffs.patientAdmissions.toISOString()).toBe('2019-02-21T00:00:00.000Z')
     expect(cutoffs.auditLogs.toISOString()).toBe('2024-02-21T00:00:00.000Z')
     expect(cutoffs.bedStageLogs.toISOString()).toBe('2025-10-24T00:00:00.000Z')
+    expect(cutoffs.offlineQueue.toISOString()).toBe('2026-01-07T00:00:00.000Z')
   })
 
   it('collectResults aggregates row counts and errors', () => {

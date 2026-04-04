@@ -63,7 +63,7 @@ export const SyncStatusBanner = React.memo(function SyncStatusBanner({
     if (syncResult.succeeded > 0)
       parts.push(`${syncResult.succeeded} update${syncResult.succeeded !== 1 ? 's' : ''} synced`)
     if (syncResult.conflicts > 0)
-      parts.push(`${syncResult.conflicts} conflict${syncResult.conflicts !== 1 ? 's' : ''} need resolution`)
+      parts.push(`${syncResult.conflicts} update${syncResult.conflicts !== 1 ? 's' : ''} need review`)
     if (syncResult.failed > 0)
       parts.push(`${syncResult.failed} failed`)
 

@@ -5,7 +5,6 @@
 
 import { useCallback, useState, useTransition } from 'react'
 import { BedGrid } from './BedGrid'
-import { ConnectionStatus } from './ConnectionStatus'
 import { OfflineBanner } from './OfflineBanner'
 import { BedDashboardActionBar } from './BedDashboardActionBar'
 import { BedDashboardModals } from './BedDashboardModals'
@@ -61,6 +60,7 @@ export function BedDashboardClient({
     isOffline,
     cacheTimestamp,
   } = useRealtimeBedUpdates(initialData)
+  const isEffectivelyOffline = isOffline || connectionStatus.status === 'disconnected'
 
   const {
     data, updatingBedId, updatingStageId, lastUpdatedBedId, lastUpdatedStageId, errorByBedId,
@@ -91,7 +91,7 @@ export function BedDashboardClient({
     onCreateVirtualBed: handleCreateVirtualBed,
     retryDrain,
   } = useOfflineWriteInterceptor({
-    isOffline,
+    isOffline: isEffectivelyOffline,
     offlineQueue,
     realtimeRefresh,
     originalHandleStageSelect,
@@ -111,7 +111,7 @@ export function BedDashboardClient({
 
   const { handleStageSelectOptimistic, displayData } = useOfflineOptimisticStages({
     data,
-    isOffline,
+    isOffline: isEffectivelyOffline,
     pendingCount: offlineQueue.pendingCount,
     handleStageSelect,
   })
@@ -130,7 +130,7 @@ export function BedDashboardClient({
     sortOrder: initialPreferences.sortOrder,
   })
   const { undoState, undoError, handleUndo, isUndoing } = useUndoManager(
-    lastUpdatedBedId, lastUpdatedStageId, realtimeRefresh, isOffline
+    lastUpdatedBedId, lastUpdatedStageId, realtimeRefresh, isEffectivelyOffline
   )
   const tatSummary = useTatSummary(24)
   const [virtualBedModalOpen, setVirtualBedModalOpen] = useState(false)
@@ -143,12 +143,12 @@ export function BedDashboardClient({
   return (
     <div className="space-y-4">
       <OfflineBanner
-        isOffline={isOffline}
+        isOffline={isEffectivelyOffline}
         pendingCount={offlineQueue.pendingCount}
         isDraining={offlineQueue.isDraining}
         cacheTimestamp={cacheTimestamp}
       />
-      {!isOffline && (
+      {!isEffectivelyOffline && (
         <SyncStatusBanner isDraining={offlineQueue.isDraining} pendingCount={offlineQueue.pendingCount} syncResult={syncResult} onRetry={retryDrain} />
       )}
       <BedDashboardActionBar
@@ -162,7 +162,7 @@ export function BedDashboardClient({
         <BedGrid
           data={displayData} onRefresh={handleRefresh} onStageSelect={handleStageSelectOptimistic} onReasonSelect={canRecordDispositionReasons ? handleReasonSelect : undefined}
           tatSummary={tatSummary} updatingBedId={updatingBedId} updatingStageId={updatingStageId} lastUpdatedBedId={lastUpdatedBedId} lastUpdatedStageId={lastUpdatedStageId}
-          errorByBedId={errorByBedId} isRefreshing={isLoading} undoState={undoState} onUndo={handleUndo} isUndoing={isUndoing} isOffline={isOffline} queuedBedIds={offlineQueue.queuedBedIds}
+          errorByBedId={errorByBedId} isRefreshing={isLoading} undoState={undoState} onUndo={handleUndo} isUndoing={isUndoing} isOffline={isEffectivelyOffline} queuedBedIds={offlineQueue.queuedBedIds}
           onOpenTriage={(bedId) => { const bed = data.beds.find(b => b.id === bedId); const triageStage = data.stages.find(s => s.name === 'Triage'); if (bed && triageStage) openTriageModal(bed, triageStage); }}
           onOpenDiagnosis={(bedId) => { const bed = data.beds.find((b) => b.id === bedId); if (bed) openDiagnosisModal(bed.id, bed.bedNumber, bed.metadata?.triageInfo?.patientUhid ?? '', bed.metadata?.triageInfo?.keySymptom ?? null) }}
           role={role} showDelayedOnly={showDelayedOnly} sortOrder={sortOrder} searchQuery={searchQuery} displayedBeds={displayedBeds} isFilterActive={isFilterActive}

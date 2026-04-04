@@ -10,7 +10,6 @@ import type { DrainResult } from './useOfflineQueue'
 import type { SyncConflict } from '../components/SyncConflictModal'
 import type { SyncResult } from '../components/SyncStatusBanner'
 import type { BedGridData } from '../types/bed'
-import { updateBedStage } from '../actions/bed-actions'
 
 interface UseSyncConflictHandlerParams {
   data: BedGridData
@@ -59,7 +58,9 @@ export function useSyncConflictHandler({
           serverStageName: server?.name ?? item.conflict.serverStageId,
         }
       })
-      if (enriched.length > 0) setSyncConflicts(enriched)
+      // Always replace conflict state so stale conflict modals do not persist
+      // after a later successful sync run.
+      setSyncConflicts(enriched)
     },
     [data.beds, data.stages]
   )
@@ -74,11 +75,19 @@ export function useSyncConflictHandler({
       if (!conflict) return
       setIsApplyingConflict(true)
       try {
-        await updateBedStage({
-          bedId: conflict.bedId,
-          toStageId: conflict.attemptedStageId,
-          supervisorOverride: true,
-          overrideReason: 'Force applied after offline sync conflict',
+        await fetch('/api/offline-sync/execute', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            type: 'stage-update',
+            bedId: conflict.bedId,
+            stageId: conflict.attemptedStageId,
+            options: {
+              supervisorOverride: true,
+              overrideReason: 'Force applied after offline sync conflict',
+            },
+          }),
+          cache: 'no-store',
         })
       } finally {
         setIsApplyingConflict(false)

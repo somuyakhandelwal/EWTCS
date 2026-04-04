@@ -14,6 +14,7 @@ import { KioskSessionsPanel } from "@/features/user-management/components/KioskS
 import { DailySummaryTrigger } from "@/features/ai-summary/components/DailySummaryTrigger"
 import { DailySummaryHistory } from "@/features/ai-summary/components/DailySummaryHistory"
 import { BackupStatusPanel } from "@/features/data-retention/components/BackupStatusPanel"
+import { OfflineQueueMonitor } from "@/features/bed-dashboard/components/OfflineQueueMonitor"
 import { SystemHealthPanel } from "@/features/system-health/components/SystemHealthPanel"
 import { MetricsPanel } from "@/features/system-health/components/MetricsPanel"
 
@@ -148,6 +149,9 @@ export default async function AdminDashboard() {
                         <BackupStatusPanel />
                     </CardContent>
                 </Card>
+
+                {/* DB5-01: Offline Queue Monitor */}
+                <OfflineQueueMonitor />
 
                 {/* AI Daily Summaries — EPIC 9 */}
                 <Card className="bg-card border-border">
