@@ -1,4 +1,4 @@
--- Migration 053: Extend cath_lab_procedures table (EPIC 20 - US-20.4)
+-- Migration 059: Extend cath_lab_procedures table (EPIC 20 - US-20.4)
 -- Purpose: Migration 046 originally created a minimal cath_lab_procedures table.
 --          This strictly safe append-only migration extends it with full cardiology
 --          fields: bed linkage, UHID, cardiologist FK, clinical data, encrypted PHI.

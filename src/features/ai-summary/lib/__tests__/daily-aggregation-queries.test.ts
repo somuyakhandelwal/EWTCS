@@ -9,7 +9,10 @@ vi.mock('@/shared/config/logger', () => ({
 }))
 
 import { query } from '@/shared/lib/db'
-import { aggregateDailyStats } from '../daily-aggregation-queries'
+import {
+    aggregateDailyStats,
+    verifyAggregateMatchesMaterializedView,
+} from '../daily-aggregation-queries'
 
 // Helper: build the 5 successive mock query results expected by aggregateDailyStats.
 // Order matches Promise.all in the source: patients, avgStageTime, delays, tat, mostDelayedStage.
@@ -111,5 +114,60 @@ describe('aggregateDailyStats', () => {
     it('propagates db errors', async () => {
         vi.mocked(query).mockRejectedValueOnce(new Error('connection refused'))
         await expect(aggregateDailyStats('2026-02-20')).rejects.toThrow('connection refused')
+    })
+})
+
+describe('verifyAggregateMatchesMaterializedView', () => {
+    beforeEach(() => vi.clearAllMocks())
+
+    it('returns matches=true when aggregate equals materialized view row', async () => {
+        mockQuerySequence(
+            { totalPatients: '15', totalBedsUsed: '18', totalStageUpdates: '72' },
+            { avgStageTimeMs: '300000' },
+            { delayCount: '4' },
+            { avgTatMs: '1800000' },
+            { stageName: 'Discharge' }
+        )
+        vi.mocked(query).mockResolvedValueOnce({
+            rows: [{
+                summary_date: '2026-02-20',
+                total_patients: '15',
+                avg_stage_time_minutes: '5.00',
+                delay_count: '4',
+                avg_tat_minutes: '30.00',
+                total_beds_used: '18',
+                total_stage_updates: '72',
+            }],
+        } as never)
+
+        const result = await verifyAggregateMatchesMaterializedView('2026-02-20')
+        expect(result.matches).toBe(true)
+        expect(result.mismatches).toEqual([])
+    })
+
+    it('returns mismatch details when values differ', async () => {
+        mockQuerySequence(
+            { totalPatients: '15', totalBedsUsed: '18', totalStageUpdates: '72' },
+            { avgStageTimeMs: '300000' },
+            { delayCount: '4' },
+            { avgTatMs: '1800000' },
+            { stageName: 'Discharge' }
+        )
+        vi.mocked(query).mockResolvedValueOnce({
+            rows: [{
+                summary_date: '2026-02-20',
+                total_patients: '11',
+                avg_stage_time_minutes: '5.00',
+                delay_count: '4',
+                avg_tat_minutes: '30.00',
+                total_beds_used: '18',
+                total_stage_updates: '65',
+            }],
+        } as never)
+
+        const result = await verifyAggregateMatchesMaterializedView('2026-02-20')
+        expect(result.matches).toBe(false)
+        expect(result.mismatches).toContain('totalPatients')
+        expect(result.mismatches).toContain('totalStageUpdates')
     })
 })
