@@ -23,6 +23,10 @@ const GlobalThemeToggle = dynamic(
   () => import("@/shared/components/GlobalThemeToggle").then((mod) => mod.GlobalThemeToggle)
 )
 
+const BrowserCompatibilityBanner = dynamic(
+  () => import("@/shared/components/BrowserCompatibilityBanner").then((mod) => mod.BrowserCompatibilityBanner)
+)
+
 const fontClasses = "font-sans antialiased";
 
 export const metadata: Metadata = {
@@ -61,6 +65,7 @@ export default function RootLayout({
             <RouteProgressBar />
           </Suspense>
           <DatabaseStatusBanner />
+          <BrowserCompatibilityBanner />
           <PageTransition>
             {children}
           </PageTransition>
