@@ -156,6 +156,7 @@ This will create:
 - ✅ `stages` table (patient workflow stages)
 - ✅ `beds` table (emergency ward beds)
 - ✅ `bed_stage_logs` table (bed history tracking)
+- ✅ `offline_queue` table (durable offline action queue for reconnect sync)
 
 **Expected output:**
 ```
@@ -238,8 +239,17 @@ Visit [http://localhost:3000/login](http://localhost:3000/login) and log in:
 | `er_intake` | Emergency intake tracking | id, bed_id, occupancy_status, triage_time_minutes |
 | `ot_procedures` | Operation theater procedures | id, patient_name, status, room_id |
 | `cath_lab_procedures` | Cath lab procedures | id, procedure_type, status |
+| `offline_queue` | Persisted offline write queue for network outage recovery | id, operation, payload, status, retry_count, client_operation_id, created_at |
 | `user_settings` | Per-user UI preferences persisted across sessions/devices (DB5-02) | user_id, preferences (JSONB), updated_at |
 | `diagnosis` | Clinical diagnosis records (US-22.2) | id, bed_id, doctor_id, patient_uhid, diagnosis_text, diagnosed_at |
+
+### US-16 Offline Queue Persistence
+
+Migrations `1775301000000_create_offline_queue.sql` and `1775302000000_add_client_operation_id_to_offline_queue.sql` add durable offline synchronization support:
+
+- Creates `offline_queue` for queued write operations created while offline.
+- Adds `client_operation_id` for idempotent replay and safer retry behavior.
+- Supports reconnect drain workflows so queued clinical actions are applied after connectivity returns.
 
 ### US-21.1 Triage Demographics (beds table)
 
