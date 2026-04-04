@@ -10,7 +10,12 @@ import { logAudit } from '@/shared/lib/audit'
 import { generateSummarySchema } from '../schemas/generate-summary'
 import { aggregateDailyStats } from '../lib/daily-aggregation-queries'
 import { generateAiSummary } from '../lib/ai-service'
-import { upsertDailySummary, getDailySummaryByDate, getRecentDailySummaries } from '../lib/daily-summary-store'
+import {
+    refreshDailySummariesMaterializedView,
+    upsertDailySummary,
+    getDailySummaryByDate,
+    getRecentDailySummaries,
+} from '../lib/daily-summary-store'
 import type { AggregationResult, DailySummary } from '../types/daily-summary'
 
 /** Returns yesterday's date string in YYYY-MM-DD (UTC). */
@@ -50,6 +55,9 @@ export async function generateDailySummary(
             triggeredBy: session.userId,
         })
 
+        // Ensure computed metrics are fresh before reading from the materialized view.
+        await refreshDailySummariesMaterializedView()
+
         // Run aggregation across existing tables
         const summaryInput = await aggregateDailyStats(targetDate)
 
@@ -73,7 +81,7 @@ export async function generateDailySummary(
             })
         }
 
-        // Upsert into daily_summaries as draft (US-9.2)
+        // Upsert review workflow metadata (daily_summary_reviews) as draft (US-9.2)
         const saved = await upsertDailySummary(summaryInput)
 
         // Audit log the generation event

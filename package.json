@@ -16,6 +16,7 @@
     "audit:verify": "node scripts/verify-audit-immutability.js",
     "db:rollback": "node scripts/run-migrations.js down 1",
     "db:status": "node scripts/run-migrations.js status",
+    "db:tatus": "node scripts/run-migrations.js status",
     "db:create": "node scripts/run-migrations.js create",
     "init": "node scripts/init-system.js",
     "db:seed": "node scripts/seed-genuine-data.mjs",
@@ -95,7 +96,7 @@
     "@eslint-community/eslint-utils": "^4.4.1",
     "minimatch": ">=10.2.1",
     "@eslint/eslintrc": {
-      "minimatch": "3.1.2"
+      "minimatch": "^3.1.4"
     }
   }
 }

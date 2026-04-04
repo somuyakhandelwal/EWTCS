@@ -1,4 +1,4 @@
--- Migration 055: Repair cath_lab_procedures canonical columns
+-- Migration 058: Repair cath_lab_procedures canonical columns
 -- Purpose: Ensure cath_lab_procedures matches canonical schema when legacy/provisional
 --          migrations created a partial table shape.
 -- Safe to run repeatedly.
