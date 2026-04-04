@@ -335,7 +335,7 @@ Display to authorized user
 - [US-18: Data Encryption & Sensitive Data Protection](../issues/102)
 - [CONTRIBUTING.md](../CONTRIBUTING.md) - Feature-first hybrid structure
 - [SECURITY.md](../SECURITY.md) - Security guidelines
-- [docs/data-model.md](./data-model.md) - Database schema
+- [docs/DATABASE.md](./DATABASE.md) - Complete database schema map
 
 ---
 

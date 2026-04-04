@@ -61,8 +61,8 @@ export function EncryptedFieldDisplay({
     if (plaintext) {
       try {
         await navigator.clipboard.writeText(plaintext);
-      } catch (err) {
-        console.error('Copy failed:', err);
+      } catch {
+        // Clipboard access may be denied — silently ignore non-critical copy failure
       }
     }
   };

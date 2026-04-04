@@ -81,7 +81,7 @@ async function verifyUsersTable(databaseUrl) {
 async function setupAdminUser(databaseUrl) {
   log.step(5, 'Setting up admin user...');
   const client = new Client({ connectionString: databaseUrl });
-  const bcrypt = require('bcrypt');
+  const bcrypt = require('bcryptjs');
   try {
     await client.connect();
     const adminUsername = process.env.ADMIN_USERNAME || 'admin';
@@ -155,6 +155,18 @@ async function setupAdminUser(databaseUrl) {
           [hashedTestPassword, username]
         );
       }
+    }
+
+    // EPIC 22: Doctor test user (username: doctor1, password: Nurse@123)
+    const doctorPassword = await bcrypt.hash('Nurse@123', 10);
+    const doctorCheck = await client.query('SELECT id FROM users WHERE username = $1', ['doctor1']);
+    if (doctorCheck.rows.length === 0) {
+      await client.query(
+        `INSERT INTO users (username, password_hash, role, created_at, updated_at)
+         VALUES ($1, $2, 'doctor', NOW(), NOW())`,
+        ['doctor1', doctorPassword]
+      );
+      log.success('Test doctor user created: doctor1 (password: Nurse@123)');
     }
     // -------------------------------------
 

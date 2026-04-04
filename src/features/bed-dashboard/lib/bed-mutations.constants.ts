@@ -1,3 +1,5 @@
+import { SHIFT_AUTOTAG_SUBQUERY } from '@/shared/lib/shift-helpers'
+
 export type BedRow = {
   id: string
   currentStageId: string | null
@@ -74,21 +76,7 @@ export const INSERT_BED_STAGE_LOG_SQL = `
     $1, $2, $3, $4, $5, $6,
     COALESCE(
       $7::uuid,
-      (
-        SELECT s.id
-        FROM   shifts s
-        WHERE  s.is_active = TRUE
-          AND (
-            (s.start_time <= s.end_time
-               AND NOW()::time >= s.start_time
-               AND NOW()::time <  s.end_time)
-            OR
-            (s.start_time > s.end_time
-               AND (NOW()::time >= s.start_time OR NOW()::time < s.end_time))
-          )
-        ORDER BY s.is_default DESC, s.created_at ASC
-        LIMIT 1
-      )
+      ${SHIFT_AUTOTAG_SUBQUERY}
     ),
     $8::uuid
   )

@@ -1,8 +1,6 @@
-// Epic 6: US-6.5 temporary (orange) / US-6.6 virtual (purple) beds
 import { memo, useState, useEffect, useCallback, type MouseEvent } from 'react'
 import { Card, CardContent } from '@/shared/components/ui/card'
-import { Clock } from 'lucide-react'
-import type { BedWithElapsedTime, DispositionDelayReason } from '../types/bed'
+import { Clock, Stethoscope } from 'lucide-react'
 import { getStageColorClasses, getDelayColorClasses } from '../lib/utils'
 import { useElapsedTime } from '../hooks/useElapsedTime'
 import { CleaningActions, isCleaningStage } from './CleaningActions'
@@ -10,45 +8,65 @@ import { BedBottleneckInfo } from './BedBottleneckInfo'
 import { BedCardVisualBadges } from './BedCardVisualBadges'
 import { BedCardUndoSection } from './BedCardUndoSection'
 import { BedTriageInfo } from './BedTriageInfo'
-import { cn } from '@/shared/lib/utils'
 import { highlightMatch } from '../lib/highlight-match'
 import { StageIcon } from './StageIcon'
+import { DiagnosisPanel } from '@/features/diagnosis/components/DiagnosisPanel'
+import { BedCardTimers } from './BedCardTimers'
+import { cn } from '@/shared/lib/utils'
+import type { BedWithElapsedTime, DispositionDelayReason } from '../types/bed'
 const ACKNOWLEDGE_PAUSE_MS = 30_000
-/** 'nurse' = In Stage timer only. 'supervisor' = In Stage + Patient Total (since admission). */
-export type BedCardViewMode = 'nurse' | 'supervisor'
+export type BedCardViewMode = 'nurse' | 'supervisor' // 'nurse' = In Stage timer only; 'supervisor' = In Stage + Patient Total
+/**
+ * BedCard component: EPIC 1, EPIC 6, EPIC 22
+ * Renders a single bed's status, patient info, and clinical actions.
+ */
 interface BedCardProps {
+  /** The bed data object, enriched with elapsed time information */
   bed: BedWithElapsedTime
+  /** Click handler for the whole card */
   onClick?: (bed: BedWithElapsedTime) => void
+  /** Context menu handler for stage transition overrides */
   onContextMenu?: (event: MouseEvent<HTMLDivElement>, bed: BedWithElapsedTime) => void
+  /** Callback for when a disposition delay reason is selected */
   onReasonSelect?: (bedId: string, reason: DispositionDelayReason) => void
+  /** Visual flag to highlight recent updates */
   showUpdated?: boolean
+  /** Error message specific to this bed (e.g., sync failed) */
   errorMessage?: string | null
+  /** Search query string for highlighting matches in patient ID or bed name */
   searchQuery?: string
+  /** Whether to show the "Undo" action for the last transition */
   showUndo?: boolean
+  /** Callback for when the user clicks "Undo" */
   onUndo?: () => void
+  /** Remaining seconds for the undo grace period */
   undoTimerSeconds?: number
-  /** True while the undo API call is in-flight — disables button and shows loading label */
+  /** Whether the "Undo" operation is currently in flight */
   isUndoing?: boolean
   /** US-4.3: Disable animation globally (accessibility setting) */
   animationEnabled?: boolean
   /** Controls which timers are shown. Defaults to 'nurse'. */
   viewMode?: BedCardViewMode
+  /** Whether the system is in offline mode */
+  isOffline?: boolean
   /** US-16.2: true when this bed has a write queued for offline sync */
   isQueuedOffline?: boolean
+  /** EPIC 22: Nurse role diagnosis display (read-only) */
+  onOpenDiagnosis?: (bedId: string) => void
+  /** EPIC 22: Doctor role diagnosis entry */
+  onOpenDoctorDiagnosis?: (bedId: string) => void
+  /** Current user role - used for role-based button visibility (EPIC 22) */
+  role?: string
 }
 export const BedCard = memo(function BedCard({
   bed, onClick, onContextMenu, onReasonSelect, showUpdated = false, errorMessage = null,
-  searchQuery = '', showUndo = false, onUndo, undoTimerSeconds = 0, animationEnabled = true,
-  isUndoing = false, isQueuedOffline = false,
+  searchQuery = '', showUndo = false, onUndo, undoTimerSeconds, animationEnabled = true,
+  isUndoing = false, isOffline = false, isQueuedOffline, onOpenDiagnosis, onOpenDoctorDiagnosis, role,
 }: BedCardProps) {
   const rawStageName = bed.currentStage?.name || 'Empty'
   const stageName = rawStageName === 'Cleaning' ? 'In Cleaning' : rawStageName
   const stageColor = bed.currentStage?.colorCode || 'gray'
   const colorClasses = bed.isDelayed ? getDelayColorClasses(true) : getStageColorClasses(stageColor)
-  // Nurse: time in current stage (resets every stage change incl. Empty → Triage)
-  const stageTime = useElapsedTime(bed.lastStageChange)
-  // Total patient time since admission — shown for all roles
-  const patientTotalTime = useElapsedTime(bed.patientStartTime)
   const { isOccupied, isDelayed, isDispositionBottleneck: isBottleneck, isEscalated } = bed
   const isCleaning = isCleaningStage(bed.currentStage?.name)
   const isTemporary = bed.isTemporary
@@ -144,39 +162,12 @@ export const BedCard = memo(function BedCard({
             />
           )}
         </div>
-        {isOccupied && bed.lastStageChange && (
-          <div className="pt-2 border-t border-border space-y-2">
-            {/* In Stage timer — shown for both nurse and supervisor */}
-            <div className="flex items-center gap-2">
-              <Clock className="h-4 w-4 text-muted-foreground" aria-hidden="true" />
-              <div className="flex-1">
-                <p className="text-xs text-muted-foreground">In Stage</p>
-                <p
-                  className={cn('text-lg font-bold', isDelayed ? 'text-destructive' : 'text-foreground')}
-                  aria-label={`Time in current stage: ${stageTime}`}
-                  suppressHydrationWarning
-                >
-                  {stageTime}
-                </p>
-              </div>
-            </div>
-            {/* Patient Total — shown for all roles */}
-            {bed.patientStartTime && (
-              <div className="flex items-center gap-2">
-                <Clock className="h-4 w-4 text-muted-foreground" aria-hidden="true" />
-                <div className="flex-1">
-                  <p className="text-xs text-muted-foreground">Patient Total</p>
-                  <p
-                    className={cn('text-sm font-semibold', isDelayed ? 'text-destructive' : 'text-muted-foreground')}
-                    aria-label={`Total patient time: ${patientTotalTime}`}
-                    suppressHydrationWarning
-                  >
-                    {patientTotalTime}
-                  </p>
-                </div>
-              </div>
-            )}
-          </div>
+        {isOccupied && (
+          <BedCardTimers
+            lastStageChange={bed.lastStageChange}
+            patientStartTime={bed.patientStartTime}
+            isDelayed={isDelayed}
+          />
         )}
         {isCleaning && <CleaningActions lastStageChange={bed.lastStageChange} />}
         {!isOccupied && !isCleaning && (
@@ -186,6 +177,22 @@ export const BedCard = memo(function BedCard({
           </div>
         )}
         <BedTriageInfo triageInfo={bed.metadata?.triageInfo} />
+        {/* EPIC 22: Doctor button (doctor role only, in occupied beds) */}
+        {onOpenDiagnosis && role === 'doctor' && bed.isOccupied && (
+          <button
+            type="button"
+            onClick={(e) => { e.stopPropagation(); onOpenDiagnosis(bed.id) }}
+            className="mt-1 w-full flex items-center justify-center gap-1.5 rounded-md border border-primary/30 bg-primary/5 px-3 py-1.5 text-xs font-semibold text-primary hover:bg-primary/10 transition-colors"
+            aria-label={`Record diagnosis for bed ${bed.bedNumber}`}
+          >
+            <Stethoscope className="h-3.5 w-3.5" aria-hidden="true" />
+            Record Diagnosis
+          </button>
+        )}
+        {/* EPIC 22: Diagnosis summary (visible to all appropriate roles) */}
+        {bed.isOccupied && (
+          <DiagnosisPanel bedId={bed.id} />
+        )}
       </CardContent>
     </Card>
   )

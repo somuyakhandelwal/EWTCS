@@ -106,19 +106,27 @@ feature-name/
 - Validation + audit trail integration for new procedure logs
 - Distinct route and workflow from OT module (`/cath-lab`)
 
-## Future Features
-
-Based on EPICS.md, upcoming features may include:
+### `ot-dashboard/`
+**EPIC 23: OT Room Dashboard ✅**
+- Live tracking of 16 OT rooms (status, running procedures)
+- OT room creation and management
+- Distinct route `/ot`
 
 ### `shift-management/`
-**EPIC 8: Shift Management**
-- Shift tracking
-- Staff assignment
-- Analytics
+**EPIC 8: Shift Management ✅**
+- Shift definition and assignment
+- Shift-aware logging (shift_id on bed_stage_logs)
+- Admin shift management page
 
-### `ai-summary/`
-**EPIC 9: Daily AI Summary Generator** *(planned — Phase 3)*
-- Remaining: AI model integration, report formatting, PDF/email export
+### `er-intake/` *(schema ready, UI pending)*
+**EPIC 20 / US-20.1 — In Progress**
+- `er_intake` table provisioned (migration 048)
+- No intake form UI yet
+
+### `diagnosis/` *(schema ready, UI pending)*
+**EPIC 20 / US-20.2 — In Progress**
+- `diagnosis` table provisioned (migration 049)
+- No UI or server actions yet
 
 ## Adding a New Feature
 
