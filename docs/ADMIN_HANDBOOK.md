@@ -6,7 +6,7 @@ Administrator runbook for configuration, maintenance, backup/recovery, security,
 - Owner: Platform / System Administration
 - Scope: Configuration, backups, troubleshooting, security, command references
 - Versioning: Git-tracked; update required in release PRs when operations change
-- Last Updated: 2026-03-29 (DB5-02 — Preferences Persistence + DB script resilience)
+- Last Updated: 2026-04-05 (US-16 offline queue persistence + replay API ops notes)
 
 ## 1) System Overview
 EWTCS is a Next.js + PostgreSQL emergency-ward operations platform.
@@ -177,6 +177,34 @@ Ops script behavior updates (local/dev):
 
 Dev runtime note:
 - `npm run dev` now clears `.next` before startup to reduce stale chunk load errors during local development.
+
+### US-16 Operational Notes (Offline Queue + Replay)
+- New migrations:
+  - `1775301000000_create_offline_queue.sql`
+  - `1775302000000_add_client_operation_id_to_offline_queue.sql`
+- New table: `offline_queue`
+  - Purpose: durable storage for write operations captured while clients are offline.
+  - Key fields: `operation`, `payload`, `status`, `retry_count`, `client_operation_id`, `created_at`.
+- New API surfaces used by reconnect replay and stable client writes:
+  - `POST /api/offline-queue`
+  - `POST /api/offline-sync/execute`
+  - `POST /api/triage/update`
+  - `POST /api/bed-stage/update`
+
+Deployment / upgrade actions:
+1. Run `npm run db:migrate` before serving traffic.
+2. Verify migration state with `npm run validate:migrations`.
+3. Verify API health with `GET /api/health` after deploy.
+
+Operational behavior:
+- Replay is idempotent via `client_operation_id` to reduce duplicate writes on retries.
+- On reconnect, clients may drain queued actions automatically; monitor API/application logs for replay success/failure patterns.
+- If a replay conflict occurs, latest-write-wins conflict handling is applied by replay endpoints.
+
+### Archival and Runtime Guardrail Notes
+- `src/app/api/cron/archival/route.ts` received operational updates; continue to require `Authorization: Bearer <CRON_SECRET>` for scheduled archival jobs.
+- `src/shared/config/realtime.ts` includes updated polling guardrails to avoid aggressive polling during disconnected periods.
+- `src/middleware.ts` remains a critical ops-impacting surface for role and route protections; validate route access behavior after deployment.
 
 ### EPIC 25 — Enhanced Dashboard Metrics (Department Metrics)
 - New migration: `1773838271566_create-department-metrics-tables.js`
