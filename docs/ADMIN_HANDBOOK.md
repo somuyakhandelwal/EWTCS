@@ -6,7 +6,7 @@ Administrator runbook for configuration, maintenance, backup/recovery, security,
 - Owner: Platform / System Administration
 - Scope: Configuration, backups, troubleshooting, security, command references
 - Versioning: Git-tracked; update required in release PRs when operations change
-- Last Updated: 2026-03-29 (DB5-02 — Preferences Persistence + DB script resilience)
+- Last Updated: 2026-04-05 (US-13.11 cross-browser compatibility + CI browser matrix)
 
 ## 1) System Overview
 EWTCS is a Next.js + PostgreSQL emergency-ward operations platform.
@@ -225,11 +225,23 @@ npm run validate:schema
 npm run validate:all
 npm test
 npm run test:coverage
+npm run test:browser:install
+npm run test:browser
 npm run perf:seed
 npm run perf:check
 npm run perf:validate
 npm run security:ssl:check
 ```
+
+### US-13.11 Operational Notes (Cross-Browser Compatibility)
+- Browser support target: latest 2 versions of Chrome, Firefox, Safari, and Edge.
+- Runtime behavior:
+  - Unsupported browsers receive a persistent warning banner.
+  - Older-but-usable browsers run in limited mode with reduced motion and visual effects.
+- Browser compatibility telemetry is emitted from client route tracking and aggregated in system health metrics.
+- CI/CD coverage:
+  - Workflow: `.github/workflows/browser-compatibility.yml`
+  - Browser projects: `chromium`, `firefox`, `webkit`, `edge-emulation`
 
 Archival API:
 ```http
