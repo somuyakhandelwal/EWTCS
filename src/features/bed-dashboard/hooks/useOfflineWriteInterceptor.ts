@@ -1,35 +1,20 @@
-// useOfflineWriteInterceptor
-// US-16.1 + US-16.2: Intercepts write operations when the browser is offline.
-//
-// When offline:
-//   - Stage updates, supervisor overrides, confirmation, discharge and
-//     disposition-reason operations are queued in useOfflineQueue (localStorage).
-//   - Virtual bed creation is blocked with an error message (FormData can't be serialised).
-//   - On network restore the queue is drained automatically (FIFO) using server actions directly.
-//
-// When online: all handlers delegate to the original callbacks unchanged.
-
 'use client'
 
 import { useCallback, useEffect, useRef } from 'react'
-import { updateBedStage } from '../actions/bed-actions'
-import { dischargeAndResetBed } from '../actions/discharge-actions'
-import { recordDispositionDelayReason } from '../actions/disposition-actions'
 import type { DispositionDelayReason, OverrideState, ConfirmationState, DischargeState } from '../types/bed'
-import type { UseOfflineQueueReturn, DrainResult } from './useOfflineQueue'
+import type { UseOfflineQueueReturn, DrainResult } from '../lib/offline-queue-types'
+import { runOfflineDrain } from './offline-write-drain'
 
 interface OfflineInterceptorParams {
   isOffline: boolean
   offlineQueue: UseOfflineQueueReturn
   realtimeRefresh: () => Promise<void>
-  // Original write handlers
   originalHandleStageSelect: (bedId: string, stageId: string) => Promise<void>
   originalHandleOverrideApprove: (reason: string) => Promise<void>
   originalHandleConfirmationConfirm: () => Promise<void>
   originalHandleDischargeConfirm: () => Promise<void>
   originalHandleReasonSelect: (bedId: string, reason: DispositionDelayReason) => Promise<void>
   originalOnCreateVirtualBed: (fd: FormData) => Promise<{ success: boolean; error?: string }>
-  // Modal state refs (to close modals when intercepting while they're open)
   overrideState: OverrideState | null
   confirmationState: ConfirmationState | null
   dischargeState: DischargeState | null
@@ -41,14 +26,12 @@ interface OfflineInterceptorParams {
 }
 
 interface OfflineInterceptorReturn {
-  /** US-16.4: accepts optional expectedStageId for conflict detection during offline drain */
   handleStageSelect: (bedId: string, stageId: string, expectedStageId?: string) => Promise<void>
   handleOverrideApprove: (reason: string) => Promise<void>
   handleConfirmationConfirm: () => Promise<void>
   handleDischargeConfirm: () => Promise<void>
   handleReasonSelect: (bedId: string, reason: DispositionDelayReason) => Promise<void>
   onCreateVirtualBed: (fd: FormData) => Promise<{ success: boolean; error?: string }>
-  /** US-16.3: manually re-trigger the drain (used by the Retry button) */
   retryDrain: () => void
 }
 
@@ -70,38 +53,15 @@ export function useOfflineWriteInterceptor({
   closeDischargeModal,
   onSyncComplete,
 }: OfflineInterceptorParams): OfflineInterceptorReturn {
-  const { enqueue, drainQueue } = offlineQueue
-
-  // ── Auto-drain on network restore ──────────────────────────────────────
+  const { enqueue, drainQueue, pendingCount, isDraining } = offlineQueue
   const prevIsOfflineRef = useRef(isOffline)
 
   const runDrain = useCallback(() => {
-    drainQueue({
-      onStageUpdate: async (bedId, stageId, options, expectedStageId) => {
-        const result = await updateBedStage({
-          bedId,
-          toStageId: stageId,
-          supervisorOverride: options?.supervisorOverride ?? false,
-          overrideReason: options?.overrideReason,
-          expectedStageId,
-        })
-        if (result.conflict && result.serverStageId !== undefined) {
-          return { success: false, conflict: { serverStageId: result.serverStageId ?? '' } }
-        }
-        return { success: result.success }
-      },
-      onDischarge: async (bedId) => {
-        const result = await dischargeAndResetBed({ bedId })
-        return result.success
-      },
-      onDispositionReason: async (bedId, reason) => {
-        const result = await recordDispositionDelayReason({ bedId, reason })
-        return result.success
-      },
-    }).then((drainResult) => {
-      realtimeRefresh()
-      onSyncComplete?.(drainResult)
-    }).catch(() => {})
+    void runOfflineDrain({
+      drainQueue,
+      realtimeRefresh,
+      onSyncComplete,
+    })
   }, [drainQueue, realtimeRefresh, onSyncComplete])
 
   useEffect(() => {
@@ -110,7 +70,22 @@ export function useOfflineWriteInterceptor({
     if (wasOffline && !isOffline) runDrain()
   }, [isOffline, runDrain])
 
-  // ── Intercepted write handlers ─────────────────────────────────────────
+  const lastAutoDrainPendingCountRef = useRef(0)
+  useEffect(() => {
+    if (isOffline || isDraining || pendingCount === 0) {
+      if (pendingCount === 0) {
+        lastAutoDrainPendingCountRef.current = 0
+      }
+      return
+    }
+
+    if (lastAutoDrainPendingCountRef.current === pendingCount) {
+      return
+    }
+
+    lastAutoDrainPendingCountRef.current = pendingCount
+    runDrain()
+  }, [isOffline, isDraining, pendingCount, runDrain])
 
   const handleStageSelect = useCallback(
     async (bedId: string, stageId: string, expectedStageId?: string) => {
@@ -169,7 +144,6 @@ export function useOfflineWriteInterceptor({
     [isOffline, enqueue, originalHandleReasonSelect]
   )
 
-  // Virtual bed creation cannot be serialised to localStorage (FormData)
   const onCreateVirtualBed = useCallback(
     async (fd: FormData) => {
       if (isOffline) {

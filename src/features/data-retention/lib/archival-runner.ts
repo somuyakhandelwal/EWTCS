@@ -14,31 +14,41 @@ const BATCH_SIZE = 500
 
 interface TableSpec {
   source: string
-  archive: string
+  archive?: string
+  mode: 'archive' | 'cleanup'
   /** Column used to compare against the cutoff date */
   dateColumn: string
   /** Key into the RetentionConfig — used to look up the per-table cutoff. */
-  configKey: 'patientAdmissions' | 'auditLogs' | 'bedStageLogs'
+  configKey: 'patientAdmissions' | 'auditLogs' | 'bedStageLogs' | 'offlineQueue'
 }
 
 const ARCHIVAL_TABLES: TableSpec[] = [
   {
     source: 'patient_admissions',
     archive: 'patient_admissions_archive',
+    mode: 'archive',
     dateColumn: 'created_at',
     configKey: 'patientAdmissions',
   },
   {
     source: 'audit_logs',
     archive: 'audit_logs_archive',
+    mode: 'archive',
     dateColumn: 'created_at',
     configKey: 'auditLogs',
   },
   {
     source: 'bed_stage_logs',
     archive: 'bed_stage_logs_archive',
+    mode: 'archive',
     dateColumn: 'transition_time',
     configKey: 'bedStageLogs',
+  },
+  {
+    source: 'offline_queue',
+    mode: 'cleanup',
+    dateColumn: 'COALESCE(drained_at, failed_at)',
+    configKey: 'offlineQueue',
   },
 ]
 
@@ -54,23 +64,38 @@ async function archiveBatch(
   cutoffDate: Date,
 ): Promise<number> {
   // CTE: grab up to BATCH_SIZE qualifying IDs, then move them atomically.
-  const sql = `
-    WITH batch AS (
-      SELECT id FROM ${spec.source}
-      WHERE ${spec.dateColumn} < $1
-      LIMIT ${BATCH_SIZE}
-      FOR UPDATE SKIP LOCKED
-    ),
-    moved AS (
-      INSERT INTO ${spec.archive}
-        SELECT s.*, NOW() AS archived_at
-        FROM ${spec.source} s
-        JOIN batch b ON b.id = s.id
-      RETURNING id
-    )
-    DELETE FROM ${spec.source}
-    WHERE id IN (SELECT id FROM moved)
-    RETURNING id`
+  const sql = spec.mode === 'archive'
+    ? `
+      WITH batch AS (
+        SELECT id FROM ${spec.source}
+        WHERE ${spec.dateColumn} < $1
+        LIMIT ${BATCH_SIZE}
+        FOR UPDATE SKIP LOCKED
+      ),
+      moved AS (
+        INSERT INTO ${spec.archive}
+          SELECT s.*, NOW() AS archived_at
+          FROM ${spec.source} s
+          JOIN batch b ON b.id = s.id
+        RETURNING id
+      )
+      DELETE FROM ${spec.source}
+      WHERE id IN (SELECT id FROM moved)
+      RETURNING id`
+    : `
+      WITH batch AS (
+        SELECT id FROM ${spec.source}
+        WHERE (
+          (drained_at IS NOT NULL AND drained_at < $1)
+          OR
+          (failed_at IS NOT NULL AND failed_at < $1)
+        )
+        LIMIT ${BATCH_SIZE}
+        FOR UPDATE SKIP LOCKED
+      )
+      DELETE FROM ${spec.source}
+      WHERE id IN (SELECT id FROM batch)
+      RETURNING id`
 
   const result = await client.query(sql, [cutoffDate])
   return result.rowCount ?? 0
@@ -89,6 +114,7 @@ export interface ArchivalCutoffs {
   patientAdmissions: Date
   auditLogs: Date
   bedStageLogs: Date
+  offlineQueue: Date
 }
 
 /**

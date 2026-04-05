@@ -37,6 +37,7 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
       cutoffs.patientAdmissions.getTime(),
       cutoffs.auditLogs.getTime(),
       cutoffs.bedStageLogs.getTime(),
+      cutoffs.offlineQueue.getTime(),
     ),
   )
 
