@@ -6,7 +6,7 @@ Administrator runbook for configuration, maintenance, backup/recovery, security,
 - Owner: Platform / System Administration
 - Scope: Configuration, backups, troubleshooting, security, command references
 - Versioning: Git-tracked; update required in release PRs when operations change
-- Last Updated: 2026-04-05 (US-13.11 cross-browser compatibility + CI browser matrix)
+- Last Updated: 2026-04-05 (DB4-04 metrics query parallelization + migration validator duplicate-prefix policy update)
 
 ## 1) System Overview
 EWTCS is a Next.js + PostgreSQL emergency-ward operations platform.
@@ -228,6 +228,11 @@ Operational behavior:
   - **Triage**: occupied bed count, total bed count, average triage time (minutes)
   - **OT**: surgeries in-progress, completed, utilization rate (%)
   - **Cath Lab**: active procedures, CAG count, PTCA count
+
+### Migration Validation Policy Notes
+- CI migration duplicate-prefix allowlist is maintained in `scripts/validate-migration-duplicates.js`.
+- Canonical approved duplicate prefix groups now include: `015`, `038`, `040`, `047`, and `058`.
+- `scripts/validate-migrations.js` consumes that shared allowlist during `npm run validate:migrations` to ensure duplicate prefixes match approved canonical groups only.
 
 ### EPIC 20 — Department Modules (ER, Diagnosis, OT, Cath Lab)
 - **Schema Additions**: Four new tables (`er_intake`, `diagnosis`, `ot_procedures`, `cath_lab_procedures`).
