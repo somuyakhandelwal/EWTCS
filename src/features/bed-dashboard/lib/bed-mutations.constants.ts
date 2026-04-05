@@ -46,17 +46,6 @@ export const UPDATE_BED_STAGE_SQL = `
         ELSE patient_start_time
       END,
       is_occupied = $3,
-      patient_uhid = CASE WHEN $2 THEN NULL ELSE patient_uhid END,
-      patient_ipd_id = CASE WHEN $2 THEN NULL ELSE patient_ipd_id END,
-      patient_name = CASE WHEN $2 THEN NULL ELSE patient_name END,
-      patient_age = CASE WHEN $2 THEN NULL ELSE patient_age END,
-      patient_gender = CASE WHEN $2 THEN NULL ELSE patient_gender END,
-      key_symptom = CASE WHEN $2 THEN NULL ELSE key_symptom END,
-      triage_category = CASE WHEN $2 THEN NULL ELSE triage_category END,
-      metadata = CASE 
-        WHEN $2 THEN metadata - 'triageInfo'
-        ELSE metadata
-      END,
       updated_at = NOW()
   WHERE id = $4
   RETURNING patient_start_time as "patientStartTime", is_occupied as "isOccupied", last_stage_change as "lastStageChange"

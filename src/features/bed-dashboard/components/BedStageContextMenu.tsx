@@ -12,8 +12,10 @@ interface BedStageContextMenuProps {
   stages: Stage[]
   isOpen: boolean
   position: { x: number; y: number } | null
-  isUpdating: boolean
+  isLoadingTransitions: boolean
+  isMutating: boolean
   updatingStageId: string | null
+  isOffline?: boolean
   validNextStages?: string[] // Stages without override requirement
   overrideRequiredStages?: string[] // Stages requiring supervisor approval
   error?: string | null // Error message when loading stages fails
@@ -27,8 +29,10 @@ export function BedStageContextMenu({
   stages,
   isOpen,
   position,
-  isUpdating,
+  isLoadingTransitions,
+  isMutating,
   updatingStageId,
+  isOffline = false,
   validNextStages = [],
   overrideRequiredStages = [],
   error,
@@ -58,7 +62,9 @@ export function BedStageContextMenu({
       const colorClasses = getStageColorClasses(stage.colorCode)
       const isValid = validNextStages.includes(stage.id)
       const requiresOverride = overrideRequiredStages.includes(stage.id)
-      const isDisabled = !isValid && !requiresOverride
+      const hasRuleData = validNextStages.length > 0 || overrideRequiredStages.length > 0
+      const isFallbackAllowed = isOffline && !hasRuleData && !isCurrentStage
+      const isDisabled = isFallbackAllowed ? false : !isValid && !requiresOverride
 
       const baseLabel = getActionLabel(bed.currentStage?.name ?? 'Empty', stage.name)
       let label = baseLabel
@@ -70,13 +76,19 @@ export function BedStageContextMenu({
         id: stage.id,
         label,
         icon: <StageIcon colorCode={stage.colorCode} className={cn("h-4 w-4", colorClasses.text)} />,
-        disabled: isUpdating || isCurrentStage || updatingStageId === stage.id || isDisabled,
+        disabled: isMutating || isLoadingTransitions || isCurrentStage || updatingStageId === stage.id || isDisabled,
         onSelect: () => onStageSelect(bed.id, stage.id),
         className: colorClasses.text,
-        title: isDisabled ? 'This transition is not allowed' : requiresOverride ? 'Requires supervisor approval' : undefined,
+        title: isDisabled
+          ? 'This transition is not allowed'
+          : requiresOverride
+            ? 'Requires supervisor approval'
+            : isFallbackAllowed
+              ? 'Offline fallback: transition validation will run when sync resumes'
+              : undefined,
       }
     })
-  }, [bed, stages, isUpdating, updatingStageId, validNextStages, overrideRequiredStages, onStageSelect])
+  }, [bed, stages, isMutating, isLoadingTransitions, updatingStageId, isOffline, validNextStages, overrideRequiredStages, onStageSelect])
 
   // US-20.2: Inject the "Update Triage Details" option at the top if the bed is in Triage (or occupied)
   const fullItems = useMemo(() => {
@@ -98,7 +110,7 @@ export function BedStageContextMenu({
 
   // US-2.2 FLASHY BUG FIX: If we are still loading transition rules, show a loading state
   // instead of a briefly-full (but disabled) menu. This prevents the "flash" of items.
-  if (isUpdating && !error) {
+  if (isLoadingTransitions && !error) {
     return (
       <ContextMenu
         isOpen={isOpen}

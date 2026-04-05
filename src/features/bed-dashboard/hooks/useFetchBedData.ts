@@ -14,7 +14,7 @@ import {
   resetConnectionStatus,
   handleOfflineStatus,
 } from '../lib/connection-manager'
-import { saveToCache, loadFromCache } from '../lib/offline-cache'
+import { fetchServerSnapshot, saveToCache, loadFromCache } from '../lib/offline-cache'
 import type { BedGridData } from '../types/bed'
 import type { ConnectionStatusDetails } from '../types/realtime'
 
@@ -103,6 +103,13 @@ export function useFetchBedData(
       if (cached) {
         setData((prev) => ({ ...cached.data, beds: getStableBeds(prev.beds, cached.data.beds) }))
         setCacheTimestamp(cached.timestamp)
+      } else {
+        const snapshot = await fetchServerSnapshot()
+        if (snapshot) {
+          setData((prev) => ({ ...snapshot.data, beds: getStableBeds(prev.beds, snapshot.data.beds) }))
+          setCacheTimestamp(snapshot.timestamp)
+          saveToCache(snapshot.data)
+        }
       }
       // Exponential backoff retry — catch the returned Promise so it cannot become an
       // unhandled rejection if fetchData rejects again on the retry.

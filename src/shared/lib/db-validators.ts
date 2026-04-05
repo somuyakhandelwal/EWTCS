@@ -32,6 +32,7 @@ export const ALLOWED_TABLES = new Set([
   'patient_admissions_archive',    // migration 028
   'audit_logs_archive',            // migration 028
   'user_settings',                 // DB5-02: user preference persistence
+  'offline_queue',                 // DB5-01: offline operation persistence
 ])
 
 /**

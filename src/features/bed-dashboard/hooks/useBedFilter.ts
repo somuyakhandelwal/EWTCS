@@ -59,7 +59,6 @@ export function useBedFilter(
   useEffect(() => {
     setShowDelayedOnly(initialFilter.showDelayedOnly)
     setSortOrder(initialFilter.sortOrder)
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [initialFilter.showDelayedOnly, initialFilter.sortOrder])
 
   // Debounced DB write

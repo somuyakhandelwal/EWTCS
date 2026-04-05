@@ -60,6 +60,7 @@ export async function getDelaysByAttribution(
     // the nurse-recorded reason. We match by bed_stage_log_id when available,
     // otherwise fall back to bed_id — and we do NOT filter by resolved_at because
     // historical (already-resolved) reasons must also count for reports.
+    // Prefer delay_reason_option_id FK over legacy reason field (DC2-02).
     const result = await query<RawDelayRow>(
       `
       SELECT
@@ -70,10 +71,11 @@ export async function getDelaysByAttribution(
       JOIN stages s
         ON bsl.from_stage_id = s.id
       LEFT JOIN LATERAL (
-        SELECT reason
-        FROM disposition_delay_reasons
-        WHERE (bed_stage_log_id = bsl.id OR bed_id = bsl.bed_id)
-        ORDER BY recorded_at DESC
+        SELECT COALESCE(o.value, ddr.reason::text) as reason
+        FROM disposition_delay_reasons ddr
+        LEFT JOIN delay_reason_options o ON ddr.delay_reason_option_id = o.id
+        WHERE (ddr.bed_stage_log_id = bsl.id OR ddr.bed_id = bsl.bed_id)
+        ORDER BY ddr.recorded_at DESC
         LIMIT 1
       ) ddr ON true
       WHERE bsl.duration_in_previous_stage_ms IS NOT NULL

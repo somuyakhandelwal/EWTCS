@@ -11,7 +11,7 @@ function isLocalHost(hostname: string) {
 }
 
 function shouldEnforceHttps() {
-    const env = (process.env.NODE_ENV as string | undefined) ?? ''
+    const env = (process.env.NODE_ENV as string | undefined) ?? ''  
     const enforceableEnv = env === 'production' || env === 'staging'
     if (!enforceableEnv) return false
     return process.env.FORCE_HTTPS !== 'false'

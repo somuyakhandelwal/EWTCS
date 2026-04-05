@@ -58,7 +58,7 @@ export async function getBedGridData(areaView: BedAreaView = 'all'): Promise<{
     // EPIC 13: track end-to-end latency for Dashboard SLA monitoring (<2 s).
     const perfMark = perfStart()
 
-    logger.info('Fetching bed grid data')
+    logger.debug('Fetching bed grid data')
 
     const [delayThresholdMs, escalationThresholdMs] = await Promise.all([
       getGlobalThresholdMs(),
@@ -123,7 +123,7 @@ export async function getBedGridData(areaView: BedAreaView = 'all'): Promise<{
       userWardId: wardScopedRoles.has(session.role) ? userWard : undefined,
     }
 
-    logger.info('Bed grid data fetched successfully', {
+    logger.debug('Bed grid data fetched successfully', {
       bedCount: beds.length,
       stageCount: stages.length,
       areaView,
