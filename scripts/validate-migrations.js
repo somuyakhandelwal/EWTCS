@@ -16,6 +16,9 @@ const ALLOWED_DUPLICATE_GROUPS = new Map([
   ['038', ['038_add_delay_reason_options', '038_create_alert_preferences']],
   ['040', ['040_create_user_feedback', '040_enable_pgcrypto']],
   ['047', ['047_add_cath_lab_roles', '047_add_doctor_and_cardiologist_roles', '047_enforce_symptom_40_char_limit']],
+  ['056', ['056_create_cath_lab_procedures', '056_seed_emergency_ward']],
+  ['057', ['057_create_cath_lab_procedures_table', '057_extend_cath_lab_procedures']],
+  ['058', ['058_normalize_delay_reason_fk', '058_repair_cath_lab_procedures_columns']],
 ]);
 
 const validateMigrations = async () => {

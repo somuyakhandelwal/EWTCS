@@ -37,6 +37,8 @@ export const SELECT_STAGE_BY_ID_SQL = `
 `
 
 export const UPDATE_BED_STAGE_SQL = `
+  -- Primary write path: application updates beds directly.
+  -- DB2-03 also adds a bed_stage_logs AFTER INSERT trigger as a backstop.
   UPDATE beds
   SET current_stage_id = $1,
       last_stage_change = NOW(),
@@ -52,6 +54,8 @@ export const UPDATE_BED_STAGE_SQL = `
 `
 
 export const INSERT_BED_STAGE_LOG_SQL = `
+  -- Trigger backstop note: inserting into bed_stage_logs also syncs
+  -- beds.current_stage_id via DB trigger (DB2-03). Keep app update as primary.
   INSERT INTO bed_stage_logs (
     bed_id,
     from_stage_id,
