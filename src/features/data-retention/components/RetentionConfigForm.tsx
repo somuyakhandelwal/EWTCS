@@ -48,6 +48,14 @@ const FIELDS: FieldConfig[] = [
     max: 3650,
     unit: 'day',
   },
+  {
+    key: 'offlineQueueDays',
+    label: 'Offline Queue',
+    description: 'Retain drained/failed offline queue rows before cleanup',
+    min: 1,
+    max: 3650,
+    unit: 'day',
+  },
 ]
 
 const inputClass = cn(

@@ -47,7 +47,9 @@ describe('upsertDailySummary', () => {
     beforeEach(() => vi.clearAllMocks())
 
     it('maps raw row to DailySummary correctly', async () => {
-        vi.mocked(query).mockResolvedValueOnce({ rows: [RAW_ROW] } as never)
+        vi.mocked(query)
+            .mockResolvedValueOnce({ rows: [{ id: 'uuid-123' }] } as never)
+            .mockResolvedValueOnce({ rows: [RAW_ROW] } as never)
 
         const result = await upsertDailySummary(SAMPLE_INPUT)
 
@@ -67,6 +69,16 @@ describe('upsertDailySummary', () => {
 
         await expect(upsertDailySummary(SAMPLE_INPUT)).rejects.toThrow(
             'Upsert returned no row — database error'
+        )
+    })
+
+    it('throws when summary cannot be loaded after review upsert', async () => {
+        vi.mocked(query)
+            .mockResolvedValueOnce({ rows: [{ id: 'uuid-123' }] } as never)
+            .mockResolvedValueOnce({ rows: [] } as never)
+
+        await expect(upsertDailySummary(SAMPLE_INPUT)).rejects.toThrow(
+            'Unable to load summary for 2026-02-20'
         )
     })
 

@@ -6,7 +6,7 @@ Administrator runbook for configuration, maintenance, backup/recovery, security,
 - Owner: Platform / System Administration
 - Scope: Configuration, backups, troubleshooting, security, command references
 - Versioning: Git-tracked; update required in release PRs when operations change
-- Last Updated: 2026-03-20 (EPIC 20 — Architecture and Database Sync)
+- Last Updated: 2026-04-05 (US-13.11 cross-browser compatibility + CI browser matrix)
 
 ## 1) System Overview
 EWTCS is a Next.js + PostgreSQL emergency-ward operations platform.
@@ -152,6 +152,21 @@ npm run db:reconcile
 npm run audit:verify
 ```
 
+### DB5-02 Operational Notes (Persist Dashboard and Filter Preferences)
+- New migration: `1743241500000_create_user_settings.sql`
+- Added table: `user_settings` (`user_id` PK/FK to `users`, `preferences JSONB`, `updated_at`)
+- Purpose: Persist per-user UI preferences (dashboard, filters, help panel) across sessions/devices.
+- Deployment action: run `npm run db:migrate` before serving traffic.
+- Validation action:
+  - `npm run validate:db`
+  - `npm run validate:migrations`
+  - `npm run validate:schema`
+
+Ops script behavior updates (local/dev):
+- `scripts/setup-database.mjs` and `scripts/validate-db-connection.js` now unwrap nested connection errors and report actionable `ECONNREFUSED` details.
+- `scripts/reset-db.js` now handles connection-refused scenarios gracefully instead of failing with opaque promise errors.
+- If PostgreSQL is not running locally, start the Windows PostgreSQL service first, then re-run setup/validation commands.
+
 ### US-21.1 Operational Notes
 - New migration: `046_add_patient_demographics_to_beds.sql`
 - Added bed demographics columns used by triage and dashboard views:
@@ -162,6 +177,34 @@ npm run audit:verify
 
 Dev runtime note:
 - `npm run dev` now clears `.next` before startup to reduce stale chunk load errors during local development.
+
+### US-16 Operational Notes (Offline Queue + Replay)
+- New migrations:
+  - `1775301000000_create_offline_queue.sql`
+  - `1775302000000_add_client_operation_id_to_offline_queue.sql`
+- New table: `offline_queue`
+  - Purpose: durable storage for write operations captured while clients are offline.
+  - Key fields: `operation`, `payload`, `status`, `retry_count`, `client_operation_id`, `created_at`.
+- New API surfaces used by reconnect replay and stable client writes:
+  - `POST /api/offline-queue`
+  - `POST /api/offline-sync/execute`
+  - `POST /api/triage/update`
+  - `POST /api/bed-stage/update`
+
+Deployment / upgrade actions:
+1. Run `npm run db:migrate` before serving traffic.
+2. Verify migration state with `npm run validate:migrations`.
+3. Verify API health with `GET /api/health` after deploy.
+
+Operational behavior:
+- Replay is idempotent via `client_operation_id` to reduce duplicate writes on retries.
+- On reconnect, clients may drain queued actions automatically; monitor API/application logs for replay success/failure patterns.
+- If a replay conflict occurs, latest-write-wins conflict handling is applied by replay endpoints.
+
+### Archival and Runtime Guardrail Notes
+- `src/app/api/cron/archival/route.ts` received operational updates; continue to require `Authorization: Bearer <CRON_SECRET>` for scheduled archival jobs.
+- `src/shared/config/realtime.ts` includes updated polling guardrails to avoid aggressive polling during disconnected periods.
+- `src/middleware.ts` remains a critical ops-impacting surface for role and route protections; validate route access behavior after deployment.
 
 ### EPIC 25 — Enhanced Dashboard Metrics (Department Metrics)
 - New migration: `1773838271566_create-department-metrics-tables.js`
@@ -210,11 +253,23 @@ npm run validate:schema
 npm run validate:all
 npm test
 npm run test:coverage
+npm run test:browser:install
+npm run test:browser
 npm run perf:seed
 npm run perf:check
 npm run perf:validate
 npm run security:ssl:check
 ```
+
+### US-13.11 Operational Notes (Cross-Browser Compatibility)
+- Browser support target: latest 2 versions of Chrome, Firefox, Safari, and Edge.
+- Runtime behavior:
+  - Unsupported browsers receive a persistent warning banner.
+  - Older-but-usable browsers run in limited mode with reduced motion and visual effects.
+- Browser compatibility telemetry is emitted from client route tracking and aggregated in system health metrics.
+- CI/CD coverage:
+  - Workflow: `.github/workflows/browser-compatibility.yml`
+  - Browser projects: `chromium`, `firefox`, `webkit`, `edge-emulation`
 
 Archival API:
 ```http

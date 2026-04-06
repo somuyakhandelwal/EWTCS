@@ -20,6 +20,45 @@ function parseDatabaseUrl(databaseUrl) {
   };
 }
 
+function formatConnectionTarget(config) {
+  return `${config.host}:${config.port}`;
+}
+
+function isConnectionRefused(error) {
+  if (!error) return false;
+  if (error.code === 'ECONNREFUSED') return true;
+  if (Array.isArray(error.errors)) {
+    return error.errors.some((inner) => inner?.code === 'ECONNREFUSED');
+  }
+  return false;
+}
+
+function formatPgErrorMessage(error) {
+  if (!error) return 'Unknown database error';
+
+  const parts = [];
+  if (error.code) parts.push(`code=${error.code}`);
+  if (error.message) parts.push(`message=${error.message}`);
+
+  if (Array.isArray(error.errors) && error.errors.length > 0) {
+    const nested = error.errors
+      .map((inner) => {
+        if (!inner) return null;
+        const endpoint = inner.address && inner.port ? `${inner.address}:${inner.port}` : null;
+        const code = inner.code || 'UNKNOWN';
+        const msg = inner.message || 'No message';
+        return endpoint ? `${code} at ${endpoint} (${msg})` : `${code} (${msg})`;
+      })
+      .filter(Boolean);
+
+    if (nested.length > 0) {
+      parts.push(`attempts=${nested.join('; ')}`);
+    }
+  }
+
+  return parts.length > 0 ? parts.join(' | ') : String(error);
+}
+
 function readDatabaseUrlFromEnvFile(filePath) {
   if (!existsSync(filePath)) return null;
   const text = readFileSync(filePath, 'utf-8');
@@ -48,9 +87,11 @@ export async function setupDatabase(step, totalSteps) {
 
   const adminUrl = `postgresql://${encodeURIComponent(dbConfig.username)}:${encodeURIComponent(dbConfig.password)}@${dbConfig.host}:${dbConfig.port}/postgres`;
   const client = new Client({ connectionString: adminUrl, ssl: dbConfig.ssl ? { rejectUnauthorized: false } : false });
+  let connected = false;
 
   try {
     await client.connect();
+    connected = true;
 
     const existsResult = await client.query('SELECT 1 FROM pg_database WHERE datname = $1', [dbConfig.dbName]);
     if (existsResult.rowCount === 0) {
@@ -61,10 +102,21 @@ export async function setupDatabase(step, totalSteps) {
       log.success(`Database already exists: ${dbConfig.dbName}`);
     }
   } catch (error) {
-    log.error(`Database setup failed: ${error.message}`);
+    if (isConnectionRefused(error)) {
+      const target = formatConnectionTarget(dbConfig);
+      log.error(`Database setup failed: cannot connect to PostgreSQL at ${target} (ECONNREFUSED)`);
+      log.info('Start PostgreSQL and retry setup.');
+      log.info('Windows: Start PostgreSQL service from Services.msc');
+      log.info('Optional check: npm run validate:db');
+    } else {
+      log.error(`Database setup failed: ${formatPgErrorMessage(error)}`);
+    }
+
     process.exit(1);
   } finally {
-    await client.end();
+    if (connected) {
+      await client.end();
+    }
   }
 
   return { ...dbConfig, databaseUrl };

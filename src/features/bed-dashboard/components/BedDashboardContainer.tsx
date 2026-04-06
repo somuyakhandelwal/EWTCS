@@ -1,4 +1,5 @@
 import { getBedGridData } from "@/features/bed-dashboard/actions/bed-grid-actions"
+import { getUserSettings } from "@/features/bed-dashboard/actions/user-settings-actions"
 import { createVirtualBed } from "@/features/bed-management/actions/virtual-bed-actions"
 import { BedDashboardClient } from "./BedDashboardClient"
 import { AlertTriangle } from "lucide-react"
@@ -10,7 +11,10 @@ interface Props {
 }
 
 export async function BedDashboardContainer({ role, areaView = 'all' }: Props) {
-    const bedGridResult = await getBedGridData(areaView)
+    const [bedGridResult, initialPreferences] = await Promise.all([
+        getBedGridData(areaView),
+        getUserSettings(),
+    ])
 
     if (!bedGridResult.success || !bedGridResult.data) {
         return (
@@ -28,6 +32,7 @@ export async function BedDashboardContainer({ role, areaView = 'all' }: Props) {
             canRecordDispositionReasons={role !== 'housekeeping'}
             onCreateVirtualBed={createVirtualBed}
             role={role}
+            initialPreferences={initialPreferences}
         />
     )
 }

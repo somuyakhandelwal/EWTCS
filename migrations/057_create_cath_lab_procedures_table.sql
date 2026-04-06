@@ -1,4 +1,4 @@
--- Migration 051: Create Cath Lab Procedures Table (Full Schema)
+-- Migration 057: Create Cath Lab Procedures Table (Full Schema)
 -- Purpose: EPIC 20 - ER Triage & Patient Intake (US-20.4)
 -- Stores: Cardiac catheterization procedures with diagnostic and intervention data
 -- Acceptance Criteria 4: New cath_lab_procedures table with cardiologist and outcomes
@@ -73,6 +73,46 @@ CREATE TABLE IF NOT EXISTS cath_lab_procedures (
     CONSTRAINT chk_cath_lab_procedures_time_order
         CHECK (actual_end_time IS NULL OR actual_start_time IS NULL OR actual_end_time >= actual_start_time)
 );
+
+-- If the table already exists from a previous migration variant, ensure this
+-- schema's expected columns are present before creating indexes.
+ALTER TABLE cath_lab_procedures
+    ADD COLUMN IF NOT EXISTS bed_id UUID REFERENCES beds(id) ON DELETE SET NULL,
+    ADD COLUMN IF NOT EXISTS patient_uhid VARCHAR(100),
+    ADD COLUMN IF NOT EXISTS cardiologist_id UUID REFERENCES users(id),
+    ADD COLUMN IF NOT EXISTS procedure_code VARCHAR(20),
+    ADD COLUMN IF NOT EXISTS clinical_indication TEXT,
+    ADD COLUMN IF NOT EXISTS clinical_indication_encrypted JSONB,
+    ADD COLUMN IF NOT EXISTS scheduled_start TIMESTAMP WITH TIME ZONE,
+    ADD COLUMN IF NOT EXISTS actual_start_time TIMESTAMP WITH TIME ZONE,
+    ADD COLUMN IF NOT EXISTS actual_end_time TIMESTAMP WITH TIME ZONE,
+    ADD COLUMN IF NOT EXISTS duration_minutes INTEGER,
+    ADD COLUMN IF NOT EXISTS status VARCHAR(20) DEFAULT 'SCHEDULED',
+    ADD COLUMN IF NOT EXISTS findings TEXT,
+    ADD COLUMN IF NOT EXISTS findings_encrypted JSONB,
+    ADD COLUMN IF NOT EXISTS interventions_performed TEXT,
+    ADD COLUMN IF NOT EXISTS interventions_performed_encrypted JSONB,
+    ADD COLUMN IF NOT EXISTS stenosis_location VARCHAR(100),
+    ADD COLUMN IF NOT EXISTS stenosis_location_encrypted JSONB,
+    ADD COLUMN IF NOT EXISTS stenosis_percentage INTEGER,
+    ADD COLUMN IF NOT EXISTS stenosis_percentage_encrypted JSONB,
+    ADD COLUMN IF NOT EXISTS outcome_encrypted JSONB,
+    ADD COLUMN IF NOT EXISTS complications TEXT,
+    ADD COLUMN IF NOT EXISTS complications_encrypted JSONB,
+    ADD COLUMN IF NOT EXISTS clinical_notes TEXT,
+    ADD COLUMN IF NOT EXISTS clinical_notes_encrypted JSONB;
+
+DO $$
+BEGIN
+    IF NOT EXISTS (
+        SELECT 1 FROM pg_constraint
+        WHERE conname = 'chk_cath_lab_procedures_status'
+    ) THEN
+        ALTER TABLE cath_lab_procedures
+            ADD CONSTRAINT chk_cath_lab_procedures_status
+            CHECK (status IN ('SCHEDULED', 'IN_PROGRESS', 'COMPLETED', 'CANCELLED'));
+    END IF;
+END $$;
 
 -- Create indexes for common queries
 CREATE INDEX IF NOT EXISTS idx_cath_lab_procedures_bed_id ON cath_lab_procedures(bed_id);

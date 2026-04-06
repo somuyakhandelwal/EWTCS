@@ -8,6 +8,7 @@ const DEFAULTS: RetentionConfig = {
   patientAdmissionsYears: 7,
   auditLogsYears: 7,
   bedStageLogDays: 90,
+  offlineQueueDays: 30,
   requiresApproval: true,
 }
 
@@ -22,6 +23,7 @@ export async function getRetentionConfig(): Promise<RetentionConfig> {
        'retention_patient_admissions_years',
        'retention_audit_logs_years',
        'retention_bed_stage_log_days',
+       'retention_offline_queue_days',
        'retention_bed_stage_log_years',
        'retention_requires_approval'
      )`
@@ -43,6 +45,9 @@ export async function getRetentionConfig(): Promise<RetentionConfig> {
       parseInt(map['retention_bed_stage_log_days'] ?? '', 10) ||
       legacyDays ||
       DEFAULTS.bedStageLogDays,
+    offlineQueueDays:
+      parseInt(map['retention_offline_queue_days'] ?? '', 10) ||
+      DEFAULTS.offlineQueueDays,
     requiresApproval:
       (map['retention_requires_approval'] ?? 'true') !== 'false',
   }
@@ -74,6 +79,11 @@ export async function saveRetentionConfig(config: RetentionConfig): Promise<void
       'retention_bed_stage_log_days',
       String(config.bedStageLogDays),
       'Days to retain bed_stage_log rows before archiving (US-3.6)',
+    ],
+    [
+      'retention_offline_queue_days',
+      String(config.offlineQueueDays),
+      'Days to retain drained/failed offline_queue rows before cleanup (DB5-01)',
     ],
     [
       'retention_bed_stage_log_years',

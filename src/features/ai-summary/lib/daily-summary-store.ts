@@ -1,12 +1,12 @@
-// Daily Summary Store — EPIC 9: Daily AI Summary
-// Handles reading and upserting daily summaries in the daily_summaries table.
-// Idempotent: re-running for the same date safely overwrites the existing row.
+// Daily Summary Store — EPIC 9 + EPIC-DB2
+// Reads computed metrics from daily_summaries_mv and stores editable workflow
+// fields in daily_summary_reviews.
 
 import { query } from '@/shared/lib/db'
 import { logger } from '@/shared/config/logger'
 import type { DailySummary, DailySummaryInput, AiInsight } from '../types/daily-summary'
 
-// Raw DB row before camelCase mapping (includes migration 034 columns)
+// Raw DB row before camelCase mapping.
 interface RawDailySummaryRow {
     id: string
     summary_date: string
@@ -25,6 +25,28 @@ interface RawDailySummaryRow {
     published_at?: string | null
     ai_insights?: unknown
 }
+
+const SUMMARY_SELECT = `
+    SELECT
+        r.id,
+        r.summary_date,
+        COALESCE(mv.total_patients, 0) AS total_patients,
+        COALESCE(mv.avg_stage_time_minutes, 0) AS avg_stage_time_minutes,
+        COALESCE(mv.delay_count, 0) AS delay_count,
+        COALESCE(mv.avg_tat_minutes, 0) AS avg_tat_minutes,
+        COALESCE(mv.total_beds_used, 0) AS total_beds_used,
+        COALESCE(mv.total_stage_updates, 0) AS total_stage_updates,
+        COALESCE(mv.generated_at, r.updated_at) AS generated_at,
+        r.ai_summary,
+        r.metadata,
+        r.status,
+        r.reviewed_by,
+        r.reviewed_at,
+        r.published_at,
+        r.ai_insights
+    FROM daily_summary_reviews r
+    LEFT JOIN daily_summaries_mv mv ON r.summary_date = mv.summary_date
+`
 
 function parseAiInsights(raw: unknown): AiInsight[] {
     if (!Array.isArray(raw)) return []
@@ -68,46 +90,31 @@ export async function upsertDailySummary(
 ): Promise<DailySummary> {
     const aiInsights = input.aiInsights ?? []
     const sql = `
-    INSERT INTO daily_summaries (
+    INSERT INTO daily_summary_reviews (
       summary_date,
-      total_patients,
-      avg_stage_time_minutes,
-      delay_count,
-      avg_tat_minutes,
-      total_beds_used,
-      total_stage_updates,
-      generated_at,
       ai_summary,
       metadata,
       status,
-      ai_insights
-    ) VALUES ($1, $2, $3, $4, $5, $6, $7, NOW(), $8, $9, 'draft', $10)
+      ai_insights,
+      reviewed_by,
+      reviewed_at,
+      published_at,
+      updated_at
+    ) VALUES ($1, $2, $3, 'draft', $4, NULL, NULL, NULL, NOW())
     ON CONFLICT (summary_date) DO UPDATE SET
-      total_patients        = EXCLUDED.total_patients,
-      avg_stage_time_minutes = EXCLUDED.avg_stage_time_minutes,
-      delay_count           = EXCLUDED.delay_count,
-      avg_tat_minutes       = EXCLUDED.avg_tat_minutes,
-      total_beds_used       = EXCLUDED.total_beds_used,
-      total_stage_updates   = EXCLUDED.total_stage_updates,
-      generated_at          = NOW(),
       ai_summary            = EXCLUDED.ai_summary,
       metadata              = EXCLUDED.metadata,
       status                = 'draft',
       ai_insights           = EXCLUDED.ai_insights,
       reviewed_by           = NULL,
       reviewed_at           = NULL,
-      published_at          = NULL
-    RETURNING *
+      published_at          = NULL,
+      updated_at            = NOW()
+    RETURNING id
   `
 
-    const result = await query<RawDailySummaryRow>(sql, [
+    const result = await query<{ id: string }>(sql, [
         input.summaryDate,
-        input.totalPatients,
-        input.avgStageTimeMinutes,
-        input.delayCount,
-        input.avgTatMinutes,
-        input.totalBedsUsed,
-        input.totalStageUpdates,
         input.aiSummary ?? null,
         JSON.stringify(input.metadata),
         JSON.stringify(aiInsights),
@@ -116,8 +123,18 @@ export async function upsertDailySummary(
     const saved = result.rows[0]
     if (!saved) throw new Error('Upsert returned no row — database error')
 
+    const summary = await getDailySummaryByDate(input.summaryDate)
+    if (!summary) throw new Error(`Unable to load summary for ${input.summaryDate}`)
+
     logger.info(`[ai-summary] Summary upserted for ${input.summaryDate}`)
-    return mapRow(saved)
+    return summary
+}
+
+/**
+ * Refresh daily summary materialized view.
+ */
+export async function refreshDailySummariesMaterializedView(): Promise<void> {
+    await query('REFRESH MATERIALIZED VIEW CONCURRENTLY daily_summaries_mv')
 }
 
 /**
@@ -126,7 +143,9 @@ export async function upsertDailySummary(
 export async function getDailySummaryById(
     id: string
 ): Promise<DailySummary | null> {
-    const sql = `SELECT * FROM daily_summaries WHERE id = $1 LIMIT 1`
+    const sql = `${SUMMARY_SELECT}
+    WHERE r.id = $1
+    LIMIT 1`
     const result = await query<RawDailySummaryRow>(sql, [id])
     const row = result.rows[0]
     return row ? mapRow(row) : null
@@ -140,8 +159,8 @@ export async function getDailySummaryByDate(
     dateStr: string
 ): Promise<DailySummary | null> {
     const sql = `
-    SELECT * FROM daily_summaries
-    WHERE summary_date = $1
+    ${SUMMARY_SELECT}
+        WHERE r.summary_date = $1
     LIMIT 1
   `
     const result = await query<RawDailySummaryRow>(sql, [dateStr])
@@ -163,14 +182,14 @@ export async function getRecentDailySummaries(
     const sql =
         statusFilter === 'published'
             ? `
-    SELECT * FROM daily_summaries
-    WHERE status = 'published'
-    ORDER BY summary_date DESC
+    ${SUMMARY_SELECT}
+    WHERE r.status = 'published'
+        ORDER BY r.summary_date DESC
     LIMIT $1
   `
             : `
-    SELECT * FROM daily_summaries
-    ORDER BY summary_date DESC
+    ${SUMMARY_SELECT}
+        ORDER BY r.summary_date DESC
     LIMIT $1
   `
     const result = await query<RawDailySummaryRow>(sql, [limit])
