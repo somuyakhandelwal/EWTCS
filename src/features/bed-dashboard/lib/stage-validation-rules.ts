@@ -4,6 +4,7 @@
 
 import pool from '@/shared/lib/db'
 import { logger } from '@/shared/config/logger'
+import { SETTINGS_CACHE_TAG, withCache } from '@/shared/lib/query-cache'
 import type { TransitionRule, UserRole } from './stage-validation-types'
 
 /**
@@ -83,7 +84,7 @@ export async function getValidNextStages(
  * Get a map of all stages to their valid next stages for a specific user role
  * Useful for pre-computing valid transitions for UI rendering
  */
-export async function getStageTransitionMap(
+async function fetchStageTransitionMapFromDB(
   userRole: UserRole
 ): Promise<Map<string, { allowed: string[]; requiresOverride: string[]; blocked: string[] }>> {
   try {
@@ -142,6 +143,13 @@ export async function getStageTransitionMap(
     throw error
   }
 }
+
+export const getStageTransitionMap = withCache(
+  fetchStageTransitionMapFromDB,
+  'bed-dashboard:get-stage-transition-map',
+  300,
+  [SETTINGS_CACHE_TAG]
+)
 
 /** Resolve stage name by ID (null-safe) */
 export async function getStageNameById(stageId: string | null): Promise<string | null> {

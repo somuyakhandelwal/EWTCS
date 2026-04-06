@@ -3,7 +3,7 @@
 
 import { query } from '@/shared/lib/db'
 import { logger } from '@/shared/config/logger'
-import { withCache } from '@/shared/lib/query-cache'
+import { SETTINGS_CACHE_TAG, withCache } from '@/shared/lib/query-cache'
 import type { Stage } from '../types/bed'
 
 async function fetchAllStagesFromDB(): Promise<Stage[]> {
@@ -34,7 +34,7 @@ async function fetchAllStagesFromDB(): Promise<Stage[]> {
  * Get all active stages ordered by display_order.
  * Cached for 60 seconds to reduce repetitive stage table reads.
  */
-export const getAllStages = withCache(fetchAllStagesFromDB, 'bed-dashboard:get-all-stages', 60)
+export const getAllStages = withCache(fetchAllStagesFromDB, 'bed-dashboard:get-all-stages', 60, [SETTINGS_CACHE_TAG])
 
 /**
  * Get stage by ID

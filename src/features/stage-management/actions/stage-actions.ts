@@ -1,10 +1,11 @@
 'use server';
 
 import { query, default as pool } from '@/shared/lib/db';
-import { revalidatePath } from 'next/cache';
+import { revalidatePath, revalidateTag } from 'next/cache';
 import type { Stage, CreateStageInput, UpdateStageInput } from '../types/stage.types';
 import { logAudit } from '@/shared/lib/audit';
 import { getStageAuditContext, getStageAuditMetadata } from './stage-audit-context';
+import { SETTINGS_CACHE_TAG } from '@/shared/lib/query-cache';
 
 // Fetch all active stages ordered by display order, including per-stage threshold (US-6.3)
 export async function getStages(): Promise<Stage[]> {
@@ -50,6 +51,7 @@ export async function createStage(input: CreateStageInput) {
   });
 
   revalidatePath('/admin/stages');
+  revalidateTag(SETTINGS_CACHE_TAG);
 }
 
 // Update an existing stage
@@ -115,6 +117,7 @@ export async function updateStage(input: UpdateStageInput) {
   revalidatePath('/admin/stages');
   revalidatePath('/dashboard');
   revalidatePath('/triage');
+  revalidateTag(SETTINGS_CACHE_TAG);
 }
 
 // Delete a stage (only non-default stages can be deleted)
@@ -153,6 +156,7 @@ export async function deleteStage(id: string) {
   });
 
   revalidatePath('/admin/stages');
+  revalidateTag(SETTINGS_CACHE_TAG);
 }
 
 // Reorder stages
@@ -194,4 +198,5 @@ export async function reorderStages(orderedIds: string[]) {
   });
 
   revalidatePath('/admin/stages');
+  revalidateTag(SETTINGS_CACHE_TAG);
 }
