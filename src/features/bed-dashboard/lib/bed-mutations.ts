@@ -17,8 +17,6 @@ import {
   INSERT_BED_STAGE_LOG_SQL,
   isNonPatientStage,
   SELECT_BED_FOR_UPDATE_SQL,
-  SELECT_STAGE_BY_ID_SQL,
-  StageRow,
   UPDATE_BED_STAGE_SQL,
 } from './bed-mutations.constants'
 
@@ -29,6 +27,10 @@ export interface UpdateBedStageParams {
   notes?: string
   ipAddress?: string | null
   supervisorOverrideApplied?: boolean
+  /** Pre-resolved target stage name from cached stage list. */
+  toStageName: string
+  /** Active shift resolved once at action start (60s bucket cache). */
+  activeShiftId?: string | null
   /** US-8.2: Supervisor manually overrides the auto-resolved shift for this log entry */
   shiftOverrideId?: string | null
   /** User ID of the supervisor performing the override */
@@ -55,6 +57,8 @@ export async function updateBedStageInDB(
     notes,
     ipAddress = null,
     supervisorOverrideApplied = false,
+    toStageName,
+    activeShiftId = null,
     shiftOverrideId,
     shiftOverrideByUserId,
   } = params
@@ -75,21 +79,14 @@ export async function updateBedStageInDB(
       throw new Error('Bed is already in the selected stage')
     }
 
-    const stageResult = await client.query<StageRow>(SELECT_STAGE_BY_ID_SQL, [toStageId])
-
-    if (stageResult.rows.length === 0) {
-      throw new Error('Stage not found or inactive')
-    }
-
-    const stage = stageResult.rows[0]
-
     const now = Date.now()
     const durationInPreviousStageMs = bed.lastStageChange
       ? now - new Date(bed.lastStageChange).getTime()
       : null
 
-    const shouldBeUnoccupied = isNonPatientStage(stage.name)
+    const shouldBeUnoccupied = isNonPatientStage(toStageName)
     const nextIsOccupied = !shouldBeUnoccupied
+    const effectiveShiftId = shiftOverrideId ?? activeShiftId ?? null
 
     // US-3.1: Use CASE to preserve patient_start_time permanently (never cleared)
     // Only set when NULL and bed becomes occupied (non-empty/non-cleaning stage)
@@ -109,7 +106,7 @@ export async function updateBedStageInDB(
       changedByUserId,
       durationInPreviousStageMs,
       notes || null,
-      shiftOverrideId ?? null,
+      effectiveShiftId,
       shiftOverrideByUserId ?? null,
     ])
 

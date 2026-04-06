@@ -3,12 +3,10 @@
 
 import { query } from '@/shared/lib/db'
 import { logger } from '@/shared/config/logger'
+import { withCache } from '@/shared/lib/query-cache'
 import type { Stage } from '../types/bed'
 
-/**
- * Get all active stages ordered by display_order
- */
-export async function getAllStages(): Promise<Stage[]> {
+async function fetchAllStagesFromDB(): Promise<Stage[]> {
   try {
     const result = await query<Stage>(`
       SELECT 
@@ -31,6 +29,12 @@ export async function getAllStages(): Promise<Stage[]> {
     throw new Error('Failed to fetch stages from database')
   }
 }
+
+/**
+ * Get all active stages ordered by display_order.
+ * Cached for 60 seconds to reduce repetitive stage table reads.
+ */
+export const getAllStages = withCache(fetchAllStagesFromDB, 'bed-dashboard:get-all-stages', 60)
 
 /**
  * Get stage by ID
