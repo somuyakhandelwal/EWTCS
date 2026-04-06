@@ -228,7 +228,7 @@ Operational behavior:
 - **Validation**: `DATABASE_SETUP.md` schema checks now expect 25+ tables.
 - **Roles**: Added `doctor`, `cardiologist`, and `cath_lab_nurse` to identity enums and route guards.
 ### EPIC 20 — Emergency Ward Capacity Expansion
-- New migrations: `056_seed_emergency_ward.sql`, `057_extend_cath_lab_procedures.sql`
+- New migrations: `056_seed_emergency_ward.sql`, `061_extend_cath_lab_procedures.sql`
 - Ensures the default development and test environment provides 30 ER beds, 6 Triage beds, and 16 OT rooms out of the box when running `npm run db:seed`.
 - Adds a strictly guarded safe-abort to the database seeder to prevent destructive `TRUNCATE CASCADE` logic from ever mutating production instances.
 - Deployment action: run `npm run db:migrate` then `npm run db:seed` structurally in any staging environment to hydrate testing interfaces.
