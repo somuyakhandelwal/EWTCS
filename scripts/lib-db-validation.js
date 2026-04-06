@@ -15,7 +15,8 @@ const EXPECTED_TABLES = [
   'bed_stage_logs_archive',
   'beds',
   'cath_lab_procedures',
-  'daily_summaries',
+  'daily_summaries_mv',
+  'daily_summary_reviews',
   'delay_reason_options',
   'diagnosis',
   'disposition_delay_reasons',
@@ -71,9 +72,13 @@ async function validateTableColumns(client, tableName, requiredColumns) {
  */
 async function getAllTables(client) {
   const result = await client.query(`
-    SELECT table_name 
-    FROM information_schema.tables 
-    WHERE table_schema = 'public' 
+    SELECT table_name
+    FROM information_schema.tables
+    WHERE table_schema = 'public'
+    UNION
+    SELECT matviewname AS table_name
+    FROM pg_matviews
+    WHERE schemaname = 'public'
     ORDER BY table_name
   `);
   return result.rows.map((row) => row.table_name);

@@ -1,0 +1,31 @@
+name: Browser Compatibility
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened]
+  push:
+    branches: [main]
+
+jobs:
+  browser-matrix:
+    name: Browser Compatibility Matrix
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Install Playwright browsers
+        run: npm run test:browser:install
+
+      - name: Run browser compatibility tests
+        run: npm run test:browser -- --project=chromium --project=firefox --project=webkit --project=edge-emulation

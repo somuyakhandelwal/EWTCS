@@ -12,6 +12,17 @@ import type {
   DrainResult,
   UseOfflineQueueReturn,
 } from '../lib/offline-queue-types'
+import {
+  fetchDbPendingQueue,
+  patchDbStatus,
+  persistToDb,
+} from './offline-queue-persistence'
+import {
+  clearQueueStorage,
+  generateQueueId,
+  readQueueFromStorage,
+  writeQueueToStorage,
+} from './offline-queue-storage'
 export type {
   QueuedOperationType,
   QueuedOperation,
@@ -20,38 +31,6 @@ export type {
   DrainResult,
   UseOfflineQueueReturn,
 } from '../lib/offline-queue-types'
-
-const QUEUE_STORAGE_KEY = 'ewtcs_offline_queue'
-
-function readQueueFromStorage(): QueuedEntry[] {
-  if (typeof window === 'undefined') return []
-  try {
-    const raw = localStorage.getItem(QUEUE_STORAGE_KEY)
-    if (!raw) return []
-    return JSON.parse(raw) as QueuedEntry[]
-  } catch {
-    return []
-  }
-}
-
-function writeQueueToStorage(queue: QueuedEntry[]): void {
-  if (typeof window === 'undefined') return
-  try {
-    localStorage.setItem(QUEUE_STORAGE_KEY, JSON.stringify(queue))
-  } catch { /* quota exceeded — best-effort */ }
-}
-
-function clearQueueStorage(): void {
-  if (typeof window === 'undefined') return
-  try {
-    localStorage.removeItem(QUEUE_STORAGE_KEY)
-  } catch { /* ignore */ }
-}
-
-let _idCounter = 0
-function generateId(): string {
-  return `oq-${Date.now()}-${++_idCounter}`
-}
 
 export function useOfflineQueue(): UseOfflineQueueReturn {
   // Hydrate from storage on first render
@@ -63,14 +42,27 @@ export function useOfflineQueue(): UseOfflineQueueReturn {
 
   const enqueue = useCallback((op: QueuedOperation) => {
     const entry: QueuedEntry = {
-      id: generateId(),
+      id: generateQueueId(),
+      clientOperationId: '',
       enqueuedAt: new Date().toISOString(),
       op,
     }
+    entry.clientOperationId = entry.id
     setQueue((prev) => {
       const next = [...prev, entry]
       writeQueueToStorage(next)
       return next
+    })
+
+    // Fire-and-forget durability write. localStorage remains the fast path.
+    void persistToDb(entry).then((dbId) => {
+      const storageQueue = readQueueFromStorage()
+      const next = storageQueue.map((e) =>
+        e.id === entry.id
+          ? { ...e, dbId: dbId ?? undefined, dbSynced: Boolean(dbId), syncError: dbId ? null : 'db_sync_failed' }
+          : e
+      )
+      writeQueueToStorage(next)
     })
   }, [])
 
@@ -83,16 +75,30 @@ export function useOfflineQueue(): UseOfflineQueueReturn {
     setIsDraining(true)
     setDrainErrors([])
 
-    // Snapshot the queue so new enqueues during drain are preserved
-    const snapshot = readQueueFromStorage()
+    // Snapshot local queue and merge with pending DB queue.
+    const localSnapshot = readQueueFromStorage()
+    const dbSnapshot = await fetchDbPendingQueue()
+    const dbClientIds = new Set(dbSnapshot.map((entry) => entry.clientOperationId))
+    const localOnly = localSnapshot.filter((entry) => !dbClientIds.has(entry.clientOperationId || entry.id))
+    const snapshot = [...dbSnapshot, ...localOnly].sort(
+      (a, b) => new Date(a.enqueuedAt).getTime() - new Date(b.enqueuedAt).getTime()
+    )
+
     const errors: string[] = []
     const succeededIds: string[] = []
 
     const conflicts: import('../lib/offline-queue-types').ConflictItem[] = []
     const conflictedIds: string[] = []
 
-    for (const entry of snapshot) {
+    for (const snapshotEntry of snapshot) {
+      const entry = { ...snapshotEntry }
+
       try {
+        if (!entry.dbId) {
+          const dbId = await persistToDb(entry)
+          if (dbId) entry.dbId = dbId
+        }
+
         let success = false
 
         if (entry.op.type === 'stage-update') {
@@ -105,6 +111,13 @@ export function useOfflineQueue(): UseOfflineQueueReturn {
           if (stageResult.conflict) {
             conflicts.push({ entry, conflict: stageResult.conflict })
             conflictedIds.push(entry.id)
+            if (entry.dbId) {
+              await patchDbStatus(
+                entry.dbId,
+                'failed',
+                `Conflict: server stage is ${stageResult.conflict.serverStageId}`
+              )
+            }
             continue
           }
           success = stageResult.success
@@ -116,12 +129,21 @@ export function useOfflineQueue(): UseOfflineQueueReturn {
 
         if (success) {
           succeededIds.push(entry.id)
+          if (entry.dbId) {
+            await patchDbStatus(entry.dbId, 'drained')
+          }
         } else {
           errors.push(`[${entry.op.type}] bed=${entry.op.bedId}: server returned failure`)
+          if (entry.dbId) {
+            await patchDbStatus(entry.dbId, 'failed', 'Server returned failure')
+          }
         }
       } catch (err) {
         const msg = err instanceof Error ? err.message : 'Unknown error'
         errors.push(`[${entry.op.type}] bed=${entry.op.bedId}: ${msg}`)
+        if (entry.dbId) {
+          await patchDbStatus(entry.dbId, 'failed', msg)
+        }
       }
     }
 

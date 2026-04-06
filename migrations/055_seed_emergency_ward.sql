@@ -1,4 +1,4 @@
--- Migration 052: Seed Emergency Ward (EPIC 20 - ER Triage & Patient Intake)
+-- Migration 055: Seed Emergency Ward (EPIC 20 - ER Triage & Patient Intake)
 -- Purpose: Ensure the canonical 'Emergency Ward' (code: ER) exists in the wards
 --          table before seed scripts insert ER-01..ER-30 beds under it.
 --          Uses ON CONFLICT so this is safe to apply on an existing database.

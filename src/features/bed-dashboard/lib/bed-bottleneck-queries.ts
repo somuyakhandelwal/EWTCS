@@ -72,10 +72,11 @@ export async function getBedsWithElapsedTime(
       FROM bed_timings bt
       JOIN stages s ON bt.current_stage_id = s.id
       LEFT JOIN LATERAL (
-        SELECT id, reason
-        FROM disposition_delay_reasons
-        WHERE bed_id = bt.id AND resolved_at IS NULL
-        ORDER BY recorded_at DESC
+        SELECT ddr.id, COALESCE(o.value, ddr.reason::text) as reason
+        FROM disposition_delay_reasons ddr
+        LEFT JOIN delay_reason_options o ON ddr.delay_reason_option_id = o.id
+        WHERE ddr.bed_id = bt.id AND ddr.resolved_at IS NULL
+        ORDER BY ddr.recorded_at DESC
         LIMIT 1
       ) ddr ON true
       ORDER BY bt.bed_number ASC

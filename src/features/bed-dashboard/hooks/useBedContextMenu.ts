@@ -32,23 +32,34 @@ export function useBedContextMenu(
 
   const openMenuForBed = useCallback(
     async (bedId: string, position: { x: number; y: number }) => {
+      const bed = beds.find(b => b.id === bedId)
+      const fromKey = bed?.currentStageId ?? 'null'
+      const cachedTransitions = stageTransitionMap?.[fromKey]
+
       // US-16.2: Offline — resolve transitions from cache synchronously so the menu
       // opens with ALL stage options visible immediately (no "Loading transitions…" flash).
       if (isOffline) {
         setMenuError(null)
         setMenuState({ bedId, position })
-        if (stageTransitionMap) {
-          const bed = beds.find(b => b.id === bedId)
-          const fromKey = bed?.currentStageId ?? 'null'
-          const transitions = stageTransitionMap[fromKey]
-          setValidNextStages(transitions?.allowed ?? [])
-          setOverrideRequiredStages(transitions?.requiresOverride ?? [])
+        if (cachedTransitions) {
+          setValidNextStages(cachedTransitions.allowed ?? [])
+          setOverrideRequiredStages(cachedTransitions.requiresOverride ?? [])
         } else {
-          // Cached data predates this feature (old cache version) — graceful degradation
+          // Cached data predates this feature (old cache version).
+          // Keep empty arrays; the existing menu logic handles offline fallback display.
           setValidNextStages([])
           setOverrideRequiredStages([])
-          setMenuError('Stage options unavailable offline. Please reconnect to update this bed.')
         }
+        return
+      }
+
+      // Online fast-path: when role-scoped transitions are already present in BedGridData,
+      // render options immediately and skip the extra server call.
+      if (cachedTransitions) {
+        setMenuError(null)
+        setMenuState({ bedId, position })
+        setValidNextStages(cachedTransitions.allowed ?? [])
+        setOverrideRequiredStages(cachedTransitions.requiresOverride ?? [])
         return
       }
 
