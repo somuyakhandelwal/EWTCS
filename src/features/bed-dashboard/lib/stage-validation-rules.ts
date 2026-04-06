@@ -154,3 +154,17 @@ export async function getStageNameById(stageId: string | null): Promise<string |
 
   return result.rows[0]?.name ?? null
 }
+
+/**
+ * Resolve stage names for multiple stage IDs in one query.
+ */
+export async function getStageNamesByIds(stageIds: string[]): Promise<Map<string, string>> {
+  if (stageIds.length === 0) return new Map()
+
+  const result = await pool.query<{ id: string; name: string }>(
+    `SELECT id, name FROM stages WHERE id = ANY($1::uuid[]) AND is_active = true`,
+    [stageIds]
+  )
+
+  return new Map(result.rows.map((row) => [row.id, row.name]))
+}
