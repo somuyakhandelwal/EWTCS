@@ -8,13 +8,14 @@
 
 import { requireRole, requireWriteRole } from '@/shared/lib/auth'
 import { logAudit } from '@/shared/lib/audit'
-import { query } from '@/shared/lib/db'
 import { logger } from '@/shared/config/logger'
 import { updateBedStageInDB } from '../lib/bed-mutations'
 import { getTATSummary, getTATRecords } from '../lib/tat-queries'
 import { getTatSummary, getCompletedTatRecords } from '../lib/tat-cleaning-queries'
 import type { TATSummary, TATRecord } from '../lib/tat-queries'
 import type { TatRecord, TatSummary } from '../types/bed'
+import { getAllStages } from '../lib/queries'
+import { resolveActiveShiftIdCached } from '@/shared/lib/shift-helpers'
 
 // ──── Upstream analytics TAT (StageAnalyticsView / useAnalyticsData) ────
 
@@ -91,22 +92,24 @@ export async function markBedClean(bedId: string): Promise<{
       entityType: 'bed',
       entityId: bedId,
     })
-    const stageResult = await query<{ id: string }>(
-      `SELECT id FROM stages WHERE LOWER(name) = 'empty' AND is_active = true LIMIT 1`
-    )
 
-    if (stageResult.rows.length === 0) {
+    const allStages = await getAllStages()
+    const emptyStage = allStages.find((stage) => stage.name.trim().toLowerCase() === 'empty')
+    if (!emptyStage) {
       return { success: false, error: 'Empty stage not found in system' }
     }
 
-    const emptyStageId = stageResult.rows[0].id
+    const activeShiftId = await resolveActiveShiftIdCached()
+
     const result = await (async () => {
       try {
         return await updateBedStageInDB({
           bedId,
-          toStageId: emptyStageId,
+          toStageId: emptyStage.id,
+          toStageName: emptyStage.name,
           changedByUserId: session.userId,
           notes: 'Bed marked clean — ready for next patient',
+          activeShiftId,
         })
       } catch (error) {
         const message = error instanceof Error ? error.message : ''

@@ -1,16 +1,9 @@
-import { SHIFT_AUTOTAG_SUBQUERY } from '@/shared/lib/shift-helpers'
-
 export type BedRow = {
   id: string
   currentStageId: string | null
   lastStageChange: Date | null
   patientStartTime: Date | null
   isOccupied: boolean
-}
-
-export type StageRow = {
-  id: string
-  name: string
 }
 
 export function isNonPatientStage(stageName: string): boolean {
@@ -28,12 +21,6 @@ export const SELECT_BED_FOR_UPDATE_SQL = `
   FROM beds
   WHERE id = $1 AND is_active = true
   FOR UPDATE
-`
-
-export const SELECT_STAGE_BY_ID_SQL = `
-  SELECT id, name
-  FROM stages
-  WHERE id = $1 AND is_active = true
 `
 
 export const UPDATE_BED_STAGE_SQL = `
@@ -66,12 +53,7 @@ export const INSERT_BED_STAGE_LOG_SQL = `
     shift_id,
     shift_override_by_user_id
   ) VALUES (
-    $1, $2, $3, $4, $5, $6,
-    COALESCE(
-      $7::uuid,
-      ${SHIFT_AUTOTAG_SUBQUERY}
-    ),
-    $8::uuid
+    $1, $2, $3, $4, $5, $6, $7::uuid, $8::uuid
   )
 `
 

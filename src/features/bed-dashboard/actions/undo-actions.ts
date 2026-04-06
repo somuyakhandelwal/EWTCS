@@ -1,12 +1,13 @@
 // Undo Actions for Bed Stage
 // US-7: Undo Last Action (Nurse)
 
-import { getBedById } from '../lib/queries'
+import { getAllStages, getBedById } from '../lib/queries'
 import { logger } from '@/shared/config/logger'
 import { requireWriteRole } from '@/shared/lib/auth'
 import { logAudit } from '@/shared/lib/audit'
 import { updateBedStageInDB } from '../lib/bed-mutations'
 import { query } from '@/shared/lib/db'
+import { resolveActiveShiftIdCached } from '@/shared/lib/shift-helpers'
 
 const UNDO_WINDOW_MS = 30 * 1000
 
@@ -76,12 +77,22 @@ export async function undoLastBedStageUpdate({ bedId }: { bedId: string }) {
       return { success: false, error: 'Bed is already in the previous stage' }
     }
 
+    const allStages = await getAllStages()
+    const targetStage = allStages.find((stage) => stage.id === latestTransition.fromStageId)
+    if (!targetStage) {
+      return { success: false, error: 'Stage not found or inactive' }
+    }
+
+    const activeShiftId = await resolveActiveShiftIdCached()
+
     // Revert to previous stage
     const updateResult = await updateBedStageInDB({
       bedId,
       toStageId: latestTransition.fromStageId,
+      toStageName: targetStage.name,
       changedByUserId: session.userId,
       notes: 'Undo last action',
+      activeShiftId,
     })
     await logAudit({
       actionType: 'UNDO',
