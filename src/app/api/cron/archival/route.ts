@@ -15,6 +15,15 @@ import { archiveTables } from '@/features/data-retention/lib/archival-runner'
 import { getRetentionConfig } from '@/features/data-retention/lib/retention-config-queries'
 import { buildCutoffs } from '@/features/data-retention/lib/archival-run-helpers'
 
+async function cleanupExpiredTokenBlacklist(): Promise<number> {
+  const result = await query<{ token: string }>(
+    `DELETE FROM token_blacklist
+     WHERE expires_at < NOW()
+     RETURNING token`
+  )
+  return result.rowCount ?? 0
+}
+
 export async function GET(request: NextRequest): Promise<NextResponse> {
   // ── Auth ──────────────────────────────────────────────────────────────
   const cronSecret = process.env.CRON_SECRET
@@ -31,6 +40,7 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
   // ── Config ────────────────────────────────────────────────────────────
   const config = await getRetentionConfig()
   const cutoffs = buildCutoffs(config)
+  const cleanedBlacklistTokens = await cleanupExpiredTokenBlacklist()
   // Earliest cutoff stored in the run record (for display only)
   const earliestCutoff = new Date(
     Math.min(
@@ -50,8 +60,12 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
       [earliestCutoff],
     )
     const runId = result.rows[0].id
-    logger.info('Archival cron created pending_approval run', { runId, cutoffs })
-    return NextResponse.json({ status: 'pending_approval', runId })
+    logger.info('Archival cron created pending_approval run', {
+      runId,
+      cutoffs,
+      cleanedBlacklistTokens,
+    })
+    return NextResponse.json({ status: 'pending_approval', runId, cleanedBlacklistTokens })
   }
 
   // ── Immediate run ─────────────────────────────────────────────────────
@@ -91,6 +105,6 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
     [runId, JSON.stringify(rowsArchived)],
   )
 
-  logger.info('Cron archival run completed', { runId, rowsArchived })
-  return NextResponse.json({ status: 'completed', runId, rowsArchived })
+  logger.info('Cron archival run completed', { runId, rowsArchived, cleanedBlacklistTokens })
+  return NextResponse.json({ status: 'completed', runId, rowsArchived, cleanedBlacklistTokens })
 }

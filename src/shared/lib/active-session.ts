@@ -4,6 +4,41 @@ import { isTokenBlacklisted } from './auth-service'
 import { cookies } from 'next/headers'
 import pool from '@/shared/lib/db'
 
+type ActiveUserCacheEntry = {
+    result: boolean
+    expiresAt: number
+}
+
+const ACTIVE_USER_CACHE_TTL_MS = 30_000
+const activeUserCache = new Map<string, ActiveUserCacheEntry>()
+
+function getCachedActiveUser(userId: string): boolean | null {
+    const cached = activeUserCache.get(userId)
+    if (!cached) return null
+
+    if (cached.expiresAt <= Date.now()) {
+        activeUserCache.delete(userId)
+        return null
+    }
+
+    return cached.result
+}
+
+function setActiveUserCache(userId: string, result: boolean): void {
+    activeUserCache.set(userId, {
+        result,
+        expiresAt: Date.now() + ACTIVE_USER_CACHE_TTL_MS,
+    })
+}
+
+export function invalidateActiveUserCache(userId: string): void {
+    activeUserCache.delete(userId)
+}
+
+export function clearActiveUserCache(): void {
+    activeUserCache.clear()
+}
+
 /**
  * Verify session AND check user is still active in database.
  * US-5.7 Acceptance Criteria: "Deactivated users cannot log in"
@@ -27,12 +62,18 @@ export async function verifyActiveSession() {
         return null
     }
 
-    const { rows } = await pool.query(
-        'SELECT is_active FROM users WHERE id = $1',
-        [session.userId]
-    )
+    let isActive = getCachedActiveUser(session.userId)
+    if (isActive === null) {
+        const { rows } = await pool.query(
+            'SELECT is_active FROM users WHERE id = $1',
+            [session.userId]
+        )
 
-    if (rows.length === 0 || !rows[0].is_active) {
+        isActive = rows.length > 0 && Boolean(rows[0].is_active)
+        setActiveUserCache(session.userId, isActive)
+    }
+
+    if (!isActive) {
         // User doesn't exist or is deactivated — destroy session cookie
         await deleteSession()
         return null
