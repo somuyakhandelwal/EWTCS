@@ -1,7 +1,7 @@
 # EWTCS Project Status
 
 **Emergency Ward Bed Status Monitoring & AI Daily Report System**  
-**Last Updated:** March 20, 2026  
+**Last Updated:** April 6, 2026  
 **Version:** 2.0 (Phase 1 + Phase 2 + Phase 3 Core + EPIC 20 + EPIC 23 + EPIC 24)
 
 ---
@@ -86,11 +86,11 @@ The core system is **fully operational** and **production-ready**. Phase 2 real-
 - [x] Dual plaintext/encrypted column pattern for migration path
 
 ### Infrastructure & DevOps
-- [x] PostgreSQL database with 68 migrations (includes duplicate-numbered repair migrations; applied state is tracked by `node-pg-migrate` via filename)
+- [x] PostgreSQL database with 74 migration files (64 numbered SQL + 10 timestamped migrations; applied state is tracked by `node-pg-migrate` via filename)
 - [x] Automated setup wizard (`npm run setup`)
 - [x] Environment variable validation
 - [x] Database seeding scripts
-- [x] Feature-first architecture (22 feature modules)
+- [x] Feature-first architecture (21 feature modules)
 - [x] TypeScript throughout
 - [x] ESLint code quality checks
 - [x] Vitest v3 + Testing Library testing framework
@@ -104,15 +104,18 @@ The core system is **fully operational** and **production-ready**. Phase 2 real-
 
 ## 📊 System Statistics (Current)
 
-- **Database Tables:** 25+ (users, beds, stages, wards, bed_stage_logs, bed_stage_log_corrections, stage_transitions, disposition_delay_reasons, audit_logs, token_blacklist, kiosk_sessions, patient_admissions, shifts, system_settings, stage_delay_thresholds, daily_summaries, report_signoffs, ot_rooms, ot_procedures, er_intake, diagnosis, cath_lab_procedures, alert_preferences, error_events, user_feedback, archival tables)
-- **Migrations Applied:** 68 (includes duplicate-numbered repair migrations; applied state tracked by filename)
+- **Database Tables:** 34 detected by `validate:schema` in the current development database
+- **Migration Files in Repository:** 74 (64 numbered SQL + 10 timestamped SQL/JS)
+- **Applied Migration Entries (Current Dev DB):** 115 (`pgmigrations` includes historical repair/alias entries)
+- **Approved Duplicate Migration Prefix Groups:** 5 (`015`, `038`, `040`, `047`, `058`)
 - **Emergency Beds:** 50 configured (expandable)
 - **Workflow Stages:** 8 stages
 - **User Roles:** 8 (Admin, Supervisor, Nurse, Housekeeping, Auditor, Doctor, Cardiologist, Cath Lab Nurse)
 - **Test Users:** 5+ (admin1, supervisor1, nurse, nurse1, auditor1)
-- **Feature Modules:** 22 (auth, bed-dashboard, bed-management, cath-lab, diagnosis, data-encryption, data-retention, export, help, import, management-report, notifications, ot-dashboard, security-scanning, shift-management, stage-management, system-health, user-management, ward-management, ai-summary, adoption, ...)
-- **API Endpoints:** 18 route handlers + Server Actions
-- **Application Routes:** 15+ pages with middleware-protected access
+- **Feature Modules:** 21 under `src/features`
+- **API Route Files:** 23 route handlers under `src/app/api/**/route.ts` (+ Server Actions)
+- **Automated Test Files:** 98 (`*.test.ts(x)` / `*.spec.ts(x)` across `src/` and `tests/`)
+- **Validation Pipeline:** `npm run validate:all` passed on April 6, 2026 (env, DB, migrations, schema, build)
 
 ---
 
@@ -174,7 +177,7 @@ All Phase 2 core features are now complete:
 EWTCS/
 ├── src/
 │   ├── app/                    # Next.js App Router pages & API routes
-│   ├── features/               # 20 feature modules
+│   ├── features/               # 21 feature modules
 │   │   ├── auth/              # Authentication
 │   │   ├── bed-dashboard/     # Bed management & analytics
 │   │   ├── cath-lab/          # Cath lab procedures (EPIC 20)
@@ -185,7 +188,7 @@ EWTCS/
 │   │   ├── system-health/     # Error monitoring
 │   │   └── ...                # 12 more modules
 │   └── shared/                 # Shared utilities, UI components & libs
-├── migrations/                 # Database migrations (68 files, some duplicate-numbered repair migrations are expected)
+├── migrations/                 # Database migrations (74 files; duplicate-numbered repair migrations are expected)
 ├── scripts/                    # Setup, backup, encryption utilities
 ├── docs/                       # Documentation, training, infrastructure
 └── public/                     # Static assets
@@ -198,7 +201,7 @@ EWTCS/
 | Test Type | Status | Details |
 |-----------|--------|---------|
 | Manual Testing | ✅ Passed | All features tested manually |
-| Database Migrations | ✅ Passed | All 68 migration files applied successfully |
+| Database Migrations | ✅ Passed | 74 migration files validated; 0 pending migrations |
 | Automated Tests | ✅ Passed | Vitest v3 test suite |
 | TypeScript Compilation | ✅ Passed | No type errors |
 | ESLint Validation | ✅ Passed | Code quality checks pass |
@@ -246,7 +249,7 @@ EWTCS/
 
 ## 🐛 Known Issues
 
-- None currently reported
+- Documentation drift can occur quickly; verify repository metrics (`validate:migrations`, `validate:schema`) before release sign-off
 
 ---
 
@@ -286,4 +289,4 @@ EWTCS/
 
 **Project is production-ready with Phase 1 + Phase 2 + Phase 3 core features deployed.**  
 **All core features are operational and tested.**  
-**Last Updated:** March 20, 2026
+**Last Updated:** April 6, 2026

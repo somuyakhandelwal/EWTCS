@@ -19,7 +19,7 @@ Migrations live in `migrations/` and are run in **lexicographic filename order**
 
 ---
 
-## Full Migration Inventory (68 files)
+## Full Migration Inventory (74 files)
 
 | File | Purpose |
 |------|---------|
@@ -104,8 +104,7 @@ These arose from parallel team development. They are **not a bug** — `node-pg-
 | 038 | `038_add_delay_reason_options.sql`, `038_create_alert_preferences.sql` | Different features |
 | 040 | `040_create_user_feedback.sql`, `040_enable_pgcrypto.sql` | Different features |
 | 047 | `047_add_cath_lab_roles.sql`, `047_add_doctor_and_cardiologist_roles.sql`, `047_enforce_symptom_40_char_limit.sql` | 3 features merged by different devs |
-| 056 | `056_create_cath_lab_procedures.sql`, `056_seed_emergency_ward.sql` | Different purposes |
-| 057 | `057_create_cath_lab_procedures_table.sql`, `057_extend_cath_lab_procedures.sql` | One replaces the other |
+| 058 | `058_normalize_delay_reason_fk.sql`, `058_repair_cath_lab_procedures_columns.sql` | Normalization + repair pair |
 
 > **Do NOT renumber or delete applied migrations.** The migration runner tracks them by filename. Renaming a file that has already been applied in production will cause it to be re-run, potentially breaking the database.
 
