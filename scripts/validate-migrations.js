@@ -12,6 +12,15 @@ const fs = require('fs');
 const { loadEnvironment } = require('./lib-env');
 const { validateDuplicateGroups } = require('./lib-migration-duplicate-check');
 
+const ALLOWED_DUPLICATE_GROUPS = new Map([
+  ['015', ['015_add_password_reset', '015_add_tat_to_admissions']],
+  ['038', ['038_add_delay_reason_options', '038_create_alert_preferences']],
+  ['040', ['040_create_user_feedback', '040_enable_pgcrypto']],
+  ['047', ['047_add_cath_lab_roles', '047_add_doctor_and_cardiologist_roles', '047_enforce_symptom_40_char_limit']],
+  ['056', ['056_create_cath_lab_procedures', '056_seed_emergency_ward']],
+  ['058', ['058_normalize_delay_reason_fk', '058_repair_cath_lab_procedures_columns']],
+]);
+
 const validateMigrations = async () => {
   console.log('🔍 Validating database migrations...\n');
 

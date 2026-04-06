@@ -471,21 +471,19 @@ Doctor diagnostic assessments (EPIC 20 — US-20.2).
 | `bed_id` | UUID | FK → beds(id) ON DELETE CASCADE | Bed reference |
 | `patient_uhid` | VARCHAR(100) | | Hospital patient ID |
 | `doctor_id` | UUID | FK → users(id), NOT NULL | Diagnosing doctor |
-| `symptoms_observed` | TEXT | | Symptoms (plaintext) |
 | `symptoms_observed_encrypted` | JSONB | | AES-256-GCM encrypted |
-| `clinical_findings` | TEXT | | Clinical findings (plaintext) |
 | `clinical_findings_encrypted` | JSONB | | AES-256-GCM encrypted |
 | `diagnosis_code` | VARCHAR(20) | | ICD-10 code |
-| `diagnosis_text` | TEXT | | Diagnosis description |
 | `diagnosis_text_encrypted` | JSONB | | AES-256-GCM encrypted |
 | `severity` | VARCHAR(20) | CHECK (MILD/MODERATE/SEVERE/CRITICAL) | Clinical severity |
-| `recommended_action` | TEXT | | Recommended next step |
 | `recommended_action_encrypted` | JSONB | | AES-256-GCM encrypted |
 | `diagnosed_at` | TIMESTAMPTZ | NOT NULL, DEFAULT NOW() | |
 | `created_at` | TIMESTAMPTZ | | |
 | `updated_at` | TIMESTAMPTZ | | |
 
 **Indexes:** `idx_diagnosis_bed_id`, `idx_diagnosis_patient_uhid`, `idx_diagnosis_doctor_id`, `idx_diagnosis_diagnosed_at`, `idx_diagnosis_severity`
+
+**Security Note:** Plaintext PHI columns were removed by `059_drop_diagnosis_plaintext_columns.sql`. Diagnosis PHI must be stored in `*_encrypted` JSONB columns only.
 
 ---
 
