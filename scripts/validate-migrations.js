@@ -10,14 +10,7 @@ const { Client } = require('pg');
 const path = require('path');
 const fs = require('fs');
 const { loadEnvironment } = require('./lib-env');
-
-const ALLOWED_DUPLICATE_GROUPS = new Map([
-  ['015', ['015_add_password_reset', '015_add_tat_to_admissions']],
-  ['038', ['038_add_delay_reason_options', '038_create_alert_preferences']],
-  ['040', ['040_create_user_feedback', '040_enable_pgcrypto']],
-  ['047', ['047_add_cath_lab_roles', '047_add_doctor_and_cardiologist_roles', '047_enforce_symptom_40_char_limit']],
-  ['058', ['058_normalize_delay_reason_fk', '058_repair_cath_lab_procedures_columns']],
-]);
+const { validateDuplicateGroups } = require('./lib-migration-duplicate-check');
 
 const validateMigrations = async () => {
   console.log('🔍 Validating database migrations...\n');
@@ -56,50 +49,17 @@ const validateMigrations = async () => {
     process.exit(1);
   }
 
-  const numberToNames = new Map();
-  for (const name of migrationFiles) {
-    const match = name.match(/^(\d+)_/);
-    if (!match) continue;
-    const number = match[1];
-    const existing = numberToNames.get(number) ?? [];
-    existing.push(name);
-    numberToNames.set(number, existing);
+  const duplicateValidation = validateDuplicateGroups(migrationFiles);
+  if (duplicateValidation.errors.length > 0) {
+    console.error('❌ ERROR: Duplicate migration groups are not in the approved canonical set.');
+    for (const message of duplicateValidation.errors) {
+      console.error(`  ✗ ${message}`);
+    }
+    process.exit(1);
   }
 
-  const duplicates = Array.from(numberToNames.entries()).filter(([, names]) => names.length > 1);
-
-  if (duplicates.length > 0) {
-    const errors = [];
-
-    for (const [number, names] of duplicates) {
-      const allowed = ALLOWED_DUPLICATE_GROUPS.get(number);
-      if (!allowed) {
-        errors.push(`Unexpected duplicate prefix ${number}: ${names.join(', ')}`);
-        continue;
-      }
-
-      const normalizedActual = [...names].sort();
-      const normalizedExpected = [...allowed].sort();
-
-      if (
-        normalizedActual.length !== normalizedExpected.length ||
-        normalizedActual.some((name, index) => name !== normalizedExpected[index])
-      ) {
-        errors.push(
-          `Duplicate prefix ${number} does not match allowlist. Found: ${normalizedActual.join(', ')} | Expected: ${normalizedExpected.join(', ')}`
-        );
-      }
-    }
-
-    if (errors.length > 0) {
-      console.error('❌ ERROR: Duplicate migration groups are not in the approved canonical set.');
-      for (const message of errors) {
-        console.error(`  ✗ ${message}`);
-      }
-      process.exit(1);
-    }
-
-    console.log(`ℹ️  Validated ${duplicates.length} approved duplicate migration prefix groups.`);
+  if (duplicateValidation.duplicateCount > 0) {
+    console.log(`ℹ️  Validated ${duplicateValidation.duplicateCount} approved duplicate migration prefix groups.`);
   }
 
   const numericMigrations = migrationFiles

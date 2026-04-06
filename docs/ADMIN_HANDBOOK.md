@@ -152,6 +152,12 @@ npm run db:reconcile
 npm run audit:verify
 ```
 
+### Migration Validator Policy (CI)
+- Script: `scripts/validate-migrations.js`
+- Duplicate numeric prefixes are allowlisted in `scripts/lib-migration-duplicate-check.js`.
+- Current approved duplicate groups: `015`, `038`, `040`, `047`, `058`.
+- When adding canonical duplicate groups in migrations, update the allowlist and this handbook in the same PR.
+
 ### DB5-02 Operational Notes (Persist Dashboard and Filter Preferences)
 - New migration: `1743241500000_create_user_settings.sql`
 - Added table: `user_settings` (`user_id` PK/FK to `users`, `preferences JSONB`, `updated_at`)
