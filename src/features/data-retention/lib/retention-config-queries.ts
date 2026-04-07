@@ -2,6 +2,7 @@
 // EPIC 14 — US-14.2
 
 import { query } from '@/shared/lib/db'
+import { getAllSystemSettings } from '@/shared/lib/system-settings'
 import type { RetentionConfig } from './data-retention-types'
 
 const DEFAULTS: RetentionConfig = {
@@ -17,19 +18,8 @@ const DEFAULTS: RetentionConfig = {
  * Falls back to safe defaults when a key is missing.
  */
 export async function getRetentionConfig(): Promise<RetentionConfig> {
-  const result = await query<{ key: string; value: string }>(
-    `SELECT key, value FROM system_settings
-     WHERE key IN (
-       'retention_patient_admissions_years',
-       'retention_audit_logs_years',
-       'retention_bed_stage_log_days',
-       'retention_offline_queue_days',
-       'retention_bed_stage_log_years',
-       'retention_requires_approval'
-     )`
-  )
-
-  const map = Object.fromEntries(result.rows.map((r) => [r.key, r.value]))
+  const settings = await getAllSystemSettings()
+  const map = Object.fromEntries(settings.entries())
 
   const legacyYears = parseInt(map['retention_bed_stage_log_years'] ?? '', 10)
   const legacyDays = Number.isInteger(legacyYears) && legacyYears > 0 ? legacyYears * 365 : null
