@@ -80,7 +80,12 @@ export const OfflineBanner = React.memo(function OfflineBanner({
               <span className="ml-2">
                 •{' '}
                 <strong>{pendingCount}</strong>{' '}
-                update{pendingCount !== 1 ? 's' : ''} pending sync
+                update{pendingCount !== 1 ? 's' : ''} queued for sync
+              </span>
+            )}
+            {pendingCount === 0 && (
+              <span className="ml-2">
+                • Actions will be queued automatically
               </span>
             )}
           </span>
@@ -89,7 +94,7 @@ export const OfflineBanner = React.memo(function OfflineBanner({
 
       {/* Right label */}
       <span className="shrink-0 text-xs font-medium opacity-70 hidden sm:block">
-        {isDraining ? 'Please wait…' : 'Read-only mode'}
+        {isDraining ? 'Please wait…' : 'Queueing enabled'}
       </span>
     </div>
   )

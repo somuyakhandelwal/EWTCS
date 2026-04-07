@@ -10,12 +10,15 @@
     "test": "vitest run",
     "test:watch": "vitest",
     "test:coverage": "vitest run --coverage",
+    "test:browser": "playwright test",
+    "test:browser:install": "playwright install --with-deps",
     "setup": "node scripts/quick-start-setup.mjs",
     "db:migrate": "node scripts/run-migrations.js up",
     "db:reconcile": "node scripts/reconcile-migration-history.js",
     "audit:verify": "node scripts/verify-audit-immutability.js",
     "db:rollback": "node scripts/run-migrations.js down 1",
     "db:status": "node scripts/run-migrations.js status",
+    "db:tatus": "node scripts/run-migrations.js status",
     "db:create": "node scripts/run-migrations.js create",
     "init": "node scripts/init-system.js",
     "db:seed": "node scripts/seed-genuine-data.mjs",
@@ -63,11 +66,12 @@
     "react-dom": "^19.0.0",
     "recharts": "^3.7.0",
     "tailwind-merge": "^3.4.0",
-    "tailwindcss-animate": "^1.0.7",
     "uuid": "^13.0.0",
     "zod": "^4.3.6"
   },
   "devDependencies": {
+    "@playwright/test": "^1.59.1",
+    "@tailwindcss/postcss": "^4.2.2",
     "@testing-library/jest-dom": "^6.9.1",
     "@testing-library/react": "^16.3.2",
     "@testing-library/user-event": "^14.6.1",
@@ -86,6 +90,7 @@
     "jsdom": "^28.1.0",
     "postcss": "^8.5.6",
     "tailwindcss": "^4.2.2",
+    "tailwindcss-animate": "^1.0.7",
     "ts-node": "^10.9.2",
     "tsx": "^4.21.0",
     "typescript": "5.9.3",
@@ -95,7 +100,7 @@
     "@eslint-community/eslint-utils": "^4.4.1",
     "minimatch": ">=10.2.1",
     "@eslint/eslintrc": {
-      "minimatch": "3.1.2"
+      "minimatch": "^3.1.4"
     }
   }
 }

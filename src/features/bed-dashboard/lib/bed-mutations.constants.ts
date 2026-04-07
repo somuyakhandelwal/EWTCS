@@ -24,6 +24,8 @@ export const SELECT_BED_FOR_UPDATE_SQL = `
 `
 
 export const UPDATE_BED_STAGE_SQL = `
+  -- Primary write path: application updates beds directly.
+  -- DB2-03 also adds a bed_stage_logs AFTER INSERT trigger as a backstop.
   UPDATE beds
   SET current_stage_id = $1,
       last_stage_change = NOW(),
@@ -33,23 +35,14 @@ export const UPDATE_BED_STAGE_SQL = `
         ELSE patient_start_time
       END,
       is_occupied = $3,
-      patient_uhid = CASE WHEN $2 THEN NULL ELSE patient_uhid END,
-      patient_ipd_id = CASE WHEN $2 THEN NULL ELSE patient_ipd_id END,
-      patient_name = CASE WHEN $2 THEN NULL ELSE patient_name END,
-      patient_age = CASE WHEN $2 THEN NULL ELSE patient_age END,
-      patient_gender = CASE WHEN $2 THEN NULL ELSE patient_gender END,
-      key_symptom = CASE WHEN $2 THEN NULL ELSE key_symptom END,
-      triage_category = CASE WHEN $2 THEN NULL ELSE triage_category END,
-      metadata = CASE 
-        WHEN $2 THEN metadata - 'triageInfo'
-        ELSE metadata
-      END,
       updated_at = NOW()
   WHERE id = $4
   RETURNING patient_start_time as "patientStartTime", is_occupied as "isOccupied", last_stage_change as "lastStageChange"
 `
 
 export const INSERT_BED_STAGE_LOG_SQL = `
+  -- Trigger backstop note: inserting into bed_stage_logs also syncs
+  -- beds.current_stage_id via DB trigger (DB2-03). Keep app update as primary.
   INSERT INTO bed_stage_logs (
     bed_id,
     from_stage_id,

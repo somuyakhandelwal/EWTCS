@@ -3,10 +3,17 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
 import { StageFormModal } from './StageFormModal'
 import { updateStage } from '../actions/stage-actions'
+import { clearStageDraft, loadStageDraft, saveStageDraft } from '../actions/stage-draft-actions'
 
 vi.mock('../actions/stage-actions', () => ({
   createStage: vi.fn(),
   updateStage: vi.fn(),
+}))
+
+vi.mock('../actions/stage-draft-actions', () => ({
+  saveStageDraft: vi.fn(),
+  loadStageDraft: vi.fn().mockResolvedValue(null),
+  clearStageDraft: vi.fn(),
 }))
 
 const stage = {
@@ -26,6 +33,9 @@ describe('StageFormModal autosave', () => {
   beforeEach(() => {
     vi.useFakeTimers()
     localStorage.clear()
+    vi.mocked(loadStageDraft).mockResolvedValue(null)
+    vi.mocked(saveStageDraft).mockResolvedValue(undefined)
+    vi.mocked(clearStageDraft).mockResolvedValue(undefined)
   })
 
   afterEach(() => {
@@ -95,50 +105,44 @@ describe('StageFormModal autosave', () => {
     expect(screen.getByText('Validation error')).toBeInTheDocument()
   })
 
-  it('prompts to restore and loads unsaved draft from localStorage', () => {
+  it('prompts to restore and loads unsaved draft from localStorage', async () => {
     const confirmSpy = vi.spyOn(window, 'confirm').mockReturnValue(true)
-    localStorage.setItem(
-      'ewtcs:stage-form-draft:stage-1',
-      JSON.stringify({
-        version: 1,
-        updatedAt: Date.now(),
-        data: {
-          name: 'Recovered Stage',
-          color: 'green',
-          desc: 'Recovered description',
-          thresholdHours: 2,
-          thresholdMins: 15,
-        },
-      })
-    )
+    vi.mocked(loadStageDraft).mockResolvedValue({
+      name: 'Recovered Stage',
+      color: 'green',
+      desc: 'Recovered description',
+      thresholdHours: 2,
+      thresholdMins: 15,
+    })
 
     render(<StageFormModal stage={stage} onClose={() => undefined} onSaved={() => undefined} />)
 
+    await act(async () => {
+      await Promise.resolve()
+      await Promise.resolve()
+    })
     expect(confirmSpy).toHaveBeenCalledWith('Unsaved stage form changes were found. Restore them now?')
     expect(screen.getByDisplayValue('Recovered Stage')).toBeInTheDocument()
     expect(screen.getByDisplayValue('Recovered description')).toBeInTheDocument()
     expect(screen.getByText('Recovered unsaved changes from previous session.')).toBeInTheDocument()
   })
 
-  it('discards draft when restore prompt is rejected', () => {
+  it('discards draft when restore prompt is rejected', async () => {
     const confirmSpy = vi.spyOn(window, 'confirm').mockReturnValue(false)
-    localStorage.setItem(
-      'ewtcs:stage-form-draft:stage-1',
-      JSON.stringify({
-        version: 1,
-        updatedAt: Date.now(),
-        data: {
-          name: 'Rejected draft',
-          color: 'green',
-          desc: 'Rejected description',
-          thresholdHours: 2,
-          thresholdMins: 30,
-        },
-      })
-    )
+    vi.mocked(loadStageDraft).mockResolvedValue({
+      name: 'Rejected draft',
+      color: 'green',
+      desc: 'Rejected description',
+      thresholdHours: 2,
+      thresholdMins: 30,
+    })
 
     render(<StageFormModal stage={stage} onClose={() => undefined} onSaved={() => undefined} />)
 
+    await act(async () => {
+      await Promise.resolve()
+      await Promise.resolve()
+    })
     expect(confirmSpy).toHaveBeenCalledWith('Unsaved stage form changes were found. Restore them now?')
     expect(screen.getByDisplayValue('Triage')).toBeInTheDocument()
     expect(screen.queryByText('Recovered unsaved changes from previous session.')).not.toBeInTheDocument()

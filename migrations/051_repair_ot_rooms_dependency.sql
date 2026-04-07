@@ -1,4 +1,4 @@
--- Migration 052: Repair missing ot_rooms dependency
+-- Migration 051: Repair missing ot_rooms dependency
 -- Purpose: Recover databases impacted by earlier SQL runner behavior
 -- Safe to run repeatedly.
 
