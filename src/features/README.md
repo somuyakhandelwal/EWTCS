@@ -39,6 +39,7 @@ feature-name/
 - Auto-refresh with connection status
 - Stage transition history and timestamps
 - Duration calculations and stage logs
+- Dual-update safety: app-level bed stage update is primary, DB trigger on `bed_stage_logs` is consistency backstop
 - Visual alerts and color configuration
 
 ### `analytics/`

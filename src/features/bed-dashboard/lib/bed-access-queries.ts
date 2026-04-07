@@ -1,5 +1,6 @@
 import { query } from '@/shared/lib/db'
 import { logger } from '@/shared/config/logger'
+import { SETTINGS_CACHE_TAG, withCache } from '@/shared/lib/query-cache'
 
 /** Get the ward ID and flags for a specific bed (for access control) */
 export async function getBedAccessInfo(
@@ -28,8 +29,7 @@ export async function getBedWard(bedId: string): Promise<string | null> {
   return info?.ward_id || null
 }
 
-/** Get the ward ID for a specific user (for access control) */
-export async function getUserWard(userId: string): Promise<string | null> {
+async function fetchUserWardFromDB(userId: string): Promise<string | null> {
   try {
     const result = await query<{ ward_id: string | null }>(
       `
@@ -47,6 +47,9 @@ export async function getUserWard(userId: string): Promise<string | null> {
     throw new Error('Failed to verify access permissions')
   }
 }
+
+/** Get the ward ID for a specific user (for access control) */
+export const getUserWard = withCache(fetchUserWardFromDB, 'bed-dashboard:get-user-ward', 300, [SETTINGS_CACHE_TAG])
 
 /**
  * Verify ward-level access for a user/bed pair.

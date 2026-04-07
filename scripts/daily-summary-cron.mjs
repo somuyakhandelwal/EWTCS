@@ -34,6 +34,13 @@ async function main() {
   try {
     await client.connect()
 
+    const cleanupResult = await client.query(
+      'DELETE FROM token_blacklist WHERE expires_at < NOW()'
+    )
+    console.log(
+      `[daily-summary] Cleared expired token blacklist rows=${cleanupResult.rowCount ?? 0}`
+    )
+
     // CONCURRENTLY allows reads while refreshing.
     await client.query('REFRESH MATERIALIZED VIEW CONCURRENTLY daily_summaries_mv')
 

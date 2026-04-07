@@ -1,6 +1,6 @@
 # EWTCS — Migration Reference
 
-> **Quick Rule:** `node-pg-migrate` tracks applied migrations **by filename**, not by number prefix.  
+> **Quick Rule:** `node-pg-migrate` tracks applied migrations **by filename**, not by number prefix.
 > Duplicate-numbered files are safe — each unique filename is tracked independently.
 
 ---
@@ -19,7 +19,7 @@ Migrations live in `migrations/` and are run in **lexicographic filename order**
 
 ---
 
-## Full Migration Inventory (68 files)
+## Full Migration Inventory (74 files)
 
 | File | Purpose |
 |------|---------|
@@ -82,8 +82,10 @@ Migrations live in `migrations/` and are run in **lexicographic filename order**
 | `056_create_cath_lab_procedures.sql` | Initial minimal cath_lab_procedures table (CAG/PTCA enum approach) |
 | `056_seed_emergency_ward.sql` | ⚠️ Duplicate number — seeds Emergency Ward (code: ER) into wards |
 | `057_create_cath_lab_procedures_table.sql` | Drops the 056 minimal table, recreates with full EPIC 24 schema |
-| `057_extend_cath_lab_procedures.sql` | ⚠️ Duplicate number — extends cath_lab_procedures (runs if 056 was original minimal) |
 | `058_repair_cath_lab_procedures_columns.sql` | Final repair pass on cath_lab_procedures columns |
+| `059_drop_diagnosis_plaintext_columns.sql` | Drops plaintext diagnosis PHI columns after encrypted backfill |
+| `060_add_current_stage_trigger.sql` | Adds current-stage maintenance trigger support |
+| `061_extend_cath_lab_procedures.sql` | Extends cath_lab_procedures safely for environments that still started from the minimal schema |
 | `1740649700000_add-performance-indexes.js` | JS migration — additional performance indexes |
 | `1771680144644_add-escalation-threshold.js` | JS migration — escalation_threshold_minutes setting |
 | `1773770454739_add-triage-columns-to-beds.js` | JS migration — triage columns on beds |
@@ -104,8 +106,8 @@ These arose from parallel team development. They are **not a bug** — `node-pg-
 | 038 | `038_add_delay_reason_options.sql`, `038_create_alert_preferences.sql` | Different features |
 | 040 | `040_create_user_feedback.sql`, `040_enable_pgcrypto.sql` | Different features |
 | 047 | `047_add_cath_lab_roles.sql`, `047_add_doctor_and_cardiologist_roles.sql`, `047_enforce_symptom_40_char_limit.sql` | 3 features merged by different devs |
-| 056 | `056_create_cath_lab_procedures.sql`, `056_seed_emergency_ward.sql` | Different purposes |
-| 057 | `057_create_cath_lab_procedures_table.sql`, `057_extend_cath_lab_procedures.sql` | One replaces the other |
+| 056 | `056_create_cath_lab_procedures.sql`, `056_seed_emergency_ward.sql` | Minimal cath-lab table + ward seed landed in parallel |
+| 058 | `058_normalize_delay_reason_fk.sql`, `058_repair_cath_lab_procedures_columns.sql` | Normalization + repair pair |
 
 > **Do NOT renumber or delete applied migrations.** The migration runner tracks them by filename. Renaming a file that has already been applied in production will cause it to be re-run, potentially breaking the database.
 

@@ -1,5 +1,4 @@
 'use server'
-
 import { revalidatePath } from 'next/cache'
 import { query } from '@/shared/lib/db'
 import { requireRole } from '@/shared/lib/auth'
@@ -25,22 +24,62 @@ export async function submitDiagnosis(
   try {
     // Enforce doctor-only access
     const session = await requireRole('doctor')
-
     // Validate input with Zod
     const parseResult = diagnosisSchema.safeParse(formData)
     if (!parseResult.success) {
       const firstError = parseResult.error.issues[0]?.message ?? 'Invalid input'
       return { success: false, error: firstError }
     }
-
     const data = parseResult.data
+    const encryptionKey = process.env.ENCRYPTION_KEY
+
+    if (!encryptionKey || !/^[a-f0-9]{64}$/i.test(encryptionKey)) {
+      return {
+        success: false,
+        error: 'Diagnosis encryption is not configured. Set ENCRYPTION_KEY (64-char hex).',
+      }
+    }
 
     const insertResult = await query<{ id: string }>(
       `INSERT INTO diagnosis (
          bed_id, patient_uhid, doctor_id,
-         symptoms_observed, diagnosis_text, diagnosis_code,
-         severity, recommended_action, diagnosed_at
-       ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, NOW())
+         symptoms_observed_encrypted, diagnosis_text_encrypted, diagnosis_code,
+         severity, recommended_action_encrypted, diagnosed_at
+       ) VALUES (
+         $1,
+         $2,
+         $3,
+         CASE
+           WHEN $4::text IS NULL OR btrim($4::text) = '' THEN NULL
+           ELSE jsonb_build_object(
+             'data', encode(pgp_sym_encrypt($4::text, $9, 'cipher-algo=aes256, compress-algo=0'), 'base64'),
+             'kv', 1,
+             'alg', 'pgp_sym_encrypt',
+             'encoding', 'base64'
+           )
+         END,
+         CASE
+           WHEN $5::text IS NULL OR btrim($5::text) = '' THEN NULL
+           ELSE jsonb_build_object(
+             'data', encode(pgp_sym_encrypt($5::text, $9, 'cipher-algo=aes256, compress-algo=0'), 'base64'),
+             'kv', 1,
+             'alg', 'pgp_sym_encrypt',
+             'encoding', 'base64'
+           )
+         END,
+         $6,
+         $7,
+         CASE
+           WHEN $8::text IS NULL OR btrim($8::text) = '' THEN NULL
+           ELSE jsonb_build_object(
+             'data', encode(pgp_sym_encrypt($8::text, $9, 'cipher-algo=aes256, compress-algo=0'), 'base64'),
+             'kv', 1,
+             'alg', 'pgp_sym_encrypt',
+             'encoding', 'base64'
+           )
+         END,
+         NOW()
+       )
        RETURNING id`,
       [
         bedId,
@@ -51,6 +90,7 @@ export async function submitDiagnosis(
         data.diagnosisCode || null,
         data.severity,
         data.recommendedAction || null,
+        encryptionKey,
       ],
     )
 
@@ -91,7 +131,6 @@ export async function submitDiagnosis(
     return { success: false, error: `Failed to save: ${message}` }
   }
 }
-
 /**
  * EPIC 22 — US-22.1 (read side)
  * Fetch the most recent diagnosis for a bed.
@@ -106,18 +145,50 @@ export async function getDiagnosisForBed(
   try {
     const session = await verifyActiveSession()
     if (!session) return null
-
+    const encryptionKey = process.env.ENCRYPTION_KEY
+    if (!encryptionKey || !/^[a-f0-9]{64}$/i.test(encryptionKey)) return null
     const result = await query<DiagnosisRecord>(
-      `SELECT d.*,
+      `SELECT d.id,
+              d.bed_id,
+              d.patient_uhid,
+              d.doctor_id,
+              d.diagnosis_code,
+              d.severity,
+              d.diagnosed_at,
+              d.created_at,
+              d.updated_at,
+              CASE
+                WHEN d.symptoms_observed_encrypted IS NULL THEN NULL
+                WHEN d.symptoms_observed_encrypted->>'alg' = 'pgp_sym_encrypt' THEN
+                  pgp_sym_decrypt(decode(d.symptoms_observed_encrypted->>'data', 'base64'), $2)
+                ELSE NULL
+              END AS symptoms_observed,
+              CASE
+                WHEN d.clinical_findings_encrypted IS NULL THEN NULL
+                WHEN d.clinical_findings_encrypted->>'alg' = 'pgp_sym_encrypt' THEN
+                  pgp_sym_decrypt(decode(d.clinical_findings_encrypted->>'data', 'base64'), $2)
+                ELSE NULL
+              END AS clinical_findings,
+              CASE
+                WHEN d.diagnosis_text_encrypted IS NULL THEN NULL
+                WHEN d.diagnosis_text_encrypted->>'alg' = 'pgp_sym_encrypt' THEN
+                  pgp_sym_decrypt(decode(d.diagnosis_text_encrypted->>'data', 'base64'), $2)
+                ELSE NULL
+              END AS diagnosis_text,
+              CASE
+                WHEN d.recommended_action_encrypted IS NULL THEN NULL
+                WHEN d.recommended_action_encrypted->>'alg' = 'pgp_sym_encrypt' THEN
+                  pgp_sym_decrypt(decode(d.recommended_action_encrypted->>'data', 'base64'), $2)
+                ELSE NULL
+              END AS recommended_action,
               u.username AS doctor_username
          FROM diagnosis d
          LEFT JOIN users u ON d.doctor_id = u.id
         WHERE d.bed_id = $1
         ORDER BY d.diagnosed_at DESC
         LIMIT 1`,
-      [bedId],
+      [bedId, encryptionKey],
     )
-
     return result.rows[0] ?? null
   } catch {
     return null

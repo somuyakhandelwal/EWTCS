@@ -61,6 +61,40 @@ async function reconcileMigrationHistory() {
       "UPDATE pgmigrations SET name = '024_add_housekeeping_role_and_stages' WHERE name = '015_add_housekeeping_role_and_stages'"
     );
 
+    const canonicalRenames = [
+      ['019_add_password_reset', '015_add_password_reset'],
+      ['020_add_tat_to_admissions', '016_add_tat_to_admissions'],
+      ['021_add_temporary_beds', '017_add_temporary_beds'],
+      ['022_create_shifts', '018_create_shifts'],
+      ['023_add_shift_id_to_logs', '019_add_shift_id_to_logs'],
+      ['024_create_system_settings', '020_create_system_settings'],
+      ['025_create_stage_delay_thresholds', '021_create_stage_delay_thresholds'],
+      ['022_create_daily_summaries', '023_create_daily_summaries'],
+      ['052_create_alert_preferences', '038_create_alert_preferences'],
+      ['053_enable_pgcrypto', '040_enable_pgcrypto'],
+      ['054_enforce_symptom_40_char_limit', '047_enforce_symptom_40_char_limit'],
+      ['046_create_cath_lab_procedures', '056_create_cath_lab_procedures'],
+      ['051_create_cath_lab_procedures_table', '057_create_cath_lab_procedures_table'],
+      ['052_repair_ot_rooms_dependency', '051_repair_ot_rooms_dependency'],
+      ['055_repair_cath_lab_procedures_columns', '058_repair_cath_lab_procedures_columns'],
+      ['056_seed_emergency_ward', '055_seed_emergency_ward'],
+      ['057_extend_cath_lab_procedures', '061_extend_cath_lab_procedures'],
+      ['058_drop_diagnosis_plaintext_columns', '059_drop_diagnosis_plaintext_columns'],
+    ];
+
+    for (const [oldName, newName] of canonicalRenames) {
+      await client.query(
+        `DELETE FROM pgmigrations old
+         WHERE old.name = $1
+           AND EXISTS (
+             SELECT 1 FROM pgmigrations current
+             WHERE current.name = $2
+           )`,
+        [oldName, newName]
+      );
+      await client.query('UPDATE pgmigrations SET name = $1 WHERE name = $2', [newName, oldName]);
+    }
+
     const orderedRows = await client.query(
       `SELECT id, name, run_on,
               ROW_NUMBER() OVER (ORDER BY name) AS expected_id

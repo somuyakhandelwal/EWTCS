@@ -70,10 +70,10 @@ export function BedDashboardClient({
     dischargeState, isDischargeSubmitting, handleDischargeConfirm: originalHandleDischargeConfirm,
     closeDischargeModal, triageState, openTriageModal, closeTriageModal, handleTriageSubmit,
   } = useBedStageUpdate(realtimeData, { confirmCriticalStages: settings.confirmCriticalStages })
-  
+
   const offlineQueue = useOfflineQueue()
   const [, startTransition] = useTransition()
-  
+
   const baseHandleReasonSelect = useCallback(
     async (bedId: string, reason: DispositionDelayReason) => {
       await recordDispositionDelayReason({ bedId, reason })

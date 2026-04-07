@@ -6,7 +6,7 @@ Administrator runbook for configuration, maintenance, backup/recovery, security,
 - Owner: Platform / System Administration
 - Scope: Configuration, backups, troubleshooting, security, command references
 - Versioning: Git-tracked; update required in release PRs when operations change
-- Last Updated: 2026-04-05 (US-13.11 cross-browser compatibility + CI browser matrix)
+- Last Updated: 2026-04-05 (DB4-04 metrics query parallelization + migration validator duplicate-prefix policy update)
 
 ## 1) System Overview
 EWTCS is a Next.js + PostgreSQL emergency-ward operations platform.
@@ -152,6 +152,12 @@ npm run db:reconcile
 npm run audit:verify
 ```
 
+### Migration Validator Policy (CI)
+- Script: `scripts/validate-migrations.js`
+- Duplicate numeric prefixes are allowlisted in `scripts/lib-migration-duplicate-check.js`.
+- Current approved duplicate groups: `015`, `038`, `040`, `047`, `058`.
+- When adding canonical duplicate groups in migrations, update the allowlist and this handbook in the same PR.
+
 ### DB5-02 Operational Notes (Persist Dashboard and Filter Preferences)
 - New migration: `1743241500000_create_user_settings.sql`
 - Added table: `user_settings` (`user_id` PK/FK to `users`, `preferences JSONB`, `updated_at`)
@@ -223,12 +229,17 @@ Operational behavior:
   - **OT**: surgeries in-progress, completed, utilization rate (%)
   - **Cath Lab**: active procedures, CAG count, PTCA count
 
+### Migration Validation Policy Notes
+- CI migration duplicate-prefix allowlist is maintained in `scripts/validate-migration-duplicates.js`.
+- Canonical approved duplicate prefix groups now include: `015`, `038`, `040`, `047`, and `058`.
+- `scripts/validate-migrations.js` consumes that shared allowlist during `npm run validate:migrations` to ensure duplicate prefixes match approved canonical groups only.
+
 ### EPIC 20 — Department Modules (ER, Diagnosis, OT, Cath Lab)
 - **Schema Additions**: Four new tables (`er_intake`, `diagnosis`, `ot_procedures`, `cath_lab_procedures`).
 - **Validation**: `DATABASE_SETUP.md` schema checks now expect 25+ tables.
 - **Roles**: Added `doctor`, `cardiologist`, and `cath_lab_nurse` to identity enums and route guards.
 ### EPIC 20 — Emergency Ward Capacity Expansion
-- New migrations: `056_seed_emergency_ward.sql`, `057_extend_cath_lab_procedures.sql`
+- New migrations: `056_seed_emergency_ward.sql`, `061_extend_cath_lab_procedures.sql`
 - Ensures the default development and test environment provides 30 ER beds, 6 Triage beds, and 16 OT rooms out of the box when running `npm run db:seed`.
 - Adds a strictly guarded safe-abort to the database seeder to prevent destructive `TRUNCATE CASCADE` logic from ever mutating production instances.
 - Deployment action: run `npm run db:migrate` then `npm run db:seed` structurally in any staging environment to hydrate testing interfaces.
