@@ -31,7 +31,8 @@ function resolveLiveDatabaseUrl(): string | null {
 }
 
 const liveDatabaseUrl = resolveLiveDatabaseUrl()
-const describeWithDb = liveDatabaseUrl ? describe : describe.skip
+const runDbIntegration = process.env.RUN_DB_INTEGRATION === 'true'
+const describeWithDb = runDbIntegration && liveDatabaseUrl ? describe : describe.skip
 
 describeWithDb('DB2-03 current stage trigger backstop', () => {
   it('is attached only to bed_stage_logs and not to bed_stage_logs_archive', async () => {

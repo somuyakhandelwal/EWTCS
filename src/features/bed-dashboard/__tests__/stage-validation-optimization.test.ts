@@ -19,6 +19,11 @@ vi.mock('@/shared/config/logger', () => ({
   },
 }))
 
+vi.mock('@/shared/lib/query-cache', () => ({
+  SETTINGS_CACHE_TAG: 'settings',
+  withCache: <T extends (...args: any[]) => any>(fn: T) => fn,
+}))
+
 import { categorizeStagesForTransition } from '../lib/stage-validation'
 
 describe('stage-validation optimization', () => {
