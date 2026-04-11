@@ -12,6 +12,9 @@ import { validatePii } from '../lib/pii-utils'
 import { headers } from 'next/headers'
 import { getClientIpFromHeaders } from '@/shared/lib/request-ip'
 import { resolveActiveShiftIdCached } from '@/shared/lib/shift-helpers'
+import { dispatchDueWebhooks, queueWebhookEvent } from '@/features/external-integration/lib/webhook-dispatcher'
+import type { BedStatusChangedPayload } from '@/features/external-integration/types/webhook.types'
+import crypto from 'crypto'
 
 /**
  * Update bed stage (US-2.1, US-2.2)
@@ -172,6 +175,36 @@ export async function updateBedStage(input: UpdateBedStageInput): Promise<{
       shiftOverrideId: canOverrideShift ? (result.data.shiftOverrideId ?? null) : null,
       shiftOverrideByUserId: canOverrideShift && result.data.shiftOverrideId ? session.userId : null,
     })
+
+    if (bed.currentStageId !== result.data.toStageId) {
+      const webhookPayload: BedStatusChangedPayload = {
+        eventId: crypto.randomUUID(),
+        eventType: 'bed.status.changed',
+        occurredAt: new Date().toISOString(),
+        source: 'ewtcs',
+        version: '1.0',
+        bedId: result.data.bedId,
+        bedNumber: bed.bedNumber,
+        fromStageId: bed.currentStageId,
+        toStageId: result.data.toStageId,
+        changedByUserId: session.userId,
+      }
+
+      try {
+        await queueWebhookEvent(webhookPayload)
+        void dispatchDueWebhooks(5).catch((dispatchError) => {
+          logger.warn('Webhook dispatch failed after bed status change', {
+            bedId: result.data.bedId,
+            error: dispatchError instanceof Error ? dispatchError.message : 'Unknown webhook dispatch error',
+          })
+        })
+      } catch (webhookError) {
+        logger.warn('Webhook queueing failed for bed status change', {
+          bedId: result.data.bedId,
+          error: webhookError instanceof Error ? webhookError.message : 'Unknown webhook queue error',
+        })
+      }
+    }
 
     return {
       success: true,

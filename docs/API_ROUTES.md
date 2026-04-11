@@ -73,6 +73,15 @@ All API routes are located under `src/app/api/`. Authentication is enforced via 
 - `/api/external/beds`: 60 requests/minute per IP
 - `/api/external/reports`: 30 requests/minute per IP
 
+## Webhook Configuration Module (US-19.2)
+
+| Route | Method | Auth Required | Purpose | Request Body | Response |
+|-------|--------|---------------|---------|--------------|----------|
+| `/api/webhooks/endpoints` | GET | ✅ Session (admin) | List configured webhook endpoints | None | `{ success: true, data: [...] }` |
+| `/api/webhooks/endpoints` | POST | ✅ Session (admin) | Create webhook endpoint with event subscriptions | `{ name, targetUrl, signingSecret, subscribedEvents, timeoutMs?, maxRetries?, retryBackoffBaseMs? }` | `{ success: true, id }` |
+| `/api/webhooks/endpoints` | PATCH | ✅ Session (admin) | Update endpoint settings/subscriptions/activation | `{ id, ...partialFields }` | `{ success: true }` |
+| `/api/webhooks/endpoints` | DELETE | ✅ Session (admin) | Deactivate endpoint | Query: `?id=<uuid>` | `{ success: true }` |
+
 ---
 
 ## Backup Module
@@ -92,6 +101,7 @@ All API routes are located under `src/app/api/`. Authentication is enforced via 
 | Route | Method | Auth Required | Purpose | Request Body | Response |
 |-------|--------|---------------|---------|--------------|----------|
 | `/api/cron/archival` | GET | ✅ Bearer Token (`CRON_SECRET`) | Monthly automated data archival | None | `{ status: "completed"/"pending_approval"/"failed", runId, rowsArchived? }` |
+| `/api/cron/webhooks/dispatch` | POST | ✅ Bearer Token (`CRON_SECRET`) | Queue delay-threshold events and dispatch due webhook deliveries with retry processing | None (optional query: `?limit=25`) | `{ success: true, queuedDelayEvents, claimed, delivered, failed }` |
 
 ⚠️ Protected by `CRON_SECRET` env var, NOT JWT session. Called by Vercel Cron or system crontab.
 
