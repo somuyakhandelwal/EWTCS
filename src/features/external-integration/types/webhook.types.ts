@@ -1,4 +1,4 @@
-// US-19.2: Webhook contract types for outbound real-time events.
+// issue-117: Webhook contract types for outbound real-time events.
 
 export const WEBHOOK_EVENT_TYPES = [
   'bed.status.changed',

@@ -2280,7 +2280,7 @@
 
 ---
 
-### US-19.2: Webhook Support for Real-Time Events
+### issue-117: Webhook Support for Real-Time Events
 
 **As a** integration developer  
 **I want** to receive webhooks when critical events occur  
@@ -2591,7 +2591,7 @@
 - US-13.12: Implement CDN for Static Assets (3 points) - P3
 
 **External Integration:**
-- US-19.2: Webhook Support for Real-Time Events (8 points) - P3
+- issue-117: Webhook Support for Real-Time Events (8 points) - P3
 
 **Additional Features:**
 - US-12.5: Alert on Suspicious Audit Patterns (5 points) - P2

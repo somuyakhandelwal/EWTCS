@@ -1,5 +1,5 @@
 -- Migration: create_webhook_integration_tables
--- US-19.2: Webhook support for real-time external integrations
+-- issue-117: Webhook support for real-time external integrations
 
 CREATE TABLE IF NOT EXISTS webhook_endpoints (
   id                     UUID PRIMARY KEY DEFAULT gen_random_uuid(),

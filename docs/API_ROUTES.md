@@ -73,7 +73,7 @@ All API routes are located under `src/app/api/`. Authentication is enforced via 
 - `/api/external/beds`: 60 requests/minute per IP
 - `/api/external/reports`: 30 requests/minute per IP
 
-## Webhook Configuration Module (US-19.2)
+## Webhook Configuration Module (issue-117)
 
 | Route | Method | Auth Required | Purpose | Request Body | Response |
 |-------|--------|---------------|---------|--------------|----------|

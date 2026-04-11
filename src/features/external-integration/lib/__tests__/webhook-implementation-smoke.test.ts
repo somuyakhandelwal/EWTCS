@@ -9,7 +9,7 @@ async function readFile(relativePath: string): Promise<string> {
   return fs.readFileSync(path.resolve(__dirname, relativePath), 'utf-8')
 }
 
-describe('US-19.2 webhook implementation smoke checks', () => {
+describe('issue-117 webhook implementation smoke checks', () => {
   it('dispatcher includes retry and dead-letter status handling', async () => {
     const src = await readFile('../webhook-dispatcher.ts')
 

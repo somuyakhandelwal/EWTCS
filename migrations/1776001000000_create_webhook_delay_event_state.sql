@@ -1,5 +1,5 @@
 -- Migration: create_webhook_delay_event_state
--- US-19.2: Track delay webhook emission state to avoid duplicate events.
+-- issue-117: Track delay webhook emission state to avoid duplicate events.
 
 CREATE TABLE IF NOT EXISTS webhook_delay_event_state (
   bed_id            UUID PRIMARY KEY REFERENCES beds(id) ON DELETE CASCADE,

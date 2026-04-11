@@ -57,7 +57,7 @@ Retrieve aggregated bed performance metrics over a specific time period.
 ## Interactive Documentation
 Swagger/OpenAPI documentation is available interactively within the application. Navigate to `/swagger.html` in your browser to view the schema and test the endpoints directly from the interface.
 
-## Outbound Webhooks (US-19.2)
+## Outbound Webhooks (issue-117)
 
 In addition to pull-based REST APIs, EWTCS supports push-based outbound webhooks for critical events.
 

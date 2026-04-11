@@ -9,7 +9,7 @@ async function readFile(relativePath: string): Promise<string> {
   return fs.readFileSync(path.resolve(__dirname, relativePath), 'utf-8')
 }
 
-describe('US-19.2 route smoke checks', () => {
+describe('issue-117 route smoke checks', () => {
   it('cron webhook dispatch route is protected by CRON_SECRET auth', async () => {
     const src = await readFile('../../../../app/api/cron/webhooks/dispatch/route.ts')
 
