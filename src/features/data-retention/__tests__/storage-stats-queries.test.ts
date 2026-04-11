@@ -1,14 +1,19 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { query } from '@/shared/lib/db'
 import { logger } from '@/shared/config/logger'
+import { getAllSystemSettings } from '@/shared/lib/system-settings'
 import { fetchStorageStats } from '../lib/storage-stats-queries'
-import { RAW_TABLE_ROWS, RAW_THRESHOLD_ROW, mockAllQueries } from './storage-stats-fixtures'
+import { RAW_TABLE_ROWS, mockAllQueries } from './storage-stats-fixtures'
 
 vi.mock('@/shared/lib/db', () => ({ query: vi.fn() }))
 vi.mock('@/shared/config/logger', () => ({ logger: { info: vi.fn(), error: vi.fn(), warn: vi.fn() } }))
+vi.mock('@/shared/lib/system-settings', () => ({ getAllSystemSettings: vi.fn() }))
 
 describe('fetchStorageStats', () => {
-  beforeEach(() => vi.clearAllMocks())
+  beforeEach(() => {
+    vi.clearAllMocks()
+    vi.mocked(getAllSystemSettings).mockResolvedValue(new Map([['storage_alert_threshold_gb', '10']]))
+  })
 
   it('returns a table entry for each monitored table', async () => {
     mockAllQueries(query, {})
@@ -31,14 +36,15 @@ describe('fetchStorageStats', () => {
   })
 
   it('sets isAlertTriggered correctly based on threshold', async () => {
-    mockAllQueries(query, { dbBytes: String(12 * 1024 ** 3), thresholdValue: '10' })
+    mockAllQueries(query, { dbBytes: String(12 * 1024 ** 3) })
     const stats = await fetchStorageStats()
     expect(stats.isAlertTriggered).toBe(true)
     expect(stats.alertThresholdGb).toBe(10)
   })
 
   it('uses default 10 GB threshold fallback', async () => {
-    mockAllQueries(query, { thresholdValue: null })
+    mockAllQueries(query, {})
+    vi.mocked(getAllSystemSettings).mockResolvedValue(new Map())
     const stats = await fetchStorageStats()
     expect(stats.alertThresholdGb).toBe(10)
   })
@@ -71,12 +77,9 @@ describe('fetchStorageStats', () => {
     expect(logger.error).toHaveBeenCalledWith('Failed to fetch storage stats', err)
   })
 
-  it('gracefully handles threshold query failure', async () => {
-    let call = 0
-    vi.mocked(query).mockImplementation(() => {
-      if (call++ === 2) return Promise.reject(new Error('no table')) as never
-      return Promise.resolve({ rows: call === 1 ? RAW_TABLE_ROWS : [{ db_bytes: '0' }] }) as never
-    })
+  it('gracefully handles invalid threshold value', async () => {
+    mockAllQueries(query, { dbBytes: '0' })
+    vi.mocked(getAllSystemSettings).mockResolvedValue(new Map([['storage_alert_threshold_gb', 'abc']]))
     const stats = await fetchStorageStats()
     expect(stats.alertThresholdGb).toBe(10)
   })

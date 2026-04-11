@@ -7,6 +7,7 @@
 
 import { query } from '@/shared/lib/db'
 import { logger } from '@/shared/config/logger'
+import { getAllSystemSettings } from '@/shared/lib/system-settings'
 import type { TableSizeInfo, StorageStats } from './data-retention-types'
 
 // Tables we actively monitor for EPIC 14
@@ -29,28 +30,18 @@ interface RawSizeRow {
   pretty_size: string
 }
 
-interface RawSettingRow {
-  value: string
-}
-
 // ── Helpers ───────────────────────────────────────────────────────────────
 
 function buildTableList(): string {
   return MONITORED_TABLES.map((t) => `'${t}'`).join(', ')
 }
 
-async function fetchAlertThresholdGb(): Promise<number> {
-  try {
-    const result = await query<RawSettingRow>(
-      `SELECT value FROM system_settings WHERE key = 'storage_alert_threshold_gb' LIMIT 1`,
-      [],
-    )
-    if (result.rows.length === 0) return DEFAULT_ALERT_THRESHOLD_GB
-    const parsed = parseFloat(result.rows[0].value)
-    return isNaN(parsed) ? DEFAULT_ALERT_THRESHOLD_GB : parsed
-  } catch {
-    return DEFAULT_ALERT_THRESHOLD_GB
-  }
+function resolveAlertThresholdGb(settings: Map<string, string>): number {
+  const raw = settings.get('storage_alert_threshold_gb')
+  if (!raw) return DEFAULT_ALERT_THRESHOLD_GB
+
+  const parsed = parseFloat(raw)
+  return isNaN(parsed) ? DEFAULT_ALERT_THRESHOLD_GB : parsed
 }
 
 // ── Public query function ─────────────────────────────────────────────────
@@ -67,7 +58,7 @@ export async function fetchStorageStats(): Promise<StorageStats> {
   const tableList = buildTableList()
 
   try {
-    const [tablesResult, dbSizeResult, thresholdGb] = await Promise.all([
+    const [tablesResult, dbSizeResult, settings] = await Promise.all([
       query<RawSizeRow>(
         `SELECT
            relname                                   AS table_name,
@@ -85,8 +76,10 @@ export async function fetchStorageStats(): Promise<StorageStats> {
         `SELECT pg_database_size(current_database()) AS db_bytes`,
         [],
       ),
-      fetchAlertThresholdGb(),
+      getAllSystemSettings(),
     ])
+
+    const thresholdGb = resolveAlertThresholdGb(settings)
 
     const tables: TableSizeInfo[] = tablesResult.rows.map((row) => ({
       tableName: row.table_name,

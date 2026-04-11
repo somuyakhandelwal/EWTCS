@@ -3,6 +3,34 @@ import { useRouter } from 'next/navigation'
 import type { BedWithElapsedTime, Stage, BedGridData } from '../types/bed'
 import type { TriageState } from './useBedStageUpdate'
 
+type TriageSubmitResponse = { success: boolean; error?: string }
+
+async function submitTriageUpdate(
+  bedId: string,
+  triageData: {
+    patientUhid: string
+    patientIpdId?: string | null
+    patientName: string
+    patientAge: number
+    patientGender: 'Male' | 'Female' | 'Other' | 'Unknown'
+    keySymptom: string
+    triageCategory: 'Resuscitation' | 'Emergent' | 'Urgent' | 'Less Urgent' | 'Non-Urgent'
+  }
+): Promise<TriageSubmitResponse> {
+  const response = await fetch('/api/triage/update', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ bedId, triageData }),
+    cache: 'no-store',
+  })
+
+  const result = (await response.json()) as TriageSubmitResponse
+  if (!response.ok) {
+    return { success: false, error: result.error || 'Failed to save triage info' }
+  }
+  return result
+}
+
 interface UseTriageConfirmProps {
   setTemporaryError: (bedId: string, error: string) => void
   setData: React.Dispatch<React.SetStateAction<BedGridData>>
@@ -30,8 +58,7 @@ export function useTriageConfirm({ setTemporaryError, setData }: UseTriageConfir
     triageCategory: 'Resuscitation' | 'Emergent' | 'Urgent' | 'Less Urgent' | 'Non-Urgent';
   }, performStageUpdate: (bedId: string, stageId: string) => Promise<boolean>) => {
     if (!triageState) return
-    const { updateBedTriageInfo } = await import('../actions/triage-actions') // Lazy load
-    const result = await updateBedTriageInfo(bedId, triageData)
+    const result = await submitTriageUpdate(bedId, triageData)
     
     if (result.success) {
       // Optimistically update the local triage data

@@ -3,8 +3,8 @@
 
 import type { Dispatch, SetStateAction } from 'react'
 import type { BedGridData, BedWithElapsedTime, Stage } from '../types/bed'
-import { updateBedStage } from '../actions/bed-actions'
 import { isTransientError, retryAsync } from '@/shared/lib/retry'
+import { submitBedStageUpdate } from './stage-update-api'
 
 const UPDATE_TIMEOUT_MS = 2000
 const UPDATE_RETRIES = 2
@@ -97,7 +97,7 @@ export async function executeStageUpdate({
     const result = await retryAsync(async () => {
       isUpdateTimedOut.current = false
 
-      const updatePromise = updateBedStage({
+      const updatePromise = submitBedStageUpdate({
         bedId,
         toStageId: stageId,
         supervisorOverride: options?.supervisorOverride ?? false,

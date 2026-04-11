@@ -6,7 +6,7 @@ Administrator runbook for configuration, maintenance, backup/recovery, security,
 - Owner: Platform / System Administration
 - Scope: Configuration, backups, troubleshooting, security, command references
 - Versioning: Git-tracked; update required in release PRs when operations change
-- Last Updated: 2026-03-29 (DB5-02 — Preferences Persistence + DB script resilience)
+- Last Updated: 2026-04-05 (DB4-04 metrics query parallelization + migration validator duplicate-prefix policy update)
 
 ## 1) System Overview
 EWTCS is a Next.js + PostgreSQL emergency-ward operations platform.
@@ -152,6 +152,12 @@ npm run db:reconcile
 npm run audit:verify
 ```
 
+### Migration Validator Policy (CI)
+- Script: `scripts/validate-migrations.js`
+- Duplicate numeric prefixes are allowlisted in `scripts/lib-migration-duplicate-check.js`.
+- Current approved duplicate groups: `015`, `038`, `040`, `047`, `058`.
+- When adding canonical duplicate groups in migrations, update the allowlist and this handbook in the same PR.
+
 ### DB5-02 Operational Notes (Persist Dashboard and Filter Preferences)
 - New migration: `1743241500000_create_user_settings.sql`
 - Added table: `user_settings` (`user_id` PK/FK to `users`, `preferences JSONB`, `updated_at`)
@@ -178,6 +184,34 @@ Ops script behavior updates (local/dev):
 Dev runtime note:
 - `npm run dev` now clears `.next` before startup to reduce stale chunk load errors during local development.
 
+### US-16 Operational Notes (Offline Queue + Replay)
+- New migrations:
+  - `1775301000000_create_offline_queue.sql`
+  - `1775302000000_add_client_operation_id_to_offline_queue.sql`
+- New table: `offline_queue`
+  - Purpose: durable storage for write operations captured while clients are offline.
+  - Key fields: `operation`, `payload`, `status`, `retry_count`, `client_operation_id`, `created_at`.
+- New API surfaces used by reconnect replay and stable client writes:
+  - `POST /api/offline-queue`
+  - `POST /api/offline-sync/execute`
+  - `POST /api/triage/update`
+  - `POST /api/bed-stage/update`
+
+Deployment / upgrade actions:
+1. Run `npm run db:migrate` before serving traffic.
+2. Verify migration state with `npm run validate:migrations`.
+3. Verify API health with `GET /api/health` after deploy.
+
+Operational behavior:
+- Replay is idempotent via `client_operation_id` to reduce duplicate writes on retries.
+- On reconnect, clients may drain queued actions automatically; monitor API/application logs for replay success/failure patterns.
+- If a replay conflict occurs, latest-write-wins conflict handling is applied by replay endpoints.
+
+### Archival and Runtime Guardrail Notes
+- `src/app/api/cron/archival/route.ts` received operational updates; continue to require `Authorization: Bearer <CRON_SECRET>` for scheduled archival jobs.
+- `src/shared/config/realtime.ts` includes updated polling guardrails to avoid aggressive polling during disconnected periods.
+- `src/middleware.ts` remains a critical ops-impacting surface for role and route protections; validate route access behavior after deployment.
+
 ### EPIC 25 — Enhanced Dashboard Metrics (Department Metrics)
 - New migration: `1773838271566_create-department-metrics-tables.js`
 - Creates three new tables for cross-department operational visibility:
@@ -195,12 +229,17 @@ Dev runtime note:
   - **OT**: surgeries in-progress, completed, utilization rate (%)
   - **Cath Lab**: active procedures, CAG count, PTCA count
 
+### Migration Validation Policy Notes
+- CI migration duplicate-prefix allowlist is maintained in `scripts/validate-migration-duplicates.js`.
+- Canonical approved duplicate prefix groups now include: `015`, `038`, `040`, `047`, and `058`.
+- `scripts/validate-migrations.js` consumes that shared allowlist during `npm run validate:migrations` to ensure duplicate prefixes match approved canonical groups only.
+
 ### EPIC 20 — Department Modules (ER, Diagnosis, OT, Cath Lab)
 - **Schema Additions**: Four new tables (`er_intake`, `diagnosis`, `ot_procedures`, `cath_lab_procedures`).
 - **Validation**: `DATABASE_SETUP.md` schema checks now expect 25+ tables.
 - **Roles**: Added `doctor`, `cardiologist`, and `cath_lab_nurse` to identity enums and route guards.
 ### EPIC 20 — Emergency Ward Capacity Expansion
-- New migrations: `056_seed_emergency_ward.sql`, `057_extend_cath_lab_procedures.sql`
+- New migrations: `056_seed_emergency_ward.sql`, `061_extend_cath_lab_procedures.sql`
 - Ensures the default development and test environment provides 30 ER beds, 6 Triage beds, and 16 OT rooms out of the box when running `npm run db:seed`.
 - Adds a strictly guarded safe-abort to the database seeder to prevent destructive `TRUNCATE CASCADE` logic from ever mutating production instances.
 - Deployment action: run `npm run db:migrate` then `npm run db:seed` structurally in any staging environment to hydrate testing interfaces.
@@ -225,11 +264,23 @@ npm run validate:schema
 npm run validate:all
 npm test
 npm run test:coverage
+npm run test:browser:install
+npm run test:browser
 npm run perf:seed
 npm run perf:check
 npm run perf:validate
 npm run security:ssl:check
 ```
+
+### US-13.11 Operational Notes (Cross-Browser Compatibility)
+- Browser support target: latest 2 versions of Chrome, Firefox, Safari, and Edge.
+- Runtime behavior:
+  - Unsupported browsers receive a persistent warning banner.
+  - Older-but-usable browsers run in limited mode with reduced motion and visual effects.
+- Browser compatibility telemetry is emitted from client route tracking and aggregated in system health metrics.
+- CI/CD coverage:
+  - Workflow: `.github/workflows/browser-compatibility.yml`
+  - Browser projects: `chromium`, `firefox`, `webkit`, `edge-emulation`
 
 Archival API:
 ```http

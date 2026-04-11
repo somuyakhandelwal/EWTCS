@@ -109,4 +109,37 @@ describe('department-metrics', () => {
     expect(result.success).toBe(false)
     expect(result.error).toBe('Database error fetching metrics')
   })
+
+  it('dispatches intake, OT, and cath queries in parallel', async () => {
+    let resolveIntake!: (value: unknown) => void
+    let resolveOt!: (value: unknown) => void
+    let resolveCath!: (value: unknown) => void
+
+    const intakePromise = new Promise((resolve) => {
+      resolveIntake = resolve
+    })
+    const otPromise = new Promise((resolve) => {
+      resolveOt = resolve
+    })
+    const cathPromise = new Promise((resolve) => {
+      resolveCath = resolve
+    })
+
+    vi.mocked(query)
+      .mockImplementationOnce(() => intakePromise as never)
+      .mockImplementationOnce(() => otPromise as never)
+      .mockImplementationOnce(() => cathPromise as never)
+
+    const pending = getDepartmentMetrics()
+
+    // Parallel dispatch means all three query() calls happen before awaiting any result.
+    expect(query).toHaveBeenCalledTimes(3)
+
+    resolveIntake({ rows: [{ occupied_beds: '1', total_beds: '2', avg_triage_time: '3.5' }] })
+    resolveOt({ rows: [{ in_progress: '1', completed: '2', total_rooms: '4' }] })
+    resolveCath({ rows: [{ active_procedures: '1', cag_count: '2', ptca_count: '3' }] })
+
+    const result = await pending
+    expect(result.success).toBe(true)
+  })
 })

@@ -24,6 +24,28 @@ interface RawDailySummaryRow {
     ai_insights?: unknown
 }
 
+const SUMMARY_SELECT = `
+    SELECT
+        r.id,
+        r.summary_date,
+        COALESCE(mv.total_patients, 0) AS total_patients,
+        COALESCE(mv.avg_stage_time_minutes, 0) AS avg_stage_time_minutes,
+        COALESCE(mv.delay_count, 0) AS delay_count,
+        COALESCE(mv.avg_tat_minutes, 0) AS avg_tat_minutes,
+        COALESCE(mv.total_beds_used, 0) AS total_beds_used,
+        COALESCE(mv.total_stage_updates, 0) AS total_stage_updates,
+        COALESCE(mv.generated_at, r.updated_at) AS generated_at,
+        r.ai_summary,
+        r.metadata,
+        r.status,
+        r.reviewed_by,
+        r.reviewed_at,
+        r.published_at,
+        r.ai_insights
+    FROM daily_summary_reviews r
+    LEFT JOIN daily_summaries_mv mv ON mv.summary_date = r.summary_date
+`
+
 function parseAiInsights(raw: unknown): AiInsight[] {
     if (!Array.isArray(raw)) return []
     return raw.filter((x): x is AiInsight => Boolean(x && typeof x === 'object'
@@ -63,11 +85,19 @@ export async function updateDailySummaryStatus(
     reviewedBy: string
 ): Promise<DailySummary | null> {
     const sql = `
-    UPDATE daily_summaries
-    SET status = $1, reviewed_by = $2, reviewed_at = NOW(),
-        published_at = CASE WHEN $1 = 'published' THEN NOW() ELSE published_at END
-    WHERE id = $3 AND status = 'draft'
-    RETURNING *
+    WITH updated AS (
+      UPDATE daily_summary_reviews
+      SET status = $1,
+          reviewed_by = $2,
+          reviewed_at = NOW(),
+          published_at = CASE WHEN $1 = 'published' THEN NOW() ELSE published_at END,
+          updated_at = NOW()
+      WHERE id = $3 AND status = 'draft'
+      RETURNING id
+    )
+    ${SUMMARY_SELECT}
+    WHERE r.id IN (SELECT id FROM updated)
+    LIMIT 1
   `
     const result = await query<RawDailySummaryRow>(sql, [status, reviewedBy, id])
     const row = result.rows[0]
@@ -83,10 +113,17 @@ export async function updateSummaryDraft(
     aiInsights: AiInsight[]
 ): Promise<DailySummary | null> {
     const sql = `
-    UPDATE daily_summaries
-    SET ai_summary = $1, ai_insights = $2
-    WHERE id = $3 AND status = 'draft'
-    RETURNING *
+    WITH updated AS (
+      UPDATE daily_summary_reviews
+      SET ai_summary = $1,
+          ai_insights = $2,
+          updated_at = NOW()
+      WHERE id = $3 AND status = 'draft'
+      RETURNING id
+    )
+    ${SUMMARY_SELECT}
+    WHERE r.id IN (SELECT id FROM updated)
+    LIMIT 1
   `
     const result = await query<RawDailySummaryRow>(sql, [
         aiSummary,
@@ -104,8 +141,8 @@ export async function flagInsight(
     summaryId: string,
     insightId: string
 ): Promise<DailySummary | null> {
-    const sel = await query<RawDailySummaryRow>(
-        'SELECT * FROM daily_summaries WHERE id = $1 AND status = $2',
+    const sel = await query<{ ai_insights: unknown }>(
+        'SELECT ai_insights FROM daily_summary_reviews WHERE id = $1 AND status = $2',
         [summaryId, 'draft']
     )
     const row = sel.rows[0]
@@ -115,7 +152,16 @@ export async function flagInsight(
         i.id === insightId ? { ...i, flagged: !i.flagged } : i
     )
     const upd = await query<RawDailySummaryRow>(
-        `UPDATE daily_summaries SET ai_insights = $1 WHERE id = $2 AND status = 'draft' RETURNING *`,
+        `WITH changed AS (
+           UPDATE daily_summary_reviews
+           SET ai_insights = $1,
+               updated_at = NOW()
+           WHERE id = $2 AND status = 'draft'
+           RETURNING id
+         )
+         ${SUMMARY_SELECT}
+         WHERE r.id IN (SELECT id FROM changed)
+         LIMIT 1`,
         [JSON.stringify(updated), summaryId]
     )
     const out = upd.rows[0]
@@ -127,9 +173,9 @@ export async function getDraftSummariesPendingReview(
     limit: number = 30
 ): Promise<DailySummary[]> {
     const sql = `
-    SELECT * FROM daily_summaries
-    WHERE status = 'draft'
-    ORDER BY summary_date DESC
+    ${SUMMARY_SELECT}
+    WHERE r.status = 'draft'
+        ORDER BY r.summary_date DESC
     LIMIT $1
   `
     const result = await query<RawDailySummaryRow>(sql, [limit])

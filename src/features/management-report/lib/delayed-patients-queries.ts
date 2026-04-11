@@ -10,6 +10,7 @@ import 'server-only'
 
 import { query } from '@/shared/lib/db'
 import { logger } from '@/shared/config/logger'
+import { getAllSystemSettings } from '@/shared/lib/system-settings'
 import type {
   DelayedPatientsSummary,
   DelayTrendPoint,
@@ -19,33 +20,23 @@ import type {
 // Helpers
 // ---------------------------------------------------------------------------
 
-async function resolveThresholdMs(): Promise<number> {
-  try {
-    const result = await query<{ value: string }>(
-      `SELECT value FROM system_settings
-       WHERE key IN ('los_target_minutes', 'delay_threshold_minutes')
-       ORDER BY CASE key WHEN 'los_target_minutes' THEN 0 ELSE 1 END
-       LIMIT 1`
-    )
-    if (result.rows.length === 0) return 180 * 60 * 1000
-    const minutes = parseInt(result.rows[0].value, 10)
-    return isNaN(minutes) || minutes <= 0 ? 180 * 60 * 1000 : minutes * 60 * 1000
-  } catch {
-    return 180 * 60 * 1000
-  }
+function resolveThresholdMsFromSettings(settings: Map<string, string>): number {
+  const losTargetRaw = settings.get('los_target_minutes')
+  const delayThresholdRaw = settings.get('delay_threshold_minutes')
+  const minutesRaw = losTargetRaw ?? delayThresholdRaw
+
+  if (!minutesRaw) return 180 * 60 * 1000
+
+  const minutes = parseInt(minutesRaw, 10)
+  return isNaN(minutes) || minutes <= 0 ? 180 * 60 * 1000 : minutes * 60 * 1000
 }
 
-async function resolveTargetPct(): Promise<number | null> {
-  try {
-    const result = await query<{ value: string }>(
-      `SELECT value FROM system_settings WHERE key = 'delay_target_pct' LIMIT 1`
-    )
-    if (result.rows.length === 0) return null
-    const pct = parseFloat(result.rows[0].value)
-    return isNaN(pct) ? null : pct
-  } catch {
-    return null
-  }
+function resolveTargetPctFromSettings(settings: Map<string, string>): number | null {
+  const raw = settings.get('delay_target_pct')
+  if (!raw) return null
+
+  const pct = parseFloat(raw)
+  return isNaN(pct) ? null : pct
 }
 
 // ---------------------------------------------------------------------------
@@ -64,8 +55,9 @@ export async function getDelayedPatientsSummary(
   endDate: Date,
   shiftId?: string | null
 ): Promise<DelayedPatientsSummary> {
-  const thresholdMs = await resolveThresholdMs()
-  const targetPct = await resolveTargetPct()
+  const settings = await getAllSystemSettings()
+  const thresholdMs = resolveThresholdMsFromSettings(settings)
+  const targetPct = resolveTargetPctFromSettings(settings)
 
   const params: unknown[] = [startDate, endDate, thresholdMs, shiftId ?? null]
 

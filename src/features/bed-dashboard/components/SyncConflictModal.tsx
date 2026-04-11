@@ -53,7 +53,7 @@ export const SyncConflictModal = React.memo(function SyncConflictModal({
         <div className="flex items-center gap-3 px-6 py-4 border-b border-gray-200 dark:border-gray-700 bg-amber-50 dark:bg-amber-950/40">
           <AlertTriangle className="h-5 w-5 text-amber-600 shrink-0" aria-hidden="true" />
           <h2 id="conflict-modal-title" className="font-semibold text-gray-900 dark:text-gray-100">
-            Sync Conflicts Detected
+            Sync Review Needed
           </h2>
           <span className="ml-auto text-sm text-gray-500">
             {conflicts.length} remaining
@@ -81,7 +81,7 @@ export const SyncConflictModal = React.memo(function SyncConflictModal({
                   </span>
                   <ArrowRight className="h-3 w-3 shrink-0" aria-hidden="true" />
                   <span className="text-amber-600 dark:text-amber-400 font-medium">
-                    Server is now: {c.serverStageName}
+                    Current stage: {c.serverStageName}
                   </span>
                 </div>
                 <div className="flex gap-2">
@@ -90,14 +90,14 @@ export const SyncConflictModal = React.memo(function SyncConflictModal({
                     disabled={isApplying}
                     className="flex-1 rounded-md border border-gray-300 dark:border-gray-600 px-3 py-1.5 text-sm font-medium hover:bg-gray-50 dark:hover:bg-gray-800 disabled:opacity-50"
                   >
-                    Keep Server ({c.serverStageName})
+                    Keep Current Stage
                   </button>
                   <button
                     onClick={() => onForceApply(c.entryId)}
                     disabled={isApplying}
                     className="flex-1 rounded-md bg-amber-600 text-white px-3 py-1.5 text-sm font-medium hover:bg-amber-700 disabled:opacity-50"
                   >
-                    Apply My Change
+                    Apply Latest Offline Update
                   </button>
                 </div>
               </div>
@@ -112,7 +112,7 @@ export const SyncConflictModal = React.memo(function SyncConflictModal({
             disabled={!allResolved && conflicts.length > 0}
             className="rounded-md bg-gray-900 dark:bg-gray-100 text-white dark:text-gray-900 px-4 py-2 text-sm font-medium hover:opacity-90 disabled:opacity-40 disabled:cursor-not-allowed"
           >
-            {allResolved ? 'Done' : 'Resolve all conflicts to continue'}
+            {allResolved ? 'Done' : 'Resolve all items to continue'}
           </button>
         </div>
       </div>

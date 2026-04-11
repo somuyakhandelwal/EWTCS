@@ -1,8 +1,7 @@
 import { memo, useState, useEffect, useCallback, type MouseEvent } from 'react'
 import { Card, CardContent } from '@/shared/components/ui/card'
-import { Clock, Stethoscope } from 'lucide-react'
+import { Stethoscope } from 'lucide-react'
 import { getStageColorClasses, getDelayColorClasses } from '../lib/utils'
-import { useElapsedTime } from '../hooks/useElapsedTime'
 import { CleaningActions, isCleaningStage } from './CleaningActions'
 import { BedBottleneckInfo } from './BedBottleneckInfo'
 import { BedCardVisualBadges } from './BedCardVisualBadges'
@@ -53,15 +52,13 @@ interface BedCardProps {
   isQueuedOffline?: boolean
   /** EPIC 22: Nurse role diagnosis display (read-only) */
   onOpenDiagnosis?: (bedId: string) => void
-  /** EPIC 22: Doctor role diagnosis entry */
-  onOpenDoctorDiagnosis?: (bedId: string) => void
   /** Current user role - used for role-based button visibility (EPIC 22) */
   role?: string
 }
 export const BedCard = memo(function BedCard({
   bed, onClick, onContextMenu, onReasonSelect, showUpdated = false, errorMessage = null,
   searchQuery = '', showUndo = false, onUndo, undoTimerSeconds, animationEnabled = true,
-  isUndoing = false, isOffline = false, isQueuedOffline, onOpenDiagnosis, onOpenDoctorDiagnosis, role,
+  isUndoing = false, isOffline = false, isQueuedOffline, onOpenDiagnosis, role,
 }: BedCardProps) {
   const rawStageName = bed.currentStage?.name || 'Empty'
   const stageName = rawStageName === 'Cleaning' ? 'In Cleaning' : rawStageName
@@ -140,8 +137,12 @@ export const BedCard = memo(function BedCard({
           {onContextMenu && <p className="text-[10px] text-muted-foreground">Tap or right-click to update stage</p>}
           {showUpdated && <p className="text-[10px] text-status-occupied" role="status">Updated</p>}
           {isQueuedOffline && (
-            <p className="text-[10px] text-amber-500 font-medium" role="status" aria-label="Update queued — will sync when reconnected">
-              ⏳ Pending sync
+            <p
+              className="text-[10px] text-amber-600 dark:text-amber-400 font-semibold"
+              role="status"
+              aria-label="Update queued offline and will sync when reconnected"
+            >
+              {isOffline ? '⏳ Queued offline - will sync on reconnect' : '⏳ Pending sync'}
             </p>
           )}
           {errorMessage && <p className="text-[10px] text-destructive" role="alert">{errorMessage}</p>}

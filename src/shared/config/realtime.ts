@@ -28,15 +28,42 @@ export interface RealtimeConfig {
   cacheMaxSizeBytes: number
 }
 
+const MIN_POLLING_INTERVAL_MS = 1500
+const MIN_RETRY_INTERVAL_MS = 3000
+
+function parseInterval(value: string | undefined, fallback: number, min: number): number {
+  const parsed = Number.parseInt(value || String(fallback), 10)
+  if (!Number.isFinite(parsed)) return fallback
+  return Math.max(parsed, min)
+}
+
 /**
  * Get real-time update configuration from environment
  */
 export function getRealtimeConfig(): RealtimeConfig {
+  const pollingInterval = parseInterval(
+    process.env.NEXT_PUBLIC_REALTIME_POLLING_INTERVAL_MS,
+    3000,
+    MIN_POLLING_INTERVAL_MS,
+  )
+
+  const retryInterval = parseInterval(
+    process.env.NEXT_PUBLIC_REALTIME_RETRY_INTERVAL_MS,
+    10000,
+    MIN_RETRY_INTERVAL_MS,
+  )
+
+  const maxRetryInterval = parseInterval(
+    process.env.NEXT_PUBLIC_REALTIME_MAX_RETRY_INTERVAL_MS,
+    30000,
+    retryInterval,
+  )
+
   return {
     enabled: process.env.NEXT_PUBLIC_REALTIME_ENABLED !== 'false',
-    pollingInterval: parseInt(process.env.NEXT_PUBLIC_REALTIME_POLLING_INTERVAL_MS || '3000', 10),
-    retryInterval: parseInt(process.env.NEXT_PUBLIC_REALTIME_RETRY_INTERVAL_MS || '10000', 10),
-    maxRetryInterval: parseInt(process.env.NEXT_PUBLIC_REALTIME_MAX_RETRY_INTERVAL_MS || '30000', 10),
+    pollingInterval,
+    retryInterval,
+    maxRetryInterval,
     // US-16.1: Offline Cache
     cacheEnabled: process.env.NEXT_PUBLIC_CACHE_ENABLED !== 'false',
     cacheKey: process.env.NEXT_PUBLIC_CACHE_KEY || 'ewtcs_bed_grid_cache',

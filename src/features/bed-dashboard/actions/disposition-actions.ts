@@ -60,10 +60,12 @@ export async function recordDispositionDelayReason(input: {
         [input.bedId]
       )
 
+      // Insert new reason with both reason and delay_reason_option_id (FK)
+      // for backward compatibility and foreign key constraint
       await client.query(
         `INSERT INTO disposition_delay_reasons
-           (bed_id, bed_stage_log_id, reason, notes, recorded_by_user_id)
-         VALUES ($1, $2, $3, $4, $5)`,
+           (bed_id, bed_stage_log_id, reason, notes, recorded_by_user_id, delay_reason_option_id)
+         VALUES ($1, $2, $3, $4, $5, (SELECT id FROM delay_reason_options WHERE value = $3 LIMIT 1))`,
         [input.bedId, bedStageLogId, input.reason, input.notes ?? null, session.userId]
       )
 

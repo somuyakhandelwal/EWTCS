@@ -8,7 +8,15 @@ import type {
   StageCategories,
   UserRole,
 } from './stage-validation-types'
-import { getTransitionRule, getValidNextStages, getStageNameById } from './stage-validation-rules'
+import {
+  categorizeHousekeepingStages,
+  categorizeStandardStages,
+} from './stage-validation-categorization'
+import {
+  getTransitionRule,
+  getValidNextStages,
+  getStageNameById,
+} from './stage-validation-rules'
 
 /**
  * Validate a stage transition with detailed error messaging
@@ -109,10 +117,6 @@ export async function validateTransition(
 /**
  * Categorize all possible stages into allowed, override-required, and invalid
  * Used for UI to show which transitions are available and which need approval
- *
- * PERFORMANCE OPTIMIZATION: Uses Promise.all() for parallel database queries
- * instead of sequential loop. With 8 stages, this reduces response time by ~8x
- * (from 500ms to 50-100ms).
  */
 export async function categorizeStagesForTransition(
   fromStageId: string | null,
@@ -121,51 +125,10 @@ export async function categorizeStagesForTransition(
 ): Promise<StageCategories> {
   try {
     if (userRole === 'housekeeping') {
-      const results = await Promise.all(
-        allStageIds.map(async (toStageId) => ({
-          toStageId,
-          result: await validateTransition(fromStageId, toStageId, userRole),
-        }))
-      )
-      return {
-        allowed: results.filter(r => r.result.isValid).map(r => r.toStageId),
-        requiresOverride: [],
-        invalid: results.filter(r => !r.result.isValid).map(r => r.toStageId),
-      }
+      return categorizeHousekeepingStages(fromStageId, allStageIds)
     }
-    const allowed: string[] = []
-    const requiresOverride: string[] = []
-    const invalid: string[] = []
-    // Fetch all transition rules in parallel (single DB batch instead of sequential queries)
-    const rules = await Promise.all(
-      allStageIds.map(toStageId => getTransitionRule(fromStageId, toStageId))
-    )
-    // Process all results together
-    allStageIds.forEach((toStageId, index) => {
-      const rule = rules[index]
-      // No rule = allowed by default
-      if (!rule) {
-        allowed.push(toStageId)
-        return
-      }
-      // Explicitly allowed
-      if (rule.isAllowed) {
-        allowed.push(toStageId)
-        return
-      }
-      // Requires override
-      if (rule.requiresSupervisorOverride) {
-        if (userRole === 'supervisor' || userRole === 'admin') {
-          requiresOverride.push(toStageId)
-        } else {
-          invalid.push(toStageId)
-        }
-        return
-      }
-      // Explicitly forbidden with no override option
-      invalid.push(toStageId)
-    })
-    return { allowed, requiresOverride, invalid }
+
+    return categorizeStandardStages(fromStageId, allStageIds, userRole)
   } catch (error) {
     logger.error('Failed to categorize stages for transition', error as Error)
 

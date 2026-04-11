@@ -18,6 +18,7 @@ import { removeVirtualBed, createVirtualBed } from '@/features/bed-management/ac
 import { getBedGridData } from '@/features/bed-dashboard/actions/bed-grid-actions'
 import type { BedGridData } from '@/features/bed-dashboard/types/bed'
 import { AlertPreferencesPanel } from '@/features/notifications/components/AlertPreferencesPanel'
+import { OfflineQueueMonitor } from '@/features/bed-dashboard/components/OfflineQueueMonitor'
 import type { AlertPreferences } from '@/features/notifications/types/alert-preferences'
 
 interface SupervisorClientShellProps {
@@ -63,6 +64,8 @@ export function SupervisorClientShell({ initialData }: SupervisorClientShellProp
     return (
         <>
             <AlertPreferencesPanel onPreferencesChange={setAlertPreferences} />
+
+            <OfflineQueueMonitor />
 
             <div data-help-id="supervisor-overview">
                 <SupervisorBedOverview

@@ -10,10 +10,11 @@ import { getStageTransitionMap } from '../lib/stage-validation'
 import type { UserRole } from '../lib/stage-validation-types'
 import { getGlobalThresholdMs, getGlobalEscalationThresholdMs } from '@/shared/lib/threshold'
 import { perfStart, perfEnd, logPerf, PERF_SLA } from '@/shared/lib/perf-monitor'
+import { SETTINGS_CACHE_TAG, withCache } from '@/shared/lib/query-cache'
 
 export type BedAreaView = 'all' | 'emergency' | 'triage'
 
-async function getTriageWardIds(): Promise<Set<string>> {
+async function fetchTriageWardIdsFromDB(): Promise<Set<string>> {
   const result = await query<{ id: string }>(
     `
     SELECT id
@@ -28,6 +29,8 @@ async function getTriageWardIds(): Promise<Set<string>> {
 
   return new Set(result.rows.map((row) => row.id))
 }
+
+const getTriageWardIds = withCache(fetchTriageWardIdsFromDB, 'bed-dashboard:get-triage-ward-ids', 120, [SETTINGS_CACHE_TAG])
 
 function filterBedsByArea(data: BedGridData['beds'], areaView: BedAreaView, triageWardIds: Set<string>) {
   if (areaView === 'all' || triageWardIds.size === 0) {
@@ -58,7 +61,7 @@ export async function getBedGridData(areaView: BedAreaView = 'all'): Promise<{
     // EPIC 13: track end-to-end latency for Dashboard SLA monitoring (<2 s).
     const perfMark = perfStart()
 
-    logger.info('Fetching bed grid data')
+    logger.debug('Fetching bed grid data')
 
     const [delayThresholdMs, escalationThresholdMs] = await Promise.all([
       getGlobalThresholdMs(),
@@ -123,7 +126,7 @@ export async function getBedGridData(areaView: BedAreaView = 'all'): Promise<{
       userWardId: wardScopedRoles.has(session.role) ? userWard : undefined,
     }
 
-    logger.info('Bed grid data fetched successfully', {
+    logger.debug('Bed grid data fetched successfully', {
       bedCount: beds.length,
       stageCount: stages.length,
       areaView,

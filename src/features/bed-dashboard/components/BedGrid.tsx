@@ -163,6 +163,7 @@ export function BedGrid({
               undoTimerSeconds={undoState?.bedId === bed.id ? undoState.timer : 0}
               onUndo={undoState?.bedId === bed.id ? onUndo : undefined}
               isUndoing={undoState?.bedId === bed.id ? isUndoing : false}
+              isOffline={isOffline}
               isQueuedOffline={queuedBedIds?.has(bed.id) ?? false}
               onOpenDiagnosis={onOpenDiagnosis}
               role={role}
@@ -177,8 +178,10 @@ export function BedGrid({
           stages={data.stages}
           isOpen={Boolean(menuState)}
           position={menuState?.position ?? null}
-          isUpdating={Boolean(updatingBedId) || isLoadingTransitions}
+          isLoadingTransitions={isLoadingTransitions}
+          isMutating={Boolean(updatingBedId)}
           updatingStageId={updatingStageId}
+          isOffline={isOffline}
           validNextStages={validNextStages}
           overrideRequiredStages={overrideRequiredStages}
           error={menuError}

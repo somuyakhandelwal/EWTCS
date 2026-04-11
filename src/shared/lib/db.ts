@@ -9,6 +9,7 @@ import { logger } from '@/shared/config/logger';
  */
 const SLOW_QUERY_WARN_MS = 500;
 const SLOW_QUERY_ERROR_MS = 2000;
+const DB_LOG_QUERIES = process.env.DB_LOG_QUERIES === 'true';
 
 /**
  * Initializes the PostgreSQL connection pool.
@@ -48,7 +49,7 @@ export const poolInit = () => {
   });
 
   newPool.on('connect', () => {
-    logger.debug('New client connected to database pool');
+    if (DB_LOG_QUERIES) logger.debug('New client connected to database pool');
   });
 
   // Cache the pool globally in all environments to prevent connection exhaustion
@@ -102,11 +103,13 @@ export const query = async <T extends QueryResultRow = QueryResultRow>(
     const result = await pool.query<T>(text, params);
     const duration = Date.now() - start;
 
-    logger.debug(`Query executed in ${duration}ms`, {
-      queryLength: text.length,
-      duration,
-      affectedRows: result.rowCount,
-    });
+    if (DB_LOG_QUERIES) {
+      logger.debug(`Query executed in ${duration}ms`, {
+        queryLength: text.length,
+        duration,
+        affectedRows: result.rowCount,
+      });
+    }
 
     // EPIC 13: Detect queries that risk breaching page-level SLAs.
     if (duration > SLOW_QUERY_ERROR_MS) {

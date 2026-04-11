@@ -1,9 +1,14 @@
--- Migration 046: Create cath_lab_procedures table (US-24.1)
+-- Migration 056: Create cath_lab_procedures table (US-24.1)
 -- Purpose: Dedicated cardiology emergency workflow logging for CAG/PTCA procedures.
 
 -- Up Migration
 
-CREATE TYPE cath_lab_procedure_type AS ENUM ('CAG', 'PTCA');
+DO $$
+BEGIN
+  CREATE TYPE cath_lab_procedure_type AS ENUM ('CAG', 'PTCA');
+EXCEPTION
+  WHEN duplicate_object THEN NULL;
+END $$;
 
 CREATE TABLE IF NOT EXISTS cath_lab_procedures (
   id              UUID PRIMARY KEY DEFAULT gen_random_uuid(),
