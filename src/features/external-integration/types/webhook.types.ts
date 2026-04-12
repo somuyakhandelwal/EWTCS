@@ -60,6 +60,7 @@ export interface WebhookEndpointConfig {
 }
 
 export interface WebhookDeliveryHeaders {
+  [headerName: string]: string
   'Content-Type': 'application/json'
   'X-EWTCS-Event': WebhookEventType
   'X-EWTCS-Timestamp': string
