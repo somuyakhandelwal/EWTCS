@@ -3,6 +3,7 @@
 
 import { query } from '@/shared/lib/db'
 import { logger } from '@/shared/config/logger'
+import { getAllSystemSettings } from '@/shared/lib/system-settings'
 import { buildLosWhereClause } from './los-where-clause'
 import type {
   LosFilters,
@@ -17,11 +18,11 @@ export type { LosFilters, LosSummary, LosTrendPoint }
 
 export async function getLosTargetMs(): Promise<number | null> {
   try {
-    const result = await query<{ value: string }>(
-      `SELECT value FROM system_settings WHERE key = 'los_target_minutes' LIMIT 1`
-    )
-    if (result.rows.length === 0) return null
-    const minutes = parseInt(result.rows[0].value, 10)
+    const settings = await getAllSystemSettings()
+    const raw = settings.get('los_target_minutes')
+    if (!raw) return null
+
+    const minutes = parseInt(raw, 10)
     return isNaN(minutes) ? null : minutes * 60 * 1000
   } catch (error) {
     logger.error('getLosTargetMs failed', error as Error)
