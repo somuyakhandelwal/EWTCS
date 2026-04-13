@@ -5,6 +5,7 @@ import { logger } from '@/shared/config/logger'
 import { UpdateBedStageSchema, type UpdateBedStageInput } from '../schemas/bed-schemas'
 import { updateBedStageInDB } from '../lib/bed-mutations'
 import { checkWardAccess } from '../lib/bed-queries'
+import type { BedAccessInfo } from '../lib/bed-access-queries'
 import { requireWriteRole } from '@/shared/lib/auth'
 import { logAudit } from '@/shared/lib/audit'
 import { validateTransition } from '../lib/stage-validation'
@@ -57,16 +58,27 @@ export async function updateBedStage(input: UpdateBedStageInput): Promise<{
     ])
     if (piiError) return { success: false, error: piiError }
 
-    // IDOR FIX: Ward-level access control (checkWardAccess in bed-queries.ts)
-    const wardError = await checkWardAccess(session.userId, result.data.bedId, session.role)
-    if (wardError) {
-      logger.warn('Ward access denied', { userId: session.userId, bedId: result.data.bedId })
-      return { success: false, error: wardError }
-    }
-
     const bed = await getBedById(result.data.bedId)
     if (!bed) {
       return { success: false, error: 'Bed not found' }
+    }
+
+    const prefetchedBedInfo: BedAccessInfo = {
+      ward_id: bed.wardId ?? null,
+      is_virtual: bed.isVirtual,
+      is_temporary: bed.isTemporary,
+    }
+
+    // IDOR FIX: Ward-level access control (checkWardAccess in bed-queries.ts)
+    const wardError = await checkWardAccess(
+      session.userId,
+      result.data.bedId,
+      session.role,
+      prefetchedBedInfo
+    )
+    if (wardError) {
+      logger.warn('Ward access denied', { userId: session.userId, bedId: result.data.bedId })
+      return { success: false, error: wardError }
     }
 
     const allStages = await getAllStages()

@@ -45,6 +45,7 @@ export const TRIAGE_INFO_METADATA_PROJECTION = `
 export const BED_SELECT_PROJECTION = `
   b.id,
   b.bed_number as "bedNumber",
+  b.ward_id as "wardId",
   b.current_stage_id as "currentStageId",
   b.patient_start_time as "patientStartTime",
   b.last_stage_change as "lastStageChange",

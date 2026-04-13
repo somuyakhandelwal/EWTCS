@@ -8,13 +8,14 @@ import { requireRole } from '@/shared/lib/auth'
 import { query } from '@/shared/lib/db'
 import { getStageTransitionMap } from '../lib/stage-validation'
 import type { UserRole } from '../lib/stage-validation-types'
+import { readTransitionEntry } from '../lib/stage-transition-map-utils'
 import { getGlobalThresholdMs, getGlobalEscalationThresholdMs } from '@/shared/lib/threshold'
 import { perfStart, perfEnd, logPerf, PERF_SLA } from '@/shared/lib/perf-monitor'
 import { SETTINGS_CACHE_TAG, withCache } from '@/shared/lib/query-cache'
 
 export type BedAreaView = 'all' | 'emergency' | 'triage'
 
-async function fetchTriageWardIdsFromDB(): Promise<Set<string>> {
+async function fetchTriageWardIdsFromDB(): Promise<string[]> {
   const result = await query<{ id: string }>(
     `
     SELECT id
@@ -27,7 +28,7 @@ async function fetchTriageWardIdsFromDB(): Promise<Set<string>> {
     `
   )
 
-  return new Set(result.rows.map((row) => row.id))
+  return result.rows.map((row) => row.id)
 }
 
 const getTriageWardIds = withCache(fetchTriageWardIdsFromDB, 'bed-dashboard:get-triage-ward-ids', 120, [SETTINGS_CACHE_TAG])
@@ -70,13 +71,17 @@ export async function getBedGridData(areaView: BedAreaView = 'all'): Promise<{
 
     // Fetch beds, stages, transition map, and caller's ward assignment in parallel
     // US-16.2: stageTransitionMap is cached with BedGridData so offline nurses see stage options
-    const [allBeds, stages, transitionMapRaw, userWard, triageWardIds] = await Promise.all([
+    const [allBeds, stages, transitionMapRaw, userWard, triageWardIdList] = await Promise.all([
       getBedsWithElapsedTime(delayThresholdMs, escalationThresholdMs),
       getAllStages(),
       getStageTransitionMap(session.role as UserRole),
       getUserWard(session.userId),
       getTriageWardIds(),
     ])
+
+    // withCache returns serialized values; keep cached payload as string[] and
+    // reconstruct a Set for fast membership checks.
+    const triageWardIds = new Set(triageWardIdList)
 
     // Ward-scope the bed list for nurses and housekeeping.
     // Admins/supervisors see every ward; floater nurses (no ward assigned) also see all.
@@ -100,7 +105,7 @@ export async function getBedGridData(areaView: BedAreaView = 'all'): Promise<{
     const stageTransitionMap: BedGridData['stageTransitionMap'] = {}
 
     for (const fromKey of allFromKeys) {
-      const entry = transitionMapRaw.get(fromKey) ?? { allowed: [], requiresOverride: [], blocked: [] }
+      const entry = readTransitionEntry(transitionMapRaw, fromKey) ?? { allowed: [], requiresOverride: [], blocked: [] }
       const covered = new Set([...entry.allowed, ...entry.requiresOverride, ...entry.blocked])
       // Stages absent from `covered` have no DB rule → allowed by default (matches online path)
       const noRuleStages = allStageIds.filter(id => !covered.has(id))

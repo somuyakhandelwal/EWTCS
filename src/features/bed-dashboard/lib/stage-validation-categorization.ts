@@ -1,5 +1,6 @@
 import type { StageCategories, UserRole } from './stage-validation-types'
 import { getStageNamesByIds, getStageTransitionMap } from './stage-validation-rules'
+import { readTransitionEntry } from './stage-transition-map-utils'
 
 function buildHousekeepingDecision(fromStageName: string | null, toStageName: string | null): boolean {
   const isStartCleaning = fromStageName === 'Discharge Process' && toStageName === 'Cleaning'
@@ -44,7 +45,7 @@ export async function categorizeStandardStages(
 ): Promise<StageCategories> {
   const transitionMap = await getStageTransitionMap(userRole)
   const fromKey = fromStageId || 'null'
-  const entry = transitionMap.get(fromKey) ?? { allowed: [], requiresOverride: [], blocked: [] }
+  const entry = readTransitionEntry(transitionMap, fromKey) ?? { allowed: [], requiresOverride: [], blocked: [] }
 
   const allowedSet = new Set(entry.allowed)
   const overrideSet = new Set(entry.requiresOverride)

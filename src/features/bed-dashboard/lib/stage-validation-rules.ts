@@ -2,7 +2,7 @@
 // Epic 2: One-Click Stage Update System (US-2.2)
 // Purpose: Database queries for stage transition rules
 
-import pool from '@/shared/lib/db'
+import { query } from '@/shared/lib/db'
 import { logger } from '@/shared/config/logger'
 import { SETTINGS_CACHE_TAG, withCache } from '@/shared/lib/query-cache'
 import type { TransitionRule, UserRole } from './stage-validation-types'
@@ -16,7 +16,7 @@ export async function getTransitionRule(
   toStageId: string
 ): Promise<TransitionRule | null> {
   try {
-    const result = await pool.query<TransitionRule>(
+    const result = await query<TransitionRule>(
       `
       SELECT 
         from_stage_id as "fromStageId",
@@ -52,7 +52,7 @@ export async function getValidNextStages(
   userRole: UserRole
 ): Promise<string[]> {
   try {
-    const result = await pool.query<{ toStageId: string }>(
+    const result = await query<{ toStageId: string }>(
       `
       SELECT DISTINCT to_stage_id as "toStageId"
       FROM stage_transitions
@@ -88,7 +88,7 @@ async function fetchStageTransitionMapFromDB(
   userRole: UserRole
 ): Promise<Map<string, { allowed: string[]; requiresOverride: string[]; blocked: string[] }>> {
   try {
-    const result = await pool.query<{
+    const result = await query<{
       fromStageId: string | null
       toStageId: string
       isAllowed: boolean
@@ -155,7 +155,7 @@ export const getStageTransitionMap = withCache(
 export async function getStageNameById(stageId: string | null): Promise<string | null> {
   if (!stageId) return null
 
-  const result = await pool.query<{ name: string }>(
+  const result = await query<{ name: string }>(
     `SELECT name FROM stages WHERE id = $1 AND is_active = true LIMIT 1`,
     [stageId]
   )
@@ -169,7 +169,7 @@ export async function getStageNameById(stageId: string | null): Promise<string |
 export async function getStageNamesByIds(stageIds: string[]): Promise<Map<string, string>> {
   if (stageIds.length === 0) return new Map()
 
-  const result = await pool.query<{ id: string; name: string }>(
+  const result = await query<{ id: string; name: string }>(
     `SELECT id, name FROM stages WHERE id = ANY($1::uuid[]) AND is_active = true`,
     [stageIds]
   )
