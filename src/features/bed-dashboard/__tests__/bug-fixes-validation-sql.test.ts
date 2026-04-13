@@ -189,3 +189,4 @@ describe('Bug 8 – isTokenBlacklisted fails closed on DB error', () => {
     expect(src).not.toContain('console.error')
   })
 })
+

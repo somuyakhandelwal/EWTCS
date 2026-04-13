@@ -2,12 +2,18 @@ import { query } from '@/shared/lib/db'
 import { logger } from '@/shared/config/logger'
 import { SETTINGS_CACHE_TAG, withCache } from '@/shared/lib/query-cache'
 
+export type BedAccessInfo = {
+  ward_id: string | null
+  is_virtual: boolean
+  is_temporary: boolean
+}
+
 /** Get the ward ID and flags for a specific bed (for access control) */
 export async function getBedAccessInfo(
   bedId: string
-): Promise<{ ward_id: string | null; is_virtual: boolean; is_temporary: boolean } | null> {
+): Promise<BedAccessInfo | null> {
   try {
-    const result = await query<{ ward_id: string | null; is_virtual: boolean; is_temporary: boolean }>(
+    const result = await query<BedAccessInfo>(
       `
       SELECT b.ward_id, b.is_virtual, b.is_temporary
       FROM beds b
@@ -58,15 +64,18 @@ export const getUserWard = withCache(fetchUserWardFromDB, 'bed-dashboard:get-use
 export async function checkWardAccess(
   userId: string,
   bedId: string,
-  role: string
+  role: string,
+  prefetchedBedInfo?: BedAccessInfo
 ): Promise<string | null> {
-  const [userWard, bedInfo] = await Promise.all([getUserWard(userId), getBedAccessInfo(bedId)])
+  if (role === 'admin' || role === 'supervisor') return null
+
+  const bedInfo = prefetchedBedInfo ?? await getBedAccessInfo(bedId)
 
   if (!bedInfo) return 'Bed not found.'
 
-  if (role === 'admin') return null
-
   if (bedInfo.is_virtual || bedInfo.is_temporary) return null
+
+  const userWard = await getUserWard(userId)
 
   if (!userWard) return null
 

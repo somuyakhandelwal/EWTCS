@@ -3,6 +3,9 @@
 
 /**
  * Whitelist of allowed table names to prevent SQL injection
+ *
+ * IMPORTANT: Update this whitelist whenever a migration creates a new table
+ * or materialized view used by dynamic table-name helpers.
  */
 export const ALLOWED_TABLES = new Set([
   // ── Core (migrations 001–014) ──────────────────────────────────
@@ -33,6 +36,16 @@ export const ALLOWED_TABLES = new Set([
   'audit_logs_archive',            // migration 028
   'user_settings',                 // DB5-02: user preference persistence
   'offline_queue',                 // DB5-01: offline operation persistence
+  // ── Feature tables (migrations 036–055 + DB2/DB5) ─────────────
+  'ot_rooms',                      // migration 045
+  'cath_lab_procedures',           // migration 057 (introduced in 056)
+  'er_intake',                     // migration 048
+  'diagnosis',                     // migration 049
+  'ot_procedures',                 // migration 050
+  'delay_reason_options',          // migration 038
+  'alert_preferences',             // migration 038
+  'user_feedback',                 // migration 040
+  'error_events',                  // migration 039
 ])
 
 /**
