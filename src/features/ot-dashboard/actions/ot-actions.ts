@@ -59,7 +59,7 @@ export async function updateOTRoomStatus(input: {
   procedureName?: string
 }): Promise<{ success: boolean; error?: string }> {
   try {
-    const session = await requireWriteRole(['nurse', 'supervisor', 'admin'], {
+    const session = await requireWriteRole(['nurse', 'supervisor', 'admin', 'doctor', 'cardiologist'], {
       actionType: 'UPDATE',
       entityType: 'ot_room',
       entityId: input.roomId,
@@ -79,8 +79,8 @@ export async function updateOTRoomStatus(input: {
 
       await client.query(
         `UPDATE ot_rooms
-         SET status = $1,
-             started_at = CASE WHEN $1 = 'ongoing' THEN NOW() ELSE NULL END,
+         SET status = $1::text::ot_room_status,
+             started_at = CASE WHEN $1::text = 'ongoing' THEN NOW() ELSE NULL END,
              updated_by = $2,
              updated_at = NOW()
          WHERE id = $3`,
