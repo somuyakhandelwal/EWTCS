@@ -48,7 +48,7 @@ export async function runProcedureTransition(
          status
        )
        VALUES ($1, $2, $3, NOW(), 'IN_PROGRESS')`,
-      [input.roomId, parsed.data.procedureName, null]
+      [input.roomId, parsed.data.procedureName, session.userId]
     )
 
     await logAudit({

@@ -1,23 +1,22 @@
-export type CathLabProcedureType = 'CAG' | 'PTCA'
+export type CathLabProcedureType = string
 
 export interface CathLabProcedure {
   id: string
   procedureType: CathLabProcedureType
-  patientId: string
-  cardiologist: string
-  startTime: string
-  endTime: string
-  outcome: string
-  createdBy: string | null
+  patientUhid: string | null
+  cardiologistId: string
+  startTime: string | null
+  endTime: string | null
+  outcome: string | null
   createdAt: string
   updatedAt: string
 }
 
 export interface CreateCathLabProcedureInput {
   procedureType: CathLabProcedureType
-  patientId: string
-  cardiologist: string
-  startTime: string
-  endTime: string
-  outcome: string
+  patientUhid?: string | null
+  cardiologistId?: string
+  startTime?: string | null
+  endTime?: string | null
+  outcome?: string | null
 }

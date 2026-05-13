@@ -2,7 +2,7 @@
 
 > A real-time digital dashboard for hospital emergency ward management that enables nurses to track bed status with one-click updates, automatic time tracking, and AI-generated daily performance reports.
 
-[![Next.js](https://img.shields.io/badge/Next.js-15.5-black)](https://nextjs.org/)
+[![Next.js](https://img.shields.io/badge/Next.js-15.1.12-black)](https://nextjs.org/)
 [![TypeScript](https://img.shields.io/badge/TypeScript-5.0-blue)](https://www.typescriptlang.org/)
 [![PostgreSQL](https://img.shields.io/badge/PostgreSQL-14+-blue)](https://www.postgresql.org/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
@@ -25,7 +25,7 @@ Emergency wards lack real-time visibility into patient progress. Manual tracking
 - **Daily AI Reports**: Automated performance summaries
 ---
 
-- **[Next.js 15.5](https://nextjs.org/)** - React framework with App Router
+- **[Next.js 15.1.12](https://nextjs.org/)** - React framework with App Router
 - **[shadcn/ui](https://ui.shadcn.com/)** - Beautiful, accessible components
 - **[Tailwind CSS](https://tailwindcss.com/)** - Utility-first styling
 **Our Solution:**
@@ -54,7 +54,7 @@ A simple, intuitive dashboard that provides:
 ## 🔧 Technology Stack
 
 ### Frontend
-- **Next.js 15.5** - React framework with App Router
+- **Next.js 15.1.12** - React framework with App Router
 - **shadcn/ui** - Beautiful, accessible components
 - **Tailwind CSS** - Utility-first styling
 - **TypeScript** - Static type checking

@@ -18,7 +18,7 @@ Core capabilities:
 - **External Integration API** — Read-only API endpoints for other hospital systems.
 - **OT Room Tracking** — 16 Operation Theatre rooms with Available/Ongoing status.
 - **Cath Lab Module** — Full cardiac catheterization procedure tracking with cardiologist workflow.
-- **Department Modules** — ER Intake, Diagnosis, and OT Procedures tables (⚠️ partial — schema ready, UI pending).
+- **Department Modules** — ER Intake and OT Procedures are partially implemented (schema + metrics), and Diagnosis has doctor actions plus embedded Bed Card UI (standalone department UIs still pending).
 - **Audit Trail** — Every action is logged immutably with IP address, user, timestamp, and change details.
 
 ---
@@ -30,9 +30,9 @@ Core capabilities:
 | **Framework** | Next.js (App Router) | ^15.1.12 |
 | **UI** | React | ^19.0.0 |
 | **Language** | TypeScript | ^5 |
-| **Styling** | Tailwind CSS | ^3.4.17 |
-| **Database** | PostgreSQL | Via `pg` (^8.11.3) connection pool |
-| **ORM/Migrations** | Raw SQL + `node-pg-migrate` | ^8.0.4 — 68 migration files |
+| **Styling** | Tailwind CSS | ^4.2.2 |
+| **Database** | PostgreSQL | Via `pg` (^8.20.0) connection pool |
+| **ORM/Migrations** | Raw SQL + `node-pg-migrate` | ^8.0.4 — 75 migration files |
 | **Authentication** | Custom JWT via `jose` | HS256, httpOnly cookies |
 | **Password Hashing** | `bcrypt` / `bcryptjs` | ^6.0.0 / ^3.0.3 |
 | **Validation** | `zod` | ^4.3.6 |
@@ -50,11 +50,11 @@ Core capabilities:
 
 ```
 EWTCS/
-├── migrations/             # 68 SQL migration files (001_init → 058 + timestamped), run via node-pg-migrate
+├── migrations/             # 75 SQL/JS migration files, run via node-pg-migrate
 ├── scripts/                # DB setup, seeding, backup, validation, and deployment scripts
 ├── src/
 │   ├── app/                # Next.js App Router
-│   │   ├── api/            # 18 API route handlers (auth, bed-dashboard, backup, cron, etc.)
+│   │   ├── api/            # 23 API route handlers (auth, bed-dashboard, backup, cron, offline, triage, etc.)
 │   │   ├── admin/          # Admin panel pages
 │   │   ├── analytics/      # Analytics/reporting pages
 │   │   ├── dashboard/      # Bed grid dashboard (nurse/housekeeping view)

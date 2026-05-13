@@ -86,7 +86,7 @@ export async function getValidNextStages(
  */
 async function fetchStageTransitionMapFromDB(
   userRole: UserRole
-): Promise<Map<string, { allowed: string[]; requiresOverride: string[]; blocked: string[] }>> {
+): Promise<Record<string, { allowed: string[]; requiresOverride: string[]; blocked: string[] }>> {
   try {
     const result = await pool.query<{
       fromStageId: string | null
@@ -107,15 +107,15 @@ async function fetchStageTransitionMapFromDB(
       []
     )
 
-    const map = new Map<string, { allowed: string[]; requiresOverride: string[]; blocked: string[] }>()
+    const map: Record<string, { allowed: string[]; requiresOverride: string[]; blocked: string[] }> = {}
 
     for (const row of result.rows) {
       const key = row.fromStageId || 'null'
-      if (!map.has(key)) {
-        map.set(key, { allowed: [], requiresOverride: [], blocked: [] })
+      if (!map[key]) {
+        map[key] = { allowed: [], requiresOverride: [], blocked: [] }
       }
 
-      const entry = map.get(key)!
+      const entry = map[key]
 
       if (row.isAllowed) {
         if (!entry.allowed.includes(row.toStageId)) {

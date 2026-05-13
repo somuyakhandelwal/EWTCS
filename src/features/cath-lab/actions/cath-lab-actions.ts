@@ -28,7 +28,7 @@ export async function createCathLabProcedureAction(input: CreateCathLabProcedure
       }
     }
 
-    const procedure = await createCathLabProcedure(result.data, session.userId)
+    const procedure = await createCathLabProcedure(result.data, result.data.cardiologistId || session.userId)
 
     await logAudit({
       actionType: 'CREATE_CATH_LAB_PROCEDURE',
@@ -37,7 +37,7 @@ export async function createCathLabProcedureAction(input: CreateCathLabProcedure
       performedBy: session.userId,
       metadata: {
         procedureType: procedure.procedureType,
-        patientId: procedure.patientId,
+        patientUhid: procedure.patientUhid,
       },
     })
 

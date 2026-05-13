@@ -19,7 +19,7 @@ Migrations live in `migrations/` and are run in **lexicographic filename order**
 
 ---
 
-## Full Migration Inventory (74 files)
+## Full Migration Inventory (75 files)
 
 | File | Purpose |
 |------|---------|
@@ -77,22 +77,28 @@ Migrations live in `migrations/` and are run in **lexicographic filename order**
 | `048_create_er_intake_table.sql` | er_intake table (EPIC 20 — US-20.1) |
 | `049_create_diagnosis_table.sql` | diagnosis table (EPIC 20 — US-20.2) |
 | `050_create_ot_procedures_table.sql` | ot_procedures table (EPIC 20 — US-20.3) |
-| `052_repair_ot_rooms_dependency.sql` | Repair migration for ot_rooms FK dependencies (051 skipped) |
+| `051_repair_ot_rooms_dependency.sql` | Repair migration for ot_rooms FK dependencies |
+| `052_replace_daily_summaries_with_materialized_view.sql` | Replaces daily_summaries table with `daily_summaries_mv` materialized view for reporting performance |
 | `054_repair_stage_transitions_table.sql` | Repair migration for stage_transitions (053 skipped) |
+| `055_seed_emergency_ward.sql` | Seeds Emergency Ward records required by department metrics |
 | `056_create_cath_lab_procedures.sql` | Initial minimal cath_lab_procedures table (CAG/PTCA enum approach) |
 | `056_seed_emergency_ward.sql` | ⚠️ Duplicate number — seeds Emergency Ward (code: ER) into wards |
 | `057_create_cath_lab_procedures_table.sql` | Drops the 056 minimal table, recreates with full EPIC 24 schema |
+| `058_normalize_delay_reason_fk.sql` | Normalizes delay reason FK behavior and transition compatibility |
 | `058_repair_cath_lab_procedures_columns.sql` | Final repair pass on cath_lab_procedures columns |
 | `059_drop_diagnosis_plaintext_columns.sql` | Drops plaintext diagnosis PHI columns after encrypted backfill |
 | `060_add_current_stage_trigger.sql` | Adds current-stage maintenance trigger support |
 | `061_extend_cath_lab_procedures.sql` | Extends cath_lab_procedures safely for environments that still started from the minimal schema |
 | `1740649700000_add-performance-indexes.js` | JS migration — additional performance indexes |
+| `1743241500000_create_user_settings.sql` | Creates user_settings table for per-user preferences |
 | `1771680144644_add-escalation-threshold.js` | JS migration — escalation_threshold_minutes setting |
 | `1773770454739_add-triage-columns-to-beds.js` | JS migration — triage columns on beds |
 | `1773838271566_create-department-metrics-tables.js` | JS migration — **no-op** (canonical SQL migrations 048/050 own these tables) |
 | `1773855000000_seed_triage_area_beds.sql` | Seeds Triage Area ward and beds |
 | `1774000000000_enforce_symptom_40_char_limit_after_triage.sql` | Re-enforces 40-char symptom constraint after triage columns added |
 | `1774239900000_ot_procedure_tracking_constraints.sql` | surgeon_id made nullable; unique index for one active OT per room |
+| `1775301000000_create_offline_queue.sql` | Creates offline_queue table for deferred client operations |
+| `1775302000000_add_client_operation_id_to_offline_queue.sql` | Adds idempotency key support for offline queue replay |
 
 ---
 
@@ -118,7 +124,7 @@ These arose from parallel team development. They are **not a bug** — `node-pg-
 | Gap | Reason |
 |-----|--------|
 | 036 | Removed/superseded — `037_fix_stage_transitions.sql` is the corrective |
-| 051, 053, 055 | Renumbered during team development; covered by subsequent repair migrations |
+| 053 | Reserved/skipped during team development; covered by subsequent repair migrations |
 
 ---
 

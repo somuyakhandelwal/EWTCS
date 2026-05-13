@@ -37,7 +37,33 @@ All API routes are located under `src/app/api/`. Authentication is enforced via 
 
 | Route | Method | Auth Required | Purpose | Request Body | Response |
 |-------|--------|---------------|---------|--------------|----------|
+| `/api/bed-dashboard/snapshot` | GET | ✅ Session | Return a consolidated dashboard snapshot for polling clients | None | `{ success: boolean, data?: object }` |
 | `/api/bed-dashboard/undo` | POST | ✅ Session (any role, action enforces role) | Undo the last bed stage update | `{ bedId: string }` | `{ success: boolean, error?: string }` |
+
+---
+
+## Bed Stage Module
+
+| Route | Method | Auth Required | Purpose | Request Body | Response |
+|-------|--------|---------------|---------|--------------|----------|
+| `/api/bed-stage/update` | POST | ✅ Session (write role enforced in action) | Apply a stage transition to a bed | `{ bedId: string, toStageId: string, ... }` | `{ success: boolean, data?: object, error?: string }` |
+
+---
+
+## Triage Module
+
+| Route | Method | Auth Required | Purpose | Request Body | Response |
+|-------|--------|---------------|---------|--------------|----------|
+| `/api/triage/update` | POST | ✅ Session (write role enforced in action) | Submit triage assessment updates for a bed | `{ bedId: string, triageData: object }` | `{ success: boolean, error?: string }` |
+
+---
+
+## Offline Sync Module
+
+| Route | Method | Auth Required | Purpose | Request Body | Response |
+|-------|--------|---------------|---------|--------------|----------|
+| `/api/offline-queue` | GET, POST | ✅ Session | Inspect/enqueue offline operations for deferred replay | `{ operations?: object[] }` (POST) | `{ success: boolean, data?: object }` |
+| `/api/offline-sync/execute` | POST | ✅ Session | Execute queued offline operations on reconnect | `{ operationIds?: string[] }` | `{ success: boolean, results?: object[] }` |
 
 ---
 
@@ -135,27 +161,32 @@ Returns 503 if database is unreachable.
 
 ---
 
-## Summary Table (All 18 Route Files)
+## Summary Table (All 23 Route Files)
 
 | # | Route File | Methods | Auth | Module |
 |---|-----------|---------|------|--------|
 | 1 | `auth/login/route.ts` | POST | Public | Auth |
 | 2 | `auth/logout/route.ts` | POST | Session | Auth |
 | 3 | `auth/force-logout/route.ts` | GET | Public | Auth |
-| 4 | `bed-dashboard/undo/route.ts` | POST | Session | Bed Dashboard |
-| 5 | `bed-history/correct/route.ts` | POST | Session (supervisor/admin) | Bed History |
-| 6 | `daily-summary/generate/route.ts` | POST, GET | Session (admin/supervisor/auditor) | AI Summary |
-| 7 | `daily-summary/[date]/route.ts` | GET | Session | AI Summary |
-| 8 | `external/beds/route.ts` | GET | API Key | External |
-| 9 | `external/reports/route.ts` | GET | API Key | External |
-| 10 | `external/docs/route.ts` | GET | Public | External |
-| 11 | `backup/status/route.ts` | GET, POST | Admin only | Backup |
-| 12 | `backup/restore/route.ts` | POST | Admin only | Backup |
-| 13 | `cron/archival/route.ts` | GET | CRON_SECRET Bearer | Cron |
-| 14 | `feedback/route.ts` | POST | Any authenticated | Feedback |
-| 15 | `health/route.ts` | GET | Public | Health |
-| 16 | `help/events/route.ts` | POST | Session | Help |
-| 17 | `monitoring/errors/route.ts` | GET, PATCH | Admin / Supervisor | Monitoring |
-| 18 | `monitoring/track/route.ts` | POST | Session | Monitoring |
+| 4 | `backup/restore/route.ts` | POST | Admin only | Backup |
+| 5 | `backup/status/route.ts` | GET, POST | Admin only | Backup |
+| 6 | `bed-dashboard/snapshot/route.ts` | GET | Session | Bed Dashboard |
+| 7 | `bed-dashboard/undo/route.ts` | POST | Session | Bed Dashboard |
+| 8 | `bed-history/correct/route.ts` | POST | Session (supervisor/admin) | Bed History |
+| 9 | `bed-stage/update/route.ts` | POST | Session (write role enforced) | Bed Stage |
+| 10 | `cron/archival/route.ts` | GET | CRON_SECRET Bearer | Cron |
+| 11 | `daily-summary/[date]/route.ts` | GET | Session | AI Summary |
+| 12 | `daily-summary/generate/route.ts` | POST, GET | Session (admin/supervisor/auditor) | AI Summary |
+| 13 | `external/beds/route.ts` | GET | API Key | External |
+| 14 | `external/docs/route.ts` | GET | Public | External |
+| 15 | `external/reports/route.ts` | GET | API Key | External |
+| 16 | `feedback/route.ts` | POST | Any authenticated | Feedback |
+| 17 | `health/route.ts` | GET | Public | Health |
+| 18 | `help/events/route.ts` | POST | Session | Help |
+| 19 | `monitoring/errors/route.ts` | GET, PATCH | Admin / Supervisor | Monitoring |
+| 20 | `monitoring/track/route.ts` | POST | Session | Monitoring |
+| 21 | `offline-queue/route.ts` | GET, POST | Session | Offline Sync |
+| 22 | `offline-sync/execute/route.ts` | POST | Session | Offline Sync |
+| 23 | `triage/update/route.ts` | POST | Session (write role enforced) | Triage |
 
 > ⚠️ **Note:** Many bed operations (stage updates, patient admission, bed CRUD) are handled via **Next.js Server Actions** in the `features/` directory rather than traditional API routes. These are invoked directly from React Server Components and are not accessible as REST endpoints.

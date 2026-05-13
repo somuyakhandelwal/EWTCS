@@ -42,22 +42,11 @@ feature-name/
 - Dual-update safety: app-level bed stage update is primary, DB trigger on `bed_stage_logs` is consistency backstop
 - Visual alerts and color configuration
 
-### `analytics/`
-**EPIC 7: Disposition Bottleneck & TAT Analytics**
-- Disposition bottleneck tracking
-- Waiting time analytics
-- Turnaround time (TAT) analysis
-- Delay reason attribution (US-17)
-- CSV export for analysis
-
-### `audit-mode/`
-**EPIC 12: Audit Role & Compliance (NEW) ✅**
-- Auditor read-only role with full data access
-- All action buttons disabled in audit mode
-- Audit logging with immutable records
-- Audit mode indicator banner
-- Read-only auditor history with filtering, sorting, pagination
-- Comprehensive audit trail with IP tracking and timestamps
+### `management-report/`
+**Reporting & KPI Dashboard**
+- Delayed patients, bed performance, and stage delay reports
+- Report sign-off workflow for supervisor/admin
+- Export-friendly datasets for operational review
 
 ### `ai-summary/`
 **EPIC 9: Daily AI Summary Generator ✅**
@@ -79,7 +68,7 @@ feature-name/
 - Preference-aware supervisor alert visibility
 
 ### `security-scanning/`
-**EPIC 17: Security & Privacy (Automated Vulnerability Scanning) ✅**
+**EPIC 17: Security & Privacy (Automated Vulnerability Scanning) 🟡**
 - Automated weekly vulnerability scanning with npm audit
 - Weekly schedule (Monday 00:00 UTC) + on-demand + PR integration
 - SLA tracking with deadline calculation per severity:
@@ -91,7 +80,7 @@ feature-name/
 - Slack & email notifications for vulnerability alerts
 - GitHub issue creation for critical vulnerabilities
 - PR comments with scan results and blocking on critical vulns
-- Historical scan archival (90-day artifacts + git history)
+- Historical scan archival framework (DB persistence wiring still in progress)
 - Dependabot integration for automated dependency updates
 - Multi-format reporting (Markdown, HTML, JSON)
 - Admin-only server actions with audit logging
@@ -119,15 +108,50 @@ feature-name/
 - Shift-aware logging (shift_id on bed_stage_logs)
 - Admin shift management page
 
-### `er-intake/` *(schema ready, UI pending)*
-**EPIC 20 / US-20.1 — In Progress**
-- `er_intake` table provisioned (migration 048)
-- No intake form UI yet
+### `bed-management/`
+**Bed Administration**
+- Bed CRUD and temporary/virtual bed handling
+- Admin-level bed configuration flows
 
-### `diagnosis/` *(schema ready, UI pending)*
+### `stage-management/`
+**Stage Configuration**
+- Stage catalog and transition policy management
+- Delay-threshold and workflow rule control
+
+### `ward-management/`
+**Ward Administration**
+- Ward CRUD and assignment mappings
+- Access-control support for ward-scoped visibility
+
+### `data-retention/`
+**Data Lifecycle & Archival**
+- Retention configuration and archival workflow
+- Retrieval/search utilities for archived records
+
+### `system-health/`
+**Operations Monitoring**
+- Error/event tracking and operational health metrics
+- Admin monitoring actions and acknowledgements
+
+### `adoption/`
+**Adoption & Feedback**
+- User feedback capture and usage/adoption analytics
+
+### `export/` and `import/`
+**Data Interop**
+- CSV/PDF export support
+- Batch import with validation and duplicate protection
+
+### `help/`
+**In-App Guidance**
+- Contextual help content and usage event tracking
+
+### `diagnosis/` *(partially integrated)*
 **EPIC 20 / US-20.2 — In Progress**
 - `diagnosis` table provisioned (migration 049)
-- No UI or server actions yet
+- Doctor-only submit/read server actions implemented
+- Diagnosis panel/modal UI integrated into Bed Card flow
+- Dedicated standalone diagnosis route/page still pending
 
 ## Adding a New Feature
 

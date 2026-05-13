@@ -14,7 +14,7 @@ import { SETTINGS_CACHE_TAG, withCache } from '@/shared/lib/query-cache'
 
 export type BedAreaView = 'all' | 'emergency' | 'triage'
 
-async function fetchTriageWardIdsFromDB(): Promise<Set<string>> {
+async function fetchTriageWardIdsFromDB(): Promise<string[]> {
   const result = await query<{ id: string }>(
     `
     SELECT id
@@ -27,21 +27,22 @@ async function fetchTriageWardIdsFromDB(): Promise<Set<string>> {
     `
   )
 
-  return new Set(result.rows.map((row) => row.id))
+  return result.rows.map((row) => row.id)
 }
 
 const getTriageWardIds = withCache(fetchTriageWardIdsFromDB, 'bed-dashboard:get-triage-ward-ids', 120, [SETTINGS_CACHE_TAG])
 
-function filterBedsByArea(data: BedGridData['beds'], areaView: BedAreaView, triageWardIds: Set<string>) {
-  if (areaView === 'all' || triageWardIds.size === 0) {
+function filterBedsByArea(data: BedGridData['beds'], areaView: BedAreaView, triageWardIds: string[]) {
+  const triageWardIdSet = new Set(triageWardIds)
+  if (areaView === 'all' || triageWardIdSet.size === 0) {
     return data
   }
 
   if (areaView === 'triage') {
-    return data.filter((bed) => bed.wardId && triageWardIds.has(bed.wardId))
+    return data.filter((bed) => bed.wardId && triageWardIdSet.has(bed.wardId))
   }
 
-  return data.filter((bed) => !bed.wardId || !triageWardIds.has(bed.wardId))
+  return data.filter((bed) => !bed.wardId || !triageWardIdSet.has(bed.wardId))
 }
 
 /**
@@ -100,7 +101,7 @@ export async function getBedGridData(areaView: BedAreaView = 'all'): Promise<{
     const stageTransitionMap: BedGridData['stageTransitionMap'] = {}
 
     for (const fromKey of allFromKeys) {
-      const entry = transitionMapRaw.get(fromKey) ?? { allowed: [], requiresOverride: [], blocked: [] }
+      const entry = transitionMapRaw[fromKey] ?? { allowed: [], requiresOverride: [], blocked: [] }
       const covered = new Set([...entry.allowed, ...entry.requiresOverride, ...entry.blocked])
       // Stages absent from `covered` have no DB rule → allowed by default (matches online path)
       const noRuleStages = allStageIds.filter(id => !covered.has(id))
@@ -130,7 +131,7 @@ export async function getBedGridData(areaView: BedAreaView = 'all'): Promise<{
       bedCount: beds.length,
       stageCount: stages.length,
       areaView,
-      triageWardCount: triageWardIds.size,
+      triageWardCount: triageWardIds.length,
     })
 
     // EPIC 13: log latency sample — WARN is emitted if > 2 s SLA.
