@@ -1,6 +1,6 @@
 'use server'
 
-import { getBedById } from '../lib/queries'
+import { getAllStages, getBedById } from '../lib/queries'
 import { logger } from '@/shared/config/logger'
 import { UpdateBedStageSchema, type UpdateBedStageInput } from '../schemas/bed-schemas'
 import { updateBedStageInDB } from '../lib/bed-mutations'
@@ -8,9 +8,10 @@ import { checkWardAccess } from '../lib/bed-queries'
 import { requireWriteRole } from '@/shared/lib/auth'
 import { logAudit } from '@/shared/lib/audit'
 import { validateTransition } from '../lib/stage-validation'
+import { validatePii } from '../lib/pii-utils'
 import { headers } from 'next/headers'
 import { getClientIpFromHeaders } from '@/shared/lib/request-ip'
-import { detectPii, redactPii } from '@/shared/lib/pii-detector'
+import { resolveActiveShiftIdCached } from '@/shared/lib/shift-helpers'
 
 /**
  * Update bed stage (US-2.1, US-2.2)
@@ -49,39 +50,12 @@ export async function updateBedStage(input: UpdateBedStageInput): Promise<{
       }
     }
 
-    // US-17.7: Backend PII enforcement — reject if PII detected in free-text fields
-    // This runs regardless of frontend validation to prevent bypass via direct API calls.
-    const freeTextFields: Array<{ field: string; value: string | undefined }> = [
+    // US-17.7: Backend PII enforcement
+    const piiError = await validatePii(result.data.bedId, session.userId, [
       { field: 'notes', value: result.data.notes },
       { field: 'overrideReason', value: result.data.overrideReason },
-    ]
-    for (const { field, value } of freeTextFields) {
-      if (!value) continue
-      const pii = detectPii(value)
-      if (pii.hasPii) {
-        await logAudit({
-          actionType: 'PII_BLOCKED',
-          entityType: 'bed',
-          entityId: result.data.bedId,
-          performedBy: session.userId,
-          metadata: {
-            field,
-            detectedCategories: pii.summary,
-            redactedValue: redactPii(value),
-          },
-        })
-        logger.warn('PII detected and blocked in bed stage update', {
-          userId: session.userId,
-          bedId: result.data.bedId,
-          field,
-          categories: pii.summary,
-        })
-        return {
-          success: false,
-          error: `Field "${field}" contains patient information (${pii.summary}). Remove it before submitting.`,
-        }
-      }
-    }
+    ])
+    if (piiError) return { success: false, error: piiError }
 
     // IDOR FIX: Ward-level access control (checkWardAccess in bed-queries.ts)
     const wardError = await checkWardAccess(session.userId, result.data.bedId, session.role)
@@ -94,6 +68,14 @@ export async function updateBedStage(input: UpdateBedStageInput): Promise<{
     if (!bed) {
       return { success: false, error: 'Bed not found' }
     }
+
+    const allStages = await getAllStages()
+    const targetStage = allStages.find((stage) => stage.id === result.data.toStageId)
+    if (!targetStage) {
+      return { success: false, error: 'Stage not found or inactive' }
+    }
+
+    const activeShiftId = await resolveActiveShiftIdCached()
 
     // US-16.4: Conflict detection — bed may have been moved by another user while offline.
     // Compare expected stage (what client saw when queuing) vs actual current stage.
@@ -108,7 +90,7 @@ export async function updateBedStage(input: UpdateBedStageInput): Promise<{
           actualStageId: bed.currentStageId,
           enqueuedAt: result.data.enqueuedAt,
         },
-      }).catch(() => {})
+      }).catch(() => { })
       return { success: false, conflict: true, serverStageId: bed.currentStageId ?? '' }
     }
 
@@ -181,10 +163,12 @@ export async function updateBedStage(input: UpdateBedStageInput): Promise<{
     const updateResult = await updateBedStageInDB({
       bedId: result.data.bedId,
       toStageId: result.data.toStageId,
+      toStageName: targetStage.name,
       changedByUserId: session.userId,
       notes: result.data.notes,
       ipAddress,
       supervisorOverrideApplied: result.data.supervisorOverride,
+      activeShiftId,
       shiftOverrideId: canOverrideShift ? (result.data.shiftOverrideId ?? null) : null,
       shiftOverrideByUserId: canOverrideShift && result.data.shiftOverrideId ? session.userId : null,
     })

@@ -15,6 +15,7 @@ vi.mock('@/features/ai-summary/lib/ai-service', () => ({
     generateAiSummary: vi.fn(),
 }))
 vi.mock('@/features/ai-summary/lib/daily-summary-store', () => ({
+    refreshDailySummariesMaterializedView: vi.fn(),
     upsertDailySummary: vi.fn(),
     getDailySummaryByDate: vi.fn(),
     getRecentDailySummaries: vi.fn(),
@@ -24,6 +25,7 @@ import { requireRole } from '@/shared/lib/auth'
 import { aggregateDailyStats } from '@/features/ai-summary/lib/daily-aggregation-queries'
 import { generateAiSummary } from '@/features/ai-summary/lib/ai-service'
 import {
+    refreshDailySummariesMaterializedView,
     upsertDailySummary,
     getDailySummaryByDate,
     getRecentDailySummaries,
@@ -69,6 +71,7 @@ describe('generateDailySummary', () => {
 
         expect(result.success).toBe(true)
         expect(result.date).toBe('2026-02-20')
+        expect(refreshDailySummariesMaterializedView).toHaveBeenCalledTimes(1)
         expect(generateAiSummary).toHaveBeenCalledWith(SAMPLE_INPUT)
         expect(result.summary?.totalPatients).toBe(10)
     })

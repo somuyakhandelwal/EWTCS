@@ -42,6 +42,14 @@ export type QueuedOperation =
 export interface QueuedEntry {
   /** Unique entry id (used for deduplication and removal) */
   id: string
+  /** Stable client-generated id used for DB deduplication */
+  clientOperationId: string
+  /** Database row id when the entry is persisted server-side */
+  dbId?: string
+  /** True when the entry has been synced to the offline_queue table */
+  dbSynced?: boolean
+  /** Last best-effort sync error (if enqueue DB write failed) */
+  syncError?: string | null
   /** ISO timestamp when enqueued */
   enqueuedAt: string
   op: QueuedOperation

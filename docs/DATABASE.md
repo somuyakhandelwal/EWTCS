@@ -471,21 +471,19 @@ Doctor diagnostic assessments (EPIC 20 — US-20.2).
 | `bed_id` | UUID | FK → beds(id) ON DELETE CASCADE | Bed reference |
 | `patient_uhid` | VARCHAR(100) | | Hospital patient ID |
 | `doctor_id` | UUID | FK → users(id), NOT NULL | Diagnosing doctor |
-| `symptoms_observed` | TEXT | | Symptoms (plaintext) |
 | `symptoms_observed_encrypted` | JSONB | | AES-256-GCM encrypted |
-| `clinical_findings` | TEXT | | Clinical findings (plaintext) |
 | `clinical_findings_encrypted` | JSONB | | AES-256-GCM encrypted |
 | `diagnosis_code` | VARCHAR(20) | | ICD-10 code |
-| `diagnosis_text` | TEXT | | Diagnosis description |
 | `diagnosis_text_encrypted` | JSONB | | AES-256-GCM encrypted |
 | `severity` | VARCHAR(20) | CHECK (MILD/MODERATE/SEVERE/CRITICAL) | Clinical severity |
-| `recommended_action` | TEXT | | Recommended next step |
 | `recommended_action_encrypted` | JSONB | | AES-256-GCM encrypted |
 | `diagnosed_at` | TIMESTAMPTZ | NOT NULL, DEFAULT NOW() | |
 | `created_at` | TIMESTAMPTZ | | |
 | `updated_at` | TIMESTAMPTZ | | |
 
 **Indexes:** `idx_diagnosis_bed_id`, `idx_diagnosis_patient_uhid`, `idx_diagnosis_doctor_id`, `idx_diagnosis_diagnosed_at`, `idx_diagnosis_severity`
+
+**Security Note:** Plaintext PHI columns were removed by `059_drop_diagnosis_plaintext_columns.sql`. Diagnosis PHI must be stored in `*_encrypted` JSONB columns only.
 
 ---
 
@@ -501,7 +499,7 @@ OT surgical procedure tracking (EPIC 20 — US-20.3).
 | `patient_uhid` | VARCHAR(100) | | Hospital patient ID |
 | `procedure_name` | VARCHAR(100) | NOT NULL | Procedure name |
 | `procedure_code` | VARCHAR(20) | | ICD-9 procedure code |
-| `surgeon_id` | UUID | FK → users(id), NOT NULL | Primary surgeon |
+| `surgeon_id` | UUID | FK → users(id) | Primary surgeon (nullable — allows nurse-initiated procedures) |
 | `anesthetist_id` | UUID | FK → users(id) | Anesthetist |
 | `scheduled_start` | TIMESTAMPTZ | | Planned start time |
 | `actual_start_time` | TIMESTAMPTZ | | Actual start |
@@ -519,11 +517,13 @@ OT surgical procedure tracking (EPIC 20 — US-20.3).
 
 **Indexes:** `idx_ot_procedures_ot_id`, `idx_ot_procedures_status`, `idx_ot_procedures_bed_id`, `idx_ot_procedures_patient_uhid`, `idx_ot_procedures_surgeon_id`, `idx_ot_procedures_scheduled_start`, `idx_ot_procedures_actual_start_time`, composite `idx_ot_procedures_ot_status_start`
 
+**Unique Constraint:** `idx_ot_procedures_one_active_per_room` — enforces at most one `IN_PROGRESS` procedure per OT room at any time.
+
 ---
 
 ## 25. `cath_lab_procedures` ✅ Fully Implemented
 
-Cardiac catheterization procedures (EPIC 20 — US-20.4 / US-24.1).
+Cardiac catheterization procedures (EPIC 24 — US-24.1). Full schema replaces earlier minimal version from migration 056.
 
 | Column | Type | Constraints | Description |
 |--------|------|-------------|-------------|

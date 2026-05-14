@@ -1,9 +1,10 @@
 'use server'
 
-import { revalidatePath } from 'next/cache'
+import { revalidatePath, revalidateTag } from 'next/cache'
 import { requireAdminWrite } from '@/shared/lib/auth'
 import { logAudit } from '@/shared/lib/audit'
 import { query } from '@/shared/lib/db'
+import { SETTINGS_CACHE_TAG } from '@/shared/lib/query-cache'
 import { createWardSchema } from '../schemas/ward-schemas'
 import type { Ward, CreateWardInput } from '../types/ward.types'
 
@@ -62,6 +63,7 @@ export async function createWard(formData: FormData): Promise<{ success: boolean
         })
 
         revalidatePath('/admin/wards')
+    revalidateTag(SETTINGS_CACHE_TAG)
         return { success: true }
     } catch (error) {
         if (error instanceof Error && error.name === 'ZodError') {

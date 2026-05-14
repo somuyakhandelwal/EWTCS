@@ -1,20 +1,47 @@
 import os from 'os';
 import fs from 'fs/promises';
 import { logger } from '@/shared/config/logger';
+import type { BrowserCompatibilityTier, BrowserFamily } from '@/shared/types/browser-compat.types';
 
 // In-memory stats for tracking across Edge/Node isolate if possible
 let requestCount = 0;
 let lastReset = Date.now();
 const activeUsers = new Set<string>();
+const browserFamilyCounts: Record<BrowserFamily, number> = {
+  chrome: 0,
+  firefox: 0,
+  safari: 0,
+  edge: 0,
+  unknown: 0,
+};
+const compatibilityTierCounts: Record<BrowserCompatibilityTier, number> = {
+  supported: 0,
+  limited: 0,
+  unsupported: 0,
+};
+
+interface RequestTelemetry {
+  browserFamily?: BrowserFamily;
+  browserVersion?: number | null;
+  compatibilityTier?: BrowserCompatibilityTier;
+}
 
 /**
  * Epic 13: Records a new incoming request.
  * Increments request count and tracks unique active users for calculating metrics.
  * @param userId - Optional user identifier to track active sessions
  */
-export function recordRequest(userId?: string) {
+export function recordRequest(userId?: string, telemetry?: RequestTelemetry) {
   requestCount++;
   if (userId) activeUsers.add(userId);
+
+  const family = telemetry?.browserFamily ?? 'unknown';
+  browserFamilyCounts[family] = (browserFamilyCounts[family] ?? 0) + 1;
+
+  const tier = telemetry?.compatibilityTier;
+  if (tier) {
+    compatibilityTierCounts[tier] = (compatibilityTierCounts[tier] ?? 0) + 1;
+  }
 }
 
 /**
@@ -25,12 +52,18 @@ export function recordRequest(userId?: string) {
 export async function getSystemMetrics() {
   const now = Date.now();
   const elapsedMinutes = (now - lastReset) / 60000;
-  
+
   // Reset window every hour to get a fresh rate
   if (elapsedMinutes > 60) {
     requestCount = 0;
     lastReset = now;
     activeUsers.clear();
+    for (const key of Object.keys(browserFamilyCounts) as BrowserFamily[]) {
+      browserFamilyCounts[key] = 0;
+    }
+    for (const key of Object.keys(compatibilityTierCounts) as BrowserCompatibilityTier[]) {
+      compatibilityTierCounts[key] = 0;
+    }
   }
 
   const rate = elapsedMinutes > 0 ? (requestCount / elapsedMinutes) : 0;
@@ -45,7 +78,7 @@ export async function getSystemMetrics() {
     const diskTotal = stats.blocks * stats.bsize;
     const diskFree = stats.bfree * stats.bsize;
     if (diskTotal > 0) diskUsage = ((diskTotal - diskFree) / diskTotal) * 100;
-  } catch (_error) {
+  } catch {
     diskUsage = 0; // fallback if unsupported
   }
 
@@ -55,6 +88,10 @@ export async function getSystemMetrics() {
     disk: Number(diskUsage.toFixed(1)),
     requestsPerMin: Number(rate.toFixed(1)),
     activeUsers: activeUsers.size,
+    browserUsage: {
+      family: { ...browserFamilyCounts },
+      compatibilityTier: { ...compatibilityTierCounts },
+    },
   };
 
   if (metrics.cpu > 80) logger.warn('High CPU usage detected', metrics);

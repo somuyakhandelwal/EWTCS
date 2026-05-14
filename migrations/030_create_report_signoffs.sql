@@ -10,7 +10,7 @@
 BEGIN;
 
 CREATE TABLE IF NOT EXISTS report_signoffs (
-  id              UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  id              UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
 
   -- Which report is being signed off
   report_date     DATE        NOT NULL,

@@ -7,18 +7,40 @@
 
 // Expected core tables based on migrations
 const EXPECTED_TABLES = [
-  'users',
+  'alert_preferences',
+  'archival_runs',
   'audit_logs',
-  'beds',
-  'stages',
+  'audit_logs_archive',
   'bed_stage_logs',
-  'wards',
-  'token_blacklist',
-  'pgmigrations',
-  // EPIC 25: Department metrics tables (migration 1773838271566_create-department-metrics-tables)
+  'bed_stage_logs_archive',
+  'beds',
+  'cath_lab_procedures',
+  'daily_summaries_mv',
+  'daily_summary_reviews',
+  'delay_reason_options',
+  'diagnosis',
+  'disposition_delay_reasons',
   'er_intake',
+  'error_events',
+  'kiosk_sessions',
   'ot_procedures',
-  'cath_lab_procedures'
+  'ot_rooms',
+  'patient_admissions',
+  'patient_admissions_archive',
+  'pgmigrations',
+  'shifts',
+  'stage_delay_thresholds',
+  'stage_transitions',
+  'stages',
+  'system_settings',
+  'token_blacklist',
+  'user_feedback',
+  'users',
+  'wards',
+  // Canonical table from migration 007
+  'bed_stage_log_corrections',
+  // Canonical table from migration 030
+  'report_signoffs'
 ];
 
 /**
@@ -50,9 +72,13 @@ async function validateTableColumns(client, tableName, requiredColumns) {
  */
 async function getAllTables(client) {
   const result = await client.query(`
-    SELECT table_name 
-    FROM information_schema.tables 
-    WHERE table_schema = 'public' 
+    SELECT table_name
+    FROM information_schema.tables
+    WHERE table_schema = 'public'
+    UNION
+    SELECT matviewname AS table_name
+    FROM pg_matviews
+    WHERE schemaname = 'public'
     ORDER BY table_name
   `);
   return result.rows.map((row) => row.table_name);

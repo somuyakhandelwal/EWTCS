@@ -68,6 +68,33 @@ const resolveDatabaseUrl = () => {
   return plaintext;
 };
 
+const isConnectionRefusedError = (error) => {
+  if (!error) return false;
+  if (error.code === 'ECONNREFUSED') return true;
+  if (Array.isArray(error.errors)) {
+    return error.errors.some((inner) => inner && inner.code === 'ECONNREFUSED');
+  }
+  return false;
+};
+
+const formatDbTarget = (databaseUrl) => {
+  try {
+    const parsed = new URL(databaseUrl);
+    return `${parsed.hostname}:${parsed.port || '5432'}`;
+  } catch {
+    return 'configured DATABASE_URL host';
+  }
+};
+
+const logConnectionRefusedHelp = (databaseUrl) => {
+  const target = formatDbTarget(databaseUrl);
+  console.error(`[reset] Unable to connect to PostgreSQL at ${target} (ECONNREFUSED).`);
+  console.error('[reset] Start PostgreSQL and retry. Helpful commands:');
+  console.error('  - Docker: docker compose up -d');
+  console.error('  - Local service (Windows): start PostgreSQL service from Services.msc');
+  console.error('  - Validate env: npm run validate:db');
+};
+
 const reset = async () => {
   loadEnvFiles();
 
@@ -79,21 +106,46 @@ const reset = async () => {
 
   const databaseUrl = resolveDatabaseUrl();
   const client = new Client({ connectionString: databaseUrl });
+  let connected = false;
 
-  await client.connect();
   try {
+    await client.connect();
+    connected = true;
+
     await client.query('BEGIN');
     await client.query('DROP SCHEMA IF EXISTS public CASCADE');
     await client.query('CREATE SCHEMA public');
     await client.query('COMMIT');
     console.log('[reset] Database schema reset successfully.');
   } catch (error) {
-    await client.query('ROLLBACK');
-    console.error('[reset] Database reset failed:', error.message);
+    if (connected) {
+      try {
+        await client.query('ROLLBACK');
+      } catch {
+        // Ignore rollback failures during fatal reset errors
+      }
+    }
+
+    if (isConnectionRefusedError(error)) {
+      logConnectionRefusedHelp(databaseUrl);
+    } else {
+      console.error('[reset] Database reset failed:', error.message);
+    }
+
     process.exitCode = 1;
   } finally {
-    await client.end();
+    if (connected) {
+      await client.end();
+    }
   }
 };
 
-reset();
+reset().catch((error) => {
+  const databaseUrl = process.env.DATABASE_URL || '';
+  if (isConnectionRefusedError(error)) {
+    logConnectionRefusedHelp(databaseUrl);
+  } else {
+    console.error('[reset] Unexpected failure:', error.message);
+  }
+  process.exit(1);
+});

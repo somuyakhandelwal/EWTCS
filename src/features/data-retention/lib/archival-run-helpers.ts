@@ -16,6 +16,7 @@ export async function createRunRecord(
       cutoffs.patientAdmissions.getTime(),
       cutoffs.auditLogs.getTime(),
       cutoffs.bedStageLogs.getTime(),
+      cutoffs.offlineQueue.getTime(),
     ),
   )
   const result = await query<{ id: string }>(
@@ -87,5 +88,6 @@ export function buildCutoffs(config: RetentionConfig): ArchivalCutoffs {
     patientAdmissions: yearsAgo(config.patientAdmissionsYears),
     auditLogs: yearsAgo(config.auditLogsYears),
     bedStageLogs: daysAgo(config.bedStageLogDays),
+    offlineQueue: daysAgo(config.offlineQueueDays),
   }
 }

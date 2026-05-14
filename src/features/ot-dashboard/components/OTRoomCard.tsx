@@ -25,24 +25,43 @@ function formatElapsed(startedAt: Date | null): string {
 export function OTRoomCard({ room, onStatusChange }: OTRoomCardProps) {
   const [optimisticStatus, setOptimisticStatus] = useState(room.status)
   const [optimisticStartedAt, setOptimisticStartedAt] = useState(room.startedAt)
+  const [procedureName, setProcedureName] = useState(room.activeProcedureName || '')
+  const [error, setError] = useState<string | null>(null)
   const [isPending, startTransition] = useTransition()
 
   const isOngoing = optimisticStatus === 'ongoing'
 
   async function handleToggle() {
+    setError(null)
+
     const newStatus = isOngoing ? 'available' : 'ongoing'
+    const trimmedProcedureName = procedureName.trim()
+
+    if (newStatus === 'ongoing' && trimmedProcedureName.length < 2) {
+      setError('Procedure name is required before starting')
+      return
+    }
 
     // Optimistic update — UI changes immediately
     setOptimisticStatus(newStatus)
     setOptimisticStartedAt(newStatus === 'ongoing' ? new Date() : null)
 
-    const result = await updateOTRoomStatus({ roomId: room.id, status: newStatus })
+    const result = await updateOTRoomStatus({
+      roomId: room.id,
+      status: newStatus,
+      procedureName: newStatus === 'ongoing' ? trimmedProcedureName : undefined,
+    })
 
     if (!result.success) {
       // Revert on error
       setOptimisticStatus(room.status)
       setOptimisticStartedAt(room.startedAt)
+      setError(result.error || 'Failed to update OT room')
+      return
     } else {
+      if (newStatus === 'available') {
+        setProcedureName('')
+      }
       startTransition(() => {
         onStatusChange?.()
       })
@@ -73,10 +92,34 @@ export function OTRoomCard({ room, onStatusChange }: OTRoomCardProps) {
       </div>
 
       {isOngoing && optimisticStartedAt && (
-        <p className="text-xs text-red-400 font-mono">
-          Duration: {formatElapsed(optimisticStartedAt)}
-        </p>
+        <div className="space-y-1">
+          <p className="text-xs text-red-400 font-mono">
+            Duration: {formatElapsed(optimisticStartedAt)}
+          </p>
+          <p className="text-xs text-foreground/80 truncate" title={procedureName || room.activeProcedureName || ''}>
+            Procedure: {procedureName || room.activeProcedureName || 'Unknown'}
+          </p>
+        </div>
       )}
+
+      {!isOngoing && (
+        <div className="space-y-1">
+          <label htmlFor={`procedure-${room.id}`} className="text-xs text-muted-foreground">
+            Procedure Name
+          </label>
+          <input
+            id={`procedure-${room.id}`}
+            value={procedureName}
+            onChange={(e) => setProcedureName(e.target.value)}
+            placeholder="e.g., Appendectomy"
+            disabled={isPending}
+            className="w-full rounded-md border border-input bg-background px-2 py-1 text-xs text-foreground"
+            maxLength={100}
+          />
+        </div>
+      )}
+
+      {error && <p className="text-xs text-destructive">{error}</p>}
 
       <button
         onClick={handleToggle}
