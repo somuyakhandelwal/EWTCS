@@ -14,7 +14,8 @@ export interface AiInsight {
 }
 
 /**
- * The full daily summary record stored in the daily_summaries table.
+ * The full daily summary record returned by joining daily_summaries_mv
+ * (computed metrics) with daily_summary_reviews (workflow metadata).
  */
 export interface DailySummary {
     id: string

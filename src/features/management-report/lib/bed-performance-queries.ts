@@ -8,6 +8,7 @@
 import 'server-only'
 
 import { query } from '@/shared/lib/db'
+import { getAllSystemSettings } from '@/shared/lib/system-settings'
 import type { BedPerformanceReport, BedPerformanceRow } from '../types/report.types'
 
 // Outlier = avg duration > overall mean × OUTLIER_MULTIPLIER
@@ -15,20 +16,15 @@ import type { BedPerformanceReport, BedPerformanceRow } from '../types/report.ty
 const OUTLIER_MULTIPLIER = 1.5
 const OUTLIER_DELAY_RATE_PCT = 30
 
-async function resolveThresholdMs(): Promise<number> {
-  try {
-    const result = await query<{ value: string }>(
-      `SELECT value FROM system_settings
-       WHERE key IN ('los_target_minutes', 'delay_threshold_minutes')
-       ORDER BY CASE key WHEN 'los_target_minutes' THEN 0 ELSE 1 END
-       LIMIT 1`
-    )
-    if (result.rows.length === 0) return 180 * 60 * 1000
-    const minutes = parseInt(result.rows[0].value, 10)
-    return isNaN(minutes) || minutes <= 0 ? 180 * 60 * 1000 : minutes * 60 * 1000
-  } catch {
-    return 180 * 60 * 1000
-  }
+function resolveThresholdMsFromSettings(settings: Map<string, string>): number {
+  const losTargetRaw = settings.get('los_target_minutes')
+  const delayThresholdRaw = settings.get('delay_threshold_minutes')
+  const minutesRaw = losTargetRaw ?? delayThresholdRaw
+
+  if (!minutesRaw) return 180 * 60 * 1000
+
+  const minutes = parseInt(minutesRaw, 10)
+  return isNaN(minutes) || minutes <= 0 ? 180 * 60 * 1000 : minutes * 60 * 1000
 }
 
 /**
@@ -43,7 +39,8 @@ export async function getBedPerformanceReport(
   endDate: Date,
   shiftId?: string | null
 ): Promise<BedPerformanceReport> {
-  const thresholdMs = await resolveThresholdMs()
+  const settings = await getAllSystemSettings()
+  const thresholdMs = resolveThresholdMsFromSettings(settings)
 
   const params: unknown[] = [startDate, endDate, thresholdMs, shiftId ?? null]
 

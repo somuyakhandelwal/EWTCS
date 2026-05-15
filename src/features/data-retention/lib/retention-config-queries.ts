@@ -2,12 +2,14 @@
 // EPIC 14 — US-14.2
 
 import { query } from '@/shared/lib/db'
+import { getAllSystemSettings } from '@/shared/lib/system-settings'
 import type { RetentionConfig } from './data-retention-types'
 
 const DEFAULTS: RetentionConfig = {
   patientAdmissionsYears: 7,
   auditLogsYears: 7,
   bedStageLogDays: 90,
+  offlineQueueDays: 30,
   requiresApproval: true,
 }
 
@@ -16,18 +18,8 @@ const DEFAULTS: RetentionConfig = {
  * Falls back to safe defaults when a key is missing.
  */
 export async function getRetentionConfig(): Promise<RetentionConfig> {
-  const result = await query<{ key: string; value: string }>(
-    `SELECT key, value FROM system_settings
-     WHERE key IN (
-       'retention_patient_admissions_years',
-       'retention_audit_logs_years',
-       'retention_bed_stage_log_days',
-       'retention_bed_stage_log_years',
-       'retention_requires_approval'
-     )`
-  )
-
-  const map = Object.fromEntries(result.rows.map((r) => [r.key, r.value]))
+  const settings = await getAllSystemSettings()
+  const map = Object.fromEntries(settings.entries())
 
   const legacyYears = parseInt(map['retention_bed_stage_log_years'] ?? '', 10)
   const legacyDays = Number.isInteger(legacyYears) && legacyYears > 0 ? legacyYears * 365 : null
@@ -43,6 +35,9 @@ export async function getRetentionConfig(): Promise<RetentionConfig> {
       parseInt(map['retention_bed_stage_log_days'] ?? '', 10) ||
       legacyDays ||
       DEFAULTS.bedStageLogDays,
+    offlineQueueDays:
+      parseInt(map['retention_offline_queue_days'] ?? '', 10) ||
+      DEFAULTS.offlineQueueDays,
     requiresApproval:
       (map['retention_requires_approval'] ?? 'true') !== 'false',
   }
@@ -74,6 +69,11 @@ export async function saveRetentionConfig(config: RetentionConfig): Promise<void
       'retention_bed_stage_log_days',
       String(config.bedStageLogDays),
       'Days to retain bed_stage_log rows before archiving (US-3.6)',
+    ],
+    [
+      'retention_offline_queue_days',
+      String(config.offlineQueueDays),
+      'Days to retain drained/failed offline_queue rows before cleanup (DB5-01)',
     ],
     [
       'retention_bed_stage_log_years',

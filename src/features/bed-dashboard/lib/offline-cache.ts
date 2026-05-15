@@ -125,3 +125,38 @@ export function clearCache(): void {
     localStorage.removeItem(realtimeConfig.cacheKey)
   } catch { /* ignore */ }
 }
+
+/**
+ * Fetch a fresh server-side snapshot if local cache is unavailable.
+ * Intended for reconnect recovery when client cache is empty.
+ */
+export async function fetchServerSnapshot(): Promise<{ data: BedGridData; timestamp: number } | null> {
+  if (typeof window === 'undefined') return null
+
+  try {
+    const response = await fetch('/api/bed-dashboard/snapshot', {
+      method: 'GET',
+      cache: 'no-store',
+      credentials: 'same-origin',
+    })
+
+    if (!response.ok) {
+      return null
+    }
+
+    const payload = await response.json() as {
+      success?: boolean
+      data?: BedGridData
+      timestamp?: number
+    }
+
+    if (!payload.success || !payload.data) {
+      return null
+    }
+
+    const timestamp = typeof payload.timestamp === 'number' ? payload.timestamp : Date.now()
+    return { data: payload.data, timestamp }
+  } catch {
+    return null
+  }
+}

@@ -8,9 +8,9 @@ import { BottleneckPanel } from './BottleneckPanel'
 import { BedGridStats } from './BedGridStats'
 import { BedGridHeader } from './BedGridHeader'
 import { BedGridFooter } from './BedGridFooter'
-import { useBedFilter } from '../hooks/useBedFilter'
 import { useBedContextMenu } from '../hooks/useBedContextMenu'
 import type { BedGridData, BedWithElapsedTime, DispositionDelayReason, TatSummary } from '../types/bed'
+import type { SortOrder } from '../hooks/useBedFilter'
 import { getBedStatistics } from '../lib/utils'
 import { isCleaningStage } from './CleaningActions'
 
@@ -40,6 +40,16 @@ interface BedGridProps {
   onOpenDiagnosis?: (bedId: string) => void
   /** Current user role — forwarded to BedCard for EPIC 22 */
   role?: string
+  // DB5-02: Filter state lifted to BedDashboardClient for SSR initial values
+  showDelayedOnly: boolean
+  sortOrder: SortOrder
+  searchQuery: string
+  displayedBeds: BedWithElapsedTime[]
+  isFilterActive: boolean
+  onToggleDelayedFilter: () => void
+  onToggleSortOrder: () => void
+  onSearchChange: (query: string) => void
+  onClearFilter: () => void
 }
 
 export function BedGrid({
@@ -63,6 +73,16 @@ export function BedGrid({
   onOpenTriage,
   onOpenDiagnosis,
   role,
+  // DB5-02: filter state from BedDashboardClient
+  showDelayedOnly,
+  sortOrder,
+  searchQuery,
+  displayedBeds,
+  isFilterActive,
+  onToggleDelayedFilter,
+  onToggleSortOrder,
+  onSearchChange,
+  onClearFilter,
 }: BedGridProps) {
   const {
     menuState,
@@ -75,18 +95,6 @@ export function BedGrid({
     handleBedTap,
     handleCloseMenu,
   } = useBedContextMenu(data.beds, onStageSelect, isOffline, data.stageTransitionMap)
-
-  const {
-    showDelayedOnly,
-    sortOrder,
-    searchQuery,
-    displayedBeds,
-    isFilterActive,
-    toggleDelayedFilter,
-    toggleSortOrder,
-    setSearchQuery,
-    clearFilter,
-  } = useBedFilter(data.beds)
 
   const stats = useMemo(() => getBedStatistics(data.beds), [data.beds])
   const cleaningCount = useMemo(() => data.beds.filter(b => isCleaningStage(b.currentStage?.name)).length, [data.beds])
@@ -101,10 +109,10 @@ export function BedGrid({
         delayedCount={stats.delayed}
         isFilterActive={isFilterActive}
         isRefreshing={isRefreshing}
-        onSearchChange={setSearchQuery}
-        onToggleFilter={toggleDelayedFilter}
-        onToggleSortOrder={toggleSortOrder}
-        onClearFilter={clearFilter}
+        onSearchChange={onSearchChange}
+        onToggleFilter={onToggleDelayedFilter}
+        onToggleSortOrder={onToggleSortOrder}
+        onClearFilter={onClearFilter}
         onRefresh={onRefresh}
       />
 
@@ -155,6 +163,7 @@ export function BedGrid({
               undoTimerSeconds={undoState?.bedId === bed.id ? undoState.timer : 0}
               onUndo={undoState?.bedId === bed.id ? onUndo : undefined}
               isUndoing={undoState?.bedId === bed.id ? isUndoing : false}
+              isOffline={isOffline}
               isQueuedOffline={queuedBedIds?.has(bed.id) ?? false}
               onOpenDiagnosis={onOpenDiagnosis}
               role={role}
@@ -169,8 +178,10 @@ export function BedGrid({
           stages={data.stages}
           isOpen={Boolean(menuState)}
           position={menuState?.position ?? null}
-          isUpdating={Boolean(updatingBedId) || isLoadingTransitions}
+          isLoadingTransitions={isLoadingTransitions}
+          isMutating={Boolean(updatingBedId)}
           updatingStageId={updatingStageId}
+          isOffline={isOffline}
           validNextStages={validNextStages}
           overrideRequiredStages={overrideRequiredStages}
           error={menuError}

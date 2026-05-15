@@ -88,7 +88,7 @@ EWTCS uses a **custom JWT authentication** system (no NextAuth) with the followi
 | `nurse` | Bed operations. Stage updates, patient admit/discharge within assigned ward. | Many |
 | `housekeeping` | Bed cleaning. Limited to cleaning-related stage transitions. | Some |
 | `auditor` | Read-only analytics. No data modification capabilities. | Few |
-| `doctor` | Medical diagnoses and assessments. Can log clinical findings. | Many |
+| `doctor` | Medical diagnoses and assessments. Can log clinical findings. Redirected to `/dashboard` on login. | Many |
 | `cardiologist` | Cath lab procedures. Can log and manage cardiac catheterization cases. | Few |
 | `cath_lab_nurse` | Cath lab assistant. Limited cath lab procedure access. | Some |
 
@@ -98,7 +98,7 @@ EWTCS uses a **custom JWT authentication** system (no NextAuth) with the followi
 |--------------|---------------|-----------------|
 | `/admin/*` | admin | Redirect to `/login` |
 | `/supervisor/*` | supervisor, admin | Redirect to `/login` |
-| `/dashboard/*` | nurse, housekeeping, supervisor, admin | Redirect to `/login` |
+| `/dashboard/*` | nurse, housekeeping, supervisor, admin, **doctor** | Redirect to `/login` |
 | `/analytics/*` | supervisor, admin, auditor | Redirect to `/login` |
 | `/cath-lab/*` | cardiologist, cath_lab_nurse, nurse, supervisor, admin | Redirect to `/login` |
 | `/triage/*` | nurse, housekeeping, supervisor, admin | Redirect to `/login` |

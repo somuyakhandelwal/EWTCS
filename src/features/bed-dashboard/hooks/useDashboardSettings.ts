@@ -1,50 +1,67 @@
 'use client'
+// DB5-02: Migrated from localStorage ('ewtcs-dashboard-settings') → DB via server action.
+// Initial value comes from SSR (BedDashboardContainer fetches preferences server-side).
+// On change: debounced 300ms write to user_settings via updateUserSettings.
 
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useCallback, useRef, useEffect } from 'react'
+import { updateUserSettings } from '@/features/bed-dashboard/actions/user-settings-actions'
 
-const SETTINGS_KEY = 'ewtcs-dashboard-settings'
+const DEBOUNCE_MS = 300
 
 interface DashboardSettings {
-    confirmCriticalStages: boolean
+  confirmCriticalStages: boolean
 }
 
-const DEFAULT_SETTINGS: DashboardSettings = {
-    confirmCriticalStages: true,
-}
+/**
+ * @param initialConfirmCriticalStages - Server-fetched initial value (SSR, no flash).
+ *   Defaults to true for contexts where SSR initial value is unavailable.
+ */
+export function useDashboardSettings(initialConfirmCriticalStages: boolean = true) {
+  const [settings, setSettings] = useState<DashboardSettings>({
+    confirmCriticalStages: initialConfirmCriticalStages,
+  })
 
-export function useDashboardSettings() {
-    const [settings, setSettings] = useState<DashboardSettings>(DEFAULT_SETTINGS)
-    const [isLoaded, setIsLoaded] = useState(false)
+  // Keep state in sync if the parent re-renders with a new initial value
+  // (edge case: different user logs in without full page reload)
+  useEffect(() => {
+    setSettings({ confirmCriticalStages: initialConfirmCriticalStages })
+  }, [initialConfirmCriticalStages])
 
-    useEffect(() => {
-        try {
-            const stored = localStorage.getItem(SETTINGS_KEY)
-            if (stored) {
-                setSettings({ ...DEFAULT_SETTINGS, ...JSON.parse(stored) })
-            }
-        } catch {
-            // Silently ignore malformed localStorage data
-        } finally {
-            setIsLoaded(true)
-        }
-    }, [])
+  const debounceTimer = useRef<NodeJS.Timeout | null>(null)
 
-    const updateSettings = useCallback((newSettings: Partial<DashboardSettings>) => {
-        setSettings(prev => {
-            const next = { ...prev, ...newSettings }
-            localStorage.setItem(SETTINGS_KEY, JSON.stringify(next))
-            return next
-        })
-    }, [])
+  const persistToDb = useCallback((patch: Partial<DashboardSettings>) => {
+    if (debounceTimer.current) clearTimeout(debounceTimer.current)
+    debounceTimer.current = setTimeout(() => {
+      void updateUserSettings(patch)
+    }, DEBOUNCE_MS)
+  }, [])
 
-    const toggleConfirmation = useCallback(() => {
-        updateSettings({ confirmCriticalStages: !settings.confirmCriticalStages })
-    }, [settings.confirmCriticalStages, updateSettings])
+  const updateSettings = useCallback((newSettings: Partial<DashboardSettings>) => {
+    setSettings(prev => {
+      const next = { ...prev, ...newSettings }
+      persistToDb(next)
+      return next
+    })
+  }, [persistToDb])
 
-    return {
-        settings,
-        isLoaded,
-        updateSettings,
-        toggleConfirmation,
+  const toggleConfirmation = useCallback(() => {
+    setSettings(prev => {
+      const next = { ...prev, confirmCriticalStages: !prev.confirmCriticalStages }
+      persistToDb(next)
+      return next
+    })
+  }, [persistToDb])
+
+  // Cleanup debounce timer on unmount
+  useEffect(() => {
+    return () => {
+      if (debounceTimer.current) clearTimeout(debounceTimer.current)
     }
+  }, [])
+
+  return {
+    settings,
+    updateSettings,
+    toggleConfirmation,
+  }
 }

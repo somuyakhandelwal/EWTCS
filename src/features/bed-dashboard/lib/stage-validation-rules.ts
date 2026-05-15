@@ -4,6 +4,7 @@
 
 import pool from '@/shared/lib/db'
 import { logger } from '@/shared/config/logger'
+import { SETTINGS_CACHE_TAG, withCache } from '@/shared/lib/query-cache'
 import type { TransitionRule, UserRole } from './stage-validation-types'
 
 /**
@@ -83,7 +84,7 @@ export async function getValidNextStages(
  * Get a map of all stages to their valid next stages for a specific user role
  * Useful for pre-computing valid transitions for UI rendering
  */
-export async function getStageTransitionMap(
+async function fetchStageTransitionMapFromDB(
   userRole: UserRole
 ): Promise<Map<string, { allowed: string[]; requiresOverride: string[]; blocked: string[] }>> {
   try {
@@ -143,6 +144,13 @@ export async function getStageTransitionMap(
   }
 }
 
+export const getStageTransitionMap = withCache(
+  fetchStageTransitionMapFromDB,
+  'bed-dashboard:get-stage-transition-map',
+  300,
+  [SETTINGS_CACHE_TAG]
+)
+
 /** Resolve stage name by ID (null-safe) */
 export async function getStageNameById(stageId: string | null): Promise<string | null> {
   if (!stageId) return null
@@ -153,4 +161,18 @@ export async function getStageNameById(stageId: string | null): Promise<string |
   )
 
   return result.rows[0]?.name ?? null
+}
+
+/**
+ * Resolve stage names for multiple stage IDs in one query.
+ */
+export async function getStageNamesByIds(stageIds: string[]): Promise<Map<string, string>> {
+  if (stageIds.length === 0) return new Map()
+
+  const result = await pool.query<{ id: string; name: string }>(
+    `SELECT id, name FROM stages WHERE id = ANY($1::uuid[]) AND is_active = true`,
+    [stageIds]
+  )
+
+  return new Map(result.rows.map((row) => [row.id, row.name]))
 }

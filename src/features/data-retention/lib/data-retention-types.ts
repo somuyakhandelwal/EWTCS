@@ -40,6 +40,7 @@ export interface RetentionConfig {
   patientAdmissionsYears: number
   auditLogsYears: number
   bedStageLogDays: number
+  offlineQueueDays: number
   requiresApproval: boolean
 }
 

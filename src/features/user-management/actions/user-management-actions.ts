@@ -1,6 +1,7 @@
 'use server'
 
 import { logger } from '@/shared/config/logger'
+import { invalidateActiveUserCache } from '@/shared/lib/active-session'
 import { 
     createUserSchema, 
     updateUserSchema, 
@@ -131,6 +132,7 @@ export async function deactivateUser(userId: string, reason?: string) {
         }
 
         await deactivateUserInDB(userId)
+        invalidateActiveUserCache(userId)
         await logUserAction('DEACTIVATE', userId, session.userId, {}, reason)
         logger.info('User deactivated', { userId, reason })
 
@@ -149,6 +151,7 @@ export async function activateUser(userId: string) {
             entityId: userId,
         })
         await activateUserInDB(userId)
+        invalidateActiveUserCache(userId)
         await logUserAction('ACTIVATE', userId, session.userId)
         logger.info('User activated', { userId })
 

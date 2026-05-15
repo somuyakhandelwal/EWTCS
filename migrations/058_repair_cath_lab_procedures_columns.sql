@@ -1,5 +1,9 @@
--- Migration 055: Repair cath_lab_procedures canonical columns.
--- Safe to run on either the legacy US-24.1 table or the full canonical table.
+-- Migration 058: Repair cath_lab_procedures canonical columns
+-- Purpose: Ensure cath_lab_procedures matches canonical schema when legacy/provisional
+--          migrations created a partial table shape.
+-- Safe to run repeatedly.
+
+-- Up Migration
 
 ALTER TABLE IF EXISTS cath_lab_procedures
     ADD COLUMN IF NOT EXISTS id UUID,

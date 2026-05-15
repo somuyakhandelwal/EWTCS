@@ -1,42 +1,61 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
-import { renderHook, act } from '@testing-library/react'
+import { renderHook, act, waitFor } from '@testing-library/react'
 import { useHelpState } from './useHelpState'
 
 vi.mock('next/navigation', () => ({
   usePathname: () => '/dashboard',
 }))
 
-const STORAGE_KEY = 'ewtcs_help_panel_open'
+const { getUserSettingsMock, updateUserSettingsMock } = vi.hoisted(() => ({
+  getUserSettingsMock: vi.fn(),
+  updateUserSettingsMock: vi.fn(),
+}))
+
+vi.mock('@/features/bed-dashboard/actions/user-settings-actions', () => ({
+  getUserSettings: getUserSettingsMock,
+  updateUserSettings: updateUserSettingsMock,
+}))
+
+const DEFAULT_PREFERENCES = {
+  confirmCriticalStages: true,
+  showDelayedOnly: false,
+  sortOrder: 'none' as const,
+  helpPanelOpen: false,
+}
 
 describe('useHelpState', () => {
   beforeEach(() => {
-    localStorage.clear()
+    vi.clearAllMocks()
+    getUserSettingsMock.mockResolvedValue(DEFAULT_PREFERENCES)
   })
 
-  it('starts closed when localStorage has no entry', () => {
+  it('starts closed before async preferences load', () => {
     const { result } = renderHook(() => useHelpState())
     expect(result.current.isOpen).toBe(false)
+    expect(result.current.prefsLoaded).toBe(false)
   })
 
-  it('starts open when localStorage has "1"', () => {
-    localStorage.setItem(STORAGE_KEY, '1')
+  it('loads persisted open state from DB on mount', async () => {
+    getUserSettingsMock.mockResolvedValue({ ...DEFAULT_PREFERENCES, helpPanelOpen: true })
+
     const { result } = renderHook(() => useHelpState())
+
+    await waitFor(() => expect(result.current.prefsLoaded).toBe(true))
     expect(result.current.isOpen).toBe(true)
   })
 
-  it('openHelp sets isOpen to true and persists "1"', () => {
+  it('openHelp sets isOpen to true and persists to DB', () => {
     const { result } = renderHook(() => useHelpState())
     act(() => { result.current.openHelp() })
     expect(result.current.isOpen).toBe(true)
-    expect(localStorage.getItem(STORAGE_KEY)).toBe('1')
+    expect(updateUserSettingsMock).toHaveBeenCalledWith({ helpPanelOpen: true })
   })
 
-  it('closeHelp sets isOpen to false and persists "0"', () => {
-    localStorage.setItem(STORAGE_KEY, '1')
+  it('closeHelp sets isOpen to false and persists to DB', () => {
     const { result } = renderHook(() => useHelpState())
     act(() => { result.current.closeHelp() })
     expect(result.current.isOpen).toBe(false)
-    expect(localStorage.getItem(STORAGE_KEY)).toBe('0')
+    expect(updateUserSettingsMock).toHaveBeenCalledWith({ helpPanelOpen: false })
   })
 
   it('toggleHelp opens when closed', () => {
@@ -45,17 +64,20 @@ describe('useHelpState', () => {
     expect(result.current.isOpen).toBe(true)
   })
 
-  it('toggleHelp closes when open', () => {
-    localStorage.setItem(STORAGE_KEY, '1')
+  it('toggleHelp closes when open', async () => {
+    getUserSettingsMock.mockResolvedValue({ ...DEFAULT_PREFERENCES, helpPanelOpen: true })
+
     const { result } = renderHook(() => useHelpState())
+
+    await waitFor(() => expect(result.current.prefsLoaded).toBe(true))
     act(() => { result.current.toggleHelp() })
     expect(result.current.isOpen).toBe(false)
   })
 
-  it('toggleHelp persists the new state', () => {
+  it('toggleHelp persists the new state to DB', () => {
     const { result } = renderHook(() => useHelpState())
     act(() => { result.current.toggleHelp() })
-    expect(localStorage.getItem(STORAGE_KEY)).toBe('1')
+    expect(updateUserSettingsMock).toHaveBeenCalledWith({ helpPanelOpen: true })
   })
 
   it('returns the dashboard context for /dashboard pathname', () => {

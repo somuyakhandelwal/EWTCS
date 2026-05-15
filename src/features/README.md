@@ -39,6 +39,7 @@ feature-name/
 - Auto-refresh with connection status
 - Stage transition history and timestamps
 - Duration calculations and stage logs
+- Dual-update safety: app-level bed stage update is primary, DB trigger on `bed_stage_logs` is consistency backstop
 - Visual alerts and color configuration
 
 ### `analytics/`
@@ -63,7 +64,7 @@ feature-name/
 - Daily bed statistics aggregation (patients, stage time, delays, TAT)
 - AI narrative (200-300 words) + structured insights with confidence (US-9.1, US-9.3)
 - Draft → Review → Approve/Reject workflow (US-9.2)
-- Idempotent upsert into `daily_summaries` table
+- Computed metrics via `daily_summaries_mv` materialized view + review workflow in `daily_summary_reviews`
 - Server actions: `generateDailySummary`, `fetchDailySummaryByDate`, `fetchRecentDailySummaries`, `approveSummary`, `rejectSummary`, `updateSummaryDraftAction`, `flagInsightAction`
 - API route: `POST /api/daily-summary/generate`, `GET /api/daily-summary/generate`
 - Midnight auto-run via GitHub Actions cron (18:30 UTC = 00:00 IST)
@@ -106,19 +107,27 @@ feature-name/
 - Validation + audit trail integration for new procedure logs
 - `/cath-lab` is the shared dashboard for cardiologists and cath lab nurses
 
-## Future Features
-
-Based on EPICS.md, upcoming features may include:
+### `ot-dashboard/`
+**EPIC 23: OT Room Dashboard ✅**
+- Live tracking of 16 OT rooms (status, running procedures)
+- OT room creation and management
+- Distinct route `/ot`
 
 ### `shift-management/`
-**EPIC 8: Shift Management**
-- Shift tracking
-- Staff assignment
-- Analytics
+**EPIC 8: Shift Management ✅**
+- Shift definition and assignment
+- Shift-aware logging (shift_id on bed_stage_logs)
+- Admin shift management page
 
-### `ai-summary/`
-**EPIC 9: Daily AI Summary Generator** *(planned — Phase 3)*
-- Remaining: AI model integration, report formatting, PDF/email export
+### `er-intake/` *(schema ready, UI pending)*
+**EPIC 20 / US-20.1 — In Progress**
+- `er_intake` table provisioned (migration 048)
+- No intake form UI yet
+
+### `diagnosis/` *(schema ready, UI pending)*
+**EPIC 20 / US-20.2 — In Progress**
+- `diagnosis` table provisioned (migration 049)
+- No UI or server actions yet
 
 ## Adding a New Feature
 

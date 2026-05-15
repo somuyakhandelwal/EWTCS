@@ -30,6 +30,33 @@ const loadEnvFiles = () => {
   }
 };
 
+const isConnectionRefused = (error) => {
+  if (!error) return false;
+  if (error.code === 'ECONNREFUSED') return true;
+  if (Array.isArray(error.errors)) {
+    return error.errors.some((inner) => inner?.code === 'ECONNREFUSED');
+  }
+  return false;
+};
+
+const formatErrorMessage = (error) => {
+  if (!error) return 'Unknown error';
+  if (error.message) return error.message;
+
+  if (Array.isArray(error.errors) && error.errors.length > 0) {
+    return error.errors
+      .map((inner) => {
+        const endpoint = inner?.address && inner?.port ? `${inner.address}:${inner.port}` : 'unknown-endpoint';
+        const code = inner?.code || 'UNKNOWN';
+        const msg = inner?.message || 'No message';
+        return `${code} at ${endpoint} (${msg})`;
+      })
+      .join('; ');
+  }
+
+  return String(error);
+};
+
 const validateDatabaseConnection = async () => {
   console.log('🔍 Validating database connection...\n');
 
@@ -44,6 +71,7 @@ const validateDatabaseConnection = async () => {
   }
 
   // Validate URL format
+  let parsedUrl;
   try {
     const url = new URL(databaseUrl);
     if (url.protocol !== 'postgresql:' && url.protocol !== 'postgres:') {
@@ -51,6 +79,7 @@ const validateDatabaseConnection = async () => {
       console.error(`Found protocol: ${url.protocol}`);
       process.exit(1);
     }
+    parsedUrl = url;
   } catch (error) {
     console.error('❌ Invalid DATABASE_URL format');
     console.error(error.message);
@@ -61,7 +90,8 @@ const validateDatabaseConnection = async () => {
   const client = new Client({ connectionString: databaseUrl });
 
   try {
-    console.log('🔌 Attempting to connect to database...');
+    const target = `${parsedUrl.hostname}:${parsedUrl.port || '5432'}`;
+    console.log(`🔌 Attempting to connect to database at ${target}...`);
     await client.connect();
     console.log('✅ Database connection successful\n');
 
@@ -86,7 +116,11 @@ const validateDatabaseConnection = async () => {
     console.error('❌ Database connection failed\n');
     console.error('Error details:');
     console.error(`  Code: ${error.code || 'N/A'}`);
-    console.error(`  Message: ${error.message}`);
+    console.error(`  Message: ${formatErrorMessage(error)}`);
+    if (isConnectionRefused(error)) {
+      const target = `${parsedUrl.hostname}:${parsedUrl.port || '5432'}`;
+      console.error(`  Target: ${target}`);
+    }
     console.error('');
     console.error('Common issues:');
     console.error('  • PostgreSQL server is not running');

@@ -10,20 +10,17 @@ export const RAW_TABLE_ROWS = [
 ]
 
 export const RAW_DB_SIZE_ROW = { db_bytes: '5368709120' }
-export const RAW_THRESHOLD_ROW = { value: '10' }
 
 export function mockAllQueries(querySpy: any, opts: {
     tableRows?: typeof RAW_TABLE_ROWS
     dbBytes?: string
-    thresholdValue?: string | null
 }) {
-    const { tableRows = RAW_TABLE_ROWS, dbBytes = RAW_DB_SIZE_ROW.db_bytes, thresholdValue = '10' } = opts
+    const { tableRows = RAW_TABLE_ROWS, dbBytes = RAW_DB_SIZE_ROW.db_bytes } = opts
     let callCount = 0
     vi.mocked(querySpy).mockImplementation(() => {
         const call = callCount++
         if (call === 0) return Promise.resolve({ rows: tableRows }) as never
         if (call === 1) return Promise.resolve({ rows: [{ db_bytes: dbBytes }] }) as never
-        if (thresholdValue === null) return Promise.resolve({ rows: [] }) as never
-        return Promise.resolve({ rows: [{ value: thresholdValue }] }) as never
+        return Promise.resolve({ rows: [] }) as never
     })
 }

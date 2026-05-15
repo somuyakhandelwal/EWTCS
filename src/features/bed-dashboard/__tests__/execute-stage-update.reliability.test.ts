@@ -1,10 +1,10 @@
 import { describe, expect, it, vi } from 'vitest'
 import { executeStageUpdate } from '../lib/execute-stage-update'
-import { updateBedStage } from '../actions/bed-actions'
+import { submitBedStageUpdate } from '../lib/stage-update-api'
 import type { BedGridData, BedWithElapsedTime, Stage } from '../types/bed'
 
-vi.mock('../actions/bed-actions', () => ({
-  updateBedStage: vi.fn(),
+vi.mock('../lib/stage-update-api', () => ({
+  submitBedStageUpdate: vi.fn(),
 }))
 
 function makeStage(overrides: Partial<Stage> = {}): Stage {
@@ -85,7 +85,7 @@ function buildArgs() {
 
 describe('executeStageUpdate reliability', () => {
   it('saves stage update immediately and returns success', async () => {
-    vi.mocked(updateBedStage).mockResolvedValue({
+    vi.mocked(submitBedStageUpdate).mockResolvedValue({
       success: true,
       data: {
         bedId: 'bed-1',
@@ -95,31 +95,31 @@ describe('executeStageUpdate reliability', () => {
         isOccupied: true,
         patientStartTime: new Date(),
         lastStageChange: new Date(),
-      } as unknown as Awaited<ReturnType<typeof updateBedStage>>['data'],
+      } as unknown as Awaited<ReturnType<typeof submitBedStageUpdate>>['data'],
     })
 
     const { args } = buildArgs()
     const result = await executeStageUpdate(args)
 
     expect(result).toBe(true)
-    expect(updateBedStage).toHaveBeenCalledTimes(1)
+    expect(submitBedStageUpdate).toHaveBeenCalledTimes(1)
     expect(args.showSuccessFeedback).toHaveBeenCalledWith('bed-1', 'stage-2')
     expect(args.routerRefresh).toHaveBeenCalled()
   })
 
   it('retries failed saves and shows error via setTemporaryError after retries are exhausted', async () => {
-    vi.mocked(updateBedStage).mockResolvedValue({ success: false, error: 'Save failed' })
+    vi.mocked(submitBedStageUpdate).mockResolvedValue({ success: false, error: 'Save failed' })
 
     const { args } = buildArgs()
     const result = await executeStageUpdate(args)
 
     expect(result).toBe(false)
-    expect(updateBedStage).toHaveBeenCalledTimes(3)
+    expect(submitBedStageUpdate).toHaveBeenCalledTimes(3)
     expect(args.setTemporaryError).toHaveBeenCalledWith('bed-1', 'Save failed')
   })
 
   it('does not retry or alert on non-transient validation errors', async () => {
-    vi.mocked(updateBedStage).mockResolvedValue({
+    vi.mocked(submitBedStageUpdate).mockResolvedValue({
       success: false,
       error: 'Invalid stage transition',
       reason: 'Invalid stage transition',
@@ -130,7 +130,7 @@ describe('executeStageUpdate reliability', () => {
     const result = await executeStageUpdate(args)
 
     expect(result).toBe(false)
-    expect(updateBedStage).toHaveBeenCalledTimes(1)
+    expect(submitBedStageUpdate).toHaveBeenCalledTimes(1)
     expect(args.setTemporaryError).toHaveBeenCalledWith('bed-1', 'Invalid stage transition')
     expect(alertSpy).not.toHaveBeenCalled()
   })
