@@ -11,7 +11,7 @@ function getOTUpdateError(error: unknown): string {
     error &&
     typeof error === 'object' &&
     'code' in error &&
-    (error.code === '42703' || error.code === '23502')
+    (error.code === '42703' || error.code === '23502' || error.code === '42P08')
   ) {
     return 'OT procedure schema is out of date. Run database migrations and try again.'
   }
@@ -92,8 +92,8 @@ export async function updateOTRoomStatus(input: {
 
       await client.query(
         `UPDATE ot_rooms
-         SET status = $1,
-             started_at = CASE WHEN $1 = 'ongoing' THEN NOW() ELSE NULL END,
+         SET status = $1::ot_room_status,
+             started_at = CASE WHEN $1::ot_room_status = 'ongoing'::ot_room_status THEN NOW() ELSE NULL END,
              updated_by = $2,
              updated_at = NOW()
          WHERE id = $3`,
