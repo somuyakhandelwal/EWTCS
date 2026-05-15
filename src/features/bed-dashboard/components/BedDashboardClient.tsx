@@ -20,6 +20,7 @@ import { useOfflineWriteInterceptor } from '../hooks/useOfflineWriteInterceptor'
 import { useOfflineOptimisticStages } from '../hooks/useOfflineOptimisticStages'
 import { useTatSummary } from '../hooks/useTatSummary'
 import { recordDispositionDelayReason } from '../actions/disposition-actions'
+import type { BedAreaView } from '../actions/bed-grid-actions'
 
 interface BedDashboardClientProps {
   initialData: BedGridData
@@ -28,6 +29,8 @@ interface BedDashboardClientProps {
   onCreateVirtualBed: (fd: FormData) => Promise<{ success: boolean; error?: string }>
   /** Current user role — forwarded to BedCard for EPIC 22 doctor button */
   role?: string
+  /** Area view to maintain context during real-time polling */
+  areaView?: BedAreaView
 }
 
 export function BedDashboardClient({
@@ -35,6 +38,7 @@ export function BedDashboardClient({
   canRecordDispositionReasons = true,
   onCreateVirtualBed,
   role,
+  areaView = 'all',
 }: BedDashboardClientProps) {
   const {
     data: realtimeData,
@@ -44,7 +48,7 @@ export function BedDashboardClient({
     refresh: realtimeRefresh,
     isOffline,
     cacheTimestamp,
-  } = useRealtimeBedUpdates(initialData)
+  } = useRealtimeBedUpdates(initialData, areaView)
 
   const {
     data,

@@ -6,6 +6,19 @@ import { logger } from '@/shared/config/logger'
 import type { OTRoom, OTGridData } from '../types/ot'
 import { runProcedureTransition } from '../lib/ot-procedure-mutations'
 
+function getOTUpdateError(error: unknown): string {
+  if (
+    error &&
+    typeof error === 'object' &&
+    'code' in error &&
+    (error.code === '42703' || error.code === '23502')
+  ) {
+    return 'OT procedure schema is out of date. Run database migrations and try again.'
+  }
+
+  return 'Failed to update room status'
+}
+
 export async function getOTRooms(): Promise<{ success: boolean; data?: OTGridData; error?: string }> {
   try {
     const result = await pool.query<{
@@ -105,6 +118,6 @@ export async function updateOTRoomStatus(input: {
     return { success: true }
   } catch (error) {
     logger.error('Failed to update OT room status', error as Error)
-    return { success: false, error: 'Failed to update room status' }
+    return { success: false, error: getOTUpdateError(error) }
   }
 }

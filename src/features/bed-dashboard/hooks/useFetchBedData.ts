@@ -6,6 +6,7 @@
 
 import { useState, useCallback, useRef, type MutableRefObject } from 'react'
 import { getBedGridData } from '../actions/bed-grid-actions'
+import type { BedAreaView } from '../actions/bed-grid-actions'
 import { getStableBeds } from '../lib/bed-diff'
 import { realtimeConfig } from '@/shared/config/realtime'
 import {
@@ -42,6 +43,7 @@ export interface FetchBedDataReturn {
 export function useFetchBedData(
   initialData: BedGridData,
   isOnlineRef: MutableRefObject<boolean>,
+  areaView: BedAreaView = 'all',
 ): FetchBedDataReturn {
   const [data, setData] = useState<BedGridData>(initialData)
   const [isLoading, setIsLoading] = useState(false)
@@ -79,7 +81,7 @@ export function useFetchBedData(
     setIsLoading(true)
 
     try {
-      const result = await getBedGridData()
+      const result = await getBedGridData(areaView)
       if (result.success && result.data) {
         setData((prev) => ({
           ...result.data!,

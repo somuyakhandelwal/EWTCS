@@ -4,13 +4,9 @@
 -- Acceptance Criteria 4: New cath_lab_procedures table with cardiologist and outcomes
 --
 -- NOTE: Migration 046 created a simpler, incompatible version of this table.
--- We drop it here and recreate with the full schema.
+-- Preserve existing procedure logs and extend legacy tables in place.
 
 -- Up Migration
-
--- Drop the simplified table from migration 046 (and its enum type) before recreating.
-DROP TABLE IF EXISTS cath_lab_procedures;
-DROP TYPE IF EXISTS cath_lab_procedure_type;
 
 CREATE TABLE IF NOT EXISTS cath_lab_procedures (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
@@ -73,6 +69,35 @@ CREATE TABLE IF NOT EXISTS cath_lab_procedures (
     CONSTRAINT chk_cath_lab_procedures_time_order
         CHECK (actual_end_time IS NULL OR actual_start_time IS NULL OR actual_end_time >= actual_start_time)
 );
+
+ALTER TABLE cath_lab_procedures
+    ADD COLUMN IF NOT EXISTS bed_id UUID REFERENCES beds(id) ON DELETE SET NULL,
+    ADD COLUMN IF NOT EXISTS patient_uhid VARCHAR(100),
+    ADD COLUMN IF NOT EXISTS cardiologist_id UUID REFERENCES users(id),
+    ADD COLUMN IF NOT EXISTS procedure_code VARCHAR(20),
+    ADD COLUMN IF NOT EXISTS clinical_indication TEXT,
+    ADD COLUMN IF NOT EXISTS clinical_indication_encrypted JSONB,
+    ADD COLUMN IF NOT EXISTS scheduled_start TIMESTAMP WITH TIME ZONE,
+    ADD COLUMN IF NOT EXISTS actual_start_time TIMESTAMP WITH TIME ZONE,
+    ADD COLUMN IF NOT EXISTS actual_end_time TIMESTAMP WITH TIME ZONE,
+    ADD COLUMN IF NOT EXISTS duration_minutes INTEGER,
+    ADD COLUMN IF NOT EXISTS status VARCHAR(20) NOT NULL DEFAULT 'SCHEDULED',
+    ADD COLUMN IF NOT EXISTS findings TEXT,
+    ADD COLUMN IF NOT EXISTS findings_encrypted JSONB,
+    ADD COLUMN IF NOT EXISTS interventions_performed TEXT,
+    ADD COLUMN IF NOT EXISTS interventions_performed_encrypted JSONB,
+    ADD COLUMN IF NOT EXISTS stenosis_location VARCHAR(100),
+    ADD COLUMN IF NOT EXISTS stenosis_location_encrypted JSONB,
+    ADD COLUMN IF NOT EXISTS stenosis_percentage INTEGER,
+    ADD COLUMN IF NOT EXISTS stenosis_percentage_encrypted JSONB,
+    ADD COLUMN IF NOT EXISTS outcome_encrypted JSONB,
+    ADD COLUMN IF NOT EXISTS complications TEXT,
+    ADD COLUMN IF NOT EXISTS complications_encrypted JSONB,
+    ADD COLUMN IF NOT EXISTS clinical_notes TEXT,
+    ADD COLUMN IF NOT EXISTS clinical_notes_encrypted JSONB;
+
+ALTER TABLE cath_lab_procedures
+    ALTER COLUMN procedure_type TYPE VARCHAR(100) USING procedure_type::text;
 
 -- Create indexes for common queries
 CREATE INDEX IF NOT EXISTS idx_cath_lab_procedures_bed_id ON cath_lab_procedures(bed_id);
