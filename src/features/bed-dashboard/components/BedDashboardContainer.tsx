@@ -32,6 +32,7 @@ export async function BedDashboardContainer({ role, areaView = 'all' }: Props) {
             canRecordDispositionReasons={role !== 'housekeeping'}
             onCreateVirtualBed={createVirtualBed}
             role={role}
+            areaView={areaView}
             initialPreferences={initialPreferences}
         />
     )

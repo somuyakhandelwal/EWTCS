@@ -47,17 +47,24 @@ async function seed() {
             console.log('Nurse user already exists.');
         }
 
-        // Seed Supervisor
-        const checkSupervisor = await client.query("SELECT id FROM users WHERE username = 'supervisor'");
-        if (checkSupervisor.rows.length === 0) {
-            const supervisorPassword = await bcrypt.hash('supervisor123', 10);
-            await client.query(`
+        const demoUsers = [
+            { username: 'supervisor', password: 'supervisor123', role: 'supervisor' },
+            { username: 'cardiologist', password: 'cardiologist123', role: 'cardiologist' },
+            { username: 'cath_lab_nurse', password: 'cathlab123', role: 'cath_lab_nurse' },
+        ];
+
+        for (const user of demoUsers) {
+            const checkUser = await client.query('SELECT id FROM users WHERE username = $1', [user.username]);
+            if (checkUser.rows.length === 0) {
+                const passwordHash = await bcrypt.hash(user.password, 10);
+                await client.query(`
         INSERT INTO users (username, password_hash, role)
-        VALUES ($1, $2, 'supervisor')
-      `, ['supervisor', supervisorPassword]);
-            console.log('Seeded supervisor user.');
-        } else {
-            console.log('Supervisor user already exists.');
+        VALUES ($1, $2, $3)
+      `, [user.username, passwordHash, user.role]);
+                console.log(`Seeded ${user.role} user.`);
+            } else {
+                console.log(`${user.username} user already exists.`);
+            }
         }
 
     } catch (err) {

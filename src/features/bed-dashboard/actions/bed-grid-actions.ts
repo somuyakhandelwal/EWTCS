@@ -81,10 +81,18 @@ export async function getBedGridData(areaView: BedAreaView = 'all'): Promise<{
     // Ward-scope the bed list for nurses and housekeeping.
     // Admins/supervisors see every ward; floater nurses (no ward assigned) also see all.
     const wardScopedRoles = new Set<string>(['nurse', 'housekeeping'])
-    const wardScopedBeds =
-      wardScopedRoles.has(session.role) && userWard
-        ? allBeds.filter(b => b.wardId === userWard || b.isVirtual || b.isTemporary)
-        : allBeds
+    
+    // US-16.2: Ensure nurses can always view the global triage area, even if restricted to an ER ward
+    let wardScopedBeds = allBeds;
+    if (wardScopedRoles.has(session.role) && userWard) {
+      if (areaView === 'triage') {
+        // In Triage view, do not restrict by userWard, as triage is a shared intake area
+        wardScopedBeds = allBeds;
+      } else {
+        // In Emergency view or global view, restrict to their assigned ward
+        wardScopedBeds = allBeds.filter(b => b.wardId === userWard || b.isVirtual || b.isTemporary);
+      }
+    }
 
     const beds = filterBedsByArea(wardScopedBeds, areaView, triageWardIds)
 

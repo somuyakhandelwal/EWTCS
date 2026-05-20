@@ -6,6 +6,7 @@ import { Button } from '@/shared/components/ui/button'
 import { Input } from '@/shared/components/ui/input'
 import { Label } from '@/shared/components/ui/label'
 import { createCathLabProcedureAction } from '../actions/cath-lab-actions'
+import type { CardiologistOption } from '../types/cath-lab'
 
 const DEFAULT_PROCEDURE_TYPE = 'CAG'
 
@@ -13,25 +14,39 @@ function toIso(localDateTime: string): string {
   return new Date(localDateTime).toISOString()
 }
 
-export function CathLabProcedureForm() {
+interface CathLabProcedureFormProps {
+  cardiologists: CardiologistOption[]
+  currentUserId: string
+  currentUserRole: string
+}
+
+export function CathLabProcedureForm({
+  cardiologists,
+  currentUserId,
+  currentUserRole,
+}: CathLabProcedureFormProps) {
   const router = useRouter()
   const [isPending, startTransition] = useTransition()
   const [error, setError] = useState<string | null>(null)
 
   const [procedureType, setProcedureType] = useState<'CAG' | 'PTCA'>(DEFAULT_PROCEDURE_TYPE)
-  const [patientId, setPatientId] = useState('')
-  const [cardiologist, setCardiologist] = useState('')
+  const [patientUhid, setPatientUhid] = useState('')
+  const [cardiologistId, setCardiologistId] = useState(cardiologists[0]?.id ?? '')
   const [startTime, setStartTime] = useState('')
   const [endTime, setEndTime] = useState('')
   const [outcome, setOutcome] = useState('')
+  const [clinicalNotes, setClinicalNotes] = useState('')
+
+  const isCardiologist = currentUserRole === 'cardiologist'
 
   function resetForm() {
     setProcedureType(DEFAULT_PROCEDURE_TYPE)
-    setPatientId('')
-    setCardiologist('')
+    setPatientUhid('')
+    setCardiologistId(cardiologists[0]?.id ?? '')
     setStartTime('')
     setEndTime('')
     setOutcome('')
+    setClinicalNotes('')
   }
 
   function handleSubmit(e: React.FormEvent) {
@@ -41,11 +56,12 @@ export function CathLabProcedureForm() {
     startTransition(async () => {
       const result = await createCathLabProcedureAction({
         procedureType,
-        patientId,
-        cardiologist,
-        startTime: toIso(startTime),
-        endTime: toIso(endTime),
+        patientUhid,
+        cardiologistId: isCardiologist ? currentUserId : cardiologistId,
+        actualStartTime: toIso(startTime),
+        actualEndTime: toIso(endTime),
         outcome,
+        clinicalNotes,
       })
 
       if (!result.success) {
@@ -78,14 +94,30 @@ export function CathLabProcedureForm() {
       </div>
 
       <div className="space-y-2">
-        <Label htmlFor="patientId">Patient ID</Label>
-        <Input id="patientId" value={patientId} onChange={(e) => setPatientId(e.target.value)} required disabled={isPending} />
+        <Label htmlFor="patientUhid">Patient UHID</Label>
+        <Input id="patientUhid" value={patientUhid} onChange={(e) => setPatientUhid(e.target.value)} required disabled={isPending} />
       </div>
 
-      <div className="space-y-2">
-        <Label htmlFor="cardiologist">Cardiologist</Label>
-        <Input id="cardiologist" value={cardiologist} onChange={(e) => setCardiologist(e.target.value)} required disabled={isPending} />
-      </div>
+      {!isCardiologist && (
+        <div className="space-y-2">
+          <Label htmlFor="cardiologistId">Cardiologist</Label>
+          <select
+            id="cardiologistId"
+            value={cardiologistId}
+            onChange={(e) => setCardiologistId(e.target.value)}
+            className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm text-foreground"
+            disabled={isPending}
+            required
+          >
+            <option value="" disabled>Select cardiologist</option>
+            {cardiologists.map((cardiologist) => (
+              <option key={cardiologist.id} value={cardiologist.id}>
+                {cardiologist.username}
+              </option>
+            ))}
+          </select>
+        </div>
+      )}
 
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
         <div className="space-y-2">
@@ -107,6 +139,18 @@ export function CathLabProcedureForm() {
           rows={3}
           disabled={isPending}
           required
+          className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm text-foreground"
+        />
+      </div>
+
+      <div className="space-y-2">
+        <Label htmlFor="clinicalNotes">Notes</Label>
+        <textarea
+          id="clinicalNotes"
+          value={clinicalNotes}
+          onChange={(e) => setClinicalNotes(e.target.value)}
+          rows={3}
+          disabled={isPending}
           className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm text-foreground"
         />
       </div>

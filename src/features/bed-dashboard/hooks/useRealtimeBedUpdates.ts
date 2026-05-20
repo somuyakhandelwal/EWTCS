@@ -12,6 +12,7 @@ import { useFetchBedData } from './useFetchBedData'
 import { usePollingEngine } from './usePollingEngine'
 import type { BedGridData } from '../types/bed'
 import type { UseRealtimeBedUpdatesReturn } from '../types/realtime'
+import type { BedAreaView } from '../actions/bed-grid-actions'
 
 /**
  * Composes useFetchBedData + usePollingEngine + useNetworkStatus to deliver
@@ -19,6 +20,7 @@ import type { UseRealtimeBedUpdatesReturn } from '../types/realtime'
  */
 export function useRealtimeBedUpdates(
   initialData: BedGridData,
+  areaView: BedAreaView = 'all',
 ): UseRealtimeBedUpdatesReturn<BedGridData> {
   const { isOnline } = useNetworkStatus()
   const isOnlineRef = useRef(isOnline)
@@ -33,7 +35,7 @@ export function useRealtimeBedUpdates(
     abortControllerRef,
     retryTimeoutRef,
     errorCountRef,
-  } = useFetchBedData(initialData, isOnlineRef)
+  } = useFetchBedData(initialData, isOnlineRef, areaView)
 
   const { startPolling, stopPolling } = usePollingEngine(fetchData, isOnline, {
     retryTimeoutRef,

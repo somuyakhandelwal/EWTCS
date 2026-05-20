@@ -4,6 +4,10 @@ interface CathLabProcedureListProps {
   procedures: CathLabProcedure[]
 }
 
+function formatDate(value: string | null): string {
+  return value ? new Date(value).toLocaleString() : '-'
+}
+
 export function CathLabProcedureList({ procedures }: CathLabProcedureListProps) {
   if (procedures.length === 0) {
     return (
@@ -23,10 +27,11 @@ export function CathLabProcedureList({ procedures }: CathLabProcedureListProps) 
           <thead className="bg-muted/20 border-b border-border">
             <tr>
               <th className="text-left px-4 py-2 text-muted-foreground font-medium">Type</th>
-              <th className="text-left px-4 py-2 text-muted-foreground font-medium">Patient ID</th>
+              <th className="text-left px-4 py-2 text-muted-foreground font-medium">Patient UHID</th>
               <th className="text-left px-4 py-2 text-muted-foreground font-medium">Cardiologist</th>
               <th className="text-left px-4 py-2 text-muted-foreground font-medium">Start</th>
               <th className="text-left px-4 py-2 text-muted-foreground font-medium">End</th>
+              <th className="text-left px-4 py-2 text-muted-foreground font-medium">Duration</th>
               <th className="text-left px-4 py-2 text-muted-foreground font-medium">Outcome</th>
             </tr>
           </thead>
@@ -34,10 +39,13 @@ export function CathLabProcedureList({ procedures }: CathLabProcedureListProps) 
             {procedures.map((procedure, index) => (
               <tr key={procedure.id} className={index % 2 === 0 ? '' : 'bg-muted/10'}>
                 <td className="px-4 py-2 font-semibold text-card-foreground">{procedure.procedureType}</td>
-                <td className="px-4 py-2 text-card-foreground">{procedure.patientId}</td>
-                <td className="px-4 py-2 text-card-foreground">{procedure.cardiologist}</td>
-                <td className="px-4 py-2 text-muted-foreground">{new Date(procedure.startTime).toLocaleString()}</td>
-                <td className="px-4 py-2 text-muted-foreground">{new Date(procedure.endTime).toLocaleString()}</td>
+                <td className="px-4 py-2 text-card-foreground">{procedure.patientUhid ?? '-'}</td>
+                <td className="px-4 py-2 text-card-foreground">{procedure.cardiologistName}</td>
+                <td className="px-4 py-2 text-muted-foreground">{formatDate(procedure.actualStartTime)}</td>
+                <td className="px-4 py-2 text-muted-foreground">{formatDate(procedure.actualEndTime)}</td>
+                <td className="px-4 py-2 text-muted-foreground">
+                  {procedure.durationMinutes == null ? '-' : `${procedure.durationMinutes} min`}
+                </td>
                 <td className="px-4 py-2 text-card-foreground">{procedure.outcome}</td>
               </tr>
             ))}

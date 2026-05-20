@@ -22,6 +22,7 @@ import { useOfflineWriteInterceptor } from '../hooks/useOfflineWriteInterceptor'
 import { useOfflineOptimisticStages } from '../hooks/useOfflineOptimisticStages'
 import { useTatSummary } from '../hooks/useTatSummary'
 import { recordDispositionDelayReason } from '../actions/disposition-actions'
+import type { BedAreaView } from '../actions/bed-grid-actions'
 import type { UserPreferences } from '@/shared/types/user-preferences.types'
 import { DEFAULT_USER_PREFERENCES } from '@/shared/types/user-preferences.types'
 
@@ -32,6 +33,8 @@ interface BedDashboardClientProps {
   onCreateVirtualBed: (fd: FormData) => Promise<{ success: boolean; error?: string }>
   /** Current user role — forwarded to BedCard for EPIC 22 doctor button */
   role?: string
+  /** Area view to maintain context during real-time polling */
+  areaView?: BedAreaView
   /**
    * DB5-02: SSR-fetched user preferences — eliminates flash of default state.
    * Falls back to DEFAULT_USER_PREFERENCES when not provided.
@@ -44,6 +47,7 @@ export function BedDashboardClient({
   canRecordDispositionReasons = true,
   onCreateVirtualBed,
   role,
+  areaView = 'all',
   initialPreferences = DEFAULT_USER_PREFERENCES,
 }: BedDashboardClientProps) {
   // DB5-02: Settings & filter are owned here now (SSR initial values)
@@ -59,7 +63,7 @@ export function BedDashboardClient({
     refresh: realtimeRefresh,
     isOffline,
     cacheTimestamp,
-  } = useRealtimeBedUpdates(initialData)
+  } = useRealtimeBedUpdates(initialData, areaView)
   const isEffectivelyOffline = isOffline || connectionStatus.status === 'disconnected'
 
   const {

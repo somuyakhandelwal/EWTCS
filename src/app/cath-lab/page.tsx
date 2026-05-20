@@ -2,7 +2,10 @@ import { redirect } from 'next/navigation'
 import { Activity } from 'lucide-react'
 import { verifyActiveSession } from '@/shared/lib/active-session'
 import { LogoutButton } from '@/features/auth/components/LogoutButton'
-import { getRecentCathLabProceduresAction } from '@/features/cath-lab/actions/cath-lab-actions'
+import {
+  getActiveCardiologistsAction,
+  getRecentCathLabProceduresAction,
+} from '@/features/cath-lab/actions/cath-lab-actions'
 import { CathLabProcedureForm } from '@/features/cath-lab/components/CathLabProcedureForm'
 import { CathLabProcedureList } from '@/features/cath-lab/components/CathLabProcedureList'
 
@@ -21,7 +24,10 @@ export default async function CathLabPage() {
     redirect('/dashboard')
   }
 
-  const proceduresResult = await getRecentCathLabProceduresAction(50)
+  const [proceduresResult, cardiologistsResult] = await Promise.all([
+    getRecentCathLabProceduresAction(50),
+    getActiveCardiologistsAction(),
+  ])
 
   return (
     <div className="min-h-screen bg-background text-foreground p-3 sm:p-8">
@@ -42,7 +48,11 @@ export default async function CathLabPage() {
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-[360px_1fr] gap-4">
-          <CathLabProcedureForm />
+          <CathLabProcedureForm
+            cardiologists={cardiologistsResult.data ?? []}
+            currentUserId={session.userId}
+            currentUserRole={session.role}
+          />
           <CathLabProcedureList procedures={proceduresResult.data ?? []} />
         </div>
       </div>

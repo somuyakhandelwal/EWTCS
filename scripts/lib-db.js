@@ -135,7 +135,7 @@ async function setupAdminUser(databaseUrl) {
     }
 
     // --- Developer Testing Enhancement ---
-    const testRoles = ['nurse', 'supervisor', 'housekeeping', 'auditor'];
+    const testRoles = ['nurse', 'supervisor', 'housekeeping', 'auditor', 'cardiologist', 'cath_lab_nurse'];
     const testPassword = process.env.ADMIN_PASSWORD || 'user@123';
     const hashedTestPassword = await bcrypt.hash(testPassword, 10);
     for (const role of testRoles) {
