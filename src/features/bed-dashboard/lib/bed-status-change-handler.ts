@@ -2,7 +2,7 @@ import { logger } from '@/shared/config/logger'
 import { dispatchDueWebhooks, queueWebhookEvent } from '@/features/external-integration/lib/webhook-dispatcher'
 import type { BedStatusChangedPayload } from '@/features/external-integration/types/webhook.types'
 import crypto from 'crypto'
-import type { Bed } from '@/features/bed-dashboard/types/bed-types'
+import type { Bed } from '@/features/bed-dashboard/types/bed'
 
 export async function handleBedStatusChange(
   bed: Bed,

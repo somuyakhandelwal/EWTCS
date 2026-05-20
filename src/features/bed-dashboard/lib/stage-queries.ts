@@ -65,3 +65,30 @@ export async function getStageById(stageId: string): Promise<Stage | null> {
     throw new Error('Failed to fetch stage from database')
   }
 }
+
+/**
+ * Get all active stages for a specific area (e.g., 'ER', 'TRIAGE')
+ */
+export async function getStagesByArea(area: 'ER' | 'TRIAGE'): Promise<Stage[]> {
+  try {
+    const result = await query<Stage>(`
+      SELECT 
+        id,
+        name,
+        display_order as "displayOrder",
+        color_code as "colorCode",
+        description,
+        is_active as "isActive",
+        created_at as "createdAt",
+        updated_at as "updatedAt"
+      FROM stages
+      WHERE is_active = true AND area = $1
+      ORDER BY display_order ASC
+    `, [area])
+    
+    return result.rows
+  } catch (error) {
+    logger.error('Failed to fetch stages by area', error as Error, { area })
+    throw new Error('Failed to fetch stages from database')
+  }
+}

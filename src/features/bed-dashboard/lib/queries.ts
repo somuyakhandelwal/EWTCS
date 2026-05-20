@@ -2,7 +2,7 @@
 // Epic 1: Nurse Desk Bed Dashboard
 // Re-exports all queries for backward compatibility
 
-export { getAllStages, getStageById } from './stage-queries'
+export { getAllStages, getStageById, getStagesByArea } from './stage-queries'
 export {
   getAllBeds,
   getBedsWithElapsedTime,

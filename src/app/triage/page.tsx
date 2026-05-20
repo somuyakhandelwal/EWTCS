@@ -43,7 +43,10 @@ export default async function TriagePage() {
 
           <div className="min-w-0 flex-1 rounded-xl border border-primary/20 bg-primary/5 p-2 sm:p-3">
             <Suspense fallback={<BedGridSkeleton />}>
-              <BedDashboardContainer role={session.role} areaView="triage" />
+              <BedDashboardContainer
+                role={session.role}
+                areaView="triage"
+              />
             </Suspense>
           </div>
         </div>
