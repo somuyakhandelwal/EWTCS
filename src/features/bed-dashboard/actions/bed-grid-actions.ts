@@ -4,31 +4,14 @@ import { logger } from '@/shared/config/logger'
 import type { BedGridData } from '../types/bed'
 import { getUserWard } from '../lib/bed-queries'
 import { requireRole } from '@/shared/lib/auth'
-import { query } from '@/shared/lib/db'
 import { getStageTransitionMap } from '../lib/stage-validation'
 import type { UserRole } from '../lib/stage-validation-types'
 import { getGlobalThresholdMs, getGlobalEscalationThresholdMs } from '@/shared/lib/threshold'
 import { perfStart, perfEnd, logPerf, PERF_SLA } from '@/shared/lib/perf-monitor'
-import { SETTINGS_CACHE_TAG, withCache } from '@/shared/lib/query-cache'
+import { getTriageWardIds } from '../lib/triage-wards'
 
 export type BedAreaView = 'all' | 'emergency' | 'triage'
 
-async function fetchTriageWardIdsFromDB(): Promise<string[]> {
-  const result = await query<{ id: string }>(
-    `
-    SELECT id
-    FROM wards
-    WHERE is_active = true
-      AND (
-        UPPER(code) = 'TRIAGE'
-        OR LOWER(name) LIKE '%triage%'
-      )
-    `
-  )
-  return result.rows.map((row) => row.id)
-}
-
-const getTriageWardIds = withCache(fetchTriageWardIdsFromDB, 'bed-dashboard:get-triage-ward-ids', 120, [SETTINGS_CACHE_TAG])
 
 function filterBedsByArea(data: BedGridData['beds'], areaView: BedAreaView, triageWardIds: Set<string>) {
   if (areaView === 'all' || triageWardIds.size === 0) {

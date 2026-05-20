@@ -1,4 +1,4 @@
--- Migration 050: Deactivate 'Triage' as an ER bed stage and disable related transitions
+-- Migration 063: Deactivate 'Triage' as an ER bed stage and disable related transitions
 -- Purpose: EPIC 25 — Separate Triage area from Emergency Ward bed stages
 -- Notes:
 --  - This migration does not delete historical rows. It marks the 'Triage' stage and any
@@ -26,7 +26,7 @@ BEGIN
     BEGIN
       IF EXISTS (SELECT 1 FROM pg_tables WHERE schemaname = 'public' AND tablename = 'migrations_audit') THEN
         INSERT INTO migrations_audit (migration, description, created_at)
-        VALUES ('050_remove_triage_from_er', 'Deactivated ''Triage'' stage and related transitions (EPIC 25)', CURRENT_TIMESTAMP);
+        VALUES ('063_remove_triage_from_er', 'Deactivated ''Triage'' stage and related transitions (EPIC 25)', CURRENT_TIMESTAMP);
       END IF;
     EXCEPTION WHEN undefined_table THEN
       -- ignore if migrations_audit doesn't exist
