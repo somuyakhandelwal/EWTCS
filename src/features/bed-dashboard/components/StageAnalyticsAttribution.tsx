@@ -33,7 +33,7 @@ const ICONS = {
 } as const
 
 const DESCRIPTIONS: Record<string, string> = {
-  emergency_staff: 'Delays in Triage, Registration, Doctor Assessment & Treatment',
+  emergency_staff: 'Delays in Initial Investigation, Initial Treatment, Drugs/Test & Observation',
   hospital_capacity: 'Decision Made delays caused by unavailable beds upstairs',
   unattributed: 'Decision Made delays without a bed-availability reason recorded',
 }

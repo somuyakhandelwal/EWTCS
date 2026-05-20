@@ -55,12 +55,16 @@ export async function getBedsWithElapsedTime(
         bt.created_at AS "createdAt",
         bt.updated_at AS "updatedAt",
         json_build_object(
-          'id',           s.id,
-          'name',         s.name,
-          'displayOrder', s.display_order,
-          'colorCode',    s.color_code,
-          'description',  s.description,
-          'isActive',     s.is_active
+          'id',           COALESCE(s.id, bt.current_stage_id),
+          'name',         CASE
+                            WHEN s.id IS NULL OR s.is_active = false
+                            THEN 'Unknown (Legacy)'
+                            ELSE s.name
+                          END,
+          'displayOrder', COALESCE(s.display_order, -1),
+          'colorCode',    COALESCE(s.color_code, 'gray'),
+          'description',  COALESCE(s.description, 'Legacy stage — no longer active'),
+          'isActive',     COALESCE(s.is_active, false)
         ) AS "currentStage",
         bt.computed_elapsed_ms AS "elapsedTimeMs",
         COALESCE(bt.computed_elapsed_ms > bt.effective_threshold_ms, false) AS "isDelayed",
@@ -70,7 +74,10 @@ export async function getBedsWithElapsedTime(
         ddr.reason AS "dispositionDelayReason",
         ddr.id AS "dispositionDelayLogId"
       FROM bed_timings bt
-      JOIN stages s ON bt.current_stage_id = s.id
+      -- LEFT JOIN so beds with a deactivated/missing stage_id are still returned.
+      -- CASE guards above provide safe fallback labels ('Unknown (Legacy)', 'gray').
+      -- Migration 064 is the primary fix; this JOIN change is a defence-in-depth guard.
+      LEFT JOIN stages s ON bt.current_stage_id = s.id
       LEFT JOIN LATERAL (
         SELECT ddr.id, COALESCE(o.value, ddr.reason::text) as reason
         FROM disposition_delay_reasons ddr
