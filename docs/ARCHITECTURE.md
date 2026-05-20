@@ -6,7 +6,7 @@
 
 ## 1. High-Level System Description
 
-EWTCS is a real-time hospital Emergency Ward bed management system. It enables nurses, housekeeping staff, supervisors, auditors, and administrators to monitor and control each bed's status through an **8-stage patient workflow** — from patient arrival (Triage) through treatment, discharge, and bed cleaning.
+EWTCS is a real-time hospital Emergency Ward bed management system. It enables nurses, housekeeping staff, supervisors, auditors, and administrators to monitor and control each bed's status through an **8-stage patient workflow** — from initial investigation through treatment, discharge, and bed cleaning. Triage is modelled as a separate intake area and is not an ER bed stage.
 
 Core capabilities:
 

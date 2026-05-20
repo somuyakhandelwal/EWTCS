@@ -5,20 +5,20 @@ import { logger } from '@/shared/config/logger'
 
 export async function getDepartmentMetrics() {
   try {
-    // 1. Triage metrics: occupied triage beds and average time spent in triage.
-    // NOTE: triage_stage is a single CTE lookup (one subquery, no per-row loop)
-    // that is reused by downstream CTEs via joins.
+    // 1. Triage Area metrics: occupied beds in the TRIAGE ward and recent intake avg time.
+    // NOTE: Triage is a SEPARATE WARD (code='TRIAGE'), NOT an ER stage (U.S 25.2).
+    // This query counts beds by ward_id, not by stage name.
     const intakeQuery = query(`
-      WITH triage_stage AS (
+      WITH triage_ward AS (
         SELECT id
-        FROM stages
-        WHERE LOWER(name) = 'triage'
+        FROM wards
+        WHERE code = 'TRIAGE' AND is_active = true
         LIMIT 1
       ),
       triage_beds AS (
         SELECT b.id, b.is_occupied
         FROM beds b
-        JOIN triage_stage ts ON b.current_stage_id = ts.id
+        JOIN triage_ward tw ON b.ward_id = tw.id
         WHERE b.is_active = true
       ),
       recent_intake AS (
@@ -30,7 +30,7 @@ export async function getDepartmentMetrics() {
       triage_durations AS (
         SELECT bsl.bed_id, bsl.duration_in_previous_stage_ms
         FROM bed_stage_logs bsl
-        JOIN triage_stage ts ON bsl.from_stage_id = ts.id
+        JOIN triage_beds tb ON bsl.bed_id = tb.id
         WHERE bsl.duration_in_previous_stage_ms IS NOT NULL
       )
       SELECT

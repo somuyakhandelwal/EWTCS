@@ -24,8 +24,6 @@ COMMENT ON TABLE stage_transitions IS 'Defines valid stage transitions in the em
 
 INSERT INTO stage_transitions (from_stage_id, to_stage_id, is_allowed, requires_supervisor_override, description, priority)
 VALUES
-    ((SELECT id FROM stages WHERE name = 'Empty'), (SELECT id FROM stages WHERE name = 'Triage'), true, false, 'Patient arrives.', 10),
-    ((SELECT id FROM stages WHERE name = 'Triage'), (SELECT id FROM stages WHERE name = 'Registration'), true, false, 'Patient proceeds to registration.', 10),
     ((SELECT id FROM stages WHERE name = 'Registration'), (SELECT id FROM stages WHERE name = 'Doctor Assessment'), true, false, 'Doctor examines patient.', 10),
     ((SELECT id FROM stages WHERE name = 'Doctor Assessment'), (SELECT id FROM stages WHERE name = 'Treatment/Observation'), true, false, 'Doctor orders treatment.', 10),
     ((SELECT id FROM stages WHERE name = 'Treatment/Observation'), (SELECT id FROM stages WHERE name = 'Decision Made'), true, false, 'Treatment complete.', 10),
@@ -33,8 +31,6 @@ VALUES
     ((SELECT id FROM stages WHERE name = 'Discharge Process'), (SELECT id FROM stages WHERE name = 'Cleaning'), true, false, 'Bed is being cleaned.', 10),
     ((SELECT id FROM stages WHERE name = 'Cleaning'), (SELECT id FROM stages WHERE name = 'Empty'), true, false, 'Bed cleaning complete.', 10),
     ((SELECT id FROM stages WHERE name = 'Treatment/Observation'), (SELECT id FROM stages WHERE name = 'Doctor Assessment'), false, true, 'Patient condition changes.', 9),
-    ((SELECT id FROM stages WHERE name = 'Treatment/Observation'), (SELECT id FROM stages WHERE name = 'Triage'), false, true, 'Emergency: patient deteriorates.', 8),
-    ((SELECT id FROM stages WHERE name = 'Triage'), (SELECT id FROM stages WHERE name = 'Treatment/Observation'), false, true, 'Emergency case.', 8),
     ((SELECT id FROM stages WHERE name = 'Doctor Assessment'), (SELECT id FROM stages WHERE name = 'Decision Made'), false, true, 'Doctor assessment complete.', 8),
     ((SELECT id FROM stages WHERE name = 'Empty'), (SELECT id FROM stages WHERE name = 'Treatment/Observation'), false, true, 'Emergency readmission.', 8),
     ((SELECT id FROM stages WHERE name = 'Empty'), (SELECT id FROM stages WHERE name = 'Doctor Assessment'), false, true, 'Immediate doctor assessment.', 8)

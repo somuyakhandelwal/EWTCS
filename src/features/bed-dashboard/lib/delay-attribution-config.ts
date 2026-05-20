@@ -18,7 +18,7 @@ export interface AttributionConfig {
 
 /**
  * Default attribution configuration.
- * Stages 1–4 (Triage, Registration, Doctor Assessment, Treatment/Observation)
+ * Stages 1–4 (Initial Investigation, Initial Treatment, Drugs/Test, Observation)
  * are Emergency Staff delays.
  * Stage 5 (Decision Made) with a bed-unavailability reason is Hospital Capacity.
  *

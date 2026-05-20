@@ -22,7 +22,7 @@ function makeStage(overrides: Partial<Stage> = {}): Stage {
 }
 
 function makeBed(overrides: Partial<BedWithElapsedTime> = {}): BedWithElapsedTime {
-  const stage = makeStage({ id: 'stage-1', name: 'Triage' })
+  const stage = makeStage({ id: 'stage-1', name: 'Initial Investigation' })
   return {
     id: 'bed-1',
     bedNumber: 'EW-01',

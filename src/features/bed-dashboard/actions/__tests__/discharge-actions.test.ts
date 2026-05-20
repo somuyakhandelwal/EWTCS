@@ -33,8 +33,8 @@ import { dischargeAndResetBed } from '../discharge-actions'
 
 const BED = {
   id: 'bed-1',
-  currentStageId: 'stage-triage',
-  currentStageName: 'Triage',
+  currentStageId: 'stage-initial-investigation',
+  currentStageName: 'Initial Investigation',
   patientStartTime: new Date('2026-03-15T08:00:00.000Z'),
   lastStageChange: new Date('2026-03-15T08:05:00.000Z'),
   isOccupied: true,

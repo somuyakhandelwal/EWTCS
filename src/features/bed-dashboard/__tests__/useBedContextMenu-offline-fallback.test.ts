@@ -15,7 +15,7 @@ const BED: BedWithElapsedTime = {
   id: 'bed-1',
   bedNumber: 'A-01',
   wardId: 'ward-1',
-  currentStageId: 'stage-triage',
+  currentStageId: 'stage-initial-investigation',
   currentStage: null,
   patientStartTime: null,
   lastStageChange: null,
@@ -54,7 +54,7 @@ describe('useBedContextMenu offline cache behavior', () => {
     getValidTransitionsForBedMock.mockReset()
     const onStageSelect = vi.fn()
     const stageTransitionMap: StageTransitionMap = {
-      'stage-triage': {
+      'stage-initial-investigation': {
         allowed: ['stage-assessment'],
         requiresOverride: ['stage-hold'],
       },
@@ -74,7 +74,7 @@ describe('useBedContextMenu offline cache behavior', () => {
     getValidTransitionsForBedMock.mockReset()
     const onStageSelect = vi.fn()
     const stageTransitionMap: StageTransitionMap = {
-      'stage-triage': {
+      'stage-initial-investigation': {
         allowed: ['stage-assessment'],
         requiresOverride: ['stage-hold'],
       },

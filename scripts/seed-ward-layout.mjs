@@ -1,6 +1,6 @@
 /**
  * seed-ward-layout.mjs
- * EPIC 20 — ER Triage & Patient Intake
+ * EPIC 20 — Emergency Ward & Triage Area Layout
  *
  * Exports three idempotent ward-seeding functions:
  *   seedErBeds(client, SM)     — 30 Emergency Ward beds  (ER-01 … ER-30)

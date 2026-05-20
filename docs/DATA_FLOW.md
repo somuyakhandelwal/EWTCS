@@ -31,10 +31,10 @@ flowchart TD
 
     subgraph Workflow["8-Stage Patient Workflow"]
         S0["Empty<br/>🔘 gray"]
-        S1["Triage<br/>🔵 blue"]
-        S2["Registration<br/>🔵 cyan"]
-        S3["Doctor Assessment<br/>🟡 yellow"]
-        S4["Treatment/Observation<br/>🟠 orange"]
+        S1["Initial Investigation<br/>🔵 blue"]
+        S2["Initial Treatment<br/>🔵 cyan"]
+        S3["Drugs/Test<br/>🟡 yellow"]
+        S4["Observation<br/>🟠 orange"]
         S5["Decision Made<br/>🟢 green"]
         S6["Discharge Process<br/>🟣 purple"]
         S7["Cleaning<br/>🟤 pink"]
@@ -75,12 +75,12 @@ flowchart TD
 flowchart TD
     Start(["Patient Arrives at ER"])
     
-    A["Nurse assigns patient to bed<br/>Bed: Empty → Triage"]
+    A["Nurse assigns patient to bed<br/>Bed: Empty → Initial Investigation"]
     B["Record patient details<br/>Name, MRD, Symptom<br/>(AES-256 encrypted at rest)"]
-    C["Triage assessment complete<br/>Bed: Triage → Registration"]
-    D["Registration & documentation<br/>Bed: Registration → Doctor Assessment"]
-    E["Doctor examines patient<br/>Bed: Doctor Assessment → Treatment"]
-    F["Active treatment / monitoring<br/>Bed: Treatment → Decision Made"]
+    C["Initial assessment & investigations ordered<br/>Bed: Initial Investigation → Initial Treatment"]
+    D["First-line treatment administered<br/>Bed: Initial Treatment → Drugs/Test"]
+    E["Awaiting medication response/diagnostic tests<br/>Bed: Drugs/Test → Observation"]
+    F["Observation & active clinical monitoring<br/>Bed: Observation → Decision Made"]
     
     G{"Disposition<br/>bottleneck?"}
     G1["Record delay reason<br/>disposition_delay_reasons table<br/>no_bed_upstairs, awaiting_transport, etc."]
@@ -338,13 +338,13 @@ flowchart LR
 
 ```mermaid
 flowchart TD
-    subgraph Arrival["Patient Arrival"]
+    subgraph Arrival["ER Patient Arrival"]
         Patient(["Patient arrives at ER"])
-        Assign["Nurse assigns bed<br/>Bed: Empty → Triage"]
+        Assign["Nurse assigns bed<br/>Bed: Empty → Initial Investigation"]
     end
 
     subgraph ERIntake["ER Intake (US-20.1) ⚠️ Schema Only"]
-        Triage["Record chief complaint<br/>symptom, triage_level"]
+        Triage["Record chief complaint & triage level<br/>symptom, triage_level"]
         Vitals["Record vital signs<br/>bp, hr, temp, rr, o2"]
         TriageDB[("er_intake table<br/>AES-256 encrypted")]
     end
@@ -374,7 +374,7 @@ flowchart TD
     end
 
     subgraph Discharge_Path["Post-Procedure"]
-        PostOp["Post-op monitoring<br/>Bed: Treatment → Decision Made"]
+        PostOp["Post-op monitoring<br/>Bed: Initial Treatment → Observation → Decision Made"]
         DischargeFlow["Standard discharge flow<br/>(see diagram 2)"]
     end
 

@@ -72,7 +72,7 @@ export function BedDashboardClient({
     handleOverrideApprove: originalHandleOverrideApprove, closeOverrideModal, confirmationState,
     handleConfirmationConfirm: originalHandleConfirmationConfirm, closeConfirmationModal,
     dischargeState, isDischargeSubmitting, handleDischargeConfirm: originalHandleDischargeConfirm,
-    closeDischargeModal, triageState, openTriageModal, closeTriageModal, handleTriageSubmit,
+    closeDischargeModal, triageState, closeTriageModal, handleTriageSubmit,
   } = useBedStageUpdate(realtimeData, { confirmCriticalStages: settings.confirmCriticalStages })
 
   const offlineQueue = useOfflineQueue()
@@ -167,7 +167,7 @@ export function BedDashboardClient({
           data={displayData} onRefresh={handleRefresh} onStageSelect={handleStageSelectOptimistic} onReasonSelect={canRecordDispositionReasons ? handleReasonSelect : undefined}
           tatSummary={tatSummary} updatingBedId={updatingBedId} updatingStageId={updatingStageId} lastUpdatedBedId={lastUpdatedBedId} lastUpdatedStageId={lastUpdatedStageId}
           errorByBedId={errorByBedId} isRefreshing={isLoading} undoState={undoState} onUndo={handleUndo} isUndoing={isUndoing} isOffline={isEffectivelyOffline} queuedBedIds={offlineQueue.queuedBedIds}
-          onOpenTriage={(bedId) => { const bed = data.beds.find(b => b.id === bedId); const triageStage = data.stages.find(s => s.name === 'Triage'); if (bed && triageStage) openTriageModal(bed, triageStage); }}
+
           onOpenDiagnosis={(bedId) => { const bed = data.beds.find((b) => b.id === bedId); if (bed) openDiagnosisModal(bed.id, bed.bedNumber, bed.metadata?.triageInfo?.patientUhid ?? '', bed.metadata?.triageInfo?.keySymptom ?? null) }}
           role={role} showDelayedOnly={showDelayedOnly} sortOrder={sortOrder} searchQuery={searchQuery} displayedBeds={displayedBeds} isFilterActive={isFilterActive}
           onToggleDelayedFilter={toggleDelayedFilter} onToggleSortOrder={toggleSortOrder} onSearchChange={setSearchQuery} onClearFilter={clearFilter}

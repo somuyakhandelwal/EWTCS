@@ -107,7 +107,7 @@ export function useBedStageUpdate(
     dischargeState, data, setData, closeDischargeModal, setTemporaryError, showSuccessFeedback, handleRefresh
   })
 
-  // US-20.2: Triage workflow
+  // Triage ward modal: used by /triage page only. NOT an ER stage (U.S 25.2).
   const { triageState, openTriageModal, closeTriageModal, handleTriageSubmit: baseHandleTriageSubmit } = useTriageConfirm({
     setTemporaryError, setData
   })
@@ -118,7 +118,7 @@ export function useBedStageUpdate(
     data, stageById, updatingBedId, setUpdatingBedId, setUpdatingStageId, setData, setTemporaryError,
     clearError, showSuccessFeedback, openOverrideModal, overrideState, closeOverrideModal,
     openConfirmationModal, confirmationState, closeConfirmationModal, confirmCriticalStages,
-    openDischargeModal, openTriageModal
+    openDischargeModal,
   })
   
   const handleTriageSubmit = useCallback((bedId: string, triageData: {

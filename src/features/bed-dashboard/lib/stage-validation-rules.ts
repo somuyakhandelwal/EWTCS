@@ -81,13 +81,33 @@ export async function getValidNextStages(
 }
 
 /**
- * Get a map of all stages to their valid next stages for a specific user role
- * Useful for pre-computing valid transitions for UI rendering
+ * Get a plain object map of all stages to their valid next stages for a specific user role.
+ * 
+ * DESIGN NOTES:
+ * Originally, this function returned a JavaScript Map class. However, because this function
+ * is cached using Next.js `unstable_cache` (which serializes and deserializes cached results
+ * as JSON), Map structures are not correctly preserved. Map objects serialize to empty objects
+ * or lose their prototypes upon retrieval from the caching layer, throwing runtime TypeError
+ * exceptions such as `transitionMapRaw.get is not a function`.
+ * 
+ * To ensure safe, bulletproof caching and fast database query reduction, we return a plain
+ * JavaScript Record object instead. Callers can access allowed transitions via object lookup:
+ * `transitionMap[fromKey]` instead of `.get(fromKey)`.
+ * 
+ * WORKFLOW RULES ENFORCED:
+ * - Administrators and Supervisors have full access to transition rules that require overrides.
+ * - Standard users (nurses, etc.) only see rules explicitly allowed by active transition definitions.
+ * - Transitions with no explicit database rule are allowed by default for backward compatibility.
+ * 
+ * @param userRole - The role of the requesting user (nurse, doctor, supervisor, admin, housekeeping).
+ * @returns A plain object mapping source stage IDs (or 'null' for intake) to lists of target stages.
  */
 async function fetchStageTransitionMapFromDB(
   userRole: UserRole
-): Promise<Map<string, { allowed: string[]; requiresOverride: string[]; blocked: string[] }>> {
+): Promise<Record<string, { allowed: string[]; requiresOverride: string[]; blocked: string[] }>> {
   try {
+    logger.debug('Querying database for full stage transition map', { userRole })
+
     const result = await pool.query<{
       fromStageId: string | null
       toStageId: string
@@ -106,16 +126,15 @@ async function fetchStageTransitionMapFromDB(
       `,
       []
     )
-
-    const map = new Map<string, { allowed: string[]; requiresOverride: string[]; blocked: string[] }>()
+    // Using a plain JavaScript Record object instead of Map to survive JSON unstable_cache serialization
+    const transitionRecord: Record<string, { allowed: string[]; requiresOverride: string[]; blocked: string[] }> = {}
 
     for (const row of result.rows) {
       const key = row.fromStageId || 'null'
-      if (!map.has(key)) {
-        map.set(key, { allowed: [], requiresOverride: [], blocked: [] })
+      if (!transitionRecord[key]) {
+        transitionRecord[key] = { allowed: [], requiresOverride: [], blocked: [] }
       }
-
-      const entry = map.get(key)!
+      const entry = transitionRecord[key]
 
       if (row.isAllowed) {
         if (!entry.allowed.includes(row.toStageId)) {
@@ -137,20 +156,23 @@ async function fetchStageTransitionMapFromDB(
       }
     }
 
-    return map
+    logger.debug('Stage transition map successfully built', { 
+      userRole, 
+      configuredSourceStagesCount: Object.keys(transitionRecord).length 
+    })
+
+    return transitionRecord
   } catch (error) {
     logger.error('Failed to get stage transition map', error as Error)
     throw error
   }
 }
-
 export const getStageTransitionMap = withCache(
   fetchStageTransitionMapFromDB,
   'bed-dashboard:get-stage-transition-map',
   300,
   [SETTINGS_CACHE_TAG]
 )
-
 /** Resolve stage name by ID (null-safe) */
 export async function getStageNameById(stageId: string | null): Promise<string | null> {
   if (!stageId) return null
@@ -159,7 +181,6 @@ export async function getStageNameById(stageId: string | null): Promise<string |
     `SELECT name FROM stages WHERE id = $1 AND is_active = true LIMIT 1`,
     [stageId]
   )
-
   return result.rows[0]?.name ?? null
 }
 
@@ -173,6 +194,5 @@ export async function getStageNamesByIds(stageIds: string[]): Promise<Map<string
     `SELECT id, name FROM stages WHERE id = ANY($1::uuid[]) AND is_active = true`,
     [stageIds]
   )
-
   return new Map(result.rows.map((row) => [row.id, row.name]))
 }

@@ -71,13 +71,13 @@ Patient workflow stages in the emergency ward.
 | Order | Name | Color | Description |
 |-------|------|-------|-------------|
 | 0 | Empty | gray | Bed is available |
-| 1 | Triage | blue | Initial assessment |
-| 2 | Registration | cyan | Patient documentation |
-| 3 | Doctor Assessment | yellow | Doctor examination |
-| 4 | Treatment/Observation | orange | Active treatment |
-| 5 | Decision Made | green | Discharge decision |
-| 6 | Discharge Process | purple | Patient being discharged |
-| 7 | Cleaning | pink | Bed cleanup |
+| 1 | Initial Investigation | blue | Doctor performing initial assessment and ordering investigations |
+| 2 | Initial Treatment | cyan | Patient receiving first-line treatment |
+| 3 | Drugs/Test | yellow | Awaiting medications or diagnostic test results |
+| 4 | Observation | orange | Patient under active clinical monitoring |
+| 5 | Decision Made | green | Discharge or admission decision has been made |
+| 6 | Discharge Process | purple | Patient being discharged or transferred to another ward |
+| 7 | Cleaning | pink | Bed cleaning and preparation |
 
 ---
 
@@ -156,11 +156,10 @@ Defines valid workflow transitions between stages.
 | `created_at` | TIMESTAMPTZ | | |
 | `updated_at` | TIMESTAMPTZ | | |
 
-**Seeded Rules:**
-- **Forward (allowed):** Empty→Triage→Registration→Doctor Assessment→Treatment→Decision Made→Discharge→Cleaning→Empty
-- **Backward (supervisor override):** Treatment→Doctor Assessment, Treatment→Triage
-- **Skip (supervisor override):** Triage→Treatment, Doctor Assessment→Decision Made
-- **Emergency (supervisor override):** Empty→Treatment, Empty→Doctor Assessment
+**Seeded Rules (U.S 25.2):**
+- **Forward (allowed):** Empty → Initial Investigation → Initial Treatment → Drugs/Test → Observation → Decision Made → Discharge Process → Cleaning → Empty
+- **Backward (supervisor override):** Observation → Initial Treatment, Drugs/Test → Initial Investigation, Initial Treatment → Initial Investigation
+- **Skip (supervisor override):** Initial Investigation → Decision Made, Empty → Observation, Empty → Initial Treatment
 
 ---
 

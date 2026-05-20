@@ -10,7 +10,7 @@ import type { BedGridData } from '../types/bed'
 
 // Minimal fixture data -------------------------------------------------------
 
-const STAGE_A = { id: 'stage-a', name: 'Triage', colorCode: '#ff0000', displayOrder: 1, description: null, isActive: true, createdAt: new Date(), updatedAt: new Date() }
+const STAGE_A = { id: 'stage-a', name: 'Initial Investigation', colorCode: '#ff0000', displayOrder: 1, description: null, isActive: true, createdAt: new Date(), updatedAt: new Date() }
 const STAGE_B = { id: 'stage-b', name: 'Treatment', colorCode: '#00ff00', displayOrder: 2, description: null, isActive: true, createdAt: new Date(), updatedAt: new Date() }
 
 const BED_1 = {
