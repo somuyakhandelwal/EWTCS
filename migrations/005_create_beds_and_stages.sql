@@ -59,6 +59,7 @@ CREATE INDEX IF NOT EXISTS idx_bed_logs_user ON bed_stage_logs(changed_by_user_i
 -- Insert default stages (based on PRD - Emergency Ward workflow)
 INSERT INTO stages (name, display_order, color_code, description) VALUES
     ('Empty', 0, 'gray', 'Bed is available and ready for next patient'),
+    ('Triage', 1, 'blue', 'Patient initial assessment and prioritization'),
     ('Registration', 2, 'cyan', 'Patient registration and documentation'),
     ('Doctor Assessment', 3, 'yellow', 'Doctor examining patient and ordering tests'),
     ('Treatment/Observation', 4, 'orange', 'Patient receiving treatment or under observation'),
