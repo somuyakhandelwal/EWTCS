@@ -15,6 +15,8 @@ import { archiveTables } from '@/features/data-retention/lib/archival-runner'
 import { getRetentionConfig } from '@/features/data-retention/lib/retention-config-queries'
 import { buildCutoffs } from '@/features/data-retention/lib/archival-run-helpers'
 
+export const dynamic = 'force-dynamic'
+
 async function cleanupExpiredTokenBlacklist(): Promise<number> {
   const result = await query<{ token: string }>(
     `DELETE FROM token_blacklist

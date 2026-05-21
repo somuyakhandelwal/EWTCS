@@ -1,6 +1,8 @@
 import { type NextRequest, NextResponse } from 'next/server'
 import { deleteSession } from '@/shared/lib/session'
 
+export const dynamic = 'force-dynamic'
+
 /**
  * GET /api/auth/force-logout
  *

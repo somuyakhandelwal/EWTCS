@@ -2,6 +2,8 @@ import { NextRequest, NextResponse } from 'next/server'
 import { undoLastBedStageUpdate } from '@/features/bed-dashboard/actions/undo-actions'
 import { verifySession } from '@/shared/lib/session'
 
+export const dynamic = 'force-dynamic'
+
 export async function POST(req: NextRequest) {
   // HTTP-layer auth: /api/* paths are not covered by middleware.ts
   // Defense-in-depth: reject unauthenticated requests before parsing the body.

@@ -10,6 +10,8 @@ import {
   MONITOR_SELECT_SQL,
 } from './route-helpers'
 
+export const dynamic = 'force-dynamic'
+
 export async function POST(request: NextRequest) {
   try {
     const session = await verifyActiveSession()

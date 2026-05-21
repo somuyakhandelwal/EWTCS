@@ -6,6 +6,8 @@ import { logAudit } from '@/shared/lib/audit'
 import { getClientIpFromHeaders } from '@/shared/lib/request-ip'
 import { logger } from '@/shared/config/logger'
 
+export const dynamic = 'force-dynamic'
+
 export async function POST(request: Request) {
     try {
         const cookieStore = await cookies()

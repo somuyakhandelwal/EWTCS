@@ -2,6 +2,8 @@ import { NextResponse } from 'next/server'
 import { verifySession } from '@/shared/lib/session'
 import { getBedGridData } from '@/features/bed-dashboard/actions/bed-grid-actions'
 
+export const dynamic = 'force-dynamic'
+
 export async function GET() {
   const session = await verifySession()
   if (!session) {

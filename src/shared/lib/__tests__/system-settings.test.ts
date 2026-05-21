@@ -42,6 +42,6 @@ describe('getAllSystemSettings', () => {
     const result = await getAllSystemSettings()
 
     expect(result.size).toBe(0)
-    expect(logger.error).toHaveBeenCalledWith('fetchAllSystemSettingsFromDb failed', err)
+    expect(logger.error).toHaveBeenCalledWith('fetchAllSystemSettingEntriesFromDb failed', err)
   })
 })

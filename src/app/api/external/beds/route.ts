@@ -4,6 +4,8 @@ import { isRateLimited } from '@/shared/lib/rate-limit'
 import { getClientIpFromHeaders } from '@/shared/lib/request-ip'
 import { logger } from '@/shared/config/logger'
 
+export const dynamic = 'force-dynamic'
+
 const API_KEY = process.env.EXTERNAL_API_KEY
 
 export async function GET(request: Request) {

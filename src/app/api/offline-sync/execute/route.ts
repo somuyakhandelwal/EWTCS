@@ -5,6 +5,8 @@ import { dischargeAndResetBed } from '@/features/bed-dashboard/actions/discharge
 import { recordDispositionDelayReason } from '@/features/bed-dashboard/actions/disposition-actions'
 import type { DispositionDelayReason } from '@/features/bed-dashboard/types/bed'
 
+export const dynamic = 'force-dynamic'
+
 type StageUpdatePayload = {
   type: 'stage-update'
   bedId: string

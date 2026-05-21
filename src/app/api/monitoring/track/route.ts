@@ -3,6 +3,8 @@ import { recordRequest } from '@/shared/lib/system-metrics'
 import { cookies } from 'next/headers'
 import type { BrowserTrackingPayload } from '@/shared/types/browser-compat.types'
 
+export const dynamic = 'force-dynamic'
+
 export async function POST(request: Request) {
   const cookieStore = await cookies()
   const sessionToken = cookieStore.get('session')?.value

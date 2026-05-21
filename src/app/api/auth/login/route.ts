@@ -9,6 +9,8 @@ import { logAudit } from '@/shared/lib/audit'
 import { getPasswordResetStatus } from '@/features/auth/lib/password-reset-db'
 import { logUnknownLoginAttempt } from '@/features/auth/lib/auth-helpers'
 
+export const dynamic = 'force-dynamic'
+
 const loginSchema = z.object({
   username: z.string().min(1, 'Username is required'),
   password: z.string().min(1, 'Password is required'),

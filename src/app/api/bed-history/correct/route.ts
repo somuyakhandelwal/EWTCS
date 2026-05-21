@@ -15,6 +15,8 @@ import { verifySession } from '@/shared/lib/session'
 import { submitHistoryCorrection } from '@/features/bed-dashboard/actions/stage-history-correction-write-actions'
 import { logger } from '@/shared/config/logger'
 
+export const dynamic = 'force-dynamic'
+
 export async function POST(req: NextRequest) {
   // Defense-in-depth: reject unauthenticated requests before parsing the body.
   // Role enforcement (supervisor/admin) happens inside submitHistoryCorrection.

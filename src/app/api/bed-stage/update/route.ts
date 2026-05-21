@@ -2,6 +2,8 @@ import { NextRequest, NextResponse } from 'next/server'
 import { logger } from '@/shared/config/logger'
 import { updateBedStage } from '@/features/bed-dashboard/actions/bed-actions'
 
+export const dynamic = 'force-dynamic'
+
 type StageUpdatePayload = {
   bedId: string
   toStageId: string

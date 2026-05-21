@@ -2,6 +2,8 @@ import { NextResponse } from 'next/server'
 import { z } from 'zod'
 import { logger } from '@/shared/config/logger'
 
+export const dynamic = 'force-dynamic'
+
 const HelpEventSchema = z.object({
   eventType: z.enum(['open', 'close', 'search', 'start_tour', 'finish_tour']),
   routeKey: z.string().min(1).max(120),

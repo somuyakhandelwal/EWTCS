@@ -2,6 +2,8 @@ import { NextRequest, NextResponse } from 'next/server'
 import { logger } from '@/shared/config/logger'
 import { updateBedTriageInfo } from '@/features/bed-dashboard/actions/triage-actions'
 
+export const dynamic = 'force-dynamic'
+
 type TriagePayload = {
   bedId: string
   triageData: {

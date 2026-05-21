@@ -7,6 +7,8 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { fetchDailySummaryByDate } from '@/features/ai-summary/actions/daily-summary-actions'
 
+export const dynamic = 'force-dynamic'
+
 const ISO_DATE_RE = /^\d{4}-\d{2}-\d{2}$/
 
 /**
