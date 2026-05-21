@@ -1,6 +1,7 @@
 import { z } from 'zod'
 import {
   TRIAGE_CATEGORY_OPTIONS,
+  TRIAGE_DECISION_OUTCOMES,
   TRIAGE_STATES,
   type TriagePatientDetails,
   type TriageState,
@@ -30,9 +31,24 @@ export const transitionTriageBedSchema = z.object({
   toState: z.enum(TRIAGE_STATES),
 })
 
+export const triageDecisionSchema = z.object({
+  bedId: z.string().uuid('Invalid bed ID'),
+  outcome: z.enum(TRIAGE_DECISION_OUTCOMES),
+  erBedId: z.string().uuid('Invalid ER bed ID').optional().nullable(),
+}).superRefine((data, ctx) => {
+  if (data.outcome === 'shift_to_er' && !data.erBedId) {
+    ctx.addIssue({
+      code: z.ZodIssueCode.custom,
+      path: ['erBedId'],
+      message: 'Select an ER bed for transfer.',
+    })
+  }
+})
+
 export type AssignTriagePatientInput = z.infer<typeof assignTriagePatientSchema>
 export type UpdateTriageDetailsInput = z.infer<typeof updateTriageDetailsSchema>
 export type TransitionTriageBedInput = z.infer<typeof transitionTriageBedSchema>
+export type TriageDecisionInput = z.infer<typeof triageDecisionSchema>
 
 export function normalizePatientDetails(patient: TriagePatientDetails): TriagePatientDetails {
   return {

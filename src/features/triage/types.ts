@@ -16,6 +16,20 @@ export const TRIAGE_STATES = [
 
 export type TriageState = (typeof TRIAGE_STATES)[number]
 
+export const TRIAGE_DECISION_OUTCOMES = [
+  'shift_to_er',
+  'shift_to_icu_ot',
+  'discharge',
+] as const
+
+export type TriageDecisionOutcome = (typeof TRIAGE_DECISION_OUTCOMES)[number]
+
+export const TRIAGE_DECISION_LABELS: Record<TriageDecisionOutcome, string> = {
+  shift_to_er: 'Shift to ER',
+  shift_to_icu_ot: 'Shift to ICU/OT',
+  discharge: 'Discharge',
+}
+
 export const TRIAGE_STATE_LABELS: Record<TriageState, string> = {
   empty: 'Empty',
   initial_treatment: 'Initial Treatment',
@@ -78,6 +92,12 @@ export interface TriageBed {
   lastStateChange: Date
   patientStartTime: Date | null
   patient: Partial<TriagePatientDetails> | null
+}
+
+export interface ErBedOption {
+  id: string
+  bedNumber: string
+  currentStageName: string
 }
 
 export interface TriageDashboardData {

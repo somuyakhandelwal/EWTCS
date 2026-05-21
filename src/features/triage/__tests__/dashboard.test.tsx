@@ -9,6 +9,8 @@ vi.mock('next/navigation', () => ({
 
 vi.mock('../actions', () => ({
   assignTriagePatient: vi.fn(),
+  completeTriageDecision: vi.fn(),
+  fetchAvailableErBeds: vi.fn().mockResolvedValue({ success: true, data: { beds: [] } }),
   transitionTriageBed: vi.fn(),
   updateTriagePatientDetails: vi.fn(),
 }))
@@ -63,7 +65,7 @@ describe('TriageDashboardClient', () => {
 
     expect(screen.getByText('Assign Patient')).toBeInTheDocument()
     expect(screen.getByText('Mark Decision Made')).toBeInTheDocument()
-    expect(screen.getByText('Move to Cleaning')).toBeInTheDocument()
+    expect(screen.getByText('Record Decision Outcome')).toBeInTheDocument()
     expect(screen.getByText('Cleaning Complete')).toBeInTheDocument()
   })
 })

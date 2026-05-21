@@ -12,6 +12,7 @@ interface TriageBedCardProps {
   isPending: boolean
   onAssign: (bed: TriageBed) => void
   onEdit: (bed: TriageBed) => void
+  onDecision: (bed: TriageBed) => void
   onTransition: (bed: TriageBed) => void
 }
 
@@ -28,6 +29,7 @@ export function TriageBedCard({
   isPending,
   onAssign,
   onEdit,
+  onDecision,
   onTransition,
 }: TriageBedCardProps) {
   const [now, setNow] = useState(() => new Date())
@@ -89,8 +91,8 @@ export function TriageBedCard({
             </Button>
           )}
           {bed.state === 'decision_made' && (
-            <Button size="sm" onClick={() => onTransition(bed)} disabled={isPending}>
-              <Eraser className="h-4 w-4" /> Move to Cleaning
+            <Button size="sm" onClick={() => onDecision(bed)} disabled={isPending}>
+              <Eraser className="h-4 w-4" /> Record Decision Outcome
             </Button>
           )}
           {bed.state === 'cleaning' && (

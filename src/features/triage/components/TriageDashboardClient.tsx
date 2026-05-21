@@ -2,14 +2,22 @@
 
 import { useEffect, useMemo, useState, useTransition } from 'react'
 import { useRouter } from 'next/navigation'
-import { assignTriagePatient, transitionTriageBed, updateTriagePatientDetails } from '../actions'
+import {
+  assignTriagePatient,
+  completeTriageDecision,
+  fetchAvailableErBeds,
+  transitionTriageBed,
+  updateTriagePatientDetails,
+} from '../actions'
 import {
   TRIAGE_STATE_LABELS,
+  type ErBedOption,
   type TriageBed,
   type TriagePatientDetails,
   type TriageState,
 } from '../types'
 import { TriageBedCard } from './TriageBedCard'
+import { TriageDecisionModal } from './TriageDecisionModal'
 import { TriagePatientModal } from './TriagePatientModal'
 
 interface TriageDashboardClientProps {
@@ -20,7 +28,6 @@ type ModalState = { bed: TriageBed; mode: 'assign' | 'edit' } | null
 
 const NEXT_STATE: Partial<Record<TriageState, TriageState>> = {
   initial_treatment: 'decision_made',
-  decision_made: 'cleaning',
   cleaning: 'empty',
 }
 
@@ -32,6 +39,9 @@ export function TriageDashboardClient({ initialBeds }: TriageDashboardClientProp
   const router = useRouter()
   const [beds, setBeds] = useState(initialBeds)
   const [modalState, setModalState] = useState<ModalState>(null)
+  const [decisionBed, setDecisionBed] = useState<TriageBed | null>(null)
+  const [erBeds, setErBeds] = useState<ErBedOption[]>([])
+  const [isLoadingErBeds, setIsLoadingErBeds] = useState(false)
   const [pendingBedId, setPendingBedId] = useState<string | null>(null)
   const [error, setError] = useState<string | null>(null)
   const [isPending, startTransition] = useTransition()
@@ -48,8 +58,27 @@ export function TriageDashboardClient({ initialBeds }: TriageDashboardClientProp
   const refreshAfterSuccess = () => {
     setError(null)
     setModalState(null)
+    setDecisionBed(null)
     router.refresh()
   }
+
+  const loadErBeds = async () => {
+    setError(null)
+    setIsLoadingErBeds(true)
+    const result = await fetchAvailableErBeds()
+    if (!result.success) {
+      setError(result.error || 'Failed to load ER beds.')
+      setErBeds([])
+    } else {
+      setErBeds(result.data?.beds ?? [])
+    }
+    setIsLoadingErBeds(false)
+  }
+
+  useEffect(() => {
+    if (!decisionBed) return
+    void loadErBeds()
+  }, [decisionBed])
 
   const handlePatientSubmit = (bedId: string, patient: TriagePatientDetails) => {
     const mode = modalState?.mode
@@ -82,6 +111,23 @@ export function TriageDashboardClient({ initialBeds }: TriageDashboardClientProp
     })
   }
 
+  const handleDecisionSubmit = (
+    bedId: string,
+    outcome: 'shift_to_er' | 'shift_to_icu_ot' | 'discharge',
+    erBedId?: string | null
+  ) => {
+    setPendingBedId(bedId)
+    startTransition(async () => {
+      const result = await completeTriageDecision({ bedId, outcome, erBedId: erBedId ?? null })
+      setPendingBedId(null)
+      if (!result.success) {
+        setError(result.error || 'Failed to record decision outcome.')
+        return
+      }
+      refreshAfterSuccess()
+    })
+  }
+
   return (
     <div className="space-y-5">
       <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
@@ -91,7 +137,7 @@ export function TriageDashboardClient({ initialBeds }: TriageDashboardClientProp
         <Summary label="Empty" value={counts.empty} />
       </div>
 
-      {error && !modalState && (
+      {error && !modalState && !decisionBed && (
         <div className="rounded-md border border-destructive bg-destructive/10 px-3 py-2 text-sm text-destructive">
           {error}
         </div>
@@ -105,6 +151,7 @@ export function TriageDashboardClient({ initialBeds }: TriageDashboardClientProp
             isPending={(isPending && pendingBedId === bed.id) || Boolean(pendingBedId)}
             onAssign={(nextBed) => { setError(null); setModalState({ bed: nextBed, mode: 'assign' }) }}
             onEdit={(nextBed) => { setError(null); setModalState({ bed: nextBed, mode: 'edit' }) }}
+            onDecision={(nextBed) => { setError(null); setDecisionBed(nextBed) }}
             onTransition={handleTransition}
           />
         ))}
@@ -118,6 +165,18 @@ export function TriageDashboardClient({ initialBeds }: TriageDashboardClientProp
         error={modalState ? error : null}
         onClose={() => { setError(null); setModalState(null) }}
         onSubmit={handlePatientSubmit}
+      />
+
+      <TriageDecisionModal
+        bed={decisionBed}
+        isOpen={Boolean(decisionBed)}
+        isSubmitting={isPending}
+        isLoadingErBeds={isLoadingErBeds}
+        error={decisionBed ? error : null}
+        erBeds={erBeds}
+        onClose={() => { setError(null); setDecisionBed(null) }}
+        onSubmit={handleDecisionSubmit}
+        onRefreshErBeds={loadErBeds}
       />
     </div>
   )

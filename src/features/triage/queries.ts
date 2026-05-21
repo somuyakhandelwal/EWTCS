@@ -3,6 +3,7 @@ import { logger } from '@/shared/config/logger'
 import { requireRole } from '@/shared/lib/auth'
 import {
   TRIAGE_BED_NUMBERS,
+  type ErBedOption,
   type TriageBed,
   type TriageCategory,
   type TriageState,
@@ -87,6 +88,40 @@ export async function getTriageDashboardData(): Promise<{
     return {
       success: false,
       error: error instanceof Error ? error.message : 'Failed to load triage beds',
+    }
+  }
+}
+
+export async function getAvailableErBeds(): Promise<{
+  success: boolean
+  data?: { beds: ErBedOption[] }
+  error?: string
+}> {
+  try {
+    await requireRole(['nurse', 'supervisor', 'admin'])
+
+    const result = await query<ErBedOption>(
+      `
+      SELECT
+        b.id,
+        b.bed_number as "bedNumber",
+        COALESCE(s.name, 'Unknown') as "currentStageName"
+      FROM beds b
+      JOIN wards w ON w.id = b.ward_id AND w.code = 'ER'
+      LEFT JOIN stages s ON s.id = b.current_stage_id
+      WHERE b.is_active = true
+        AND b.is_occupied = false
+        AND COALESCE(LOWER(s.name), '') = 'empty'
+      ORDER BY b.bed_number ASC
+      `
+    )
+
+    return { success: true, data: { beds: result.rows } }
+  } catch (error) {
+    logger.error('Failed to fetch available ER beds', error as Error)
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : 'Failed to load ER beds',
     }
   }
 }
