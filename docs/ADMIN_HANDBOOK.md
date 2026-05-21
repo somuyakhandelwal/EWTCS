@@ -6,7 +6,7 @@ Administrator runbook for configuration, maintenance, backup/recovery, security,
 - Owner: Platform / System Administration
 - Scope: Configuration, backups, troubleshooting, security, command references
 - Versioning: Git-tracked; update required in release PRs when operations change
-- Last Updated: 2026-05-20 (EPIC 25 ER Bed Workflow Triage Removal - deactivating legacy triage stages)
+- Last Updated: 2026-05-21 (EPIC 25 - Triage Workflow Separation: Add dedicated 6-bed Triage area with independent 4-stage workflow)
 
 > **Release-specific operational notes** are in [ADMIN_HANDBOOK_RELEASES.md](./ADMIN_HANDBOOK_RELEASES.md).
 

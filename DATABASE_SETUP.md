@@ -182,6 +182,7 @@ This PR introduces the following migration files; ensure they are reviewed and, 
 - migrations/050_remove_triage_from_er.sql
 - migrations/055_seed_emergency_ward.sql
 - migrations/062_us25_2_er_stage_repair.sql
+- migrations/063_add_triage_workflow_stages.sql (EPIC 25: Separate Triage Area from ER workflow)
 
 If these migrations alter table structures or seed critical data, update the "Detailed Setup" and any operational runbooks (docs/ADMIN_HANDBOOK.md) with steps required for deployment and rollback.
 
