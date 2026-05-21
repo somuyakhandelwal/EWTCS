@@ -15,10 +15,10 @@ import {
 } from './schemas'
 import {
   assignPatientInDB,
-  completeTriageDecisionInDB,
   transitionTriageBedInDB,
   updatePatientInDB,
 } from './mutations'
+import { completeTriageDecisionInDB } from './decision-mutations'
 import { getAvailableErBeds } from './queries'
 
 type ActionResult = { success: boolean; error?: string; errors?: Record<string, string[]> }
