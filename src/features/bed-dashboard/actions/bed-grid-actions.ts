@@ -58,13 +58,20 @@ export async function getBedGridData(areaView: BedAreaView = 'all'): Promise<{
     // we fetch a plain array `triageWardIdsRaw` from the cached call and subsequently construct a new,
     // real JavaScript `Set` inside this non-cached caller. This completely avoids runtime exceptions
     // like `triageWardIds.has is not a function`.
-    const [allBeds, stages, transitionMapRaw, userWard, triageWardIdsRaw] = await Promise.all([
+    const [allBeds, allStages, transitionMapRaw, userWard, triageWardIdsRaw] = await Promise.all([
       getBedsWithElapsedTime(delayThresholdMs, escalationThresholdMs),
       getAllStages(),
       getStageTransitionMap(session.role as UserRole),
       getUserWard(session.userId),
       getTriageWardIds(),
     ])
+
+    // Filter stages by area view
+    const stages = allStages.filter(stage => {
+      if (areaView === 'triage') return stage.area === 'TRIAGE'
+      if (areaView === 'emergency') return stage.area === 'ER'
+      return true
+    })
 
     // Reconstruct the Set from the raw cached array to restore all prototype methods like Set.has().
     const triageWardIds = new Set(triageWardIdsRaw)

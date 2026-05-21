@@ -19,7 +19,7 @@ WITH triage_ward AS (
 ), empty_stage AS (
   SELECT id
   FROM stages
-  WHERE name = 'Empty'
+  WHERE name = 'Triage Empty' AND area = 'TRIAGE'
   LIMIT 1
 ), triage_beds(bed_number) AS (
   VALUES

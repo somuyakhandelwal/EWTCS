@@ -40,8 +40,18 @@ export async function updateTriageBedStage(input: UpdateTriageStageInput): Promi
     if (!bed) {
       return { success: false, error: 'Triage bed not found.' }
     }
+    
+    if (bed.wardName !== 'Triage Area') {
+      return { success: false, error: 'Bed is not in the Triage Area.' }
+    }
+    
+    // Explicit protection: Can only triage if empty.
+    // If bed is already in another stage (except Empty), it can't be reused for a new intake.
+    if (result.data.toStageName === 'Triage Initial Treatment' && bed.currentStage?.name !== 'Triage Empty') {
+       return { success: false, error: 'Cannot intake a patient on a non-empty triage bed.' }
+    }
 
-        const validation = isValidTriageTransition(bed.currentStage?.name, result.data.toStageName)
+    const validation = isValidTriageTransition(bed.currentStage?.name, result.data.toStageName)
     if (!validation.isValid) {
       return { success: false, error: validation.reason }
     }

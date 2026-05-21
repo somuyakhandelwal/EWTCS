@@ -16,6 +16,7 @@ async function fetchAllStagesFromDB(): Promise<Stage[]> {
         color_code as "colorCode",
         description,
         is_active as "isActive",
+        area,
         created_at as "createdAt",
         updated_at as "updatedAt"
       FROM stages
@@ -49,6 +50,7 @@ export async function getStageById(stageId: string): Promise<Stage | null> {
         display_order as "displayOrder",
         color_code as "colorCode",
         description,
+        area,
         is_active as "isActive",
         created_at as "createdAt",
         updated_at as "updatedAt"
@@ -79,6 +81,7 @@ export async function getStagesByArea(area: 'ER' | 'TRIAGE'): Promise<Stage[]> {
         color_code as "colorCode",
         description,
         is_active as "isActive",
+        area,
         created_at as "createdAt",
         updated_at as "updatedAt"
       FROM stages

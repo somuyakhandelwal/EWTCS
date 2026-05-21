@@ -33,6 +33,7 @@ export interface Stage {
   colorCode: string
   description: string | null
   isActive: boolean
+  area?: 'ER' | 'TRIAGE'
   createdAt: Date
   updatedAt: Date
 }

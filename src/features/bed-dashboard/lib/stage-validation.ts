@@ -17,6 +17,8 @@ import {
   getValidNextStages,
   getStageNameById,
 } from './stage-validation-rules'
+import { isValidTriageTransition } from '@/features/triage/lib/triage-state-machine'
+import { getStageById } from './stage-queries'
 
 /**
  * Validate a stage transition with detailed error messaging
@@ -28,6 +30,35 @@ export async function validateTransition(
   userRole: UserRole
 ): Promise<TransitionValidationResult> {
   try {
+    const [fromStage, toStage] = await Promise.all([
+      currentStageId ? getStageById(currentStageId) : Promise.resolve(null),
+      getStageById(toStageId),
+    ])
+
+    // If either stage is a Triage stage, use triage-specific validation
+    if (fromStage?.area === 'TRIAGE' || toStage?.area === 'TRIAGE') {
+      const isAllowed = isValidTriageTransition(fromStage?.name, toStage?.name || '')
+      
+      // Housekeeping check for Triage
+      if (userRole === 'housekeeping') {
+        const isTriageCleaningFlow = (fromStage?.name === 'Triage Decision Made' && toStage?.name === 'Triage Cleaning') || (fromStage?.name === 'Triage Cleaning' && toStage?.name === 'Triage Empty')
+        if (!isTriageCleaningFlow) {
+          return {
+            isValid: false,
+            requiresSupervisorOverride: false,
+            reason: 'Housekeeping can only perform Start Cleaning and Cleaning Complete actions in Triage.',
+            validNextStages: [],
+          }
+        }
+      }
+
+      return {
+        isValid: isAllowed.isValid,
+        requiresSupervisorOverride: false,
+        reason: isAllowed.reason || 'Triage transition allowed',
+        validNextStages: [],
+      }
+    }
     // Housekeeping can only run cleaning workflow transitions.
     if (userRole === 'housekeeping') {
       const [fromStageName, toStageName] = await Promise.all([
