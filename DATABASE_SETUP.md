@@ -182,6 +182,7 @@ This PR introduces the following migration files; ensure they are reviewed and, 
 - migrations/050_remove_triage_from_er.sql
 - migrations/055_seed_emergency_ward.sql
 - migrations/062_us25_2_er_stage_repair.sql
+- migrations/065_create_triage_decisions.sql
 - migrations/1775303000000_create_triage_workflow.sql
 
 If these migrations alter table structures or seed critical data, update the "Detailed Setup" and any operational runbooks (docs/ADMIN_HANDBOOK.md) with steps required for deployment and rollback.
@@ -191,6 +192,12 @@ If these migrations alter table structures or seed critical data, update the "De
 - `triage_bed_statuses` for current triage bed state
 - `triage_state_logs` for immutable triage state history
 - six active physical triage beds: `TRIAGE-01` through `TRIAGE-06`
+
+`065_create_triage_decisions.sql` adds first-class persistence for triage decision outcomes:
+- `triage_decisions` stores one row per recorded disposition from triage
+- `shift_to_er` decisions require both a destination ER bed and the ER starting stage
+- `shift_to_icu_ot` and `discharge` decisions are stored without ER bed linkage
+- patient snapshot details are copied into the decision record for auditability without creating a separate patient journey id
 
 
 ### Step 4: Seed Initial Data

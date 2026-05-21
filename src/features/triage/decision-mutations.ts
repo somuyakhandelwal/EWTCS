@@ -8,6 +8,7 @@ import {
   lockErBed,
   resolveErStartingStage,
 } from './decision-helpers'
+import { writeDecisionRecord } from './decision-record-mutations'
 import {
   clearPatient,
   setTriageState,
@@ -44,13 +45,14 @@ export async function completeTriageDecisionInDB(params: {
       throw new Error('Triage patient details are missing; cannot transfer.')
     }
 
+    const transferErBedId = outcome === 'shift_to_er' ? erBedId ?? null : null
     let erBedNumber: string | null = null
     let erStageId: string | null = null
 
     if (outcome === 'shift_to_er') {
-      if (!erBedId) throw new Error('ER bed selection is required.')
+      if (!transferErBedId) throw new Error('ER bed selection is required.')
 
-      const erBed = await lockErBed(client, erBedId)
+      const erBed = await lockErBed(client, transferErBedId)
       const stageName = (erBed.currentStageName || '').trim().toLowerCase()
       if (erBed.isOccupied || stageName !== 'empty') {
         throw new Error('Selected ER bed is not available.')
@@ -96,7 +98,7 @@ export async function completeTriageDecisionInDB(params: {
           patient.triageCategory,
           erStartStage.id,
           JSON.stringify(triageInfo),
-          erBedId,
+          transferErBedId,
         ]
       )
 
@@ -105,7 +107,7 @@ export async function completeTriageDecisionInDB(params: {
         : null
 
       await client.query(INSERT_BED_STAGE_LOG_SQL, [
-        erBedId,
+        transferErBedId,
         erBed.currentStageId,
         erStartStage.id,
         userId,
@@ -118,7 +120,7 @@ export async function completeTriageDecisionInDB(params: {
       await client.query(INSERT_AUDIT_LOG_SQL, [
         'UPDATE',
         'bed',
-        erBedId,
+        transferErBedId,
         userId,
         JSON.stringify({
           fromStageId: erBed.currentStageId,
@@ -136,19 +138,33 @@ export async function completeTriageDecisionInDB(params: {
       ])
     }
 
+    await writeDecisionRecord(client, {
+      triageBedId: bedId,
+      outcome,
+      erBedId: transferErBedId,
+      erStartStageId: erStageId,
+      userId,
+      patient,
+      metadata: {
+        source: 'triage',
+        triageBedNumber: bed.bedNumber,
+        transferErBedNumber: erBedNumber,
+      },
+    })
+
     await clearPatient(client, bedId)
     await setTriageState(client, bedId, 'cleaning')
     await writeTriageLog(client, bed, 'cleaning', userId, {
       source: 'triage',
       decisionOutcome: outcome,
-      transferErBedId: erBedId ?? null,
+      transferErBedId,
       transferErBedNumber: erBedNumber,
       erStartStageId: erStageId,
     })
     await writeAudit(client, bed, 'cleaning', userId, {
       source: 'triage',
       decisionOutcome: outcome,
-      transferErBedId: erBedId ?? null,
+      transferErBedId,
       transferErBedNumber: erBedNumber,
       erStartStageId: erStageId,
     })

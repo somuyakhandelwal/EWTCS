@@ -1,6 +1,16 @@
 import type { PoolClient } from 'pg'
-import { logAudit } from '@/shared/lib/audit'
+import type { AuditLogEntry } from '@/shared/lib/audit'
 import { OTProcedureStartSchema, OTProcedureFinishSchema } from '../schemas/ot-procedure-schema'
+
+type TransitionSuccess = {
+  success: true
+  audits: AuditLogEntry[]
+}
+
+type TransitionFailure = {
+  success: false
+  error: string
+}
 
 export async function runProcedureTransition(
   client: PoolClient,
@@ -10,7 +20,7 @@ export async function runProcedureTransition(
     procedureName?: string
   },
   session: { userId: string }
-): Promise<{ success: false; error: string } | null> {
+): Promise<TransitionSuccess | TransitionFailure> {
   if (input.status === 'ongoing') {
     const parsed = OTProcedureStartSchema.safeParse({
       roomId: input.roomId,
@@ -51,18 +61,21 @@ export async function runProcedureTransition(
       [input.roomId, parsed.data.procedureName, null]
     )
 
-    await logAudit({
-      actionType: 'OT_PROCEDURE_START',
-      entityType: 'ot_procedure',
-      entityId: input.roomId,
-      performedBy: session.userId,
-      metadata: {
-        roomId: input.roomId,
-        procedureName: parsed.data.procedureName,
-      },
-    })
-
-    return null
+    return {
+      success: true,
+      audits: [
+        {
+          actionType: 'OT_PROCEDURE_START',
+          entityType: 'ot_procedure',
+          entityId: input.roomId,
+          performedBy: session.userId,
+          metadata: {
+            roomId: input.roomId,
+            procedureName: parsed.data.procedureName,
+          },
+        },
+      ],
+    }
   }
 
   const parsed = OTProcedureFinishSchema.safeParse({ roomId: input.roomId })
@@ -86,6 +99,33 @@ export async function runProcedureTransition(
   )
 
   if (activeProcedure.rows.length === 0) {
+    const roomResult = await client.query<{ status: 'available' | 'ongoing' }>(
+      `SELECT status
+       FROM ot_rooms
+       WHERE id = $1
+       FOR UPDATE`,
+      [input.roomId]
+    )
+
+    if (roomResult.rows[0]?.status === 'ongoing') {
+      return {
+        success: true,
+        audits: [
+          {
+            actionType: 'OT_ROOM_RECOVERY',
+            entityType: 'ot_room',
+            entityId: input.roomId,
+            performedBy: session.userId,
+            reason: 'Recovered stale ongoing OT room without active procedure row',
+            metadata: {
+              roomId: input.roomId,
+              recoveryType: 'stale_ongoing_without_active_procedure',
+            },
+          },
+        ],
+      }
+    }
+
     return {
       success: false,
       error: 'No active procedure found for this OT room',
@@ -103,15 +143,18 @@ export async function runProcedureTransition(
     [activeProcedure.rows[0].id]
   )
 
-  await logAudit({
-    actionType: 'OT_PROCEDURE_FINISH',
-    entityType: 'ot_procedure',
-    entityId: activeProcedure.rows[0].id,
-    performedBy: session.userId,
-    metadata: {
-      roomId: input.roomId,
-    },
-  })
-
-  return null
+  return {
+    success: true,
+    audits: [
+      {
+        actionType: 'OT_PROCEDURE_FINISH',
+        entityType: 'ot_procedure',
+        entityId: activeProcedure.rows[0].id,
+        performedBy: session.userId,
+        metadata: {
+          roomId: input.roomId,
+        },
+      },
+    ],
+  }
 }

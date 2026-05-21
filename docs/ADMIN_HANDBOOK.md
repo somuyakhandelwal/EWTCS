@@ -6,7 +6,7 @@ Administrator runbook for configuration, maintenance, backup/recovery, security,
 - Owner: Platform / System Administration
 - Scope: Configuration, backups, troubleshooting, security, command references
 - Versioning: Git-tracked; update required in release PRs when operations change
-- Last Updated: 2026-05-21 (EPIC 25 Dedicated Triage Workflow)
+- Last Updated: 2026-05-22 (EPIC 25 Triage Decision Outcomes and ER Transfer)
 
 > **Release-specific operational notes** are in [ADMIN_HANDBOOK_RELEASES.md](./ADMIN_HANDBOOK_RELEASES.md).
 
@@ -105,6 +105,7 @@ state model for the physical Triage Area.
 - Adds enum `triage_bed_state` with `empty`, `initial_treatment`, `decision_made`, and `cleaning`.
 - Adds `triage_bed_statuses` for each triage bed's current state.
 - Adds `triage_state_logs` for immutable triage state history.
+- Adds `triage_decisions` to persist triage dispositions and optional ER transfer details.
 - Ensures ward code `TRIAGE` exists and keeps exactly six active physical beds: `TRIAGE-01` through `TRIAGE-06`.
 - Deactivates any extra beds assigned to the `TRIAGE` ward that are not part of the approved six-bed layout.
 
@@ -120,8 +121,10 @@ npm run build
 1. Before production deployment, confirm no intentional extra beds are assigned to ward code `TRIAGE`; the migration marks extras inactive.
 2. After migration, open `/triage` and verify six beds are visible.
 3. Confirm triage shows only the approved states: Empty, Initial Treatment, Decision Made, Cleaning.
-4. Verify assignment and state movement are audit logged with `entity_type = 'triage_bed'`.
-5. Keep ER stage configuration separate; do not add ER-only stages to the triage workflow.
+4. Verify recording a decision outcome creates both audit trail entries and a `triage_decisions` row.
+5. For `Shift to ER`, verify only empty ER beds are offered and the transferred patient lands in the ER starting stage (`Initial Investigation` by default).
+6. Verify assignment and state movement are audit logged with `entity_type = 'triage_bed'`.
+7. Keep ER stage configuration separate; do not add ER-only stages to the triage workflow.
 
 ## 4) Troubleshooting (Common Issues)
 

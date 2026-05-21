@@ -25,6 +25,7 @@ interface TriageDashboardClientProps {
 }
 
 type ModalState = { bed: TriageBed; mode: 'assign' | 'edit' } | null
+type ActionResult = { success: boolean; error?: string; errors?: Record<string, string[]> }
 
 const NEXT_STATE: Partial<Record<TriageState, TriageState>> = {
   initial_treatment: 'decision_made',
@@ -33,6 +34,13 @@ const NEXT_STATE: Partial<Record<TriageState, TriageState>> = {
 
 function nextActionState(bed: TriageBed) {
   return NEXT_STATE[bed.state]
+}
+
+function actionError(result: ActionResult, fallback: string) {
+  const fieldError = result.errors
+    ? Object.values(result.errors).flat().find(Boolean)
+    : undefined
+  return result.error || fieldError || fallback
 }
 
 export function TriageDashboardClient({ initialBeds }: TriageDashboardClientProps) {
@@ -89,7 +97,7 @@ export function TriageDashboardClient({ initialBeds }: TriageDashboardClientProp
         : await updateTriagePatientDetails({ bedId, patient })
       setPendingBedId(null)
       if (!result.success) {
-        setError(result.error || 'Please check the triage details.')
+        setError(actionError(result, 'Please check the triage details.'))
         return
       }
       refreshAfterSuccess()
@@ -104,7 +112,7 @@ export function TriageDashboardClient({ initialBeds }: TriageDashboardClientProp
       const result = await transitionTriageBed({ bedId: bed.id, toState })
       setPendingBedId(null)
       if (!result.success) {
-        setError(result.error || `Could not move bed to ${TRIAGE_STATE_LABELS[toState]}.`)
+        setError(actionError(result, `Could not move bed to ${TRIAGE_STATE_LABELS[toState]}.`))
         return
       }
       refreshAfterSuccess()
@@ -121,7 +129,7 @@ export function TriageDashboardClient({ initialBeds }: TriageDashboardClientProp
       const result = await completeTriageDecision({ bedId, outcome, erBedId: erBedId ?? null })
       setPendingBedId(null)
       if (!result.success) {
-        setError(result.error || 'Failed to record decision outcome.')
+        setError(actionError(result, 'Failed to record decision outcome.'))
         return
       }
       refreshAfterSuccess()

@@ -24,7 +24,7 @@ Once a triage bed reaches `decision_made`, staff must record an outcome:
 
 - **Shift to ER** — requires selection of an available ER bed. The patient is
   assigned to the selected ER bed and that bed starts the ER workflow at the
-  configured ER starting stage (default: Registration). The triage bed moves to
+  configured ER starting stage (default: Initial Investigation). The triage bed moves to
   `cleaning`.
 - **Shift to ICU/OT** — records the disposition and moves the triage bed to
   `cleaning`.
@@ -41,5 +41,8 @@ and `discharge process` must not appear in triage.
 - `triage_bed_statuses` stores the current triage state per triage bed.
 - `triage_state_logs` stores immutable triage state history.
 - Patient snapshot fields remain on `beds` for this story.
+- `triage_decisions` stores each recorded disposition with patient snapshot
+  fields and optional ER transfer details. It does not create a separate
+  patient journey ID.
 - Every triage state mutation also writes an `audit_logs` row with
   `entity_type = 'triage_bed'`.

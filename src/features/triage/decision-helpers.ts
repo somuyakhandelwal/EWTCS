@@ -77,17 +77,17 @@ export async function resolveErStartingStage(
     FROM stages
     WHERE is_active = true AND LOWER(name) = ANY($1)
     ORDER BY CASE LOWER(name)
-      WHEN 'registration' THEN 1
-      WHEN 'doctor assessment' THEN 2
-      WHEN 'treatment/observation' THEN 3
+      WHEN 'initial investigation' THEN 1
+      WHEN 'initial treatment' THEN 2
+      WHEN 'drugs/test' THEN 3
       ELSE 99
     END
     LIMIT 1
     `,
     [[
-      'registration',
-      'doctor assessment',
-      'treatment/observation',
+      'initial investigation',
+      'initial treatment',
+      'drugs/test',
     ]]
   )
 

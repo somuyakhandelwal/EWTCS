@@ -2,6 +2,7 @@
 
 import pool from '@/shared/lib/db'
 import { requireWriteRole } from '@/shared/lib/auth'
+import { logAudit } from '@/shared/lib/audit'
 import { logger } from '@/shared/config/logger'
 import type { OTRoom, OTGridData } from '../types/ot'
 import { runProcedureTransition } from '../lib/ot-procedure-mutations'
@@ -79,16 +80,18 @@ export async function updateOTRoomStatus(input: {
     })
 
     const client = await pool.connect()
+    let auditsToWrite: Parameters<typeof logAudit>[0][] = []
     try {
       await client.query('BEGIN')
 
-      const transitionError = await runProcedureTransition(client, input, {
+      const transitionResult = await runProcedureTransition(client, input, {
         userId: session.userId,
       })
-      if (transitionError) {
+      if (!transitionResult.success) {
         await client.query('ROLLBACK')
-        return transitionError
+        return transitionResult
       }
+      auditsToWrite = transitionResult.audits
 
       await client.query(
         `UPDATE ot_rooms
@@ -106,6 +109,10 @@ export async function updateOTRoomStatus(input: {
       throw txError
     } finally {
       client.release()
+    }
+
+    for (const audit of auditsToWrite) {
+      await logAudit(audit)
     }
 
     logger.info('OT room status updated', {

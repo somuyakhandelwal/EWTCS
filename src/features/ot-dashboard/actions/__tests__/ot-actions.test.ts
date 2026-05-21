@@ -109,6 +109,7 @@ describe('ot-actions', () => {
       .fn()
       .mockResolvedValueOnce(undefined) // BEGIN
       .mockResolvedValueOnce({ rows: [] }) // active procedure lookup
+      .mockResolvedValueOnce({ rows: [{ status: 'available' }] }) // room status lookup
       .mockResolvedValueOnce(undefined) // ROLLBACK
 
     const release = vi.fn()
@@ -122,6 +123,36 @@ describe('ot-actions', () => {
     expect(result.success).toBe(false)
     expect(result.error).toMatch(/no active procedure/i)
     expect(query).toHaveBeenCalledWith('ROLLBACK')
+    expect(release).toHaveBeenCalled()
+  })
+
+  it('updateOTRoomStatus safely recovers stale ongoing room without active procedure', async () => {
+    vi.mocked(requireWriteRole).mockResolvedValueOnce(SESSION as never)
+
+    const query = vi
+      .fn()
+      .mockResolvedValueOnce(undefined) // BEGIN
+      .mockResolvedValueOnce({ rows: [] }) // active procedure lookup
+      .mockResolvedValueOnce({ rows: [{ status: 'ongoing' }] }) // room status lookup
+      .mockResolvedValueOnce(undefined) // UPDATE ot_rooms
+      .mockResolvedValueOnce(undefined) // COMMIT
+
+    const release = vi.fn()
+    vi.mocked(pool.connect).mockResolvedValueOnce({ query, release } as never)
+
+    const result = await updateOTRoomStatus({
+      roomId: '550e8400-e29b-41d4-a716-446655440000',
+      status: 'available',
+    })
+
+    expect(result.success).toBe(true)
+    expect(logAudit).toHaveBeenCalledWith(
+      expect.objectContaining({ actionType: 'OT_ROOM_RECOVERY' })
+    )
+    expect(query).toHaveBeenCalledWith(
+      expect.stringContaining('UPDATE ot_rooms'),
+      ['available', 'nurse-1', '550e8400-e29b-41d4-a716-446655440000']
+    )
     expect(release).toHaveBeenCalled()
   })
 
