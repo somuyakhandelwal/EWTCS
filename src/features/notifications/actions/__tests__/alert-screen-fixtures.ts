@@ -21,7 +21,7 @@ export function makeBedGridData(override: Partial<{
       beds: [{
         id: 'bed-1',
         bedNumber: 'ER-01',
-        currentStage: { id: 's1', name: 'Triage', displayOrder: 1, colorCode: '#fff', description: null, isActive: true, createdAt: now, updatedAt: now },
+        currentStage: { id: 's1', name: 'Initial Investigation', displayOrder: 1, colorCode: '#fff', description: null, isActive: true, createdAt: now, updatedAt: now },
         currentStageId: 's1',
         elapsedTimeMs: override.elapsedTimeMs ?? 0,
         isDelayed: (override.elapsedTimeMs ?? 0) > 0,

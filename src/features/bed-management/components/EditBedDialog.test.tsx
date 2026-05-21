@@ -13,7 +13,7 @@ const bed = {
   wardId: 'ward-1',
   wardName: 'Emergency',
   currentStageId: 'stage-1',
-  currentStageName: 'Triage',
+  currentStageName: 'Initial Investigation', // U.S 25.2: Triage is not an ER stage
   isOccupied: true,
   isActive: true,
   isTemporary: false,

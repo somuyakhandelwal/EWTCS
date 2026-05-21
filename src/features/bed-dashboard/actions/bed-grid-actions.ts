@@ -1,36 +1,17 @@
 'use server'
-
 import { getAllStages, getBedsWithElapsedTime } from '../lib/queries'
 import { logger } from '@/shared/config/logger'
 import type { BedGridData } from '../types/bed'
 import { getUserWard } from '../lib/bed-queries'
 import { requireRole } from '@/shared/lib/auth'
-import { query } from '@/shared/lib/db'
 import { getStageTransitionMap } from '../lib/stage-validation'
 import type { UserRole } from '../lib/stage-validation-types'
 import { getGlobalThresholdMs, getGlobalEscalationThresholdMs } from '@/shared/lib/threshold'
 import { perfStart, perfEnd, logPerf, PERF_SLA } from '@/shared/lib/perf-monitor'
-import { SETTINGS_CACHE_TAG, withCache } from '@/shared/lib/query-cache'
+import { getTriageWardIds } from '../lib/triage-wards'
 
 export type BedAreaView = 'all' | 'emergency' | 'triage'
 
-async function fetchTriageWardIdsFromDB(): Promise<Set<string>> {
-  const result = await query<{ id: string }>(
-    `
-    SELECT id
-    FROM wards
-    WHERE is_active = true
-      AND (
-        UPPER(code) = 'TRIAGE'
-        OR LOWER(name) LIKE '%triage%'
-      )
-    `
-  )
-
-  return new Set(result.rows.map((row) => row.id))
-}
-
-const getTriageWardIds = withCache(fetchTriageWardIdsFromDB, 'bed-dashboard:get-triage-ward-ids', 120, [SETTINGS_CACHE_TAG])
 
 function filterBedsByArea(data: BedGridData['beds'], areaView: BedAreaView, triageWardIds: Set<string>) {
   if (areaView === 'all' || triageWardIds.size === 0) {
@@ -68,9 +49,16 @@ export async function getBedGridData(areaView: BedAreaView = 'all'): Promise<{
       getGlobalEscalationThresholdMs(),
     ])
 
-    // Fetch beds, stages, transition map, and caller's ward assignment in parallel
-    // US-16.2: stageTransitionMap is cached with BedGridData so offline nurses see stage options
-    const [allBeds, stages, transitionMapRaw, userWard, triageWardIds] = await Promise.all([
+    // Fetch beds, stages, transition map, and caller's ward assignment in parallel.
+    // 
+    // TECHNICAL CACHE COMPATIBILITY NOTE:
+    // Next.js `unstable_cache` / `withCache` wraps `getTriageWardIds` and serializes the returned
+    // structures to JSON on disk/memory. Since native JavaScript structures like `Set` do not
+    // survive JSON serialization (they are converted to empty objects `{}` without prototype methods),
+    // we fetch a plain array `triageWardIdsRaw` from the cached call and subsequently construct a new,
+    // real JavaScript `Set` inside this non-cached caller. This completely avoids runtime exceptions
+    // like `triageWardIds.has is not a function`.
+    const [allBeds, stages, transitionMapRaw, userWard, triageWardIdsRaw] = await Promise.all([
       getBedsWithElapsedTime(delayThresholdMs, escalationThresholdMs),
       getAllStages(),
       getStageTransitionMap(session.role as UserRole),
@@ -78,37 +66,60 @@ export async function getBedGridData(areaView: BedAreaView = 'all'): Promise<{
       getTriageWardIds(),
     ])
 
+    // Reconstruct the Set from the raw cached array to restore all prototype methods like Set.has().
+    const triageWardIds = new Set(triageWardIdsRaw)
+
     // Ward-scope the bed list for nurses and housekeeping.
     // Admins/supervisors see every ward; floater nurses (no ward assigned) also see all.
     const wardScopedRoles = new Set<string>(['nurse', 'housekeeping'])
-    const wardScopedBeds =
-      wardScopedRoles.has(session.role) && userWard
-        ? allBeds.filter(b => b.wardId === userWard || b.isVirtual || b.isTemporary)
-        : allBeds
+    
+    // US-16.2: Ensure nurses can always view the global triage area, even if restricted to an ER ward
+    let wardScopedBeds = allBeds;
+    if (wardScopedRoles.has(session.role) && userWard) {
+      if (areaView === 'triage') {
+        // In Triage view, do not restrict by userWard, as triage is a shared intake area
+        wardScopedBeds = allBeds;
+      } else {
+        // In Emergency view or global view, restrict to their assigned ward
+        wardScopedBeds = allBeds.filter(b => b.wardId === userWard || b.isVirtual || b.isTemporary);
+      }
+    }
 
     const beds = filterBedsByArea(wardScopedBeds, areaView, triageWardIds)
 
-    // Convert Map → plain Record (JSON-serialisable for localStorage cache).
-    // US-16.2: replicate the online "no rule = allowed by default" behaviour so the
-    // offline transition map matches what categorizeStagesForTransition returns online.
-    // For every (fromStageId, toStageId) pair that has NO explicit DB row, the online
-    // path allows the transition.  We identify those here by comparing each stage against
-    // the explicitly-covered set (allowed + requiresOverride + blocked) and add them to
-    // allowed, keeping parity with the runtime validation logic.
+    // =========================================================================
+    // TRANSITION VALIDATION PARITY AND OFFLINE CACHE STORAGE PREPARATION:
+    // =========================================================================
+    // US-16.2: To support offline clinicians, we serialize a pre-computed stage 
+    // transition map. The client stores this in localStorage to validate stage 
+    // transitions without an active network connection.
+    // 
+    // The query cache uses Next.js `unstable_cache` which serializes structures
+    // via JSON. Therefore, `transitionMapRaw` is populated as a plain Record
+    // instead of a Map, so we perform direct object property lookups `transitionMapRaw[fromKey]`.
+    //
+    // Backwards Compatibility / Parity Rules:
+    // For every (fromStageId, toStageId) pair that has NO explicit database row,
+    // the online validation engine treats the transition as "allowed by default".
+    // To match this online behavior in offline mode, we compute all stages that
+    // have NO matching rule and explicitly add them to the `allowed` array.
     const allStageIds = stages.map(s => s.id)
     const allFromKeys = [...allStageIds, 'null']
     const stageTransitionMap: BedGridData['stageTransitionMap'] = {}
 
     for (const fromKey of allFromKeys) {
-      const entry = transitionMapRaw.get(fromKey) ?? { allowed: [], requiresOverride: [], blocked: [] }
+      // Look up allowed/override/blocked sets from the plain JSON record
+      const entry = transitionMapRaw[fromKey] ?? { allowed: [], requiresOverride: [], blocked: [] }
       const covered = new Set([...entry.allowed, ...entry.requiresOverride, ...entry.blocked])
-      // Stages absent from `covered` have no DB rule → allowed by default (matches online path)
+      
+      // Stages absent from the `covered` set have no DB rules defined → allowed by default
       const noRuleStages = allStageIds.filter(id => !covered.has(id))
       stageTransitionMap[fromKey] = {
         allowed: [...entry.allowed, ...noRuleStages],
         requiresOverride: entry.requiresOverride,
       }
     }
+    // =========================================================================
 
     const bottleneckCount = beds.filter(b => b.isDispositionBottleneck).length
     const escalationCount = beds.filter(b => b.isEscalated).length
@@ -166,7 +177,6 @@ export async function getDelayedBeds(): Promise<{
     const delayedBeds = allBeds.filter(bed => bed.isDelayed)
 
     logger.info('Delayed beds fetched', { count: delayedBeds.length })
-
     return {
       success: true,
       beds: delayedBeds,

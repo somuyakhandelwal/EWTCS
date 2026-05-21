@@ -103,9 +103,9 @@ feature-name/
 **EPIC 24: Cath Lab Module (US-24.1) ✅**
 - Dedicated cardiology procedure logging workflow
 - Procedure type support for `CAG` and `PTCA`
-- Procedure fields: patient ID, cardiologist, start/end time, and outcome
+- Procedure fields: patient UHID, cardiologist user, actual start/end time, duration, and outcome
 - Validation + audit trail integration for new procedure logs
-- Distinct route and workflow from OT module (`/cath-lab`)
+- `/cath-lab` is the shared dashboard for cardiologists and cath lab nurses
 
 ### `ot-dashboard/`
 **EPIC 23: OT Room Dashboard ✅**

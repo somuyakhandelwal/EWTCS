@@ -36,7 +36,7 @@ const MOCK_REPORT: StageDelayReport = {
     },
     {
       stageId: 's2',
-      stageName: 'Triage',
+      stageName: 'Observation',
       totalTransitions: 45,
       avgDurationMs: 900000,
       medianDurationMs: 840000,

@@ -30,8 +30,8 @@ const data: BedGridData = {
     },
   ],
   stages: [
-    { id: 'stage-a', name: 'Registration', displayOrder: 1, colorCode: '#111111', description: null, isActive: true, createdAt: new Date(), updatedAt: new Date() },
-    { id: 'stage-b', name: 'Triage', displayOrder: 2, colorCode: '#222222', description: null, isActive: true, createdAt: new Date(), updatedAt: new Date() },
+    { id: 'stage-a', name: 'Initial Investigation', displayOrder: 1, colorCode: '#111111', description: null, isActive: true, createdAt: new Date(), updatedAt: new Date() },
+    { id: 'stage-b', name: 'Initial Treatment', displayOrder: 2, colorCode: '#222222', description: null, isActive: true, createdAt: new Date(), updatedAt: new Date() },
   ],
   delayThresholdMs: 1000,
   escalationThresholdMs: 2000,

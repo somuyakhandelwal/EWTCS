@@ -172,6 +172,20 @@ All migrations completed successfully
 
 ---
 
+### Migrations included in this PR
+
+This PR introduces the following migration files; ensure they are reviewed and, if they change operations or requirements, update this document accordingly:
+
+- migrations/005_create_beds_and_stages.sql
+- migrations/010_create_stage_transitions.sql
+- migrations/037_fix_stage_transitions.sql
+- migrations/050_remove_triage_from_er.sql
+- migrations/055_seed_emergency_ward.sql
+- migrations/062_us25_2_er_stage_repair.sql
+
+If these migrations alter table structures or seed critical data, update the "Detailed Setup" and any operational runbooks (docs/ADMIN_HANDBOOK.md) with steps required for deployment and rollback.
+
+
 ### Step 4: Seed Initial Data
 
 Seed scripts populate the database with necessary initial data:
@@ -291,18 +305,24 @@ Migrations `047_enforce_symptom_40_char_limit.sql` and `1774000000000_enforce_sy
 
 UI and server validation also enforce this same 40-character limit to keep behavior consistent end-to-end.
 
-### Default Stages
+### Default Stages (EPIC 25 Standardized ER Stages)
+
+Emergency Ward (ER) beds use the 8 approved stages:
 
 | Stage | Order | Color | Description |
 |-------|-------|-------|-------------|
-| Empty | 0 | Gray | Bed available and ready |
-| Triage | 1 | Blue | Initial assessment |
-| Registration | 2 | Cyan | Patient documentation |
-| Doctor Assessment | 3 | Yellow | Doctor examining patient |
-| Treatment/Observation | 4 | Orange | Receiving treatment |
-| Decision Made | 5 | Green | Discharge/admission decided |
-| Discharge Process | 6 | Purple | Being discharged |
-| Cleaning | 7 | Pink | Bed being cleaned |
+| Empty | 0 | Gray | Bed is available and ready for next patient |
+| Initial Investigation | 1 | Blue | Doctor performing initial assessment and ordering investigations |
+| Initial Treatment | 2 | Cyan | Patient receiving first-line treatment |
+| Drugs/Test | 3 | Yellow | Awaiting medications or diagnostic test results |
+| Observation | 4 | Orange | Patient under active clinical monitoring |
+| Decision Made | 5 | Green | Discharge or admission decision has been made |
+| Discharge Process | 6 | Purple | Patient being discharged or transferred to another ward |
+| Cleaning | 7 | Pink | Bed being cleaned and prepared for the next patient |
+
+> [!NOTE]
+> **Legacy Stages Deactivated:** Under EPIC 25, the four legacy stages (`Triage`, `Registration`, `Doctor Assessment`, `Treatment/Observation`) have been deactivated (`is_active = false`) in the database. Their data is preserved for audit log and bed stage log historical integrity. Triage is now handled in a dedicated Triage Ward with 6 beds.
+
 
 ### Stage Transition Rules
 
@@ -646,6 +666,7 @@ UPDATE beds SET ward_id = (SELECT id FROM wards WHERE code = 'EWA'), ward_name =
 | `031_archive_bed_stage_logs` | EPIC 3 — `bed_stage_logs_archive` table for historical stage-transition retention (>90 days) |
 | `seed_config_jmch` | Updated JMCH hospital seed configuration with customized workflow stages |
 | `1773770454739_add-triage-columns-to-beds` | US-21.1 — adds `patient_uhid`, `patient_name`, `key_symptom`, and `triage_category` as typed columns directly on the `beds` table for active triage data |
+| `050_remove_triage_from_er` / `062_us25_2_er_stage_repair` | EPIC 25 - Removes triage stages from ER workflow and standardizes the 8 ER workflow stages |
 
 ---
 

@@ -59,7 +59,7 @@ const BEDS: BedPerformanceRow[] = [
 ]
 
 const STAGES: StageDelayRow[] = [
-  { stageId: 's1', stageName: 'Triage', totalTransitions: 20, avgDurationMs: 1_200_000, medianDurationMs: 900_000, p90DurationMs: 2_400_000, isBottleneck: false },
+  { stageId: 's1', stageName: 'Initial Investigation', totalTransitions: 20, avgDurationMs: 1_200_000, medianDurationMs: 900_000, p90DurationMs: 2_400_000, isBottleneck: false },
   { stageId: 's2', stageName: 'Treatment', totalTransitions: 18, avgDurationMs: 9_000_000, medianDurationMs: 7_200_000, p90DurationMs: 18_000_000, isBottleneck: true },
 ]
 

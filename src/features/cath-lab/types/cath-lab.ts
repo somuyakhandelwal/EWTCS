@@ -1,23 +1,32 @@
 export type CathLabProcedureType = 'CAG' | 'PTCA'
+export type CathLabProcedureStatus = 'SCHEDULED' | 'IN_PROGRESS' | 'COMPLETED' | 'CANCELLED'
 
 export interface CathLabProcedure {
   id: string
   procedureType: CathLabProcedureType
-  patientId: string
-  cardiologist: string
-  startTime: string
-  endTime: string
+  patientUhid: string | null
+  cardiologistId: string | null
+  cardiologistName: string
+  actualStartTime: string | null
+  actualEndTime: string | null
+  durationMinutes: number | null
+  status: CathLabProcedureStatus
   outcome: string
-  createdBy: string | null
   createdAt: string
   updatedAt: string
 }
 
 export interface CreateCathLabProcedureInput {
   procedureType: CathLabProcedureType
-  patientId: string
-  cardiologist: string
-  startTime: string
-  endTime: string
+  patientUhid: string
+  cardiologistId?: string | null
+  actualStartTime: string
+  actualEndTime: string
   outcome: string
+  clinicalNotes?: string | null
+}
+
+export interface CardiologistOption {
+  id: string
+  username: string
 }

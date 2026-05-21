@@ -30,7 +30,7 @@ export function StageFormModal({ stage, onClose, onSaved }:
           onChange={e => setName(e.target.value)}
           maxLength={50}
           className='w-full border border-border bg-background rounded-lg px-3 py-2 mb-4 text-foreground focus:outline-none focus:ring-2 focus:ring-blue-500'
-          placeholder='e.g. Triage In Progress'
+          placeholder='e.g. Initial Investigation'
         />
         <label className='block text-sm font-semibold text-muted-foreground mb-2'>Color</label>
         <div className='flex gap-3 mb-4'>

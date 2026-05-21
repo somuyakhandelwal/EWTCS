@@ -78,7 +78,7 @@ describe('Bug 3 – hasBedChanged: isTemporary and isActive tracked', () => {
 
   it('returns true when the current stage changes', () => {
     const old = makeBed()
-    const next = makeBed({ currentStage: { ...old.currentStage!, id: 'stage-triage', name: 'Triage' } })
+    const next = makeBed({ currentStage: { ...old.currentStage!, id: 'stage-observation', name: 'Observation' } })
     expect(hasBedChanged(old, next)).toBe(true)
   })
 

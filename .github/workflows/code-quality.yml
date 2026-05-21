@@ -46,8 +46,14 @@ jobs:
           # Function to check if file should be excluded
           should_exclude() {
             local file=$1
+            local basename
+            basename=$(basename "$file")
             for pattern in "${EXCLUDE_PATTERNS[@]}"; do
+              # Match against full path (e.g. .github/*) AND basename (e.g. *.md)
               case "$file" in
+                $pattern) return 0 ;;
+              esac
+              case "$basename" in
                 $pattern) return 0 ;;
               esac
             done

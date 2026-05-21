@@ -13,7 +13,6 @@ import { isCriticalStage } from '../lib/utils'
 
 /** Stage name that triggers the dedicated discharge modal (US-2.3) */
 const DISCHARGE_STAGE_NAME = 'Discharge Process'
-const TRIAGE_STAGE_NAME = 'Triage'
 
 interface StageUpdateActionsDeps {
   data: BedGridData
@@ -34,8 +33,6 @@ interface StageUpdateActionsDeps {
   confirmCriticalStages: boolean
   // US-2.3: Discharge intercept
   openDischargeModal: (bed: BedWithElapsedTime) => void
-  // US-20.2: Triage intercept
-  openTriageModal: (bed: BedWithElapsedTime, stage: Stage) => void
 }
 
 interface StageUpdateActionsResult {
@@ -65,7 +62,6 @@ export function useStageUpdateActions(deps: StageUpdateActionsDeps): StageUpdate
     closeConfirmationModal,
     confirmCriticalStages,
     openDischargeModal,
-    openTriageModal
   } = deps
 
   const router = useRouter()
@@ -120,12 +116,6 @@ export function useStageUpdateActions(deps: StageUpdateActionsDeps): StageUpdate
 
       if (!stage || !bed) return
 
-      // US-20.2: Intercept "Triage" stage update to collect patient details
-      if (stage.name === TRIAGE_STAGE_NAME) {
-        openTriageModal(bed, stage)
-        return
-      }
-
       // US-2.3: Intercept "Discharge Process" on an occupied bed → show discharge modal
       // This takes priority over the generic critical-stage confirmation.
       if (
@@ -144,7 +134,7 @@ export function useStageUpdateActions(deps: StageUpdateActionsDeps): StageUpdate
 
       await performStageUpdate(bedId, stageId)
     },
-    [performStageUpdate, stageById, data.beds, openTriageModal, openDischargeModal, openConfirmationModal, confirmCriticalStages]
+    [performStageUpdate, stageById, data.beds, openDischargeModal, openConfirmationModal, confirmCriticalStages]
   )
 
   const handleConfirmationConfirm = useCallback(async () => {

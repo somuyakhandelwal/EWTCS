@@ -35,7 +35,6 @@ interface BedGridProps {
   isOffline?: boolean
   /** US-16.2: beds that have a write queued for sync — shown with an amber badge */
   queuedBedIds?: Set<string>
-  onOpenTriage?: (bedId: string) => void
   /** EPIC 22: open diagnosis modal for a bed (doctor role) */
   onOpenDiagnosis?: (bedId: string) => void
   /** Current user role — forwarded to BedCard for EPIC 22 */
@@ -70,7 +69,6 @@ export function BedGrid({
   isUndoing = false,
   isOffline = false,
   queuedBedIds,
-  onOpenTriage,
   onOpenDiagnosis,
   role,
   // DB5-02: filter state from BedDashboardClient
@@ -187,10 +185,6 @@ export function BedGrid({
           error={menuError}
           onStageSelect={onStageSelect}
           onClose={handleCloseMenu}
-          onOpenTriage={(bedId) => {
-            handleCloseMenu()
-            onOpenTriage?.(bedId)
-          }}
         />
       )}
 

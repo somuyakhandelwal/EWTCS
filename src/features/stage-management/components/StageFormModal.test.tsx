@@ -18,7 +18,7 @@ vi.mock('../actions/stage-draft-actions', () => ({
 
 const stage = {
   id: 'stage-1',
-  name: 'Triage',
+  name: 'Initial Investigation',
   color_code: 'blue',
   description: 'Initial assessment',
   display_order: 1,
@@ -50,8 +50,8 @@ describe('StageFormModal autosave', () => {
 
     expect(screen.getByText('Save Stage')).toBeInTheDocument()
 
-    fireEvent.change(screen.getByPlaceholderText('e.g. Triage In Progress'), {
-      target: { value: 'Triage Updated' },
+    fireEvent.change(screen.getByPlaceholderText('e.g. Initial Investigation'), {
+      target: { value: 'Initial Investigation Updated' },
     })
 
     await act(async () => {
@@ -61,7 +61,7 @@ describe('StageFormModal autosave', () => {
     expect(updateStage).toHaveBeenCalledTimes(1)
     expect(updateStage).toHaveBeenCalledWith({
       id: 'stage-1',
-      name: 'Triage Updated',
+      name: 'Initial Investigation Updated',
       color_code: 'blue',
       description: 'Initial assessment',
       threshold_minutes: 45,
@@ -144,7 +144,7 @@ describe('StageFormModal autosave', () => {
       await Promise.resolve()
     })
     expect(confirmSpy).toHaveBeenCalledWith('Unsaved stage form changes were found. Restore them now?')
-    expect(screen.getByDisplayValue('Triage')).toBeInTheDocument()
+    expect(screen.getByDisplayValue('Initial Investigation')).toBeInTheDocument()
     expect(screen.queryByText('Recovered unsaved changes from previous session.')).not.toBeInTheDocument()
     expect(localStorage.getItem('ewtcs:stage-form-draft:stage-1')).toBeNull()
   })

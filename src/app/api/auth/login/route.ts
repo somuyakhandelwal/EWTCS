@@ -19,6 +19,8 @@ const ROLE_REDIRECT: Record<string, string> = {
   admin: '/admin',
   supervisor: '/supervisor',
   auditor: '/analytics',
+  cardiologist: '/cath-lab',
+  cath_lab_nurse: '/cath-lab',
 }
 
 // ── IP-based rate limiting ─────────────────────────────────────────────────

@@ -6,7 +6,9 @@ Administrator runbook for configuration, maintenance, backup/recovery, security,
 - Owner: Platform / System Administration
 - Scope: Configuration, backups, troubleshooting, security, command references
 - Versioning: Git-tracked; update required in release PRs when operations change
-- Last Updated: 2026-04-05 (DB4-04 metrics query parallelization + migration validator duplicate-prefix policy update)
+- Last Updated: 2026-05-20 (EPIC 25 ER Bed Workflow Triage Removal - deactivating legacy triage stages)
+
+> **Release-specific operational notes** are in [ADMIN_HANDBOOK_RELEASES.md](./ADMIN_HANDBOOK_RELEASES.md).
 
 ## 1) System Overview
 EWTCS is a Next.js + PostgreSQL emergency-ward operations platform.
@@ -158,134 +160,13 @@ npm run audit:verify
 - Current approved duplicate groups: `015`, `038`, `040`, `047`, `058`.
 - When adding canonical duplicate groups in migrations, update the allowlist and this handbook in the same PR.
 
-### DB5-02 Operational Notes (Persist Dashboard and Filter Preferences)
-- New migration: `1743241500000_create_user_settings.sql`
-- Added table: `user_settings` (`user_id` PK/FK to `users`, `preferences JSONB`, `updated_at`)
-- Purpose: Persist per-user UI preferences (dashboard, filters, help panel) across sessions/devices.
-- Deployment action: run `npm run db:migrate` before serving traffic.
-- Validation action:
-  - `npm run validate:db`
-  - `npm run validate:migrations`
-  - `npm run validate:schema`
-
-Ops script behavior updates (local/dev):
-- `scripts/setup-database.mjs` and `scripts/validate-db-connection.js` now unwrap nested connection errors and report actionable `ECONNREFUSED` details.
-- `scripts/reset-db.js` now handles connection-refused scenarios gracefully instead of failing with opaque promise errors.
-- If PostgreSQL is not running locally, start the Windows PostgreSQL service first, then re-run setup/validation commands.
-
-### US-21.1 Operational Notes
-- New migration: `046_add_patient_demographics_to_beds.sql`
-- Added bed demographics columns used by triage and dashboard views:
-	- `patient_ipd_id`
-	- `patient_age`
-	- `patient_gender`
-- Deployment action: run `npm run db:migrate` before serving traffic after updating to this release.
-
-Dev runtime note:
-- `npm run dev` now clears `.next` before startup to reduce stale chunk load errors during local development.
-
-### US-16 Operational Notes (Offline Queue + Replay)
-- New migrations:
-  - `1775301000000_create_offline_queue.sql`
-  - `1775302000000_add_client_operation_id_to_offline_queue.sql`
-- New table: `offline_queue`
-  - Purpose: durable storage for write operations captured while clients are offline.
-  - Key fields: `operation`, `payload`, `status`, `retry_count`, `client_operation_id`, `created_at`.
-- New API surfaces used by reconnect replay and stable client writes:
-  - `POST /api/offline-queue`
-  - `POST /api/offline-sync/execute`
-  - `POST /api/triage/update`
-  - `POST /api/bed-stage/update`
-
-Deployment / upgrade actions:
-1. Run `npm run db:migrate` before serving traffic.
-2. Verify migration state with `npm run validate:migrations`.
-3. Verify API health with `GET /api/health` after deploy.
-
-Operational behavior:
-- Replay is idempotent via `client_operation_id` to reduce duplicate writes on retries.
-- On reconnect, clients may drain queued actions automatically; monitor API/application logs for replay success/failure patterns.
-- If a replay conflict occurs, latest-write-wins conflict handling is applied by replay endpoints.
-
-### Archival and Runtime Guardrail Notes
-- `src/app/api/cron/archival/route.ts` received operational updates; continue to require `Authorization: Bearer <CRON_SECRET>` for scheduled archival jobs.
-- `src/shared/config/realtime.ts` includes updated polling guardrails to avoid aggressive polling during disconnected periods.
-- `src/middleware.ts` remains a critical ops-impacting surface for role and route protections; validate route access behavior after deployment.
-
-### EPIC 25 — Enhanced Dashboard Metrics (Department Metrics)
-- New migration: `1773838271566_create-department-metrics-tables.js`
-- Creates three new tables for cross-department operational visibility:
-  - `er_intake` — Emergency / Triage: bed occupancy status (`occupied`/`vacant`) and `triage_time_minutes`
-  - `ot_procedures` — Operation Theater: per-procedure `status` (`in_progress`/`completed`), `patient_name`, `room_id`
-  - `cath_lab_procedures` — Cath Lab: per-procedure `procedure_type` (`CAG`/`PTCA`) and `status` (`active`/`completed`)
-- Server action: `src/features/bed-dashboard/actions/department-metrics.ts` (`getDepartmentMetrics`)
-- UI component: `src/features/bed-dashboard/components/DepartmentMetricsView.tsx`
-- Deployment steps:
-  1. Run `npm run db:migrate` to create the three tables.
-  2. Optionally seed sample data: `node scripts/seed-metrics.js`
-  3. Confirm tables are present: `npm run validate:schema`
-- Metrics surfaced:
-  - **Triage**: occupied bed count, total bed count, average triage time (minutes)
-  - **OT**: surgeries in-progress, completed, utilization rate (%)
-  - **Cath Lab**: active procedures, CAG count, PTCA count
-
-### Migration Validation Policy Notes
-- CI migration duplicate-prefix allowlist is maintained in `scripts/validate-migration-duplicates.js`.
-- Canonical approved duplicate prefix groups now include: `015`, `038`, `040`, `047`, and `058`.
-- `scripts/validate-migrations.js` consumes that shared allowlist during `npm run validate:migrations` to ensure duplicate prefixes match approved canonical groups only.
-
-### EPIC 20 — Department Modules (ER, Diagnosis, OT, Cath Lab)
-- **Schema Additions**: Four new tables (`er_intake`, `diagnosis`, `ot_procedures`, `cath_lab_procedures`).
-- **Validation**: `DATABASE_SETUP.md` schema checks now expect 25+ tables.
-- **Roles**: Added `doctor`, `cardiologist`, and `cath_lab_nurse` to identity enums and route guards.
-### EPIC 20 — Emergency Ward Capacity Expansion
-- New migrations: `056_seed_emergency_ward.sql`, `061_extend_cath_lab_procedures.sql`
-- Ensures the default development and test environment provides 30 ER beds, 6 Triage beds, and 16 OT rooms out of the box when running `npm run db:seed`.
-- Adds a strictly guarded safe-abort to the database seeder to prevent destructive `TRUNCATE CASCADE` logic from ever mutating production instances.
-- Deployment action: run `npm run db:migrate` then `npm run db:seed` structurally in any staging environment to hydrate testing interfaces.
-
-### US-22.1 Operational Notes
-- New migrations: `047_enforce_symptom_40_char_limit.sql`, `1774000000000_enforce_symptom_40_char_limit_after_triage.sql`
-- Triage complaint field (`beds.key_symptom`) is now strictly limited to 40 characters.
-- Deployment action: run `npm run db:migrate` before application startup after pulling this release.
-
-### US-22.2 Operational Notes (Doctor Evaluation & Diagnosis)
-- New migration: `049_create_diagnosis_table.sql`
-- Role: `doctor` role enabled for clinical documentation.
-- Feature: Doctors can now record clinical diagnoses linked to patient UHID and Bed ID.
-- Deployment action: run `npm run db:migrate` and ensure the `doctor` role is assigned to clinical users via the admin dashboard.
-
 ### Validation, Tests, and Ops
 ```bash
-npm run validate:env
-npm run validate:db
-npm run validate:migrations
-npm run validate:schema
-npm run validate:all
-npm test
-npm run test:coverage
-npm run test:browser:install
-npm run test:browser
-npm run perf:seed
-npm run perf:check
-npm run perf:validate
+npm run validate:env && npm run validate:db
+npm run validate:migrations && npm run validate:schema
+npm test && npm run test:coverage
+npm run perf:seed && npm run perf:check
 npm run security:ssl:check
-```
-
-### US-13.11 Operational Notes (Cross-Browser Compatibility)
-- Browser support target: latest 2 versions of Chrome, Firefox, Safari, and Edge.
-- Runtime behavior:
-  - Unsupported browsers receive a persistent warning banner.
-  - Older-but-usable browsers run in limited mode with reduced motion and visual effects.
-- Browser compatibility telemetry is emitted from client route tracking and aggregated in system health metrics.
-- CI/CD coverage:
-  - Workflow: `.github/workflows/browser-compatibility.yml`
-  - Browser projects: `chromium`, `firefox`, `webkit`, `edge-emulation`
-
-Archival API:
-```http
-GET /api/cron/archival
-Authorization: Bearer <CRON_SECRET>
 ```
 
 ## 8) Release Update Protocol

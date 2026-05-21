@@ -96,7 +96,7 @@ The setup script will:
 ✅ Create database
 ✅ Configure environment variables (.env.local)
 ✅ Run migrations
-✅ Seed initial data (30 ER beds, 6 Triage beds, 16 OT rooms)
+✅ Seed initial data (30 ER beds, 16 OT rooms)
 ✅ Provide next steps
 
 **Default Credentials After Setup:**
@@ -245,10 +245,10 @@ The system tracks patients through 8 workflow stages with color-coded indicators
 | Stage | Color | Description |
 |-------|-------|-------------|
 | **Empty** | ⚪ Gray | Bed is available and ready for next patient |
-| **Triage** | 🔵 Blue | Patient initial assessment and prioritization |
-| **Registration** | 🟦 Cyan | Patient registration and documentation |
-| **Doctor Assessment** | 🟡 Yellow | Doctor examining patient and ordering tests |
-| **Treatment/Observation** | 🟠 Orange | Patient receiving treatment or under observation |
+| **Initial Investigation** | 🔵 Blue | Doctor performing initial assessment and ordering investigations |
+| **Initial Treatment** | 🟦 Cyan | Patient receiving first-line treatment |
+| **Drugs/Test** | 🟡 Yellow | Awaiting medications or diagnostic test results |
+| **Observation** | 🟠 Orange | Patient under active clinical monitoring |
 | **Decision Made** | 🟢 Green | Discharge decision made or admission arranged |
 | **Discharge Process** | 🟣 Purple | Patient being discharged or transferred |
 | **Cleaning** | 🟤 Pink | Bed being cleaned and prepared for next patient |
@@ -256,7 +256,7 @@ The system tracks patients through 8 workflow stages with color-coded indicators
 
 **Stage Transitions:**
 - Forward progression through stages is allowed
-- Skip ahead allowed (e.g., Triage → Treatment)
+- Skip ahead allowed (e.g., Empty → Initial Treatment)
 - Backward transitions require supervisor override
 - All transitions are logged with timestamps for analytics
 
@@ -354,7 +354,7 @@ Full environment variable reference: See [CONFIGURATION.md](CONFIGURATION.md)
 
 **Bed Management & Tracking:**
 - [x] Bed status dashboard with grid layout (20 beds)
-- [x] 8-stage patient workflow (Empty → Triage → Registration → Doctor Assessment → Treatment → Decision → Discharge → Cleaning)
+- [x] 8-stage patient workflow (Empty → Initial Investigation → Initial Treatment → Drugs/Test → Observation → Decision Made → Discharge Process → Cleaning)
 - [x] Color-coded visual indicators for each stage
 - [x] Automatic patient entry time capture (server-side)
 - [x] Real-time elapsed time tracking

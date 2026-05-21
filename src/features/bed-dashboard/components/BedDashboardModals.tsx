@@ -1,6 +1,8 @@
 'use client'
 // Extracted from BedDashboardClient to keep it within the 200-line budget.
-// Renders all modals: SupervisorOverride, Confirmation, Discharge, AddVirtualBed, Triage, Diagnosis.
+// Renders all modals: SupervisorOverride, Confirmation, Discharge, AddVirtualBed, TriageInfo, Diagnosis.
+// NOTE (U.S 25.2): TriageModal is used by the TRIAGE WARD dashboard (/triage page) only.
+// Triage is a separate physical ward — it is NOT an ER bed stage.
 
 import { SupervisorOverrideModal } from './SupervisorOverrideModal'
 import { ConfirmationModal } from './ConfirmationModal'
@@ -35,7 +37,7 @@ interface BedDashboardModalsProps {
   onVirtualBedClose: () => void
   onVirtualBedCreated: () => void
   onVirtualBedSubmit: (fd: FormData) => Promise<{ success: boolean; error?: string }>
-  // US-20.2: Triage Modal
+  // TriageModal: used by /triage page (TRIAGE WARD beds only — U.S 25.2: NOT an ER stage)
   triageState?: TriageState | null
   onTriageClose?: () => void
   onTriageSubmit?: (bedId: string, triageData: {
