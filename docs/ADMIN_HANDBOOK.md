@@ -6,7 +6,7 @@ Administrator runbook for configuration, maintenance, backup/recovery, security,
 - Owner: Platform / System Administration
 - Scope: Configuration, backups, troubleshooting, security, command references
 - Versioning: Git-tracked; update required in release PRs when operations change
-- Last Updated: 2026-05-20 (EPIC 25 ER Bed Workflow Triage Removal - deactivating legacy triage stages)
+- Last Updated: 2026-05-21 (EPIC 25 Dedicated Triage Workflow)
 
 > **Release-specific operational notes** are in [ADMIN_HANDBOOK_RELEASES.md](./ADMIN_HANDBOOK_RELEASES.md).
 
@@ -95,6 +95,33 @@ npm run validate:schema
 3. Test login as admin and one non-admin role.
 4. Confirm recent audit entries are queryable.
 5. Record drill date, backup artifact, and outcome in ops notes.
+
+## 3A) Dedicated Triage Workflow Operations
+
+Migration `1775303000000_create_triage_workflow.sql` adds the dedicated triage
+state model for the physical Triage Area.
+
+### What Changed
+- Adds enum `triage_bed_state` with `empty`, `initial_treatment`, `decision_made`, and `cleaning`.
+- Adds `triage_bed_statuses` for each triage bed's current state.
+- Adds `triage_state_logs` for immutable triage state history.
+- Ensures ward code `TRIAGE` exists and keeps exactly six active physical beds: `TRIAGE-01` through `TRIAGE-06`.
+- Deactivates any extra beds assigned to the `TRIAGE` ward that are not part of the approved six-bed layout.
+
+### Apply the Migration
+```bash
+npm run db:migrate
+npm run validate:migrations
+npm run validate:schema
+npm run build
+```
+
+### Administrator Actions
+1. Before production deployment, confirm no intentional extra beds are assigned to ward code `TRIAGE`; the migration marks extras inactive.
+2. After migration, open `/triage` and verify six beds are visible.
+3. Confirm triage shows only the approved states: Empty, Initial Treatment, Decision Made, Cleaning.
+4. Verify assignment and state movement are audit logged with `entity_type = 'triage_bed'`.
+5. Keep ER stage configuration separate; do not add ER-only stages to the triage workflow.
 
 ## 4) Troubleshooting (Common Issues)
 
