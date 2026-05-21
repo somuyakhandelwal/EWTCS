@@ -17,6 +17,7 @@ The database is organized into these areas:
 4. System configuration
 5. Data retention and archive
 6. OT room tracking
+7. Dedicated triage area tracking
 
 ## 2) Core Tables (Most Important)
 
@@ -56,6 +57,17 @@ One row per completed admission/discharge cycle.
 Defines which stage-to-stage moves are allowed.
 - Key fields: `from_stage_id`, `to_stage_id`, `is_allowed`, `requires_supervisor_override`
 - Enforces workflow rules centrally
+
+### `triage_bed_statuses`
+Current state for the six physical triage beds.
+- Key fields: `bed_id`, `state`, `last_state_change`
+- State values: `empty`, `initial_treatment`, `decision_made`, `cleaning`
+- Design rule: independent from ER `stages`
+
+### `triage_state_logs`
+Immutable history of triage state changes.
+- Key fields: `bed_id`, `from_state`, `to_state`, `changed_by_user_id`, `transition_time`
+- Used with `audit_logs` for triage workflow traceability
 
 ### `disposition_delay_reasons`
 Captures delay reasons at disposition points.

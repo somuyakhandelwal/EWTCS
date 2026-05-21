@@ -1,6 +1,5 @@
 import { verifyActiveSession } from '@/shared/lib/active-session'
-import { BedDashboardContainer } from '@/features/bed-dashboard/components/BedDashboardContainer'
-import { BedGridSkeleton } from '@/features/bed-dashboard/components/BedGridSkeleton'
+import { TriageDashboardContainer } from '@/features/triage/components/TriageDashboardContainer'
 import { LogoutButton } from '@/features/auth/components/LogoutButton'
 import { KioskBanner } from '@/features/auth/components/KioskBanner'
 import { NurseAreaSidebar } from '@/features/bed-dashboard/components/NurseAreaSidebar'
@@ -41,9 +40,9 @@ export default async function TriagePage() {
         <div className="flex flex-col gap-6 lg:flex-row lg:items-start">
           <NurseAreaSidebar activeArea="triage" />
 
-          <div className="min-w-0 flex-1 rounded-xl border border-primary/20 bg-primary/5 p-2 sm:p-3">
-            <Suspense fallback={<BedGridSkeleton />}>
-              <BedDashboardContainer role={session.role} areaView="triage" />
+          <div className="min-w-0 flex-1">
+            <Suspense fallback={<div className="rounded-lg border border-border p-6">Loading triage beds...</div>}>
+              <TriageDashboardContainer />
             </Suspense>
           </div>
         </div>

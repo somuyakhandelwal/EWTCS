@@ -19,7 +19,7 @@ Migrations live in `migrations/` and are run in **lexicographic filename order**
 
 ---
 
-## Full Migration Inventory (74 files)
+## Full Migration Inventory (80 files)
 
 | File | Purpose |
 |------|---------|
@@ -93,6 +93,7 @@ Migrations live in `migrations/` and are run in **lexicographic filename order**
 | `1773855000000_seed_triage_area_beds.sql` | Seeds Triage Area ward and beds |
 | `1774000000000_enforce_symptom_40_char_limit_after_triage.sql` | Re-enforces 40-char symptom constraint after triage columns added |
 | `1774239900000_ot_procedure_tracking_constraints.sql` | surgeon_id made nullable; unique index for one active OT per room |
+| `1775303000000_create_triage_workflow.sql` | Dedicated triage state model: `triage_bed_state`, `triage_bed_statuses`, `triage_state_logs`, and six active TRIAGE beds |
 
 ---
 

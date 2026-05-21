@@ -160,6 +160,42 @@ Defines valid workflow transitions between stages.
 
 ---
 
+## 6A. `triage_bed_statuses`
+
+Current triage-specific state for each physical triage bed.
+
+| Column | Type | Constraints | Description |
+|--------|------|-------------|-------------|
+| `bed_id` | UUID | PK, FK â†’ beds(id) ON DELETE CASCADE | Triage bed reference |
+| `state` | triage_bed_state ENUM | NOT NULL, DEFAULT empty | `empty`, `initial_treatment`, `decision_made`, or `cleaning` |
+| `last_state_change` | TIMESTAMPTZ | NOT NULL | Last triage state transition time |
+| `updated_at` | TIMESTAMPTZ | NOT NULL | Last row update time |
+| `metadata` | JSONB | NOT NULL, DEFAULT '{}' | Triage workflow metadata |
+
+**Indexes:** `idx_triage_statuses_state`
+
+---
+
+## 6B. `triage_state_logs`
+
+Immutable historical log of triage bed state transitions.
+
+| Column | Type | Constraints | Description |
+|--------|------|-------------|-------------|
+| `id` | UUID | PK | Primary key |
+| `bed_id` | UUID | FK â†’ beds(id) ON DELETE CASCADE, NOT NULL | Triage bed reference |
+| `from_state` | triage_bed_state ENUM | | Previous triage state |
+| `to_state` | triage_bed_state ENUM | NOT NULL | New triage state |
+| `changed_by_user_id` | UUID | FK â†’ users(id), NOT NULL | Who made the change |
+| `transition_time` | TIMESTAMPTZ | NOT NULL, DEFAULT CURRENT_TIMESTAMP | When transition happened |
+| `duration_in_previous_state_ms` | BIGINT | | Time in previous triage state |
+| `notes` | TEXT | | Transition notes |
+| `metadata` | JSONB | NOT NULL, DEFAULT '{}' | Extra workflow context |
+
+**Indexes:** `idx_triage_logs_bed_id`, `idx_triage_logs_transition_time`, `idx_triage_logs_user`
+
+---
+
 ## 7. `audit_logs`
 
 Generic audit trail for all entity changes.
