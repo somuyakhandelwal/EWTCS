@@ -6,7 +6,7 @@ Administrator runbook for configuration, maintenance, backup/recovery, security,
 - Owner: Platform / System Administration
 - Scope: Configuration, backups, troubleshooting, security, command references
 - Versioning: Git-tracked; update required in release PRs when operations change
-- Last Updated: 2026-05-22 (EPIC 25 Triage Decision Outcomes and ER Transfer)
+- Last Updated: 2026-05-22 (API route runtime rendering and analytics settings cache)
 
 > **Release-specific operational notes** are in [ADMIN_HANDBOOK_RELEASES.md](./ADMIN_HANDBOOK_RELEASES.md).
 
@@ -58,6 +58,15 @@ The `/api/health` endpoint additionally returns system-level metrics (Epic 13):
 - **Load Metrics**: Request rate (per minute), Active users count
 - **Database Status**: Reachability, Connection pool utilization (total, idle, waiting, max)
 These metrics are surfaced live on the Admin Dashboard (`/admin`) and automatically logged for trend analysis.
+
+### Runtime API Route Rendering
+Operational API route handlers are intentionally marked with `dynamic = 'force-dynamic'`.
+This includes `/api/cron/archival`, session-authenticated dashboard routes, external integration routes, monitoring routes, and offline-sync routes. These endpoints read live request, session, environment, or database state and must remain server-rendered on demand rather than statically prerendered during `next build`.
+
+Before changing API route rendering behavior:
+- Run `npm run build` and confirm affected `/api/*` routes appear as dynamic (`ƒ`) in the route summary.
+- For archival changes, verify `CRON_SECRET` handling and run `npm run validate:all`.
+- Update this handbook whenever `/api/cron/archival` or other ops-critical runtime route behavior changes.
 
 ## 3) Backup and Recovery
 > Archival is not backup. Keep both.
