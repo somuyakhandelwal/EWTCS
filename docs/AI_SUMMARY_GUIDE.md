@@ -6,7 +6,7 @@ The Daily AI Summary Generator automatically aggregates emergency ward bed data 
 
 1.  **Data Aggregation**: At 18:30 UTC (00:00 IST), a cron job runs `scripts/daily-summary-cron.mjs`. It computes:
     *   Total patients admitted.
-    *   Average Turnaround Time (TAT).
+    *   Average workflow Turnaround Time (TAT).
     *   Average time per stage.
     *   Disposition delay counts.
     *   Most congested workflow stage.
@@ -14,6 +14,15 @@ The Daily AI Summary Generator automatically aggregates emergency ward bed data 
 3.  **Storage**: The resulting stats and generated text are stored in the `daily_summaries` table with status `draft` until approved.
 4.  **Review Workflow** (US-9.2): Supervisors receive an in-app notification when drafts exist. They can edit, approve, or reject summaries. Summaries are only published after approval.
 5.  **Dashboard**: Administrators and Supervisors can view, generate, and review summaries in the Admin and Supervisor dashboards.
+
+## Workflow TAT Model
+
+- ER TAT is ER bed assignment to ER bed entering Cleaning.
+- Triage TAT is triage bed assignment to triage bed entering cleaning.
+- Cleaning TAT is cleaning start to Empty and is not included in whole ER or triage TAT.
+
+`patient_admissions.total_duration_ms` remains the source for LOS-style stay
+duration reports, not EPIC 25 workflow TAT.
 
 ## ⚙️ Configuration
 

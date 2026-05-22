@@ -60,7 +60,7 @@ export async function setGlobalThresholdAction(input: {
     logger.info('Global threshold updated', { totalMinutes, performedBy: session.userId })
     // EPIC 13: Invalidate the settings cache so the next dashboard request
     // fetches the new threshold from the DB instead of serving a stale cached value.
-    revalidateTag(SETTINGS_CACHE_TAG, 'max')
+    revalidateTag(SETTINGS_CACHE_TAG)
     revalidatePath('/admin/stages')
     revalidatePath('/dashboard')
     revalidatePath('/triage')

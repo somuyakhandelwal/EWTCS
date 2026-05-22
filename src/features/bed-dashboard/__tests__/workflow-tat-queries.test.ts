@@ -12,8 +12,10 @@ vi.mock('@/shared/config/logger', () => ({
 
 import { query } from '@/shared/lib/db'
 import {
+  getErCleaningTatRecords,
   getErTatRecords,
   getErTatSummary,
+  getTriageTatRecords,
   getTriageTatSummary,
   getTriageCleaningTatRecords,
 } from '../lib/stage-analytics'
@@ -68,6 +70,31 @@ describe('workflow TAT queries', () => {
     expect(String(sql)).toContain("JOIN wards w ON w.id = b.ward_id AND w.code = 'ER'")
     expect(String(sql)).toContain("LOWER(sl.to_stage_name) = 'cleaning'")
     expect(String(sql)).toContain("LOWER(sl.from_stage_name) = 'empty'")
+    expect(String(sql)).toContain('ts.is_active = true')
+    expect(String(sql)).toContain("LOWER(sl.to_stage_name) NOT IN ('empty', 'cleaning', 'triage')")
+  })
+
+  it('keeps ER cleaning TAT separate from whole ER TAT', async () => {
+    vi.mocked(query).mockResolvedValueOnce({ rows: [] } as never)
+
+    await getErCleaningTatRecords()
+
+    const [sql] = vi.mocked(query).mock.calls[0] ?? []
+    expect(String(sql)).toContain("LOWER(sl.from_stage_name) = 'cleaning'")
+    expect(String(sql)).toContain("LOWER(sl.to_stage_name) = 'empty'")
+    expect(String(sql)).not.toContain('er_start_events')
+  })
+
+  it('calculates triage whole TAT from assignment to cleaning entry', async () => {
+    vi.mocked(query).mockResolvedValueOnce({ rows: [] } as never)
+
+    await getTriageTatRecords()
+
+    const [sql] = vi.mocked(query).mock.calls[0] ?? []
+    expect(String(sql)).toContain("tsl.to_state = 'initial_treatment'")
+    expect(String(sql)).toContain("tsl.to_state = 'cleaning'")
+    expect(String(sql)).toContain('c.cleaning_at - s.started_at')
+    expect(String(sql)).not.toContain("tsl.to_state = 'empty'")
   })
 
   it('reads triage cleaning TAT from triage_state_logs', async () => {
@@ -79,5 +106,16 @@ describe('workflow TAT queries', () => {
     expect(String(sql)).toContain('FROM triage_state_logs tsl')
     expect(String(sql)).toContain("tsl.from_state = 'cleaning'")
     expect(String(sql)).toContain("tsl.to_state = 'empty'")
+  })
+
+  it('ignores incomplete workflow cycles until a cleaning entry exists', async () => {
+    vi.mocked(query).mockResolvedValueOnce({ rows: [] } as never)
+
+    await getErTatRecords()
+
+    const [sql] = vi.mocked(query).mock.calls[0] ?? []
+    expect(String(sql)).toContain('FROM er_cleaning_events c')
+    expect(String(sql)).toContain('JOIN LATERAL')
+    expect(String(sql)).not.toContain('NOW() - se.started_at')
   })
 })

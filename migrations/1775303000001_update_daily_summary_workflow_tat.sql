@@ -34,6 +34,34 @@ delay_stats AS (
   FROM disposition_delay_reasons ddr
   GROUP BY DATE_TRUNC('day', ddr.recorded_at)::date
 ),
+er_start_events AS (
+  SELECT
+    bsl.bed_id,
+    bsl.transition_time AS started_at
+  FROM bed_stage_logs bsl
+  JOIN beds b ON b.id = bsl.bed_id
+  JOIN wards w ON w.id = b.ward_id AND w.code = 'ER'
+  JOIN stages fs ON fs.id = bsl.from_stage_id
+  JOIN stages ts ON ts.id = bsl.to_stage_id
+  WHERE LOWER(fs.name) = 'empty'
+    AND ts.is_active = true
+    AND LOWER(ts.name) NOT IN ('empty', 'cleaning', 'triage')
+),
+er_cleaning_events AS (
+  SELECT
+    bsl.bed_id,
+    bsl.transition_time AS cleaning_at,
+    DATE_TRUNC('day', bsl.transition_time)::date AS summary_date,
+    LAG(bsl.transition_time) OVER (
+      PARTITION BY bsl.bed_id
+      ORDER BY bsl.transition_time ASC
+    ) AS previous_cleaning_at
+  FROM bed_stage_logs bsl
+  JOIN beds b ON b.id = bsl.bed_id
+  JOIN wards w ON w.id = b.ward_id AND w.code = 'ER'
+  JOIN stages ts ON ts.id = bsl.to_stage_id
+  WHERE LOWER(ts.name) = 'cleaning'
+),
 triage_start_events AS (
   SELECT
     tsl.bed_id,
@@ -59,12 +87,21 @@ triage_cleaning_events AS (
 ),
 workflow_tat_cycles AS (
   SELECT
-    DATE_TRUNC('day', pa.discharged_at)::date AS summary_date,
-    pa.total_duration_ms::numeric AS duration_ms
-  FROM patient_admissions pa
-  JOIN beds b ON b.id = pa.bed_id
-  JOIN wards w ON w.id = b.ward_id AND w.code = 'ER'
-  WHERE pa.total_duration_ms IS NOT NULL
+    ce.summary_date,
+    (EXTRACT(EPOCH FROM (ce.cleaning_at - se.started_at)) * 1000)::numeric AS duration_ms
+  FROM er_cleaning_events ce
+  JOIN LATERAL (
+    SELECT s.started_at
+    FROM er_start_events s
+    WHERE s.bed_id = ce.bed_id
+      AND s.started_at < ce.cleaning_at
+      AND (
+        ce.previous_cleaning_at IS NULL
+        OR s.started_at > ce.previous_cleaning_at
+      )
+    ORDER BY s.started_at DESC
+    LIMIT 1
+  ) se ON true
 
   UNION ALL
 
