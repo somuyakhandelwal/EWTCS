@@ -27,20 +27,39 @@ describe('DepartmentMetricsView', () => {
     vi.mocked(getDepartmentMetrics).mockResolvedValue({
       success: true,
       data: {
-        triage: { occupiedBeds: 10, totalBeds: 20, avgTriageTime: 15 },
+        triage: {
+          occupiedBeds: 10,
+          totalBeds: 20,
+          averageTatMinutes: 15,
+          tatCycleCount: 4,
+          averageCleaningMinutes: 6,
+          cleaningCycleCount: 3,
+        },
+        emergency: {
+          occupiedBeds: 8,
+          totalBeds: 12,
+          averageTatMinutes: 24,
+          tatCycleCount: 5,
+          averageCleaningMinutes: 9,
+          cleaningCycleCount: 4,
+        },
         ot: { inProgress: 2, completed: 5, utilizationRate: 28 },
-        cathLab: { activeProcedures: 1, cagCount: 2, ptcaCount: 3 }
-      }
+        cathLab: { activeProcedures: 1, cagCount: 2, ptcaCount: 3 },
+      },
     })
 
     render(<DepartmentMetricsView />)
 
     await waitFor(() => {
-      expect(screen.getByText('Triage Metrics')).toBeDefined()
+      expect(screen.getByText('Triage Area')).toBeDefined()
     })
 
     expect(screen.getByText('10 / 20')).toBeDefined()
+    expect(screen.getByText('8 / 12')).toBeDefined()
     expect(screen.getByText('15 mins')).toBeDefined()
+    expect(screen.getByText('24 mins')).toBeDefined()
+    expect(screen.getByText('6 mins')).toBeDefined()
+    expect(screen.getByText('9 mins')).toBeDefined()
 
     expect(screen.getAllByText('2').length).toBeGreaterThan(0) // In progress OT and CAG Count
     expect(screen.getByText('5')).toBeDefined()
@@ -54,10 +73,25 @@ describe('DepartmentMetricsView', () => {
     vi.mocked(getDepartmentMetrics).mockResolvedValue({
       success: true,
       data: {
-        triage: { occupiedBeds: 10, totalBeds: 20, avgTriageTime: 15 },
+        triage: {
+          occupiedBeds: 10,
+          totalBeds: 20,
+          averageTatMinutes: 15,
+          tatCycleCount: 2,
+          averageCleaningMinutes: 5,
+          cleaningCycleCount: 2,
+        },
+        emergency: {
+          occupiedBeds: 8,
+          totalBeds: 12,
+          averageTatMinutes: 25,
+          tatCycleCount: 4,
+          averageCleaningMinutes: 9,
+          cleaningCycleCount: 4,
+        },
         ot: { inProgress: 2, completed: 5, utilizationRate: 28 },
-        cathLab: { activeProcedures: 1, cagCount: 2, ptcaCount: 3 }
-      }
+        cathLab: { activeProcedures: 1, cagCount: 2, ptcaCount: 3 },
+      },
     })
 
     const setIntervalSpy = vi.spyOn(global, 'setInterval')
@@ -89,5 +123,37 @@ describe('DepartmentMetricsView', () => {
 
     expect(screen.getByText('Department metrics unavailable')).toBeDefined()
     expect(screen.getByText('Error')).toBeDefined()
+  })
+
+  it('shows empty-cycle text when workflow summaries are absent', async () => {
+    vi.mocked(getDepartmentMetrics).mockResolvedValue({
+      success: true,
+      data: {
+        triage: {
+          occupiedBeds: 0,
+          totalBeds: 6,
+          averageTatMinutes: 0,
+          tatCycleCount: 0,
+          averageCleaningMinutes: 0,
+          cleaningCycleCount: 0,
+        },
+        emergency: {
+          occupiedBeds: 0,
+          totalBeds: 12,
+          averageTatMinutes: 0,
+          tatCycleCount: 0,
+          averageCleaningMinutes: 0,
+          cleaningCycleCount: 0,
+        },
+        ot: { inProgress: 0, completed: 0, utilizationRate: 0 },
+        cathLab: { activeProcedures: 0, cagCount: 0, ptcaCount: 0 },
+      },
+    })
+
+    render(<DepartmentMetricsView />)
+
+    await waitFor(() => {
+      expect(screen.getAllByText('No completed cycles yet')).toHaveLength(4)
+    })
   })
 })

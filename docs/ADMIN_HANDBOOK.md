@@ -124,6 +124,7 @@ state model for the physical Triage Area.
 - Triage TAT is triage bed assignment (`initial_treatment`) through triage bed entering `cleaning`.
 - Cleaning TAT is `Cleaning`/`cleaning` through `Empty`/`empty` and is reported separately.
 - `patient_admissions.total_duration_ms` remains valid for LOS/stay-duration reporting, not EPIC 25 workflow TAT.
+- Supervisor/admin dashboard cards and daily AI summary cards must show ER and triage workflow metrics separately; legacy bed-to-bed turnaround remains historical only.
 
 ### Apply the Migration
 ```bash

@@ -4,6 +4,10 @@
 import { query } from '@/shared/lib/db'
 import { logger } from '@/shared/config/logger'
 import type { DailySummary, AiInsight } from '../types/daily-summary'
+import {
+    normalizeWorkflowInsights,
+    normalizeWorkflowSummaryText,
+} from './workflow-summary-normalizer'
 
 interface RawDailySummaryRow {
     id: string
@@ -48,11 +52,13 @@ const SUMMARY_SELECT = `
 
 function parseAiInsights(raw: unknown): AiInsight[] {
     if (!Array.isArray(raw)) return []
-    return raw.filter((x): x is AiInsight => Boolean(x && typeof x === 'object'
-        && typeof (x as AiInsight).id === 'string'
-        && typeof (x as AiInsight).text === 'string'
-        && typeof (x as AiInsight).confidence === 'number'))
-        .map(x => ({ ...x, confidence: Math.max(0, Math.min(100, x.confidence)) }))
+    return normalizeWorkflowInsights(
+        raw.filter((x): x is AiInsight => Boolean(x && typeof x === 'object'
+            && typeof (x as AiInsight).id === 'string'
+            && typeof (x as AiInsight).text === 'string'
+            && typeof (x as AiInsight).confidence === 'number'))
+            .map(x => ({ ...x, confidence: Math.max(0, Math.min(100, x.confidence)) }))
+    )
 }
 
 function mapRow(row: RawDailySummaryRow): DailySummary {
@@ -68,7 +74,7 @@ function mapRow(row: RawDailySummaryRow): DailySummary {
         totalBedsUsed: parseInt(row.total_beds_used, 10),
         totalStageUpdates: parseInt(row.total_stage_updates, 10),
         generatedAt: row.generated_at,
-        aiSummary: row.ai_summary ?? undefined,
+        aiSummary: normalizeWorkflowSummaryText(row.ai_summary ?? undefined),
         status,
         reviewedBy: row.reviewed_by ?? undefined,
         reviewedAt: row.reviewed_at ?? undefined,
@@ -112,6 +118,8 @@ export async function updateSummaryDraft(
     aiSummary: string,
     aiInsights: AiInsight[]
 ): Promise<DailySummary | null> {
+    const normalizedSummary = normalizeWorkflowSummaryText(aiSummary) ?? aiSummary
+    const normalizedInsights = normalizeWorkflowInsights(aiInsights)
     const sql = `
     WITH updated AS (
       UPDATE daily_summary_reviews
@@ -126,8 +134,8 @@ export async function updateSummaryDraft(
     LIMIT 1
   `
     const result = await query<RawDailySummaryRow>(sql, [
-        aiSummary,
-        JSON.stringify(aiInsights),
+        normalizedSummary,
+        JSON.stringify(normalizedInsights),
         id,
     ])
     const row = result.rows[0]

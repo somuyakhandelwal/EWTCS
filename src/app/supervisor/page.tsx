@@ -10,6 +10,7 @@ import { getUnacknowledgedAlertCount } from "@/features/notifications/actions/al
 
 import { verifyActiveSession } from "@/shared/lib/active-session"
 import { getBedGridData } from "@/features/bed-dashboard/actions/bed-grid-actions"
+import { DepartmentMetricsView } from "@/features/bed-dashboard/components/DepartmentMetricsView"
 import { SupervisorClientShell } from "./SupervisorClientShell"
 import { SupervisorSummarySection } from "@/features/ai-summary/components/SupervisorSummarySection"
 
@@ -69,6 +70,8 @@ export default async function SupervisorDashboard() {
                         <LogoutButton />
                     </div>
                 </div>
+
+                <DepartmentMetricsView />
 
                 {bedGridResult.success && bedGridResult.data ? (
                     <SupervisorClientShell initialData={bedGridResult.data} />

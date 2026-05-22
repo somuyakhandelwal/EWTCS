@@ -7,11 +7,21 @@ import type { DailySummaryInput } from '../types/daily-summary'
  * Builds the system prompt for Gemini to generate narrative + insights.
  */
 export function buildSummaryPrompt(stats: DailySummaryInput): string {
+    const erTatLine =
+        typeof stats.metadata.avgErTatMinutes === 'number'
+            ? `- Average ER Workflow TAT: ${stats.metadata.avgErTatMinutes} minutes`
+            : ''
+    const triageTatLine =
+        typeof stats.metadata.avgTriageTatMinutes === 'number'
+            ? `- Average Triage Workflow TAT: ${stats.metadata.avgTriageTatMinutes} minutes`
+            : ''
     const statsBlock = `
 STATISTICS for ${stats.summaryDate}:
 - Total Patients Admitted: ${stats.totalPatients}
 - Unique Beds Used: ${stats.totalBedsUsed}
-- Average Turnaround Time (TAT): ${stats.avgTatMinutes} minutes
+- Combined Workflow TAT Across Areas: ${stats.avgTatMinutes} minutes
+${erTatLine}
+${triageTatLine}
 - Average Time per Stage: ${stats.avgStageTimeMinutes} minutes
 - Total Stage Transitions: ${stats.totalStageUpdates}
 - Disposition Delays (Alerts): ${stats.delayCount}
@@ -25,7 +35,8 @@ ${stats.metadata.mostDelayedStage ? `- Most Congested Stage: ${stats.metadata.mo
 ${statsBlock}
 
 INSTRUCTIONS:
-- Narrative: Clear, professional language. Identify if the day was Busy/Moderate/Quiet (12 beds capacity). Highlight delays and efficiencies. Plain text, no markdown.
+- Narrative: Clear, professional language. Identify if the day was Busy/Moderate/Quiet (12 beds capacity). Highlight delays and efficiencies. Discuss ER and triage separately when both metrics exist. Plain text, no markdown.
+- Workflow model: Triage is its own area, not an ER stage. Do not describe triage as part of the ER stage list. Do not imply cleaning time is included in ER or triage workflow TAT.
 - Insights: Each insight is one sentence. baseConfidence indicates data strength: 80+ for strong data, 50-79 for moderate, below 50 for sparse data.
 - Respond with ONLY valid JSON: {"narrative":"...","insights":[{"text":"...","category":"...","baseConfidence":...},...]}`
 }
