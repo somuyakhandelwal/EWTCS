@@ -1,8 +1,8 @@
 import Link from 'next/link'
-import { Activity, ClipboardCheck } from 'lucide-react'
+import { Activity, ClipboardCheck, Stethoscope } from 'lucide-react'
 import { cn } from '@/shared/lib/utils'
 
-type NurseArea = 'dashboard' | 'triage'
+type NurseArea = 'dashboard' | 'triage' | 'ot'
 
 interface NurseAreaSidebarProps {
   activeArea: NurseArea
@@ -11,6 +11,7 @@ interface NurseAreaSidebarProps {
 const LINKS: Array<{ key: NurseArea; label: string; href: string; icon: typeof Activity }> = [
   { key: 'dashboard', label: 'Emergency Ward', href: '/dashboard', icon: Activity },
   { key: 'triage', label: 'Triage Area', href: '/triage', icon: ClipboardCheck },
+  { key: 'ot', label: 'Operation Theatre', href: '/ot', icon: Stethoscope },
 ]
 
 export function NurseAreaSidebar({ activeArea }: NurseAreaSidebarProps) {

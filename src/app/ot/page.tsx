@@ -4,6 +4,7 @@
 import { verifyActiveSession } from '@/shared/lib/active-session'
 import { OTDashboardContainer } from '@/features/ot-dashboard/components/OTDashboardContainer'
 import { LogoutButton } from '@/features/auth/components/LogoutButton'
+import { NurseAreaSidebar } from '@/features/bed-dashboard/components/NurseAreaSidebar'
 import Link from 'next/link'
 import { redirect } from 'next/navigation'
 import { Suspense } from 'react'
@@ -60,9 +61,15 @@ export default async function OTDashboardPage() {
         </div>
 
         {/* OT Dashboard */}
-        <Suspense fallback={<OTSkeleton />}>
-          <OTDashboardContainer />
-        </Suspense>
+        <div className="flex flex-col gap-6 lg:flex-row lg:items-start">
+          <NurseAreaSidebar activeArea="ot" />
+
+          <div className="min-w-0 flex-1">
+            <Suspense fallback={<OTSkeleton />}>
+              <OTDashboardContainer />
+            </Suspense>
+          </div>
+        </div>
 
       </div>
     </div>
