@@ -132,7 +132,7 @@ export function StageAnalyticsTAT({
       <CardHeader>
         <CardTitle className="flex items-center gap-2 text-base">
           <Clock className="h-4 w-4 text-teal-600" />
-          Workflow Turnaround Time
+          Workflow Turnaround Time by Area
         </CardTitle>
         <p className="text-sm text-gray-500">
           Whole TAT stops when the bed enters cleaning. Cleaning duration is tracked separately.

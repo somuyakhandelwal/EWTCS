@@ -3,7 +3,7 @@
 ## ✅ AI Summary Review & Approval
 1.  Navigate to the **AI Summary Section** at the bottom of the dashboard.
 2.  Review any **"Pending"** drafts generated at midnight.
-3.  Check key metrics: Total Patients, Avg TAT, Bottlenecks.
+3.  Check key metrics: Total Patients, **Avg ER TAT**, **Avg Triage TAT**, and Bottlenecks.
 4.  **Edit** any narrative text if needed for accuracy.
 5.  Click **"Approve"** to finalize the report for management.
 
@@ -25,6 +25,8 @@
 ---
 
 ## 📊 Interpreting Analytics
+- **Dashboard Workflow Cards**: Review **Triage Area** and **Emergency Ward** cards separately. Whole workflow TAT stops when the bed enters cleaning.
+- **Cleaning TAT**: Treat ER cleaning and triage cleaning as separate operational signals, not part of whole ER or triage TAT.
 - **Red Zones**: Stages with the highest average TAT are your primary bottlenecks.
 - **Hourly Heatmap**: Identifies peak admission and delay times.
 - **CSV Export**: Use the **"Export Analytics"** button for deeper data analysis in Excel.

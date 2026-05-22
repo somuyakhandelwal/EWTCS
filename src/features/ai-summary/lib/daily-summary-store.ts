@@ -5,6 +5,10 @@
 import { query } from '@/shared/lib/db'
 import { logger } from '@/shared/config/logger'
 import type { DailySummary, DailySummaryInput, AiInsight } from '../types/daily-summary'
+import {
+    normalizeWorkflowInsights,
+    normalizeWorkflowSummaryText,
+} from './workflow-summary-normalizer'
 
 // Raw DB row before camelCase mapping.
 interface RawDailySummaryRow {
@@ -50,11 +54,13 @@ const SUMMARY_SELECT = `
 
 function parseAiInsights(raw: unknown): AiInsight[] {
     if (!Array.isArray(raw)) return []
-    return raw.filter((x): x is AiInsight => Boolean(x && typeof x === 'object'
-        && typeof (x as AiInsight).id === 'string'
-        && typeof (x as AiInsight).text === 'string'
-        && typeof (x as AiInsight).confidence === 'number'))
-        .map(x => ({ ...x, confidence: Math.max(0, Math.min(100, x.confidence)) }))
+    return normalizeWorkflowInsights(
+        raw.filter((x): x is AiInsight => Boolean(x && typeof x === 'object'
+            && typeof (x as AiInsight).id === 'string'
+            && typeof (x as AiInsight).text === 'string'
+            && typeof (x as AiInsight).confidence === 'number'))
+            .map(x => ({ ...x, confidence: Math.max(0, Math.min(100, x.confidence)) }))
+    )
 }
 
 /** Map a raw pg row to the typed DailySummary shape. */
@@ -71,7 +77,7 @@ function mapRow(row: RawDailySummaryRow): DailySummary {
         totalBedsUsed: parseInt(row.total_beds_used, 10),
         totalStageUpdates: parseInt(row.total_stage_updates, 10),
         generatedAt: row.generated_at,
-        aiSummary: row.ai_summary ?? undefined,
+        aiSummary: normalizeWorkflowSummaryText(row.ai_summary ?? undefined),
         status,
         reviewedBy: row.reviewed_by ?? undefined,
         reviewedAt: row.reviewed_at ?? undefined,
@@ -88,7 +94,8 @@ function mapRow(row: RawDailySummaryRow): DailySummary {
 export async function upsertDailySummary(
     input: DailySummaryInput
 ): Promise<DailySummary> {
-    const aiInsights = input.aiInsights ?? []
+    const aiSummary = normalizeWorkflowSummaryText(input.aiSummary) ?? null
+    const aiInsights = normalizeWorkflowInsights(input.aiInsights ?? [])
     const sql = `
     INSERT INTO daily_summary_reviews (
       summary_date,
@@ -115,7 +122,7 @@ export async function upsertDailySummary(
 
     const result = await query<{ id: string }>(sql, [
         input.summaryDate,
-        input.aiSummary ?? null,
+        aiSummary,
         JSON.stringify(input.metadata),
         JSON.stringify(aiInsights),
     ])

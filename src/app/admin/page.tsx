@@ -15,6 +15,7 @@ import { DailySummaryTrigger } from "@/features/ai-summary/components/DailySumma
 import { DailySummaryHistory } from "@/features/ai-summary/components/DailySummaryHistory"
 import { BackupStatusPanel } from "@/features/data-retention/components/BackupStatusPanel"
 import { OfflineQueueMonitor } from "@/features/bed-dashboard/components/OfflineQueueMonitor"
+import { DepartmentMetricsView } from "@/features/bed-dashboard/components/DepartmentMetricsView"
 import { SystemHealthPanel } from "@/features/system-health/components/SystemHealthPanel"
 import { MetricsPanel } from "@/features/system-health/components/MetricsPanel"
 
@@ -93,6 +94,8 @@ export default async function AdminDashboard() {
                         </CardContent>
                     </Card>
                 </div>
+
+                <DepartmentMetricsView />
 
                 <AdminQuickActions />
 

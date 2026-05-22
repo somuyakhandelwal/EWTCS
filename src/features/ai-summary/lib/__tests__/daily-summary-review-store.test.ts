@@ -25,7 +25,7 @@ const RAW_ROW = {
     total_beds_used: '18',
     total_stage_updates: '72',
     generated_at: '2026-02-21T00:00:00.000Z',
-    ai_summary: 'Sample text',
+    ai_summary: 'Sample text about the triage stage',
     metadata: {},
     status: 'draft',
     ai_insights: [],
@@ -55,14 +55,15 @@ describe('updateSummaryDraft', () => {
 
     it('returns updated summary when draft exists', async () => {
         vi.mocked(query).mockResolvedValueOnce({
-            rows: [{ ...RAW_ROW, ai_summary: 'Updated text' }],
+            rows: [{ ...RAW_ROW, ai_summary: 'Updated text about the triage stage' }],
         } as never)
         const result = await updateSummaryDraft(
             'uuid-123',
-            'Updated text',
+            'Updated text about the triage stage',
             [{ id: 'i1', text: 'Insight', confidence: 80 }]
         )
         expect(result).not.toBeNull()
+        expect(result?.aiSummary).toBe('Updated text about the triage area')
     })
 
     it('returns null when not draft', async () => {

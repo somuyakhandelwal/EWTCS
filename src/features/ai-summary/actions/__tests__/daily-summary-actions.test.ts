@@ -64,7 +64,10 @@ describe('generateDailySummary', () => {
     it('returns success with summary on happy path', async () => {
         vi.mocked(requireRole).mockResolvedValue(ADMIN_SESSION as never)
         vi.mocked(aggregateDailyStats).mockResolvedValue(SAMPLE_INPUT)
-        vi.mocked(generateAiSummary).mockResolvedValue({ narrative: 'AI Summary Text', insights: [] })
+        vi.mocked(generateAiSummary).mockResolvedValue({
+            narrative: 'AI Summary Text for the triage stage',
+            insights: [{ id: 'i1', text: 'Triage stage slowed throughput', confidence: 70 }],
+        })
         vi.mocked(upsertDailySummary).mockResolvedValue(SAVED_SUMMARY)
 
         const result = await generateDailySummary({ date: '2026-02-20' })
@@ -73,6 +76,12 @@ describe('generateDailySummary', () => {
         expect(result.date).toBe('2026-02-20')
         expect(refreshDailySummariesMaterializedView).toHaveBeenCalledTimes(1)
         expect(generateAiSummary).toHaveBeenCalledWith(SAMPLE_INPUT)
+        expect(vi.mocked(upsertDailySummary).mock.calls[0]?.[0].aiSummary).toBe(
+            'AI Summary Text for the triage area'
+        )
+        expect(vi.mocked(upsertDailySummary).mock.calls[0]?.[0].aiInsights?.[0]?.text).toBe(
+            'triage area slowed throughput'
+        )
         expect(result.summary?.totalPatients).toBe(10)
     })
 

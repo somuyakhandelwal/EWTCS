@@ -1,26 +1,68 @@
 'use client'
 
-import React, { useEffect, useState } from 'react'
+import { useEffect, useState } from 'react'
 import { Card, CardContent, CardHeader, CardTitle } from '@/shared/components/ui/card'
 import { getDepartmentMetrics } from '@/features/bed-dashboard/actions/department-metrics'
 import { Loader2 } from 'lucide-react'
+import type {
+  DepartmentMetrics,
+  WorkflowAreaMetrics,
+} from '@/features/bed-dashboard/types/department-metrics'
 
-export interface DepartmentMetrics {
-  triage: {
-    occupiedBeds: number;
-    totalBeds: number;
-    avgTriageTime: number;
-  };
-  ot: {
-    inProgress: number;
-    completed: number;
-    utilizationRate: number;
-  };
-  cathLab: {
-    activeProcedures: number;
-    cagCount: number;
-    ptcaCount: number;
-  };
+function formatCycleMinutes(minutes: number, cycleCount: number): string {
+  if (cycleCount === 0) {
+    return 'No completed cycles yet'
+  }
+
+  return `${minutes} mins`
+}
+
+function WorkflowMetricsCard({
+  title,
+  occupancyLabel,
+  tatLabel,
+  cleaningLabel,
+  metrics,
+  className,
+  titleClassName,
+}: {
+  title: string
+  occupancyLabel: string
+  tatLabel: string
+  cleaningLabel: string
+  metrics: WorkflowAreaMetrics
+  className: string
+  titleClassName: string
+}) {
+  return (
+    <Card className={className}>
+      <CardHeader className="pb-2">
+        <CardTitle className={titleClassName}>{title}</CardTitle>
+      </CardHeader>
+      <CardContent>
+        <div className="space-y-1 text-sm">
+          <div className="flex justify-between gap-3">
+            <span className="text-muted-foreground">{occupancyLabel}</span>
+            <span className="font-semibold text-foreground">
+              {metrics.occupiedBeds} / {metrics.totalBeds}
+            </span>
+          </div>
+          <div className="flex justify-between gap-3">
+            <span className="text-muted-foreground">{tatLabel}</span>
+            <span className="text-right font-semibold text-foreground">
+              {formatCycleMinutes(metrics.averageTatMinutes, metrics.tatCycleCount)}
+            </span>
+          </div>
+          <div className="flex justify-between gap-3">
+            <span className="text-muted-foreground">{cleaningLabel}</span>
+            <span className="text-right font-semibold text-foreground">
+              {formatCycleMinutes(metrics.averageCleaningMinutes, metrics.cleaningCycleCount)}
+            </span>
+          </div>
+        </div>
+      </CardContent>
+    </Card>
+  )
 }
 
 export function DepartmentMetricsView() {
@@ -75,26 +117,29 @@ export function DepartmentMetricsView() {
   }
 
   return (
-    <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6" data-help-id="consolidated-metrics">
-      <Card className="bg-gradient-to-br from-blue-50 to-cyan-50 dark:from-blue-950 dark:to-cyan-950 border-blue-200 dark:border-blue-800">
-        <CardHeader className="pb-2">
-          <CardTitle className="text-lg text-blue-800 dark:text-blue-300">Triage Metrics</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="space-y-1 text-sm">
-            <div className="flex justify-between">
-              <span className="text-muted-foreground">Bed Occupancy:</span>
-              <span className="font-semibold text-foreground">
-                {metrics.triage.occupiedBeds} / {metrics.triage.totalBeds}
-              </span>
-            </div>
-            <div className="flex justify-between">
-              <span className="text-muted-foreground">Avg Triage TAT:</span>
-              <span className="font-semibold text-foreground">{metrics.triage.avgTriageTime} mins</span>
-            </div>
-          </div>
-        </CardContent>
-      </Card>
+    <div
+      className="mb-6 grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-4"
+      data-help-id="consolidated-metrics"
+    >
+      <WorkflowMetricsCard
+        title="Triage Area"
+        occupancyLabel="Bed occupancy:"
+        tatLabel="Whole triage TAT:"
+        cleaningLabel="Triage cleaning TAT:"
+        metrics={metrics.triage}
+        className="border-blue-200 bg-gradient-to-br from-blue-50 to-cyan-50 dark:border-blue-800 dark:from-blue-950 dark:to-cyan-950"
+        titleClassName="text-lg text-blue-800 dark:text-blue-300"
+      />
+
+      <WorkflowMetricsCard
+        title="Emergency Ward"
+        occupancyLabel="Bed occupancy:"
+        tatLabel="Whole ER TAT:"
+        cleaningLabel="ER cleaning TAT:"
+        metrics={metrics.emergency}
+        className="border-rose-200 bg-gradient-to-br from-rose-50 to-orange-50 dark:border-rose-800 dark:from-rose-950 dark:to-orange-950"
+        titleClassName="text-lg text-rose-800 dark:text-rose-300"
+      />
 
       <Card className="bg-gradient-to-br from-green-50 to-emerald-50 dark:from-green-950 dark:to-emerald-950 border-green-200 dark:border-green-800">
         <CardHeader className="pb-2">
@@ -102,15 +147,15 @@ export function DepartmentMetricsView() {
         </CardHeader>
         <CardContent>
           <div className="space-y-1 text-sm">
-            <div className="flex justify-between">
+            <div className="flex justify-between gap-3">
               <span className="text-muted-foreground">In Progress:</span>
               <span className="font-semibold text-foreground">{metrics.ot.inProgress}</span>
             </div>
-            <div className="flex justify-between">
+            <div className="flex justify-between gap-3">
               <span className="text-muted-foreground">Completed:</span>
               <span className="font-semibold text-foreground">{metrics.ot.completed}</span>
             </div>
-            <div className="flex justify-between">
+            <div className="flex justify-between gap-3">
               <span className="text-muted-foreground">Utilization Rate:</span>
               <span className="font-semibold text-foreground">{metrics.ot.utilizationRate}%</span>
             </div>
@@ -124,15 +169,15 @@ export function DepartmentMetricsView() {
         </CardHeader>
         <CardContent>
           <div className="space-y-1 text-sm">
-            <div className="flex justify-between">
+            <div className="flex justify-between gap-3">
               <span className="text-muted-foreground">Active Procedures:</span>
               <span className="font-semibold text-foreground">{metrics.cathLab.activeProcedures}</span>
             </div>
-            <div className="flex justify-between">
+            <div className="flex justify-between gap-3">
               <span className="text-muted-foreground">CAG Count:</span>
               <span className="font-semibold text-foreground">{metrics.cathLab.cagCount}</span>
             </div>
-            <div className="flex justify-between">
+            <div className="flex justify-between gap-3">
               <span className="text-muted-foreground">PTCA Count:</span>
               <span className="font-semibold text-foreground">{metrics.cathLab.ptcaCount}</span>
             </div>

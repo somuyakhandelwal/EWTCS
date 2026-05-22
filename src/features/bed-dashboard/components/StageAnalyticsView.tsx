@@ -26,7 +26,7 @@ interface StageAnalyticsViewProps {
 }
 
 export function StageAnalyticsView({
-  title = 'Stage Analytics',
+  title = 'Workflow Analytics by Area',
   className,
   readOnly = false,
 }: StageAnalyticsViewProps) {
@@ -106,7 +106,7 @@ export function StageAnalyticsView({
     <div className={cn('space-y-6', className)}>
       <StageAnalyticsHeader
         title={title}
-        description="Emergency Ward stage analytics with separate triage workflow TAT metrics"
+        description="ER stages, triage workflow states, and cleaning metrics reported separately"
         onExportCSV={handleExportCSV}
         exporting={exporting}
         readOnly={readOnly}

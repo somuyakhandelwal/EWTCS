@@ -74,9 +74,12 @@ export function TatAnalyticsView({ className, readOnly = false }: TatAnalyticsVi
     <div className={cn('space-y-6', className)}>
       <div className="flex items-center justify-between">
         <div>
-          <h2 className="text-2xl font-bold tracking-tight">Legacy Bed-to-Bed Turnaround</h2>
+          <h2 className="text-2xl font-bold tracking-tight">
+            Legacy Bed-to-Bed Turnaround (Historical)
+          </h2>
           <p className="text-sm text-muted-foreground mt-1">
-            Next-admission turnaround retained for historical reporting.
+            Next-admission turnaround is retained for historical reporting and is separate from
+            the ER and triage workflow TAT model.
           </p>
         </div>
         <div className="flex items-center gap-2">

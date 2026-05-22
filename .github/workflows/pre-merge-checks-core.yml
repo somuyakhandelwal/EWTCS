@@ -145,8 +145,8 @@ jobs:
           NEXT_PUBLIC_APP_URL=http://localhost:3000
           NODE_ENV=production
           EOF
-      - run: npx tsc --noEmit
       - run: npm run build
+      - run: npm run type-check
       - run: |
           if [ ! -d ".next" ]; then echo "❌ Build output directory (.next) not found"; exit 1; fi
 

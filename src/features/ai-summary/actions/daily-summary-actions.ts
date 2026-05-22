@@ -11,6 +11,10 @@ import { generateSummarySchema } from '../schemas/generate-summary'
 import { aggregateDailyStats } from '../lib/daily-aggregation-queries'
 import { generateAiSummary } from '../lib/ai-service'
 import {
+    normalizeWorkflowInsights,
+    normalizeWorkflowSummaryText,
+} from '../lib/workflow-summary-normalizer'
+import {
     refreshDailySummariesMaterializedView,
     upsertDailySummary,
     getDailySummaryByDate,
@@ -63,11 +67,11 @@ export async function generateDailySummary(
 
         // Generate AI narrative + insights (200-300 words, US-9.1, US-9.3)
         const { narrative, insights } = await generateAiSummary(summaryInput)
-        summaryInput.aiSummary = narrative
-        summaryInput.aiInsights = insights
+        summaryInput.aiSummary = normalizeWorkflowSummaryText(narrative)
+        summaryInput.aiInsights = normalizeWorkflowInsights(insights)
 
         // Post-generation validation: 200-300 word criterion (US-9.1)
-        const wordCount = narrative.split(/\s+/).filter(Boolean).length
+        const wordCount = (summaryInput.aiSummary ?? '').split(/\s+/).filter(Boolean).length
         summaryInput.metadata = {
             ...summaryInput.metadata,
             summaryWordCount: wordCount,

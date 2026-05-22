@@ -37,7 +37,7 @@ const RAW_ROW = {
     total_beds_used: '18',
     total_stage_updates: '72',
     generated_at: '2026-02-21T00:00:00.000Z',
-    ai_summary: 'Sample AI summary',
+    ai_summary: 'Sample AI summary with triage stage congestion',
     metadata: { mostDelayedStage: 'Discharge' },
     status: 'draft',
     ai_insights: [],
@@ -62,6 +62,7 @@ describe('upsertDailySummary', () => {
         expect(result.totalBedsUsed).toBe(18)
         expect(result.totalStageUpdates).toBe(72)
         expect(result.metadata.mostDelayedStage).toBe('Discharge')
+        expect(result.aiSummary).toBe('Sample AI summary with triage area congestion')
     })
 
     it('throws when db returns no row', async () => {
@@ -100,6 +101,7 @@ describe('getDailySummaryByDate', () => {
         expect(result).not.toBeNull()
         expect(result?.summaryDate).toBe('2026-02-20')
         expect(result?.totalPatients).toBe(15)
+        expect(result?.aiSummary).toBe('Sample AI summary with triage area congestion')
     })
 
     it('returns null when no row exists', async () => {

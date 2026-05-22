@@ -43,8 +43,19 @@
 - The AI summary auto-generates every night at **midnight IST**.
 - To trigger manually: Click **"Generate Today's Summary"** on the Admin page.
 - View recent summaries in the **Daily Summary History** panel.
+- Verify the summary cards show **Avg ER TAT** and **Avg Triage TAT** separately; do not treat triage as an ER stage.
 - Summaries require Supervisor approval before reaching Management.
 - If `GEMINI_API_KEY` is not set, a placeholder report is generated instead.
+
+---
+
+## Module 4A: Workflow Metrics Oversight
+### Reading Split ER and Triage Metrics
+- The Admin and Supervisor dashboards show compact workflow cards for **Triage Area** and **Emergency Ward**.
+- **Whole ER TAT** runs from ER bed assignment to ER bed entering Cleaning.
+- **Whole Triage TAT** runs from triage bed assignment to triage bed entering cleaning.
+- **Cleaning TAT** is tracked separately for ER and triage and should not be added into whole workflow TAT.
+- When reviewing `/analytics`, treat **Legacy Bed-to-Bed Turnaround (Historical)** as a historical metric only.
 
 ---
 

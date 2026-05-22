@@ -13,6 +13,10 @@ interface DailySummaryCardProps {
     summary: DailySummary
 }
 
+function formatMinutes(value: number) {
+    return `${value} min`
+}
+
 function StatItem({ label, value }: { label: string; value: string | number }) {
     return (
         <div className="flex flex-col gap-0.5">
@@ -43,6 +47,9 @@ export function DailySummaryCard({ summary }: DailySummaryCardProps) {
     })
     const status = summary.status ?? 'draft'
     const insights = summary.aiInsights ?? []
+    const hasSplitWorkflowMetrics =
+        typeof summary.metadata?.avgErTatMinutes === 'number' ||
+        typeof summary.metadata?.avgTriageTatMinutes === 'number'
 
     return (
         <div className="rounded-xl border bg-card p-4 shadow-sm space-y-4">
@@ -61,17 +68,23 @@ export function DailySummaryCard({ summary }: DailySummaryCardProps) {
             <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-6">
                 <StatItem label="Patients" value={summary.totalPatients} />
                 <StatItem label="Beds Used" value={summary.totalBedsUsed} />
-                <StatItem label="Avg Workflow TAT" value={`${summary.avgTatMinutes} min`} />
                 {typeof summary.metadata?.avgErTatMinutes === 'number' && (
-                    <StatItem label="Avg ER TAT" value={`${summary.metadata.avgErTatMinutes} min`} />
+                    <StatItem
+                        label="Avg ER TAT"
+                        value={formatMinutes(summary.metadata.avgErTatMinutes)}
+                    />
                 )}
                 {typeof summary.metadata?.avgTriageTatMinutes === 'number' && (
                     <StatItem
                         label="Avg Triage TAT"
-                        value={`${summary.metadata.avgTriageTatMinutes} min`}
+                        value={formatMinutes(summary.metadata.avgTriageTatMinutes)}
                     />
                 )}
-                <StatItem label="Avg Stage Time" value={`${summary.avgStageTimeMinutes} min`} />
+                <StatItem label="Avg Stage Time" value={formatMinutes(summary.avgStageTimeMinutes)} />
+                <StatItem
+                    label={hasSplitWorkflowMetrics ? 'Combined Workflow TAT' : 'Avg Workflow TAT'}
+                    value={formatMinutes(summary.avgTatMinutes)}
+                />
             </div>
 
             {summary.aiSummary && (
