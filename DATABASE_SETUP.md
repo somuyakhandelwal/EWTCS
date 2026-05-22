@@ -184,6 +184,8 @@ This PR introduces the following migration files; ensure they are reviewed and, 
 - migrations/062_us25_2_er_stage_repair.sql
 - migrations/065_create_triage_decisions.sql
 - migrations/1775303000000_create_triage_workflow.sql
+- migrations/1775303000001_update_daily_summary_workflow_tat.sql
+- migrations/1775303000002_add_triage_tat_indexes.sql
 
 If these migrations alter table structures or seed critical data, update the "Detailed Setup" and any operational runbooks (docs/ADMIN_HANDBOOK.md) with steps required for deployment and rollback.
 
@@ -192,6 +194,17 @@ If these migrations alter table structures or seed critical data, update the "De
 - `triage_bed_statuses` for current triage bed state
 - `triage_state_logs` for immutable triage state history
 - six active physical triage beds: `TRIAGE-01` through `TRIAGE-06`
+
+`1775303000001_update_daily_summary_workflow_tat.sql` aligns `daily_summaries_mv` with EPIC 25 workflow TAT:
+- ER TAT is ER bed assignment (`Empty` to an active ER stage) through ER bed entering `Cleaning`
+- Triage TAT is triage bed assignment (`initial_treatment`) through triage bed entering `cleaning`
+- Cleaning TAT is not included in whole ER or triage TAT
+- `patient_admissions.total_duration_ms` remains the source for LOS/stay-duration reports, not workflow TAT
+
+`1775303000002_add_triage_tat_indexes.sql` adds triage analytics indexes:
+- `idx_triage_logs_bed_time`
+- `idx_triage_logs_to_state_time`
+- `idx_triage_logs_from_state_to_state_time`
 
 `065_create_triage_decisions.sql` adds first-class persistence for triage decision outcomes:
 - `triage_decisions` stores one row per recorded disposition from triage
