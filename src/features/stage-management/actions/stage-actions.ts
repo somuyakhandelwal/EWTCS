@@ -7,7 +7,6 @@ import { logAudit } from '@/shared/lib/audit';
 import { getStageAuditContext, getStageAuditMetadata } from './stage-audit-context';
 import { SETTINGS_CACHE_TAG } from '@/shared/lib/query-cache';
 
-// Fetch all active stages ordered by display order, including per-stage threshold (US-6.3)
 export async function getStages(): Promise<Stage[]> {
   const result = await query(
     `SELECT s.*, sdt.threshold_minutes
@@ -19,7 +18,6 @@ export async function getStages(): Promise<Stage[]> {
   return result.rows as Stage[];
 }
 
-// Create a new stage
 export async function createStage(input: CreateStageInput) {
   const actor = await getStageAuditContext();
 
@@ -54,7 +52,6 @@ export async function createStage(input: CreateStageInput) {
   revalidateTag(SETTINGS_CACHE_TAG);
 }
 
-// Update an existing stage
 export async function updateStage(input: UpdateStageInput) {
   const actor = await getStageAuditContext();
 
@@ -120,7 +117,6 @@ export async function updateStage(input: UpdateStageInput) {
   revalidateTag(SETTINGS_CACHE_TAG);
 }
 
-// Delete a stage (only non-default stages can be deleted)
 export async function deleteStage(id: string) {
   const actor = await getStageAuditContext();
 
@@ -159,7 +155,6 @@ export async function deleteStage(id: string) {
   revalidateTag(SETTINGS_CACHE_TAG);
 }
 
-// Reorder stages
 export async function reorderStages(orderedIds: string[]) {
   const actor = await getStageAuditContext();
 

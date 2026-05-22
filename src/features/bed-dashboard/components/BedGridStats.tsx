@@ -64,10 +64,10 @@ export const BedGridStats = memo(function BedGridStats({
           {cleaningCount}
         </p>
       </div>
-      {/* US-2.4: Average turnaround time */}
+      {/* US-2.4: Average cleaning TAT */}
       {avgTatMs !== null && avgTatMs > 0 && (
         <div className="col-span-2 sm:col-span-1">
-          <p className="text-xs text-muted-foreground uppercase">Avg TAT (24h)</p>
+          <p className="text-xs text-muted-foreground uppercase">Avg Cleaning TAT (24h)</p>
           <p className="text-2xl font-bold text-foreground">
             {formatElapsedTime(avgTatMs)}
           </p>

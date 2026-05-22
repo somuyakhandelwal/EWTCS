@@ -36,6 +36,16 @@ All decision outcomes are recorded in triage state logs and audit logs.
 ER-only stages such as `initial investigation`, `drugs/test`, `observation`,
 and `discharge process` must not appear in triage.
 
+## Workflow TAT Definitions
+
+- Triage TAT = triage bed assignment (`initial_treatment`) to the triage bed entering `cleaning`.
+- ER TAT = ER bed assignment (`Empty` to an active ER stage) to the ER bed entering `Cleaning`.
+- Cleaning TAT = `cleaning` start to `empty`.
+
+Whole triage and ER TAT stop when the bed enters cleaning. Cleaning duration is
+reported separately. The legacy bed-to-bed turnaround view is historical and is
+not the EPIC 25 workflow TAT metric.
+
 ## Database Notes
 
 - `triage_bed_statuses` stores the current triage state per triage bed.

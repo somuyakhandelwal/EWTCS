@@ -9,6 +9,7 @@ import { logger } from '@/shared/config/logger'
 import {
   getStageTransitions,
   getStageDurationStats,
+  getTriageStateDurationStats,
   type StageTransitionRecord,
   type StageDurationStats,
 } from '../lib/stage-analytics'
@@ -82,6 +83,35 @@ export async function fetchStageDurationStats(options?: {
   } catch (error) {
     const message = error instanceof Error ? error.message : 'Failed to fetch stage statistics'
     logger.error('Failed to fetch stage duration stats', error as Error)
+    return { success: false, error: message }
+  }
+}
+
+/**
+ * Fetch triage state duration statistics.
+ */
+export async function fetchTriageStateDurationStats(options?: {
+  startDate?: Date
+  endDate?: Date
+}): Promise<{
+  success: boolean
+  data?: StageDurationStats[]
+  error?: string
+}> {
+  try {
+    const session = await requireRole(['supervisor', 'admin', 'auditor'])
+
+    const stats = await getTriageStateDurationStats(options?.startDate, options?.endDate)
+
+    logger.info('Fetched triage state duration statistics', {
+      userId: session.userId,
+      stageCount: stats.length,
+    })
+
+    return { success: true, data: stats }
+  } catch (error) {
+    const message = error instanceof Error ? error.message : 'Failed to fetch triage statistics'
+    logger.error('Failed to fetch triage duration stats', error as Error)
     return { success: false, error: message }
   }
 }

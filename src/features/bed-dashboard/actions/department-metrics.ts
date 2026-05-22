@@ -5,9 +5,10 @@ import { logger } from '@/shared/config/logger'
 
 export async function getDepartmentMetrics() {
   try {
-    // 1. Triage Area metrics: occupied beds in the TRIAGE ward and recent intake avg time.
+    // 1. Triage Area metrics: occupied beds in the TRIAGE ward and average
+    // completed triage TAT for the last 7 days.
     // NOTE: Triage is a SEPARATE WARD (code='TRIAGE'), NOT an ER stage (U.S 25.2).
-    // This query counts beds by ward_id, not by stage name.
+    // Whole triage TAT ends when the triage bed enters cleaning.
     const intakeQuery = query(`
       WITH triage_ward AS (
         SELECT id
@@ -21,27 +22,53 @@ export async function getDepartmentMetrics() {
         JOIN triage_ward tw ON b.ward_id = tw.id
         WHERE b.is_active = true
       ),
-      recent_intake AS (
-        SELECT DISTINCT bed_id
-        FROM er_intake
-        WHERE bed_id IS NOT NULL
-          AND registered_at >= NOW() - INTERVAL '7 days'
+      triage_start_events AS (
+        SELECT
+          tsl.bed_id,
+          tsl.transition_time AS started_at
+        FROM triage_state_logs tsl
+        JOIN triage_beds tb ON tb.id = tsl.bed_id
+        WHERE tsl.to_state = 'initial_treatment'
       ),
-      triage_durations AS (
-        SELECT bsl.bed_id, bsl.duration_in_previous_stage_ms
-        FROM bed_stage_logs bsl
-        JOIN triage_beds tb ON bsl.bed_id = tb.id
-        WHERE bsl.duration_in_previous_stage_ms IS NOT NULL
+      triage_cleaning_events AS (
+        SELECT
+          tsl.bed_id,
+          tsl.transition_time AS cleaning_at,
+          LAG(tsl.transition_time) OVER (
+            PARTITION BY tsl.bed_id
+            ORDER BY tsl.transition_time ASC
+          ) AS previous_cleaning_at
+        FROM triage_state_logs tsl
+        JOIN triage_beds tb ON tb.id = tsl.bed_id
+        WHERE tsl.to_state = 'cleaning'
+          AND tsl.transition_time >= NOW() - INTERVAL '7 days'
+      ),
+      triage_cycles AS (
+        SELECT
+          ce.bed_id,
+          EXTRACT(EPOCH FROM (ce.cleaning_at - se.started_at)) * 1000 AS duration_ms
+        FROM triage_cleaning_events ce
+        JOIN LATERAL (
+          SELECT s.started_at
+          FROM triage_start_events s
+          WHERE s.bed_id = ce.bed_id
+            AND s.started_at < ce.cleaning_at
+            AND (
+              ce.previous_cleaning_at IS NULL
+              OR s.started_at > ce.previous_cleaning_at
+            )
+          ORDER BY s.started_at DESC
+          LIMIT 1
+        ) se ON true
       )
       SELECT
         (SELECT COUNT(*) FROM triage_beds WHERE is_occupied = true) AS occupied_beds,
         (SELECT COUNT(*) FROM triage_beds) AS total_beds,
         COALESCE(
-          ROUND(AVG(td.duration_in_previous_stage_ms) / 60000.0, 1),
+          ROUND(AVG(tc.duration_ms) / 60000.0, 1),
           0
         ) AS avg_triage_time
-      FROM triage_durations td
-      JOIN recent_intake ri ON ri.bed_id = td.bed_id
+      FROM triage_cycles tc
     `)
     
     // 2. OT metrics: in-progress/completed surgeries and room utilization.

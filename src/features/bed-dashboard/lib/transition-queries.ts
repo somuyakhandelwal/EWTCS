@@ -60,6 +60,8 @@ export async function getStageTransitions(
         l.changed_by_username AS "changedByUsername",
         l.notes
       FROM logs_with_duration l
+      JOIN beds b ON b.id = l.bed_id
+      JOIN wards w ON w.id = b.ward_id AND w.code = 'ER'
       WHERE 1=1
     `
 
@@ -112,6 +114,7 @@ export async function getBedStageTimeline(bedId: string): Promise<BedStageTimeli
         b.id as "bedId",
         b.patient_start_time as "patientStartTime"
       FROM beds b
+      JOIN wards w ON w.id = b.ward_id AND w.code = 'ER'
       WHERE b.id = $1
       `,
       [bedId]

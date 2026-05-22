@@ -14,6 +14,8 @@ export interface RawDelayCount {
 
 export interface RawAvgTat {
     avgTatMs: string | null
+    avgErTatMs?: string | null
+    avgTriageTatMs?: string | null
 }
 
 export interface RawMostDelayedStage {

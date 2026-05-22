@@ -3,7 +3,7 @@
 // Epic: EPIC 3 - Time Tracking & Stage Logging
 
 /**
- * Stage transition record with calculated duration
+ * Stage transition record with calculated duration.
  */
 export interface StageTransitionRecord {
   id: string
@@ -20,7 +20,7 @@ export interface StageTransitionRecord {
 }
 
 /**
- * Stage duration statistics
+ * Stage or state duration statistics.
  */
 export interface StageDurationStats {
   stageName: string
@@ -35,7 +35,7 @@ export interface StageDurationStats {
 }
 
 /**
- * Bed stage timeline
+ * Bed stage timeline.
  */
 export interface BedStageTimeline {
   bedNumber: string
@@ -47,24 +47,59 @@ export interface BedStageTimeline {
 }
 
 /**
- * Attribution stats for a single delay category (US-3.4)
+ * Attribution stats for a single delay category (US-3.4).
  */
 export interface DelayAttributionStats {
   attribution: import('./delay-attribution-config').DelayAttribution
   label: string
   totalDelayedMs: number
   incidentCount: number
-  /** 0–100, calculated from the total across all categories */
+  /** 0–100, calculated from the total across all categories. */
   percentage: number
 }
 
-// Re-export query functions from separate modules
+/**
+ * Aggregate duration stats used for workflow TAT cards.
+ */
+export interface DurationMetricSummary {
+  totalCycles: number
+  averageDurationMs: number
+  minDurationMs: number | null
+  maxDurationMs: number | null
+  medianDurationMs: number | null
+  p90DurationMs: number | null
+}
+
+/**
+ * Single completed workflow or cleaning cycle.
+ */
+export interface WorkflowTatRecord {
+  bedId: string
+  bedNumber: string
+  startedAt: Date
+  completedAt: Date
+  durationMs: number
+}
+
+// Re-export query functions from separate modules.
 export { getStageTransitions, getBedStageTimeline } from './transition-queries'
 export { getStageDurationStats } from './duration-stats-queries'
+export { getTriageStateDurationStats } from './triage-duration-stats-queries'
 export { getBedsSortedByCurrentWaitTime, getBedAnalyticsSummary } from './wait-time-queries'
 export { getDelaysByAttribution } from './delay-attribution-queries'
 export type { DelayAttributionRow } from './delay-attribution-queries'
 export { type DelayAttribution, ATTRIBUTION_LABELS, ATTRIBUTION_COLORS } from './delay-attribution-config'
 export { getTATSummary, getTATRecords } from './tat-queries'
 export type { TATSummary, TATRecord } from './tat-queries'
-
+export {
+  getErTatRecords,
+  getErTatSummary,
+  getErCleaningTatRecords,
+  getErCleaningTatSummary,
+} from './er-tat-queries'
+export {
+  getTriageTatRecords,
+  getTriageTatSummary,
+  getTriageCleaningTatRecords,
+  getTriageCleaningTatSummary,
+} from './triage-tat-queries'

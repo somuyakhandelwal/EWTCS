@@ -1,18 +1,29 @@
-// useAnalyticsData — Custom hook for StageAnalyticsView data loading
-// Epic 3: Time Tracking & Stage Logging
+// useAnalyticsData - Custom hook for StageAnalyticsView data loading
 // Extracted from StageAnalyticsView.tsx to stay under the 200-line limit.
 
 import { useState, useCallback, useEffect } from 'react'
 import {
   fetchStageDurationStats,
+  fetchTriageStateDurationStats,
+} from '../actions/analytics-stage-actions'
+import {
   fetchLongestWaitingBeds,
   fetchAnalyticsSummary,
   fetchBedStageTimeline,
 } from '../actions/analytics-actions'
 import { fetchDelayAttributionStats } from '../actions/delay-attribution-actions'
-import { fetchTATSummary } from '../actions/tat-actions'
-import type { StageDurationStats, BedStageTimeline, DelayAttributionStats } from '../lib/stage-analytics'
-import type { TATSummary } from '../lib/tat-queries'
+import {
+  fetchErTatSummary,
+  fetchErCleaningTatSummary,
+  fetchTriageTatSummary,
+  fetchTriageCleaningTatSummary,
+} from '../actions/tat-actions'
+import type {
+  StageDurationStats,
+  BedStageTimeline,
+  DelayAttributionStats,
+  DurationMetricSummary,
+} from '../lib/stage-analytics'
 import { logger } from '@/shared/config/logger'
 
 type WaitingBed = {
@@ -33,11 +44,15 @@ type SummaryData = {
 }
 
 export interface AnalyticsData {
-  stageDurationStats: StageDurationStats[] | null
+  erStageDurationStats: StageDurationStats[] | null
+  triageStateDurationStats: StageDurationStats[] | null
   longestWaitingBeds: WaitingBed[]
   summary: SummaryData | null
   attributionStats: DelayAttributionStats[] | null
-  tatSummary: TATSummary | null
+  erTatSummary: DurationMetricSummary | null
+  triageTatSummary: DurationMetricSummary | null
+  erCleaningTatSummary: DurationMetricSummary | null
+  triageCleaningTatSummary: DurationMetricSummary | null
   bedTimeline: BedStageTimeline | null
   selectedBedId: string | null
   loading: boolean
@@ -47,11 +62,15 @@ export interface AnalyticsData {
 }
 
 export function useAnalyticsData(): AnalyticsData {
-  const [stageDurationStats, setStageDurationStats] = useState<StageDurationStats[] | null>(null)
+  const [erStageDurationStats, setErStageDurationStats] = useState<StageDurationStats[] | null>(null)
+  const [triageStateDurationStats, setTriageStateDurationStats] = useState<StageDurationStats[] | null>(null)
   const [longestWaitingBeds, setLongestWaitingBeds] = useState<WaitingBed[]>([])
   const [summary, setSummary] = useState<SummaryData | null>(null)
   const [attributionStats, setAttributionStats] = useState<DelayAttributionStats[] | null>(null)
-  const [tatSummary, setTatSummary] = useState<TATSummary | null>(null)
+  const [erTatSummary, setErTatSummary] = useState<DurationMetricSummary | null>(null)
+  const [triageTatSummary, setTriageTatSummary] = useState<DurationMetricSummary | null>(null)
+  const [erCleaningTatSummary, setErCleaningTatSummary] = useState<DurationMetricSummary | null>(null)
+  const [triageCleaningTatSummary, setTriageCleaningTatSummary] = useState<DurationMetricSummary | null>(null)
   const [bedTimeline, setBedTimeline] = useState<BedStageTimeline | null>(null)
   const [selectedBedId, setSelectedBedId] = useState<string | null>(null)
   const [loading, setLoading] = useState(true)
@@ -61,20 +80,35 @@ export function useAnalyticsData(): AnalyticsData {
     setLoading(true)
     setError(null)
     try {
-      const [statsResult, waitingResult, summaryResult, attributionResult, tatResult] =
-        await Promise.all([
-          fetchStageDurationStats(),
-          fetchLongestWaitingBeds(10),
-          fetchAnalyticsSummary(),
-          fetchDelayAttributionStats(),
-          fetchTATSummary(),
-        ])
+      const [
+        erStatsResult,
+        triageStatsResult,
+        waitingResult,
+        summaryResult,
+        attributionResult,
+        erTatResult,
+        triageTatResult,
+        erCleaningResult,
+        triageCleaningResult,
+      ] = await Promise.all([
+        fetchStageDurationStats(),
+        fetchTriageStateDurationStats(),
+        fetchLongestWaitingBeds(10),
+        fetchAnalyticsSummary(),
+        fetchDelayAttributionStats(),
+        fetchErTatSummary(),
+        fetchTriageTatSummary(),
+        fetchErCleaningTatSummary(),
+        fetchTriageCleaningTatSummary(),
+      ])
 
-      if (!statsResult.success) throw new Error(statsResult.error)
+      if (!erStatsResult.success) throw new Error(erStatsResult.error)
+      if (!triageStatsResult.success) throw new Error(triageStatsResult.error)
       if (!waitingResult.success) throw new Error(waitingResult.error)
       if (!summaryResult.success) throw new Error(summaryResult.error)
 
-      setStageDurationStats(statsResult.data ?? [])
+      setErStageDurationStats(erStatsResult.data ?? [])
+      setTriageStateDurationStats(triageStatsResult.data ?? [])
       setLongestWaitingBeds(
         (waitingResult.data ?? []).map((bed) => ({
           ...bed,
@@ -83,11 +117,16 @@ export function useAnalyticsData(): AnalyticsData {
       )
       setSummary(summaryResult.data ?? null)
       setAttributionStats(attributionResult.success ? (attributionResult.data ?? null) : null)
-      setTatSummary(tatResult.success ? (tatResult.data ?? null) : null)
-    } catch (err) {
-      const message = err instanceof Error ? err.message : 'Failed to load analytics'
+      setErTatSummary(erTatResult.success ? (erTatResult.data ?? null) : null)
+      setTriageTatSummary(triageTatResult.success ? (triageTatResult.data ?? null) : null)
+      setErCleaningTatSummary(erCleaningResult.success ? (erCleaningResult.data ?? null) : null)
+      setTriageCleaningTatSummary(
+        triageCleaningResult.success ? (triageCleaningResult.data ?? null) : null
+      )
+    } catch (error) {
+      const message = error instanceof Error ? error.message : 'Failed to load analytics'
       setError(message)
-      logger.error('Failed to load analytics', err as Error)
+      logger.error('Failed to load analytics', error as Error)
     } finally {
       setLoading(false)
     }
@@ -102,24 +141,30 @@ export function useAnalyticsData(): AnalyticsData {
       setBedTimeline(null)
       return
     }
+
     const loadTimeline = async () => {
       try {
         const result = await fetchBedStageTimeline(selectedBedId)
         if (!result.success) throw new Error(result.error)
         setBedTimeline(result.data ?? null)
-      } catch (err) {
-        logger.error('Failed to load bed timeline', err as Error)
+      } catch (error) {
+        logger.error('Failed to load bed timeline', error as Error)
       }
     }
+
     void loadTimeline()
   }, [selectedBedId])
 
   return {
-    stageDurationStats,
+    erStageDurationStats,
+    triageStateDurationStats,
     longestWaitingBeds,
     summary,
     attributionStats,
-    tatSummary,
+    erTatSummary,
+    triageTatSummary,
+    erCleaningTatSummary,
+    triageCleaningTatSummary,
     bedTimeline,
     selectedBedId,
     loading,

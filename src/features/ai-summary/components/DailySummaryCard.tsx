@@ -58,10 +58,19 @@ export function DailySummaryCard({ summary }: DailySummaryCardProps) {
                 </div>
             </div>
 
-            <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+            <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-6">
                 <StatItem label="Patients" value={summary.totalPatients} />
                 <StatItem label="Beds Used" value={summary.totalBedsUsed} />
-                <StatItem label="Avg TAT" value={`${summary.avgTatMinutes} min`} />
+                <StatItem label="Avg Workflow TAT" value={`${summary.avgTatMinutes} min`} />
+                {typeof summary.metadata?.avgErTatMinutes === 'number' && (
+                    <StatItem label="Avg ER TAT" value={`${summary.metadata.avgErTatMinutes} min`} />
+                )}
+                {typeof summary.metadata?.avgTriageTatMinutes === 'number' && (
+                    <StatItem
+                        label="Avg Triage TAT"
+                        value={`${summary.metadata.avgTriageTatMinutes} min`}
+                    />
+                )}
                 <StatItem label="Avg Stage Time" value={`${summary.avgStageTimeMinutes} min`} />
             </div>
 

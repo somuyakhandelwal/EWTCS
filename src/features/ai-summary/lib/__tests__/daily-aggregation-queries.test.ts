@@ -1,7 +1,5 @@
-// Tests — EPIC 9: daily-aggregation-queries.ts
-// Mocks the db `query` helper and tests the aggregateDailyStats composer.
-
-import { describe, it, expect, vi, beforeEach } from 'vitest'
+import { readFileSync } from 'node:fs'
+import { beforeEach, describe, expect, it, vi } from 'vitest'
 
 vi.mock('@/shared/lib/db', () => ({ query: vi.fn() }))
 vi.mock('@/shared/config/logger', () => ({
@@ -9,13 +7,8 @@ vi.mock('@/shared/config/logger', () => ({
 }))
 
 import { query } from '@/shared/lib/db'
-import {
-    aggregateDailyStats,
-    verifyAggregateMatchesMaterializedView,
-} from '../daily-aggregation-queries'
+import { aggregateDailyStats, verifyAggregateMatchesMaterializedView } from '../daily-aggregation-queries'
 
-// Helper: build the 5 successive mock query results expected by aggregateDailyStats.
-// Order matches Promise.all in the source: patients, avgStageTime, delays, tat, mostDelayedStage.
 function mockQuerySequence(
     patients: object,
     avgStage: object,
@@ -37,9 +30,9 @@ describe('aggregateDailyStats', () => {
     it('maps a normal day correctly', async () => {
         mockQuerySequence(
             { totalPatients: '15', totalBedsUsed: '18', totalStageUpdates: '72' },
-            { avgStageTimeMs: '300000' },   // 5 min
+            { avgStageTimeMs: '300000' },
             { delayCount: '4' },
-            { avgTatMs: '1800000' },        // 30 min
+            { avgTatMs: '1800000', avgErTatMs: '2100000', avgTriageTatMs: '900000' },
             { stageName: 'Discharge' }
         )
 
@@ -53,6 +46,8 @@ describe('aggregateDailyStats', () => {
         expect(result.delayCount).toBe(4)
         expect(result.avgTatMinutes).toBe(30)
         expect(result.metadata.mostDelayedStage).toBe('Discharge')
+        expect(result.metadata.avgErTatMinutes).toBe(35)
+        expect(result.metadata.avgTriageTatMinutes).toBe(15)
     })
 
     it('returns 0 for avgStageTimeMinutes when no stage-time rows', async () => {
@@ -65,7 +60,6 @@ describe('aggregateDailyStats', () => {
         )
 
         const result = await aggregateDailyStats('2026-02-20')
-
         expect(result.avgStageTimeMinutes).toBe(0)
         expect(result.avgTatMinutes).toBe(0)
     })
@@ -89,7 +83,7 @@ describe('aggregateDailyStats', () => {
             { avgStageTimeMs: '120000' },
             { delayCount: '0' },
             { avgTatMs: '240000' },
-            {}           // empty row — stageName is undefined
+            {}
         )
 
         const result = await aggregateDailyStats('2026-02-20')
@@ -97,7 +91,6 @@ describe('aggregateDailyStats', () => {
     })
 
     it('converts milliseconds to rounded minutes', async () => {
-        // 90 001 ms → 1.50 min (rounded 2dp)
         mockQuerySequence(
             { totalPatients: '1', totalBedsUsed: '1', totalStageUpdates: '1' },
             { avgStageTimeMs: '90001' },
@@ -114,6 +107,33 @@ describe('aggregateDailyStats', () => {
     it('propagates db errors', async () => {
         vi.mocked(query).mockRejectedValueOnce(new Error('connection refused'))
         await expect(aggregateDailyStats('2026-02-20')).rejects.toThrow('connection refused')
+    })
+
+    it('uses workflow TAT SQL instead of patient stay duration for daily TAT', async () => {
+        mockQuerySequence(
+            { totalPatients: '1', totalBedsUsed: '1', totalStageUpdates: '3' },
+            { avgStageTimeMs: '60000' },
+            { delayCount: '0' },
+            { avgTatMs: '600000', avgErTatMs: '600000', avgTriageTatMs: null },
+            {}
+        )
+
+        await aggregateDailyStats('2026-02-20')
+
+        const tatSql = String(vi.mocked(query).mock.calls[3]?.[0] ?? '')
+        expect(tatSql).toContain('er_start_events')
+        expect(tatSql).toContain("LOWER(fs.name) = 'empty'")
+        expect(tatSql).toContain("LOWER(ts.name) = 'cleaning'")
+        expect(tatSql).toContain("LOWER(ts.name) NOT IN ('empty', 'cleaning', 'triage')")
+        expect(tatSql).not.toContain('pa.total_duration_ms')
+    })
+
+    it('keeps materialized daily summary ER TAT off patient_admissions duration', () => {
+        const sql = readFileSync('migrations/1775303000001_update_daily_summary_workflow_tat.sql', 'utf8')
+
+        expect(sql).toContain('er_start_events AS')
+        expect(sql).toContain('er_cleaning_events AS')
+        expect(sql).not.toContain('pa.total_duration_ms')
     })
 })
 

@@ -63,7 +63,7 @@ export async function createWard(formData: FormData): Promise<{ success: boolean
         })
 
         revalidatePath('/admin/wards')
-    revalidateTag(SETTINGS_CACHE_TAG)
+        revalidateTag(SETTINGS_CACHE_TAG)
         return { success: true }
     } catch (error) {
         if (error instanceof Error && error.name === 'ZodError') {

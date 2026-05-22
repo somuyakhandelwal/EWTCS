@@ -21,7 +21,7 @@ import { DataRetentionContainer } from '@/features/data-retention/components/Dat
 const FULL_REPORT_SECTIONS: PdfSection[] = [
   { exportId: 'export-stage-analytics', title: 'Stage Analytics' },
   { exportId: 'export-auditor-history', title: 'Bed Stage Change History' },
-  { exportId: 'export-tat', title: 'Full-Cycle Bed Turnaround' },
+  { exportId: 'export-tat', title: 'Legacy Bed-to-Bed Turnaround' },
   { exportId: 'export-los', title: 'Average Length of Stay' },
   { exportId: 'export-patients', title: 'Total Patients Treated' },
   { exportId: 'export-delayed', title: 'Delayed Patients %' },

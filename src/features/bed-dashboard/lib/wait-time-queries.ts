@@ -42,6 +42,7 @@ export async function getBedsSortedByCurrentWaitTime(limit: number = 10): Promis
                                                                                AS "waitTimeMs",
         last_log.last_transition                                               AS "transitionTime"
       FROM beds b
+      JOIN wards w ON w.id = b.ward_id AND w.code = 'ER'
       LEFT JOIN stages s         ON b.current_stage_id = s.id
       LEFT JOIN LATERAL (
         SELECT MAX(transition_time) AS last_transition
@@ -104,6 +105,7 @@ async function getBedAnalyticsSummaryImpl(): Promise<{
         COALESCE(AVG(bs.transition_count::float), 0)                                               AS "averageTransitionsPerPatient",
         COUNT(DISTINCT CASE WHEN b.patient_start_time IS NOT NULL THEN b.id END)::bigint           AS "totalPatientsProcessed"
       FROM beds b
+      JOIN wards w ON w.id = b.ward_id AND w.code = 'ER'
       LEFT JOIN bed_stats bs ON b.id = bs.bed_id
       WHERE b.is_active = true
       `

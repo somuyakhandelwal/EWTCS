@@ -11,12 +11,20 @@ import type { StageDurationStats } from '../lib/stage-analytics'
 
 interface StageAnalyticsDurationAnalysisProps {
   stats: StageDurationStats[] | null
+  title?: string
+  description?: string
+  emptyMessage?: string
 }
 
-export function StageAnalyticsDurationAnalysis({ stats }: StageAnalyticsDurationAnalysisProps) {
+export function StageAnalyticsDurationAnalysis({
+  stats,
+  title = 'Stage Duration Analysis',
+  description = 'Time spent in each stage (milliseconds)',
+  emptyMessage = 'No stage data available',
+}: StageAnalyticsDurationAnalysisProps) {
   const renderStats = () => {
     if (!stats || stats.length === 0) {
-      return <p className="text-sm text-zinc-600">No stage data available</p>
+      return <p className="text-sm text-zinc-600">{emptyMessage}</p>
     }
 
     return stats.map((stat) => (
@@ -73,9 +81,9 @@ export function StageAnalyticsDurationAnalysis({ stats }: StageAnalyticsDuration
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
           <Clock className="h-4 w-4" />
-          Stage Duration Analysis
+          {title}
         </CardTitle>
-        <CardDescription>Time spent in each stage (milliseconds)</CardDescription>
+        <CardDescription>{description}</CardDescription>
       </CardHeader>
       <CardContent>
         <div className="space-y-4">{renderStats()}</div>

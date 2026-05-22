@@ -89,7 +89,7 @@ export function DepartmentMetricsView() {
               </span>
             </div>
             <div className="flex justify-between">
-              <span className="text-muted-foreground">Avg Triage Time:</span>
+              <span className="text-muted-foreground">Avg Triage TAT:</span>
               <span className="font-semibold text-foreground">{metrics.triage.avgTriageTime} mins</span>
             </div>
           </div>

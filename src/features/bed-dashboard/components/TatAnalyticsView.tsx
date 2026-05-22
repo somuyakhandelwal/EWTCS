@@ -1,6 +1,6 @@
-// Full-Cycle TAT Analytics View Component
+// Legacy bed-to-bed turnaround analytics view.
 // US-3.4: Track Bed Turnaround Time (Discharge → Next Admission)
-// Displays full-cycle turnaround time analytics for supervisor/admin
+// Kept for historical reporting; EPIC 25 workflow TAT lives in StageAnalyticsTAT.
 
 'use client'
 
@@ -74,9 +74,9 @@ export function TatAnalyticsView({ className, readOnly = false }: TatAnalyticsVi
     <div className={cn('space-y-6', className)}>
       <div className="flex items-center justify-between">
         <div>
-          <h2 className="text-2xl font-bold tracking-tight">Full-Cycle Bed Turnaround</h2>
+          <h2 className="text-2xl font-bold tracking-tight">Legacy Bed-to-Bed Turnaround</h2>
           <p className="text-sm text-muted-foreground mt-1">
-            Discharge → Cleaning → Empty → Idle Wait → Next Admission
+            Next-admission turnaround retained for historical reporting.
           </p>
         </div>
         <div className="flex items-center gap-2">

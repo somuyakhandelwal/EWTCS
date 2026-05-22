@@ -1,9 +1,7 @@
 'use client'
 
 // Stage Analytics View Component
-// Epic: EPIC 3 - Time Tracking & Stage Logging
-// Displays comprehensive analytics: stage durations, TAT, delay attribution.
-// Data-loading logic lives in useAnalyticsData hook.
+// Displays ER stage analytics, triage state analytics, workflow TAT, and delay attribution.
 
 import { useState } from 'react'
 import { Card } from '@/shared/components/ui/card'
@@ -27,13 +25,21 @@ interface StageAnalyticsViewProps {
   readOnly?: boolean
 }
 
-export function StageAnalyticsView({ title = 'Stage Analytics', className, readOnly = false }: StageAnalyticsViewProps) {
+export function StageAnalyticsView({
+  title = 'Stage Analytics',
+  className,
+  readOnly = false,
+}: StageAnalyticsViewProps) {
   const {
-    stageDurationStats,
+    erStageDurationStats,
+    triageStateDurationStats,
     longestWaitingBeds,
     summary,
     attributionStats,
-    tatSummary,
+    erTatSummary,
+    triageTatSummary,
+    erCleaningTatSummary,
+    triageCleaningTatSummary,
     bedTimeline,
     selectedBedId,
     loading,
@@ -62,10 +68,10 @@ export function StageAnalyticsView({ title = 'Stage Analytics', className, readO
       document.body.removeChild(link)
       window.URL.revokeObjectURL(url)
       logger.info('Successfully exported stage transitions')
-    } catch (err) {
-      const message = err instanceof Error ? err.message : 'Failed to export'
+    } catch (error) {
+      const message = error instanceof Error ? error.message : 'Failed to export'
       setExportError(message)
-      logger.error('Failed to export data', err as Error)
+      logger.error('Failed to export data', error as Error)
     } finally {
       setExporting(false)
     }
@@ -74,7 +80,7 @@ export function StageAnalyticsView({ title = 'Stage Analytics', className, readO
   if (loading) {
     return (
       <div className={cn('space-y-4', className)}>
-        <div className="h-40 rounded-lg bg-zinc-100 animate-pulse" />
+        <div className="h-40 animate-pulse rounded-lg bg-zinc-100" />
       </div>
     )
   }
@@ -82,12 +88,12 @@ export function StageAnalyticsView({ title = 'Stage Analytics', className, readO
   if (error) {
     return (
       <Card className="border-red-200 bg-red-50">
-        <div className="pt-6 px-6 pb-6">
-          <div className="flex items-center gap-2 text-red-700 font-semibold mb-2">
+        <div className="px-6 pb-6 pt-6">
+          <div className="mb-2 flex items-center gap-2 font-semibold text-red-700">
             <AlertCircle className="h-4 w-4" />
             Error Loading Analytics
           </div>
-          <p className="text-sm text-red-600 mb-4">{error}</p>
+          <p className="mb-4 text-sm text-red-600">{error}</p>
           <Button variant="outline" onClick={reload} className="mt-2" disabled={readOnly}>
             Retry
           </Button>
@@ -100,20 +106,30 @@ export function StageAnalyticsView({ title = 'Stage Analytics', className, readO
     <div className={cn('space-y-6', className)}>
       <StageAnalyticsHeader
         title={title}
+        description="Emergency Ward stage analytics with separate triage workflow TAT metrics"
         onExportCSV={handleExportCSV}
         exporting={exporting}
         readOnly={readOnly}
       />
 
-      {exportError && (
-        <p className="text-sm text-red-600 px-1">{exportError}</p>
-      )}
+      {exportError ? <p className="px-1 text-sm text-red-600">{exportError}</p> : null}
 
       <StageAnalyticsMetrics summary={summary} />
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        <div className="lg:col-span-2">
-          <StageAnalyticsDurationAnalysis stats={stageDurationStats} />
+      <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
+        <div className="space-y-6 lg:col-span-2">
+          <StageAnalyticsDurationAnalysis
+            stats={erStageDurationStats}
+            title="ER Stage Duration Analysis"
+            description="Time spent in each active ER stage before the next transition."
+            emptyMessage="No ER stage data available."
+          />
+          <StageAnalyticsDurationAnalysis
+            stats={triageStateDurationStats}
+            title="Triage State Duration Analysis"
+            description="Time spent in each triage state before the next workflow change."
+            emptyMessage="No triage state data available."
+          />
         </div>
         <div>
           <StageAnalyticsWaitingBeds
@@ -125,14 +141,15 @@ export function StageAnalyticsView({ title = 'Stage Analytics', className, readO
         </div>
       </div>
 
-      {selectedBedId && bedTimeline && (
-        <StageAnalyticsBedTimeline timeline={bedTimeline} />
-      )}
+      {selectedBedId && bedTimeline ? <StageAnalyticsBedTimeline timeline={bedTimeline} /> : null}
 
-      {/* US-2.4: Bed Turnaround Time — Cleaning → Empty duration */}
-      <StageAnalyticsTAT summary={tatSummary} />
+      <StageAnalyticsTAT
+        erSummary={erTatSummary}
+        triageSummary={triageTatSummary}
+        erCleaningSummary={erCleaningTatSummary}
+        triageCleaningSummary={triageCleaningTatSummary}
+      />
 
-      {/* US-3.4: Delay root-cause attribution breakdown */}
       <StageAnalyticsAttribution stats={attributionStats} />
     </div>
   )

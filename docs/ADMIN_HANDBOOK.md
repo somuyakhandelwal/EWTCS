@@ -6,7 +6,7 @@ Administrator runbook for configuration, maintenance, backup/recovery, security,
 - Owner: Platform / System Administration
 - Scope: Configuration, backups, troubleshooting, security, command references
 - Versioning: Git-tracked; update required in release PRs when operations change
-- Last Updated: 2026-05-22 (API route runtime rendering and analytics settings cache)
+- Last Updated: 2026-05-22 (EPIC 25 workflow TAT model and triage TAT indexes)
 
 > **Release-specific operational notes** are in [ADMIN_HANDBOOK_RELEASES.md](./ADMIN_HANDBOOK_RELEASES.md).
 
@@ -117,6 +117,13 @@ state model for the physical Triage Area.
 - Adds `triage_decisions` to persist triage dispositions and optional ER transfer details.
 - Ensures ward code `TRIAGE` exists and keeps exactly six active physical beds: `TRIAGE-01` through `TRIAGE-06`.
 - Deactivates any extra beds assigned to the `TRIAGE` ward that are not part of the approved six-bed layout.
+- Adds triage TAT indexes in `1775303000002_add_triage_tat_indexes.sql` for bed/time and state/time analytics queries.
+
+### Workflow TAT Operations
+- ER TAT is ER bed assignment (`Empty` to active ER stage) through ER bed entering `Cleaning`.
+- Triage TAT is triage bed assignment (`initial_treatment`) through triage bed entering `cleaning`.
+- Cleaning TAT is `Cleaning`/`cleaning` through `Empty`/`empty` and is reported separately.
+- `patient_admissions.total_duration_ms` remains valid for LOS/stay-duration reporting, not EPIC 25 workflow TAT.
 
 ### Apply the Migration
 ```bash
@@ -134,6 +141,7 @@ npm run build
 5. For `Shift to ER`, verify only empty ER beds are offered and the transferred patient lands in the ER starting stage (`Initial Investigation` by default).
 6. Verify assignment and state movement are audit logged with `entity_type = 'triage_bed'`.
 7. Keep ER stage configuration separate; do not add ER-only stages to the triage workflow.
+8. After deploying TAT migrations, refresh daily summaries/materialized views and compare `/analytics` workflow TAT cards with daily summary ER/triage TAT values for a known timestamp sample.
 
 ## 4) Troubleshooting (Common Issues)
 
