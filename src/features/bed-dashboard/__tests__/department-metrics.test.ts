@@ -26,105 +26,40 @@ import {
   getTriageTatSummary,
 } from '../lib/stage-analytics'
 import { getDepartmentMetrics } from '../actions/department-metrics'
+import {
+  defaultWorkflowSummaries,
+  emptyWorkflowSummary,
+  selectResult,
+} from './department-metrics.test-helpers'
 
 describe('department-metrics', () => {
   beforeEach(() => {
     vi.clearAllMocks()
-    vi.mocked(getTriageTatSummary).mockResolvedValue({
-      totalCycles: 3,
-      averageDurationMs: 930000,
-      minDurationMs: 0,
-      maxDurationMs: 0,
-      medianDurationMs: 0,
-      p90DurationMs: 0,
-    })
-    vi.mocked(getTriageCleaningTatSummary).mockResolvedValue({
-      totalCycles: 2,
-      averageDurationMs: 420000,
-      minDurationMs: 0,
-      maxDurationMs: 0,
-      medianDurationMs: 0,
-      p90DurationMs: 0,
-    })
-    vi.mocked(getErTatSummary).mockResolvedValue({
-      totalCycles: 5,
-      averageDurationMs: 1800000,
-      minDurationMs: 0,
-      maxDurationMs: 0,
-      medianDurationMs: 0,
-      p90DurationMs: 0,
-    })
-    vi.mocked(getErCleaningTatSummary).mockResolvedValue({
-      totalCycles: 4,
-      averageDurationMs: 600000,
-      minDurationMs: 0,
-      maxDurationMs: 0,
-      medianDurationMs: 0,
-      p90DurationMs: 0,
-    })
+    vi.mocked(getTriageTatSummary).mockResolvedValue(defaultWorkflowSummaries.triage)
+    vi.mocked(getTriageCleaningTatSummary).mockResolvedValue(
+      defaultWorkflowSummaries.triageCleaning
+    )
+    vi.mocked(getErTatSummary).mockResolvedValue(defaultWorkflowSummaries.emergency)
+    vi.mocked(getErCleaningTatSummary).mockResolvedValue(
+      defaultWorkflowSummaries.emergencyCleaning
+    )
   })
 
   it('getDepartmentMetrics returns correctly formatted metrics on success', async () => {
-    vi.mocked(query).mockResolvedValueOnce({
-      rows: [
-        {
-          occupied_beds: '10',
-          total_beds: '20',
-        }
-      ],
-      rowCount: 1,
-      command: 'SELECT',
-      oid: 0,
-      fields: []
-    })
-
-    // Mock OT metrics
-    vi.mocked(query).mockResolvedValueOnce({
-      rows: [
-        {
-          occupied_beds: '8',
-          total_beds: '12',
-        }
-      ],
-      rowCount: 1,
-      command: 'SELECT',
-      oid: 0,
-      fields: []
-    })
-
-    vi.mocked(query).mockResolvedValueOnce({
-      rows: [
-        {
-          in_progress: '2',
-          completed: '5',
-          total_rooms: '16',
-        }
-      ],
-      rowCount: 1,
-      command: 'SELECT',
-      oid: 0,
-      fields: []
-    })
-
-    // Mock Cath Lab metrics
-    vi.mocked(query).mockResolvedValueOnce({
-      rows: [
-        {
-          active_procedures: '1',
-          cag_count: '2',
-          ptca_count: '3'
-        }
-      ],
-      rowCount: 1,
-      command: 'SELECT',
-      oid: 0,
-      fields: []
-    })
+    vi.mocked(query)
+      .mockResolvedValueOnce(selectResult([{ occupied_beds: '10', total_beds: '20' }]))
+      .mockResolvedValueOnce(selectResult([{ occupied_beds: '8', total_beds: '12' }]))
+      .mockResolvedValueOnce(
+        selectResult([{ in_progress: '2', completed: '5', total_rooms: '16' }])
+      )
+      .mockResolvedValueOnce(
+        selectResult([{ active_procedures: '1', cag_count: '2', ptca_count: '3' }])
+      )
 
     const result = await getDepartmentMetrics()
 
     expect(query).toHaveBeenCalledTimes(4)
-    
+
     expect(result.success).toBe(true)
     expect(result.data).toBeDefined()
     expect(result.data?.triage.occupiedBeds).toBe(10)
@@ -138,57 +73,22 @@ describe('department-metrics', () => {
     expect(result.data?.emergency.totalBeds).toBe(12)
     expect(result.data?.emergency.averageTatMinutes).toBe(30)
     expect(result.data?.emergency.averageCleaningMinutes).toBe(10)
-    
+
     expect(result.data?.ot.inProgress).toBe(2)
     expect(result.data?.ot.completed).toBe(5)
     expect(result.data?.ot.utilizationRate).toBe(13) // Math.round(2 / 16 * 100) = 13
-    
+
     expect(result.data?.cathLab.activeProcedures).toBe(1)
     expect(result.data?.cathLab.cagCount).toBe(2)
     expect(result.data?.cathLab.ptcaCount).toBe(3)
   })
 
   it('getDepartmentMetrics handles zero or missing counts gracefully', async () => {
-    vi.mocked(getTriageTatSummary).mockResolvedValueOnce({
-      totalCycles: 0,
-      averageDurationMs: 0,
-      minDurationMs: null,
-      maxDurationMs: null,
-      medianDurationMs: null,
-      p90DurationMs: null,
-    })
-    vi.mocked(getTriageCleaningTatSummary).mockResolvedValueOnce({
-      totalCycles: 0,
-      averageDurationMs: 0,
-      minDurationMs: null,
-      maxDurationMs: null,
-      medianDurationMs: null,
-      p90DurationMs: null,
-    })
-    vi.mocked(getErTatSummary).mockResolvedValueOnce({
-      totalCycles: 0,
-      averageDurationMs: 0,
-      minDurationMs: null,
-      maxDurationMs: null,
-      medianDurationMs: null,
-      p90DurationMs: null,
-    })
-    vi.mocked(getErCleaningTatSummary).mockResolvedValueOnce({
-      totalCycles: 0,
-      averageDurationMs: 0,
-      minDurationMs: null,
-      maxDurationMs: null,
-      medianDurationMs: null,
-      p90DurationMs: null,
-    })
-
-    vi.mocked(query).mockResolvedValue({
-      rows: [],
-      rowCount: 0,
-      command: 'SELECT',
-      oid: 0,
-      fields: []
-    })
+    vi.mocked(getTriageTatSummary).mockResolvedValueOnce(emptyWorkflowSummary)
+    vi.mocked(getTriageCleaningTatSummary).mockResolvedValueOnce(emptyWorkflowSummary)
+    vi.mocked(getErTatSummary).mockResolvedValueOnce(emptyWorkflowSummary)
+    vi.mocked(getErCleaningTatSummary).mockResolvedValueOnce(emptyWorkflowSummary)
+    vi.mocked(query).mockResolvedValue(selectResult([]))
 
     const result = await getDepartmentMetrics()
 
@@ -240,17 +140,19 @@ describe('department-metrics', () => {
 
     expect(query).toHaveBeenCalledTimes(4)
 
-    resolveTriage({ rows: [{ occupied_beds: '1', total_beds: '2' }] })
-    resolveEmergency({ rows: [{ occupied_beds: '3', total_beds: '4' }] })
-    resolveOt({ rows: [{ in_progress: '1', completed: '2', total_rooms: '4' }] })
-    resolveCath({ rows: [{ active_procedures: '1', cag_count: '2', ptca_count: '3' }] })
+    resolveTriage(selectResult([{ occupied_beds: '1', total_beds: '2' }]))
+    resolveEmergency(selectResult([{ occupied_beds: '3', total_beds: '4' }]))
+    resolveOt(selectResult([{ in_progress: '1', completed: '2', total_rooms: '4' }]))
+    resolveCath(
+      selectResult([{ active_procedures: '1', cag_count: '2', ptca_count: '3' }])
+    )
 
     const result = await pending
     expect(result.success).toBe(true)
   })
 
   it('uses triage_state_logs and bed_stage_logs based summary queries separately', async () => {
-    vi.mocked(query).mockResolvedValue({ rows: [] } as never)
+    vi.mocked(query).mockResolvedValue(selectResult([]) as never)
 
     await getDepartmentMetrics()
 
