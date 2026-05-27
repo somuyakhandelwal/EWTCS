@@ -33,6 +33,10 @@ export const ALLOWED_TABLES = new Set([
   'audit_logs_archive',            // migration 028
   'user_settings',                 // DB5-02: user preference persistence
   'offline_queue',                 // DB5-01: offline operation persistence
+  'webhook_endpoints',             // issue-117: outbound webhook endpoint registry
+  'webhook_deliveries',            // issue-117: durable webhook outbox/delivery queue
+  'webhook_delivery_attempts',     // issue-117: webhook attempt audit log
+  'webhook_delay_event_state',     // issue-117: dedupe state for delay-threshold events
 ])
 
 /**

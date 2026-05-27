@@ -56,3 +56,45 @@ Retrieve aggregated bed performance metrics over a specific time period.
 
 ## Interactive Documentation
 Swagger/OpenAPI documentation is available interactively within the application. Navigate to `/swagger.html` in your browser to view the schema and test the endpoints directly from the interface.
+
+## Outbound Webhooks (issue-117)
+
+In addition to pull-based REST APIs, EWTCS supports push-based outbound webhooks for critical events.
+
+### Event Types
+- `bed.status.changed`
+- `bed.delay.threshold.exceeded`
+
+### Delivery Security
+Every webhook POST includes these headers:
+- `X-EWTCS-Event`
+- `X-EWTCS-Event-Id`
+- `X-EWTCS-Timestamp`
+- `X-EWTCS-Signature`
+
+Signature format:
+- `sha256=<hex_digest>`
+- HMAC input: `${timestamp}\n${rawJsonPayload}`
+
+### Retry and Logging
+- Failed deliveries are retried with exponential backoff.
+- Attempt-level logs are persisted for observability and incident response.
+- Non-retryable failures are marked dead-letter after retry budget is exhausted.
+
+### Operational Trigger
+Webhook queue processing is executed via:
+- `POST /api/cron/webhooks/dispatch`
+- Auth: `Authorization: Bearer <CRON_SECRET>`
+
+Recommended production cadence: run this endpoint every minute.
+
+### Endpoint Configuration API
+Admins configure webhook receivers through:
+- `GET /api/webhooks/endpoints`
+- `POST /api/webhooks/endpoints`
+- `PATCH /api/webhooks/endpoints`
+- `DELETE /api/webhooks/endpoints?id=<uuid>`
+
+`subscribedEvents` currently supports:
+- `bed.status.changed`
+- `bed.delay.threshold.exceeded`
